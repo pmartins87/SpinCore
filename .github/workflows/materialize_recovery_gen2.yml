@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'recovery/spincore_rebuild_gen2.tar.gz'
+      - 'recovery/bootstrap_gen2/**'
       - '.github/workflows/materialize_recovery_gen2.yml'
 
 permissions:
@@ -18,16 +18,19 @@ jobs:
   materialize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout exact bootstrap commit
+      - name: Checkout bootstrap commit
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Verify recovery archive
+      - name: Reconstruct and verify recovery archive
         shell: bash
         run: |
           set -euo pipefail
-          echo 'c55b2349007228628a2ae4244b94d5c8277001e12483692db2263a59c339c053  recovery/spincore_rebuild_gen2.tar.gz' | sha256sum -c -
+          cat recovery/bootstrap_gen2/part*.bin > /tmp/spincore_rebuild_gen2.tar.gz
+          echo 'c55b2349007228628a2ae4244b94d5c8277001e12483692db2263a59c339c053  /tmp/spincore_rebuild_gen2.tar.gz' | sha256sum -c -
+          test "$(stat -c%s /tmp/spincore_rebuild_gen2.tar.gz)" = '34202'
+          test "$(tar -tzf /tmp/spincore_rebuild_gen2.tar.gz | wc -l)" = '70'
 
       - name: Materialize canonical generation 2 tree
         shell: bash
@@ -39,9 +42,9 @@ jobs:
           if [ -f recovery/R7_4_RunKit/README_R7_4.txt ]; then mv recovery/R7_4_RunKit/README_R7_4.txt recovery/historical/README_R7_4_pre_gen2.txt; fi
           rmdir recovery/R7_4_RunKit 2>/dev/null || true
           if [ -f validation/R6_R7_2_RECERTIFICATION_20260809.md ]; then mv validation/R6_R7_2_RECERTIFICATION_20260809.md validation/historical/R6_R7_2_RECERTIFICATION_pre_gen2_20260809.md; fi
-          tar -xzf recovery/spincore_rebuild_gen2.tar.gz -C .
+          tar -xzf /tmp/spincore_rebuild_gen2.tar.gz -C .
+          rm -rf recovery/bootstrap_gen2
           rm -f recovery/spincore_rebuild_gen2.tar.gz
-          rm -f .github/workflows/materialize_recovery_gen2.yml
 
       - name: Commit materialized source directly to main
         shell: bash
