@@ -216,3 +216,118 @@ class ExternalSamplingCollector:
 def chip_delta_utility(state: SolverState) -> tuple[float, float, float]:
     """Structural test utility only; production SpinCore may use continuation value."""
     return tuple(float(x) for x in state.terminal_chip_delta())  # type: ignore[return-value]
+
+
+class NeuralAdvantagePolicy:
+    """Current Deep CFR behavior policy obtained by regret matching AdvantageNet output."""
+    def __init__(self, model, *, device: str = 'cpu') -> None:
+        self.model = model
+        self.device = device
+
+    def __call__(self, _state: SolverState, observation: bytes, legal: tuple[int, ...]) -> Policy:
+        import torch
+        from spincore_nn.codec import decode_spnniv1, collate_inputs
+        item = decode_spnniv1(observation)
+        batch = collate_inputs([item], device=self.device)
+        self.model.eval()
+        with torch.no_grad():
+            raw = self.model(batch)[0].detach().cpu().tolist()
+        return regret_matching_policy(raw, legal)
+
+
+def _samples_to_training_batch(samples, *, device: str):
+    import torch
+    from spincore_nn.codec import decode_spnniv1, collate_inputs
+    observations = [decode_spnniv1(x.observation) for x in samples]
+    batch = collate_inputs(observations, device=device)
+    target = torch.tensor([x.target for x in samples], dtype=torch.float32, device=device)
+    weights = torch.tensor([x.weight for x in samples], dtype=torch.float32, device=device)
+    return batch, target, weights
+
+
+class DeepCFRDomainSession:
+    """Minimal resumable R6 domain session using the R4 DomainBundle contract.
+
+    It intentionally does not encode R7 scheduling/calibration policy. R7 layers
+    checkpoint cadence, mid-iteration progress, distributed audits and native
+    own-reach frontier performance on top of this correctness core.
+    """
+    def __init__(self, *, solver_library, bundle, terminal_utility: TerminalUtility, device: str = 'cpu') -> None:
+        self.solver_library = solver_library
+        self.bundle = bundle
+        self.terminal_utility = terminal_utility
+        self.device = device
+        self.behavior = NeuralAdvantagePolicy(bundle.advantage, device=device)
+        self.collector = ExternalSamplingCollector(
+            policy=self.behavior,
+            terminal_utility=terminal_utility,
+            rng=bundle.batch_rng,
+            advantage_memory=bundle.adv_mem,
+            strategy_memory=bundle.pol_mem,
+        )
+        self.bundle.counters.setdefault('iteration', 0)
+        self.bundle.counters.setdefault('roots', 0)
+        self.bundle.counters.setdefault('advantage_samples', 0)
+        self.bundle.counters.setdefault('strategy_samples', 0)
+        self.bundle.counters.setdefault('nodes', 0)
+        self.bundle.counters.setdefault('adv_optimizer_steps', 0)
+        self.bundle.counters.setdefault('policy_optimizer_steps', 0)
+
+    def collect_root(self, episode, *, iteration: int, deck_seed: int | None = None) -> dict[str, int]:
+        if iteration <= 0:
+            raise ValueError('iteration must be positive')
+        if deck_seed is None:
+            deck_seed = self.bundle.batch_rng.getrandbits(64)
+        live = [i for i, stack in enumerate(episode.stacks) if stack > 0]
+        if len(live) not in (2, 3):
+            raise ValueError('SpinCore root must have two or three live players')
+
+        nodes = adv_added = strat_added = 0
+        for player in live:
+            root = self.solver_library.create(episode, deck_seed)
+            try:
+                r = self.collector.collect_advantage(root, traverser=player, iteration=iteration)
+            finally:
+                root.close()
+            nodes += r.nodes
+            adv_added += r.samples_added
+
+        for player in live:
+            root = self.solver_library.create(episode, deck_seed)
+            try:
+                strat_added += self.collector.collect_strategy_own_reach(root, target_player=player, iteration=iteration)
+            finally:
+                root.close()
+
+        c = self.bundle.counters
+        c['iteration'] = max(int(c.get('iteration', 0)), int(iteration))
+        c['roots'] = int(c.get('roots', 0)) + 1
+        c['nodes'] = int(c.get('nodes', 0)) + nodes
+        c['advantage_samples'] = int(c.get('advantage_samples', 0)) + adv_added
+        c['strategy_samples'] = int(c.get('strategy_samples', 0)) + strat_added
+        return {'nodes': nodes, 'advantage_samples': adv_added, 'strategy_samples': strat_added}
+
+    def _train(self, *, memory, model, optimizer, kind: str, steps: int, batch_size: int) -> list[float]:
+        from spincore_nn.training import train_step
+        if steps < 0 or batch_size <= 0:
+            raise ValueError('bad training schedule')
+        if steps and not memory.items:
+            raise ValueError(f'{kind} memory is empty')
+        losses: list[float] = []
+        for _ in range(steps):
+            samples = memory.sample(min(batch_size, len(memory.items)), self.bundle.batch_rng)
+            batch, target, weights = _samples_to_training_batch(samples, device=self.device)
+            losses.append(train_step(model, optimizer, batch, target, weights, kind))
+        return losses
+
+    def train_advantage(self, *, steps: int, batch_size: int) -> list[float]:
+        losses = self._train(memory=self.bundle.adv_mem, model=self.bundle.advantage, optimizer=self.bundle.adv_opt,
+                             kind='advantage', steps=steps, batch_size=batch_size)
+        self.bundle.counters['adv_optimizer_steps'] += len(losses)
+        return losses
+
+    def train_average_policy(self, *, steps: int, batch_size: int) -> list[float]:
+        losses = self._train(memory=self.bundle.pol_mem, model=self.bundle.policy, optimizer=self.bundle.pol_opt,
+                             kind='strategy', steps=steps, batch_size=batch_size)
+        self.bundle.counters['policy_optimizer_steps'] += len(losses)
+        return losses
