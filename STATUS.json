@@ -1,22 +1,28 @@
 {
   "project": "SpinCore",
-  "version": "1.12.0-recovery.1",
-  "verified_persisted_baseline": "R0-R5 recovered physically; R6 and R7.0-R7.2 re-materialized and recertified on 2026-08-09",
-  "current_gate": "R7.3",
-  "current_gate_status": "FAIL_GATE_IN_PROGRESS",
-  "physical_regression": {
-    "cpp_release_pass": 76,
-    "cpp_release_fail": 0,
-    "cpp_asan_ubsan_pass": 76,
-    "cpp_asan_ubsan_fail": 0,
-    "python_pass": 47,
-    "python_fail": 0,
-    "solver_c_abi": "V2"
+  "version": "1.12.1-recovery-integrity",
+  "verified_persisted_baseline": "Current GitHub main is NOT a self-contained recertified R7.2 checkout. Historical/recovery evidence records R0-R7.2 PASS, but the persisted tree is missing engine/neural/R7 source files referenced by CMake and the prior validation report.",
+  "current_gate": "RECOVERY_INTEGRITY_REPAIR",
+  "current_gate_status": "BLOCKING_R7_3",
+  "integrity": {
+    "audit_date": "2026-08-09",
+    "head_before_repair": "c4058f5cdf129a4cb1e2bd46bba4df6ca155d431",
+    "known_good_historical_checkpoint": "R7.2 PASS historical/recovery evidence only",
+    "missing_persisted_examples": [
+      "src/betting_engine.cpp",
+      "src/hand_engine.cpp",
+      "src/tournament_value.cpp",
+      "python/spincore/r7.py",
+      "python_tests/test_r7.py",
+      "tools/r7_training_worker.py"
+    ],
+    "abi_wrapper_repair": "python/spincore/solver.py realigned to SPINCORE_SOLVER_C_ABI_V2 in this repair",
+    "prior_76_cpp_47_python_claim": "NOT accepted as reproducible from current main until missing source/test tree is restored"
   },
-  "r7": {
-    "R7_0": "PASS_RECERTIFIED",
-    "R7_1": "PASS_RECERTIFIED",
-    "R7_2": "PASS_RECERTIFIED",
+  "historical_r7": {
+    "R7_0": "PASS_EVIDENCE",
+    "R7_1": "PASS_EVIDENCE",
+    "R7_2": "PASS_EVIDENCE",
     "R7_3": "FAIL_GATE_IN_PROGRESS",
     "frozen_gates": {
       "advantage_weighted_nrmse_max": 0.75,
@@ -24,12 +30,12 @@
       "cross_seed_mean_tv_max": 0.15,
       "cross_seed_p95_tv_max": 0.35
     },
-    "historical_last_hu": {
+    "last_hu": {
       "roots_per_seed": 640,
       "mean_tv": 0.3714,
       "p95_tv": 0.6878
     }
   },
-  "next_physical_step": "Resume R7.3 HU multi-seed stability at materially larger self-play, preserving frozen gates; start larger 3H pilot only after/alongside HU diagnostic.",
+  "next_physical_step": "Restore the self-contained R0-R7.2 source/test tree from a recoverable bundle/object/source; verify hashes/build/tests; only then resume R7.3 larger multi-seed HU.",
   "ready_for_tables": false
 }

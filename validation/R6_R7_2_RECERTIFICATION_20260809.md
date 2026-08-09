@@ -1,6 +1,10 @@
 # SpinCore R6 / R7.0-R7.2 physical recertification — 2026-08-09
 
-## Result
+> **SUPERSEDED FOR CURRENT-CHECKOUT REPRODUCIBILITY by `validation/RECOVERY_INTEGRITY_AUDIT_20260809.md`.**
+>
+> This document preserves the results and hashes recorded during the prior transient recovery run. A later audit found that the full source/test tree used for those tests was not persisted into reachable GitHub `main`. Therefore the numbers below remain recovery evidence, but they are **not** a claim that the present checkout can reproduce them until the missing tree is restored and rerun.
+
+## Result recorded by the transient recovery run
 
 - R6: PASS recertified
 - R7.0: PASS recertified
@@ -9,14 +13,14 @@
 - R7.3: still FAIL / in progress
 - READY FOR TABLES: NO
 
-## Physical validation
+## Physical validation recorded at that time
 
 - C++ Release: 76 PASS / 0 FAIL
 - C++ ASan + UBSan: 76 PASS / 0 FAIL
 - Python: 47 PASS / 0 FAIL
 - C ABI: SPINCORE_SOLVER_C_ABI_V2
 
-## Recovered/recertified semantics
+## Recovered/recertified semantics recorded at that time
 
 - Exact cloneable `SpinTraversalState` preserves hidden cards and future board across action branches.
 - Production terminal utility is explicit-payout exact ICM `V(after)-V(before)`; WTA reduces exactly to chip fraction.
@@ -36,7 +40,7 @@
 
 Historical last checkpoint: 640 roots/seed; mean TV 0.3714; p95 TV 0.6878. Frozen gates remain mean <= 0.15 and p95 <= 0.35.
 
-## File SHA-256
+## File SHA-256 recorded by the transient run
 
 - `CMakeLists.txt`: `163abf38ebcbf5d1cf961febd3bc2a28798b9d24c7f1f67ac9bd3df3a3822b4c`
 - `include/spincore/solver_c_api.h`: `c741d61c9465cf5984645d48b9b1f4c3d3a072b348935c4c01ec237f9fc057c3`
