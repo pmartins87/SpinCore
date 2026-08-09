@@ -1,23 +1,35 @@
 {
   "project": "SpinCore",
-  "version": "recovery-2026-08-09",
-  "verified_persisted_baseline": "physical R0-R5 recovered; authoritative R6 traversal state, solver C ABI v2, external-sampling collector, neural behavior policy, own-reach strategy collection and neural training path re-materialized",
-  "current_gate": "R6",
-  "current_gate_status": "RECOVERING_NEAR_CERTIFICATION",
+  "version": "1.12.0-recovery.1",
+  "verified_persisted_baseline": "R0-R5 recovered physically; R6 and R7.0-R7.2 re-materialized and recertified on 2026-08-09",
+  "current_gate": "R7.3",
+  "current_gate_status": "FAIL_GATE_IN_PROGRESS",
   "physical_regression": {
-    "cpp_pass": 64,
-    "cpp_fail": 0,
-    "python_pass": 16,
+    "cpp_release_pass": 76,
+    "cpp_release_fail": 0,
+    "cpp_asan_ubsan_pass": 76,
+    "cpp_asan_ubsan_fail": 0,
+    "python_pass": 47,
     "python_fail": 0,
-    "solver_c_abi_smoke": "PASS"
+    "solver_c_abi": "V2"
   },
-  "historical_chat_state": {
-    "R6": "PASS",
-    "R7_0": "PASS",
-    "R7_1": "PASS",
-    "R7_2": "PASS",
-    "R7_3": "FAIL_GATE_IN_PROGRESS"
+  "r7": {
+    "R7_0": "PASS_RECERTIFIED",
+    "R7_1": "PASS_RECERTIFIED",
+    "R7_2": "PASS_RECERTIFIED",
+    "R7_3": "FAIL_GATE_IN_PROGRESS",
+    "frozen_gates": {
+      "advantage_weighted_nrmse_max": 0.75,
+      "policy_weighted_mean_tv_max": 0.12,
+      "cross_seed_mean_tv_max": 0.15,
+      "cross_seed_p95_tv_max": 0.35
+    },
+    "historical_last_hu": {
+      "roots_per_seed": 640,
+      "mean_tv": 0.3714,
+      "p95_tv": 0.6878
+    }
   },
-  "next_physical_step": "finish R6 production utility/checkpoint contract, then re-materialize R7.0-R7.2 instrumentation, distributed reservoir audit, mid-iteration resume and native own-reach frontier",
+  "next_physical_step": "Resume R7.3 HU multi-seed stability at materially larger self-play, preserving frozen gates; start larger 3H pilot only after/alongside HU diagnostic.",
   "ready_for_tables": false
 }
