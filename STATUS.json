@@ -1,9 +1,22 @@
 {
   "project": "SpinCore",
-  "version": "1.9.0",
-  "verified_persisted_baseline": "SpinCore internal R2 snapshot + reintegrated R1/R3 + physical R4/R5",
-  "current_gate": "R5",
-  "current_gate_status": "PASS",
-  "next_gate": "R6 Deep CFR integration on SpinTraversalState",
+  "version": "recovery-2026-08-09",
+  "verified_persisted_baseline": "physical R0-R5 recovered; authoritative R6 SpinTraversalState re-materialized and regression-tested",
+  "current_gate": "R6",
+  "current_gate_status": "RECOVERING",
+  "physical_regression": {
+    "cpp_pass": 64,
+    "cpp_fail": 0,
+    "python_r4_r5_pass": 12,
+    "python_r4_r5_fail": 0
+  },
+  "historical_chat_state": {
+    "R6": "PASS",
+    "R7_0": "PASS",
+    "R7_1": "PASS",
+    "R7_2": "PASS",
+    "R7_3": "FAIL_GATE_IN_PROGRESS"
+  },
+  "next_physical_step": "re-materialize Deep CFR integration and R7 resumable pilot on SpinTraversalState",
   "ready_for_tables": false
 }
