@@ -60,3 +60,29 @@ def test_r6_collector_is_reproducible_from_same_seed():
         finally: root.close()
         return r,adv.items
     a=once(); b=once(); assert a==b
+
+
+def test_r6_neural_domain_session_collects_and_trains():
+    import torch
+    from spincore.deep_cfr import DeepCFRDomainSession
+    from spincore_nn import NetworkConfig,AdvantageNet,AveragePolicyNet,DomainBundle
+
+    torch.manual_seed(123)
+    cfg=NetworkConfig(card_emb=4,cat_emb=4,hidden=24,gru_hidden=12,head_hidden=16)
+    adv=AdvantageNet(cfg); pol=AveragePolicyNet(cfg)
+    bundle=DomainBundle(
+        domain='HU',seed=123,config=cfg,advantage=adv,policy=pol,
+        adv_opt=torch.optim.Adam(adv.parameters(),lr=1e-3),
+        pol_opt=torch.optim.Adam(pol.parameters(),lr=1e-3),
+        adv_mem=UniformReservoir(5000,11),pol_mem=UniformReservoir(5000,12),
+        batch_rng=random.Random(13),counters={})
+    lib=_lib(); ep=Episode(1500,True,0,10,20,(0,750,750),1)
+    sess=DeepCFRDomainSession(solver_library=lib,bundle=bundle,terminal_utility=chip_delta_utility)
+    stats=sess.collect_root(ep,iteration=1,deck_seed=444)
+    assert stats['advantage_samples']>0 and stats['strategy_samples']>0
+    la=sess.train_advantage(steps=1,batch_size=8)
+    lp=sess.train_average_policy(steps=1,batch_size=8)
+    assert len(la)==1 and len(lp)==1
+    assert bundle.counters['roots']==1
+    assert bundle.counters['adv_optimizer_steps']==1
+    assert bundle.counters['policy_optimizer_steps']==1
