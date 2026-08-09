@@ -1,0 +1,60 @@
+name: Materialize SpinCore recovery generation 2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'recovery/spincore_rebuild_gen2.tar.gz'
+      - '.github/workflows/materialize_recovery_gen2.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-recovery-gen2
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact bootstrap commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify recovery archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'c55b2349007228628a2ae4244b94d5c8277001e12483692db2263a59c339c053  recovery/spincore_rebuild_gen2.tar.gz' | sha256sum -c -
+
+      - name: Materialize canonical generation 2 tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p recovery/historical validation/historical
+          if [ -f RECOVERY_STATUS.md ]; then mv RECOVERY_STATUS.md recovery/historical/RECOVERY_STATUS_pre_gen2.md; fi
+          if [ -f tools/run_r7_4_ryzen.py ]; then mv tools/run_r7_4_ryzen.py recovery/historical/run_r7_4_ryzen_pre_gen2.py; fi
+          if [ -f recovery/R7_4_RunKit/README_R7_4.txt ]; then mv recovery/R7_4_RunKit/README_R7_4.txt recovery/historical/README_R7_4_pre_gen2.txt; fi
+          rmdir recovery/R7_4_RunKit 2>/dev/null || true
+          if [ -f validation/R6_R7_2_RECERTIFICATION_20260809.md ]; then mv validation/R6_R7_2_RECERTIFICATION_20260809.md validation/historical/R6_R7_2_RECERTIFICATION_pre_gen2_20260809.md; fi
+          tar -xzf recovery/spincore_rebuild_gen2.tar.gz -C .
+          rm -f recovery/spincore_rebuild_gen2.tar.gz
+          rm -f .github/workflows/materialize_recovery_gen2.yml
+
+      - name: Commit materialized source directly to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore Recovery Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'No materialization changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Materialize self-contained SpinCore through R7.2 [materialize-skip]'
+          git push origin HEAD:main
+          git push origin --delete tmp-probe || true
