@@ -1,0 +1,7 @@
+#include "test_framework.hpp"
+#include "spincore/hand_evaluator.hpp"
+using namespace spincore; static Card C(int r,int s){return Card{(uint8_t)r,(uint8_t)s};}
+SPIN_TEST(eval_categories_order){std::array<Card,5> sf{C(14,0),C(13,0),C(12,0),C(11,0),C(10,0)}, q{C(9,0),C(9,1),C(9,2),C(9,3),C(2,0)}, fh{C(8,0),C(8,1),C(8,2),C(7,0),C(7,1)}, fl{C(14,0),C(11,0),C(8,0),C(5,0),C(2,0)}, st{C(9,0),C(8,1),C(7,2),C(6,3),C(5,0)}, tr{C(4,0),C(4,1),C(4,2),C(14,0),C(2,0)}, tp{C(13,0),C(13,1),C(3,0),C(3,1),C(14,0)}, pa{C(12,0),C(12,1),C(14,0),C(8,1),C(2,0)}, hi{C(14,0),C(11,1),C(8,2),C(5,3),C(2,0)};auto a=evaluate_five(sf),b=evaluate_five(q),c=evaluate_five(fh),d=evaluate_five(fl),e=evaluate_five(st),f=evaluate_five(tr),g=evaluate_five(tp),h=evaluate_five(pa),i=evaluate_five(hi);REQUIRE(a>b&&b>c&&c>d&&d>e&&e>f&&f>g&&g>h&&h>i);}
+SPIN_TEST(eval_wheel_straight){std::array<Card,5>x{C(14,0),C(5,1),C(4,2),C(3,3),C(2,0)};auto r=evaluate_five(x);REQUIRE(r.category==HandCategory::Straight);REQUIRE(r.kickers[0]==5);}
+SPIN_TEST(eval_best_seven_uses_best_five){std::array<Card,7>x{C(14,0),C(14,1),C(14,2),C(13,0),C(13,1),C(2,0),C(3,0)};auto r=evaluate_best(x);REQUIRE(r.category==HandCategory::FullHouse);REQUIRE(r.kickers[0]==14&&r.kickers[1]==13);}
+SPIN_TEST(eval_pair_kicker_breaks_tie){std::array<Card,5>a{C(10,0),C(10,1),C(14,2),C(8,3),C(2,0)},b{C(10,2),C(10,3),C(13,2),C(8,1),C(2,1)};REQUIRE(evaluate_five(a)>evaluate_five(b));}

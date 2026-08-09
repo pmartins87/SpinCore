@@ -1,33 +1,25 @@
-# SpinCore finite roadmap — recovery integrity corrected 2026-08-09
+# SpinCore finite roadmap — canonical recovery generation 2
 
-The final endpoint remains **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate passes.
+Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until all gates pass.
 
-## Historical/recovery evidence
-
-- R0 Foundation / canonical repository — PASS evidence
-- R1 Complete poker engine — PASS evidence
-- R2 Canonical infoset + neural encoder — PASS evidence
-- R3 Tournament continuation value (`ICM_EXACT_V1`, explicit payout) — PASS evidence
-- R4 Neural infrastructure — PASS evidence
-- R5 CFR correctness oracle — PASS evidence
-- R6 Deep CFR integration — PASS evidence
-- R7.0 instrumentation — PASS evidence
-- R7.1 native own-reach frontier — PASS evidence
-- R7.2 full-reservoir audit / LCFR weighting / resume / worker — PASS evidence
-- R7.3 multi-seed stability — FAIL at last historical checkpoint
-
-## Current physical gate
-
-Before R7.3 can continue, **RECOVERY_INTEGRITY_REPAIR** must PASS. The current `main` is not self-contained: its build graph references source files that are absent, while the prior recertification report lists R7 files that were never persisted into the reachable tree. Therefore the old labels `PASS_RECERTIFIED` are retained only as historical evidence, not as a claim that the present checkout can reproduce 76 C++ + 47 Python tests.
-
-Required repair sequence:
-
-1. Restore the missing R0–R7.2 source/test tree from a recoverable bundle, Git object, or other authoritative source.
-2. Verify the restored files against preserved hashes wherever available.
-3. Build Release and sanitizer configurations from a clean checkout.
-4. Run the full C++ and Python regression suites.
-5. Re-certify R6/R7.0–R7.2 only if the physical checkout reproduces the gates.
-6. Resume R7.3 at materially larger HU self-play with the frozen gates unchanged.
+- R0 Foundation / canonical repository — **PASS REBUILT**
+- R1 Complete poker engine — **PASS REBUILT**
+- R2 Canonical infoset + neural encoder — **PASS REBUILT**
+- R3 Tournament continuation value (`ICM_EXACT_V1`, explicit payout) — **PASS REBUILT**
+- R4 Neural infrastructure — **PASS REBUILT**
+- R5 CFR correctness oracle — **PASS REBUILT**
+- R6 Deep CFR integration on authoritative `SpinTraversalState` — **PASS REBUILT**
+- R7 Pilot / performance / statistical stability — IN PROGRESS
+  - R7.0 approximation metrics / full-reservoir audit — **PASS REBUILT**
+  - R7.1 native own-reach frontier — **PASS REBUILT**
+  - R7.2 LCFR weighting / exact checkpoint+resume / fresh-process worker — **PASS REBUILT**
+  - R7.3 multi-seed stability — **FAIL / ACTIVE**
+  - R7.4 larger HU + 3H pilot — TODO after R7.3 diagnostic convergence
+- R8 Production training — TODO
+- R9 Strategic audit — TODO
+- R10 OpenHoldem runtime — TODO
+- R11 Safe exploitation — TODO
+- R12 Operational homologation — TODO
 
 ## Frozen R7.3 gates
 
@@ -36,14 +28,13 @@ Required repair sequence:
 - Cross-seed mean TV <= 0.15
 - Cross-seed p95 TV <= 0.35
 
-Historical last HU checkpoint: 640 roots/seed, cross-seed mean TV 0.3714, p95 TV 0.6878. R7.3 remains FAIL.
+Historical pre-loss checkpoint: 640 HU roots/seed, cross-seed mean TV 0.3714, p95 TV 0.6878. It remains evidence of the previous implementation, not a direct metric baseline for the rebuilt network until a new same-code multi-seed run is produced.
 
-After R7:
+## Recovery invariants
 
-- R8 Production training — TODO
-- R9 Strategic audit — TODO
-- R10 OpenHoldem runtime — TODO
-- R11 Safe exploitation — TODO
-- R12 Operational homologation — TODO
-
-No frozen gate may be relaxed. `TRUE_HEADS_UP` and `THREE_HANDED` remain separate strategic domains. Production utility remains exact explicit-payout ICM continuation delta. Material recovery work is persisted to `main`; no recovery branch.
+- No frozen gate may be relaxed.
+- `TRUE_HEADS_UP` and `THREE_HANDED` are separate domains for the whole hand.
+- A hand starting 3H does not switch strategic domain merely because a player folds/all-ins during that hand.
+- Production utility is exact explicit-payout ICM continuation delta; chip delta is diagnostics only.
+- Equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
+- Every meaningful step is persisted to GitHub `main`.

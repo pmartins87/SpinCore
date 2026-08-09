@@ -1,0 +1,2 @@
+#include "spincore/action_abstraction.hpp"
+namespace spincore { const char* action_name(AbstractActionSlot a) noexcept {switch(a){case AbstractActionSlot::Fold:return"fold";case AbstractActionSlot::CheckCall:return"check_call";case AbstractActionSlot::ContextRaise:return"context_raise";case AbstractActionSlot::SmallPot:return"small_pot";case AbstractActionSlot::LargePot:return"large_pot";case AbstractActionSlot::AllIn:return"all_in";}return"?";} }
