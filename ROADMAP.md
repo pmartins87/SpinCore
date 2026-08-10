@@ -18,9 +18,11 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - 1280 unique-root scale — **FAIL; brute-force root scaling paused**
     - CFR-memory / support / chance / card / RNG / fit decomposition — **DONE**
     - exact own-reach and exact Advantage bootstrap controls — **DONE**
-    - four-mode path replication screen — **DONE: Advantage external-sampling variance is the strongest isolated path lever**
+    - four-mode path replication screen — **DONE: Advantage external-sampling variance strongest isolated path lever**
     - exact opponent-expectation Advantage oracle — **DONE**
-    - three x4 acceptance-scale candidates — **DONE: ALL CROSS-SEED FAIL**
+    - replicated-candidate V1 x4 runs — **DONE / ALL CROSS-SEED FAIL / NOT DECK-IDENTICAL TO REFERENCE**
+    - deck-control V1 audit — **DONE: V1 formula mismatch found and documented**
+    - deck-exact coupled Advantage x4 640 V2 — **RUNNING**
     - partial-exact V1 — **INVALID DIAGNOSTIC CONTROL; solver/regressions PASS**
     - partial-exact V2 — **RUNNING**
     - full-exact opponent-expectation upper bound — **RUNNING**
@@ -43,75 +45,122 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 No gate has been relaxed.
 
-## Acceptance-scale evidence
+## Acceptance references
 
-| candidate | mean TV | p95 TV | individual fits | result |
+Corrected generation-2 640, workflow `31348997168`, evidence `7275ada20279c6b18d93d0539c6b44989632a605`:
+
+- mean TV `0.477649`
+- p95 `0.902403`
+- both seeds pass Advantage and AveragePolicy fit gates.
+
+Strong-Advantage 640, workflow `31364029367`, evidence `75885791b5d8894d4c590a038233f96db5879925`:
+
+- mean `0.464474`
+- p95 `0.886204`
+- both individual fits pass.
+
+## Replicated-candidate V1 results and control correction
+
+The three physical V1 x4 runs remain valid experiments and all failed the frozen cross-seed gates:
+
+| V1 candidate | mean TV | p95 TV | individual fits | evidence |
 |---|---:|---:|---|---|
-| corrected 640 | `0.477649` | `0.902403` | PASS | FAIL |
-| strong-Advantage 640 | `0.464474` | `0.886204` | PASS | FAIL |
-| separated Advantage x4 640 | `0.459596` | `0.898250` | PASS | FAIL |
-| separated both x4 640 | `0.458853` | `0.908883` | PASS | FAIL |
-| recovered-coupled Advantage x4 640 | **`0.451112`** | `0.893292` | PASS | FAIL |
+| separated Advantage x4 | `0.459596` | `0.898250` | PASS | `94b5e423fa51e1dad8445e6ce36b8832d8161648` |
+| separated both x4 | `0.458853` | `0.908883` | PASS | `871967f777f7cec17479ed3ec9f476543452912d` |
+| coupled Advantage x4 | `0.451112` | `0.893292` | PASS | `87547311076fd6a015b7d855de1a9c26124b924f` |
 
-Physical x4 evidence:
+A post-run line-by-line audit found an experimental-control error: V1 **did not use the exact authoritative deal schedule** despite its comment/JSON saying it did.
 
-- separated `advantage_x4`: workflow `31368447316`, commit `94b5e423fa51e1dad8445e6ce36b8832d8161648`;
-- separated `both_x4`: workflow `31368447316`, commit `871967f777f7cec17479ed3ec9f476543452912d`;
-- coupled `advantage_x4`: workflow `31368894934`, commit `87547311076fd6a015b7d855de1a9c26124b924f`.
+Authoritative generation-2 schedule:
 
-All three x4 candidates cleanly passed Advantage and AveragePolicy fit gates. The coupled x4 schedule produced the best mean (`0.451112`), but even that is still roughly 3x the frozen `0.15` mean gate and its p95 (`0.893292`) is essentially unchanged from the failing baseline tail. Therefore **plain independent path replication is not an acceptance-scale solution**. The large improvement seen in the two-iteration 256-root screen does not survive five CFR iterations at 640 roots, which points to variance/divergence compounding through iterative regret learning.
+```text
+deck_seed = seed * 1_000_003 + global_root * 97 + iteration
+```
 
-`both_x4` is especially unattractive: it costs substantially more policy collection/training and does not improve the tail. No x8 acceptance run is promoted because the exact Advantage oracle already showed strong diminishing returns from 4 to 8 independent paths while p95 remained saturated at 1.0.
+with `global_root` continuous across all five iterations.
+
+V1 instead used:
+
+```text
+deck_seed = (seed << 32) ^ (iteration << 16) ^ root_index_within_iteration
+```
+
+and restarted `root_index` every iteration.
+
+Consequences:
+
+- the V1 metrics remain evidence that those x4 configurations fail badly on independent hidden-deal samples;
+- they **cannot** support a tightly paired percentage-improvement claim against corrected/strong-Advantage 640;
+- the broad finding that x4 did not approach the gates remains true;
+- the exact x4 delta versus the authoritative reference is being remeasured by V2.
+
+Correction record: `validation/R7_3_REPLICATED_V1_DECK_CONTROL_CORRECTION_20260810.md`.
+
+## Deck-exact x4 V2
+
+`tools/run_r7_3_replicated_640_candidate_v2.py` replaces only the V1 deal scheduler while reusing the smoke-certified collection/fitting implementation. V2 self-checks cross-iteration global-root continuity and records the exact formula in its JSON.
+
+The highest-priority corrected candidate is **coupled Advantage x4**, because if x4 is useful this variant retains the recovered RNG-state structure. Its workflow uses:
+
+- exact authoritative `seed*1000003 + global_root*97 + iteration` deals;
+- 5 x 128 = 640 unique roots/seed;
+- four Advantage trajectories / one strategy trajectory;
+- recovered coupled RNG contract;
+- Advantage fit target `0.50`;
+- AveragePolicy fit target `0.105`, max `32768` steps;
+- reservoir `400000`;
+- unchanged frozen gates.
+
+This V2 run is active; V1 is not substituted for it.
 
 ## Causal evidence retained
 
-The investigation has established:
-
 1. CFR-memory variance dominates AveragePolicy optimizer/init variance.
-2. Root card/deck variation is not dominant.
+2. Root card/deck variation is not dominant in the dedicated shared-deck experiment.
 3. Off-support AveragePolicy extrapolation is material but downstream.
 4. Card/suit representation alone is not dominant.
 5. Training/traversal RNG bookkeeping coupling alone is not dominant.
 6. Stronger Advantage fitting helps but is insufficient.
-7. Own-reach sampling provably fragments strategy support under an identical exact policy.
+7. Own-reach Monte Carlo provably fragments strategy support under an identical exact policy.
 8. Advantage external sampling provably injects target/regret-matching noise.
-9. Four independent Advantage paths materially improve a short controlled screen, but that gain collapses at five-iteration acceptance scale.
-10. Exact opponent expectation provides a small-scale oracle; 1 -> 4 sampled paths gives a large gain versus exact, while 4 -> 8 gives little extra and leaves the p95 tail unresolved.
+9. Four Advantage paths materially improve a controlled two-iteration screen.
+10. The exact Advantage oracle shows large 1->4 benefit but small 4->8 incremental benefit, with p95 still saturated at `1.0`.
+
+The V1 deck correction does **not** invalidate items 1–10 because each came from separate controlled workflows. It only weakens paired interpretation of the three V1 640 x4 deltas.
 
 ## Active estimator-design experiments
 
 ### Partial-exact V2 — workflow `31412806987`
 
-The first partial-exact workflow (`31369138285`) is **not valid evidence about levels 1/2** because its experimental reimplementation of level 0 did not reproduce the persisted baseline exactly. Build, CTest and 26 Python tests passed; the failure was the diagnostic-control assertion itself.
-
-V2 removes that ambiguity. Level 0 is now executed through the authoritative recovered `ExternalSamplingCollector`; only positive levels use the experimental partial-exact estimator. Levels 1 and 2 enumerate the next one/two opponent decisions, probability-weight downstream Advantage samples, then return to ordinary external sampling. The physical 256-root V2 run is active.
+Level 0 is now the authoritative recovered `ExternalSamplingCollector`; only levels 1/2 are experimental. They enumerate one/two upcoming opponent decisions, probability-weight downstream Advantage samples, then return to ordinary external sampling.
 
 ### Full-exact opponent upper bound — workflow `31412933368`
 
-A bounded experiment compares the authoritative estimator against effectively full opponent-action enumeration (`exact level 128`, safely beyond the observed max depth). Its purpose is to answer the decisive question: **if opponent external-sampling variance is removed entirely, how much cross-seed instability remains?** This is an upper-bound diagnostic, not a proposed production schedule.
+A bounded experiment asks how much stability is possible if opponent-action sampling variance is effectively removed entirely. This is an upper-bound diagnostic, not a production proposal.
 
-### Common-random-number path screen — workflow `31413103901`
+### Common-random-number screen — workflow `31413103901`
 
-Modes `independent_1`, `independent_4`, `common_1`, `common_4` test whether synchronizing opponent-action random numbers across algorithm seeds suppresses iterative divergence more efficiently than adding independent paths. Under iteration-1 uniform behavior and shared decks, common-path Advantage memories are required to be byte-identical across seeds; the workflow fails if that invariant does not hold.
+`independent_1`, `independent_4`, `common_1`, `common_4`. Under shared decks plus iteration-1 uniform behavior, common modes must create byte-identical Advantage memories across seeds or fail closed.
 
 ### Iteration compounding — workflow `31413646505`
 
-Baseline and Advantage x4 run as parallel five-iteration jobs with the same deck schedule. After every Advantage refit, the diagnostic converts both freshly fitted AdvantageNets through exact regret matching on a common corpus and records cross-seed mean/p50/p95/max TV plus strategy-support metrics. This locates **which CFR iteration amplifies divergence** and whether x4 merely delays rather than prevents it. Both jobs passed smoke and are in the physical five-iteration phase.
+Baseline and Advantage x4 run five CFR iterations. After each refit, freshly fitted AdvantageNets are converted through exact regret matching on a common iteration corpus. This directly locates when cross-seed regret-policy divergence accelerates. Both jobs passed smoke and entered the physical phase.
 
 ### Antithetic x4 — workflow `31413970227`
 
-A four-path estimator uses the same underlying Uniform sequence for all four external-sampling trajectories but applies offsets `0, 1/4, 1/2, 3/4 (mod 1)`. Each individual trajectory remains marginally distributed exactly as the recovered sampler, while the four paths become low-discrepancy/antithetically correlated. It is compared against ordinary independent x4 at the same 256-root compute scale. This tests whether **better correlation structure**, rather than more paths, improves variance per unit work.
+Four marginally correct external-sampling trajectories share the same underlying Uniform sequence with quarter-turn offsets. This tests lower-discrepancy/antithetic correlation at the same four-path cost rather than blindly increasing path count.
 
-## Decision tree after active runs
+## Decision tree
 
-- If common random numbers materially reduce cross-seed TV, promote a counter-based/common-path RNG estimator as a **versioned** candidate and recertify checkpoint/resume semantics.
-- If partial/full exact opponent expectation is materially stronger, promote the cheapest bounded enumeration level that captures most of the gain.
-- If antithetic x4 beats independent x4 materially, retain x4 compute but replace independent trajectories with the lower-discrepancy estimator in the next acceptance candidate.
-- Use the five-iteration diagnostic to target the exact iteration/refit where divergence accelerates.
-- If full exact still leaves large divergence, stop treating external-sampling opponent variance as sufficient explanation and move directly to regret-sign sensitivity / policy-support discontinuity / target aggregation diagnostics.
-- Do **not** resume brute-force unique-root scaling or x8/x16 replication without new causal evidence.
+- First obtain the **deck-exact V2 x4** result before making any paired acceptance-scale claim about x4.
+- If common random numbers materially suppress divergence, promote a versioned counter-based/common-path estimator.
+- If partial/full expectation is stronger, promote the cheapest bounded enumeration level that captures most of the upper-bound gain.
+- If antithetic x4 materially beats independent x4, use the correlated estimator rather than more independent paths.
+- Use iteration-compounding evidence to target the exact refit where divergence amplifies.
+- If full exact is weak, pivot to regret-sign sensitivity, policy-support discontinuity and target aggregation/control-variate design.
+- Do **not** resume brute-force roots or x8/x16 independent replication without new causal evidence.
 
-Historical pre-loss 640 mean/p95 `0.3714 / 0.6878` remains historical evidence only and is not substituted for the generation-2 acceptance gate.
+Historical pre-loss mean/p95 `0.3714 / 0.6878` remains historical only.
 
 ## Recovery invariants
 
