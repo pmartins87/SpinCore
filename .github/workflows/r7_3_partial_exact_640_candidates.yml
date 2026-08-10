@@ -1,0 +1,148 @@
+name: SpinCore R7.3 partial-exact 640 candidates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_partial_exact_640_candidates.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-partial-exact-640-candidates
+  cancel-in-progress: false
+
+jobs:
+  candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - level: 1
+            out: validation/R7_3_PARTIAL_EXACT_LEVEL1_640_CANDIDATE.json
+          - level: 2
+            out: validation/R7_3_PARTIAL_EXACT_LEVEL2_640_CANDIDATE.json
+    name: level_${{ matrix.level }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Smoke partial-exact acceptance runner
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_partial_exact_640_candidate.py \
+            --solver build/libspincore_solver_c.so \
+            --out /tmp/R7_3_PARTIAL_EXACT_640_SMOKE.json \
+            --exact-opponent-levels '${{ matrix.level }}' \
+            --iterations 2 \
+            --roots-per-iteration 2 \
+            --advantage-chunk-steps 8 \
+            --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 \
+            --policy-chunk-steps 8 \
+            --policy-max-steps 8 \
+            --policy-fit-target 10 \
+            --batch-size 16 \
+            --audit-size 32 \
+            --cross-seed-per-seed 16 \
+            --reservoir-capacity 5000
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/R7_3_PARTIAL_EXACT_640_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_PARTIAL_EXACT_640_CANDIDATE_V1'
+          assert d['deck_semantics']=='GENERATION2_AUTHORITATIVE_GLOBAL_ROOT_FORMULA_EXACT'
+          assert d['rng_contract']=='RECOVERED_SINGLE_COUPLED_BATCH_RNG'
+          assert d['ready_for_tables'] is False
+          print('partial-exact 640 smoke OK')
+          PY
+
+      - name: Run physical partial-exact 640 candidate
+        id: candidate
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set +e
+          python tools/run_r7_3_partial_exact_640_candidate.py \
+            --solver build/libspincore_solver_c.so \
+            --out '${{ matrix.out }}' \
+            --exact-opponent-levels '${{ matrix.level }}' \
+            --iterations 5 \
+            --roots-per-iteration 128 \
+            --advantage-chunk-steps 256 \
+            --advantage-max-steps-per-iteration 4096 \
+            --advantage-fit-target 0.50 \
+            --policy-chunk-steps 256 \
+            --policy-max-steps 32768 \
+            --policy-fit-target 0.105 \
+            --batch-size 256 \
+            --audit-size 1024 \
+            --cross-seed-per-seed 1024 \
+            --reservoir-capacity 400000 \
+            --strict
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Persist partial-exact candidate evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out='${{ matrix.out }}'
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_3_PARTIAL_EXACT_640_CANDIDATE_V1","runner_failed_before_report":true,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 partial-exact level ${{ matrix.level }} 640 [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+
+      - name: Enforce frozen R7.3 gate
+        if: always()
+        shell: bash
+        run: |
+          code='${{ steps.candidate.outputs.exit_code }}'
+          if [ -z "$code" ]; then code=3; fi
+          exit "$code"
