@@ -5,7 +5,7 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "ADVANTAGE_PATH_VARIANCE_IDENTIFIED_PARALLEL_640_CANDIDATES_RUNNING",
+  "current_gate_status": "ADVANTAGE_PATH_VARIANCE_DOMINANT_THREE_640_CANDIDATES_AND_PARTIAL_EXACT_SCREEN_RUNNING",
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
@@ -35,174 +35,151 @@
       "cross_seed_p95_tv_max": 0.35
     },
     "corrected_640": {
-      "workflow_run_id": 31348997168,
-      "evidence_commit": "7275ada20279c6b18d93d0539c6b44989632a605",
-      "roots_per_seed": 640,
+      "workflow": 31348997168,
+      "evidence": "7275ada20279c6b18d93d0539c6b44989632a605",
       "mean_tv": 0.4776491225,
       "p95_tv": 0.9024027586,
-      "seed_20260829_advantage_nrmse": 0.6536425948,
-      "seed_20260829_policy_tv": 0.1057102904,
-      "seed_20260807_advantage_nrmse": 0.6716514826,
-      "seed_20260807_policy_tv": 0.1169664338,
       "per_seed_fit_pass": true,
       "cross_seed_pass": false
     },
     "scale_1280": {
-      "workflow_run_id": 31353149504,
-      "evidence_commit": "b23a11ea71535477ab89f84395cbc42173bde479",
+      "workflow": 31353149504,
+      "evidence": "b23a11ea71535477ab89f84395cbc42173bde479",
       "mean_tv": 0.4731900096,
       "p95_tv": 0.8752781749,
       "per_seed_fit_pass": false,
       "cross_seed_pass": false,
-      "interpretation": "Doubling unique roots was essentially flat and worsened AveragePolicy fit; brute-force unique-root scaling remains paused."
-    },
-    "variance_decomposition_640": {
-      "workflow_run_id": 31354594794,
-      "evidence_commit": "efd732288cc0d1414cfe791208fb23433f608be1",
-      "within_memory_mean_tv": 0.2426533997,
-      "across_memory_mean_tv": 0.4698922187,
-      "ratio": 1.9364749032,
-      "diagnosis": "CFR_MEMORY_VARIANCE_DOMINANT"
-    },
-    "shared_deck_support_640": {
-      "workflow_run_id": 31358002704,
-      "evidence_commit": "a953136d7542465798ff032499708f4e699f75c7",
-      "shared_deck_mean_tv": 0.4600675106,
-      "independent_deck_reference_mean_tv": 0.4698922187,
-      "own_support_replica_tv": 0.1203103587,
-      "off_support_replica_tv": 0.2923050523,
-      "diagnosis": "OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL"
-    },
-    "support_overlap_640": {
-      "workflow_run_id": 31360839650,
-      "evidence_commit": "e4f62f1b9439a31afc4085275d0838828abecaf7",
-      "raw_jaccard": 0.0434318378,
-      "raw_weight_coverage": 0.0777299753,
-      "raw_shared_target_tv": 0.5383199138,
-      "poker_isomorphic_jaccard": 0.0299313654,
-      "poker_isomorphic_weight_coverage": 0.0921904066,
-      "poker_isomorphic_shared_target_tv": 0.4245492184,
-      "card_representation_rewrite_promoted": false
-    },
-    "rng_coupling_screen_256": {
-      "workflow_run_id": 31361125172,
-      "evidence_commit": "f4bc94e8e94be13778dbaeb86c7cd580334f50cd",
-      "diagnosis": "TRAINING_TRAVERSAL_RNG_COUPLING_NOT_DOMINANT_AT_SCREEN_SCALE",
-      "production_rng_contract_changed": false
-    },
-    "strong_advantage_screen_256": {
-      "workflow_run_id": 31362660281,
-      "evidence_commit": "b54171eebe0d314d5df5274ab33d5ace1f183744",
-      "strong_to_weak_jaccard_ratio": 1.3286980706,
-      "strong_to_weak_weight_coverage_ratio": 1.2786386575,
-      "strong_to_weak_shared_target_tv_ratio": 0.9400058058,
-      "diagnosis": "STRONGER_ADVANTAGE_FIT_MATERIAL_AT_SCREEN_SCALE"
+      "decision": "BRUTE_FORCE_UNIQUE_ROOT_SCALING_PAUSED"
     },
     "strong_advantage_640": {
-      "workflow_run_id": 31364029367,
-      "evidence_commit": "75885791b5d8894d4c590a038233f96db5879925",
+      "workflow": 31364029367,
+      "evidence": "75885791b5d8894d4c590a038233f96db5879925",
       "mean_tv": 0.4644736052,
       "p95_tv": 0.8862043619,
-      "seed_20260829_advantage_nrmse": 0.5048450232,
-      "seed_20260829_policy_tv": 0.1068615764,
-      "seed_20260807_advantage_nrmse": 0.4963337481,
-      "seed_20260807_policy_tv": 0.103694886,
+      "seed29_advantage_nrmse": 0.5048450232,
+      "seed29_policy_tv": 0.1068615764,
+      "seed07_advantage_nrmse": 0.4963337481,
+      "seed07_policy_tv": 0.103694886,
       "per_seed_fit_pass": true,
       "cross_seed_pass": false,
-      "interpretation": "Historical-range Advantage fit is beneficial but improves acceptance-scale mean/p95 only 2.76%/1.80%."
+      "interpretation": "Better Advantage fit alone improves 640 mean/p95 only 2.76%/1.80%."
     },
-    "own_reach_support_curve_256": {
-      "workflow_run_id": 31366894171,
-      "evidence_commit": "3f5130561f0e3d83e65f33b451af86ce80dfa04d",
-      "rep1_jaccard": 0.0339460954,
-      "rep8_jaccard": 0.074382623,
-      "rep1_weight_coverage": 0.0832295169,
-      "rep8_weight_coverage": 0.2045927503,
-      "rep8_to_rep1_jaccard_ratio": 2.1911981976,
-      "rep8_to_rep1_weight_coverage_ratio": 2.4581753915,
-      "shared_target_tv_zero_invariant_pass": true,
-      "diagnosis": "OWN_REACH_SAMPLING_DENSITY_MATERIAL_FOR_SUPPORT"
+    "causal_diagnostics": {
+      "cfr_memory_variance": {
+        "workflow": 31354594794,
+        "across_memory_mean_tv": 0.4698922187,
+        "within_memory_mean_tv": 0.2426533997,
+        "diagnosis": "CFR_MEMORY_VARIANCE_DOMINANT"
+      },
+      "shared_deck_support": {
+        "workflow": 31358002704,
+        "shared_deck_mean_tv": 0.4600675106,
+        "independent_reference_mean_tv": 0.4698922187,
+        "own_support_replica_tv": 0.1203103587,
+        "off_support_replica_tv": 0.2923050523,
+        "diagnosis": "OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL"
+      },
+      "card_isomorphism": {
+        "workflow": 31360839650,
+        "raw_jaccard": 0.0434318378,
+        "poker_isomorphic_jaccard": 0.0299313654,
+        "representation_rewrite_promoted": false
+      },
+      "rng_bookkeeping_coupling": {
+        "workflow": 31361125172,
+        "diagnosis": "TRAINING_TRAVERSAL_RNG_COUPLING_NOT_DOMINANT_AT_SCREEN_SCALE"
+      }
     },
-    "advantage_target_curve_256": {
-      "workflow_run_id": 31366996254,
-      "evidence_commit": "d1ab3ebc7a905ce2b164e1bf1dee1d5c3efd0a87",
-      "rep1_target_relative_rmse": 1.0094315617,
-      "rep8_target_relative_rmse": 0.8810447602,
-      "rep1_regret_matching_mean_tv": 0.4210043061,
-      "rep8_regret_matching_mean_tv": 0.3712658026,
-      "rep1_regret_matching_p95_tv": 1.0,
-      "rep8_regret_matching_p95_tv": 1.0,
-      "diagnosis": "EXTERNAL_SAMPLING_ADVANTAGE_TARGET_VARIANCE_MATERIAL"
-    },
-    "exact_own_reach_feasibility": {
-      "workflow_run_id": 31367407567,
-      "evidence_commit": "a16e043fffda04f2c2fa228611e3e352d7ca39b8",
-      "unique_roots": 4,
-      "exact_nodes": 1265152,
-      "exact_target_samples": 188440,
-      "exact_unique_raw_observations": 116192,
-      "exact_seconds": 4.9481759071,
-      "sampled_rep1_support_coverage": 0.0030122556,
-      "sampled_rep4_support_coverage": 0.0080298127,
-      "sampled_rep8_support_coverage": 0.0210685761,
-      "diagnosis": "EXACT_OWN_REACH_ENUMERATION_FEASIBLE_AT_BENCHMARK_SCALE",
-      "production_promotion": false
+    "exact_path_controls": {
+      "own_reach_support_curve": {
+        "workflow": 31366894171,
+        "evidence": "3f5130561f0e3d83e65f33b451af86ce80dfa04d",
+        "rep1_jaccard": 0.0339460954,
+        "rep8_jaccard": 0.074382623,
+        "rep1_weight_coverage": 0.0832295169,
+        "rep8_weight_coverage": 0.2045927503,
+        "shared_target_tv_zero_invariant": true,
+        "diagnosis": "OWN_REACH_SAMPLING_DENSITY_MATERIAL_FOR_SUPPORT"
+      },
+      "advantage_target_curve": {
+        "workflow": 31366996254,
+        "evidence": "d1ab3ebc7a905ce2b164e1bf1dee1d5c3efd0a87",
+        "rep1_regret_matching_mean_tv": 0.4210043061,
+        "rep8_regret_matching_mean_tv": 0.3712658026,
+        "rep1_p95_tv": 1.0,
+        "rep8_p95_tv": 1.0,
+        "diagnosis": "EXTERNAL_SAMPLING_ADVANTAGE_TARGET_VARIANCE_MATERIAL"
+      },
+      "exact_own_reach": {
+        "workflow": 31367407567,
+        "evidence": "a16e043fffda04f2c2fa228611e3e352d7ca39b8",
+        "four_deal_nodes": 1265152,
+        "four_deal_target_samples": 188440,
+        "rep8_exact_support_coverage": 0.0210685761,
+        "diagnosis": "EXACT_OWN_REACH_ENUMERATION_FEASIBLE_AT_BENCHMARK_SCALE"
+      },
+      "exact_advantage_opponent_expectation": {
+        "workflow": 31368837895,
+        "evidence": "45c68d2028ac658ae12870c97b9bf758e47f2a89",
+        "four_deal_nodes": 1265152,
+        "four_deal_advantage_samples": 188440,
+        "exact_phase_seconds": 15.9119536877,
+        "rep1_exact_weight_coverage": 0.0425624066,
+        "rep4_exact_weight_coverage": 0.1103360764,
+        "rep8_exact_weight_coverage": 0.1575476555,
+        "rep1_exact_oracle_regret_matching_mean_tv": 0.3818597476,
+        "rep4_exact_oracle_regret_matching_mean_tv": 0.2704408291,
+        "rep8_exact_oracle_regret_matching_mean_tv": 0.2571491701,
+        "rep1_greedy_agreement": 0.4802392805,
+        "rep4_greedy_agreement": 0.7338421013,
+        "rep8_greedy_agreement": 0.7473383279,
+        "p95_tv_all_sample_counts": 1.0,
+        "diagnosis": "EXACT_ADVANTAGE_OPPONENT_EXPECTATION_FEASIBLE_AT_BENCHMARK_SCALE",
+        "interpretation": "x4 captures much of the independent-replication gain; x8 has diminishing mean benefit and the extreme tail remains unresolved."
+      }
     },
     "path_replication_screen_256": {
-      "workflow_run_id": 31366433008,
-      "evidence_commit": "a9c57fe6e3c9149ed3010ead280912295bd4f5f6",
-      "status": "DONE",
-      "duration_seconds": 1201.0220461,
-      "all_modes_fit_gates_pass": true,
-      "controlled_advantage_checkpoint_delta_baseline_vs_strategy_x4": 0.0,
+      "workflow": 31366433008,
+      "evidence": "a9c57fe6e3c9149ed3010ead280912295bd4f5f6",
+      "all_fit_gates_pass": true,
+      "baseline_vs_strategy_x4_advantage_checkpoint_nrmse_delta": 0.0,
       "baseline": {"mean_tv": 0.3053824902, "p95_tv": 0.8705430627},
-      "strategy_x4": {
-        "mean_tv": 0.2756419182,
-        "p95_tv": 0.8659037352,
-        "mean_ratio_to_baseline": 0.9026120589,
-        "p95_ratio_to_baseline": 0.9946707662,
-        "weight_coverage_ratio_to_baseline": 1.4032567851
-      },
-      "advantage_x4": {
-        "mean_tv": 0.2191179842,
-        "p95_tv": 0.6909738183,
-        "mean_ratio_to_baseline": 0.717519803,
-        "p95_ratio_to_baseline": 0.7937273271,
-        "jaccard_ratio_to_baseline": 1.1131031203,
-        "weight_coverage_ratio_to_baseline": 1.4118115956,
-        "shared_target_tv_ratio_to_baseline": 0.8768633697
-      },
-      "both_x4": {
-        "mean_tv": 0.1975979507,
-        "p95_tv": 0.7265338302,
-        "mean_ratio_to_baseline": 0.6470506891,
-        "p95_ratio_to_baseline": 0.8345754062,
-        "weight_coverage_ratio_to_baseline": 1.9063057037
-      },
-      "diagnosis": "ADVANTAGE_EXTERNAL_SAMPLING_VARIANCE_MATERIAL",
-      "interpretation": "Advantage replication is the dominant isolated downstream lever. Strategy replication alone greatly densifies fixed-policy support but cannot repair upstream CFR disagreement."
+      "strategy_x4": {"mean_tv": 0.2756419182, "p95_tv": 0.8659037352},
+      "advantage_x4": {"mean_tv": 0.2191179842, "p95_tv": 0.6909738183},
+      "both_x4": {"mean_tv": 0.1975979507, "p95_tv": 0.7265338302},
+      "advantage_x4_mean_ratio": 0.717519803,
+      "advantage_x4_p95_ratio": 0.7937273271,
+      "both_x4_mean_ratio": 0.6470506891,
+      "both_x4_p95_ratio": 0.8345754062,
+      "diagnosis": "ADVANTAGE_EXTERNAL_SAMPLING_VARIANCE_MATERIAL"
     },
-    "replicated_640_candidates": {
-      "workflow_run_id": 31368447316,
-      "workflow_commit": "9c7efc162366db23cf9de4091d99da0ab1179118",
-      "status": "RUNNING_PARALLEL",
-      "candidate_runner_smoke_workflow": 31368044199,
-      "candidate_runner_smoke_status": "PASS",
-      "common": {
+    "active_physical_runs": {
+      "replicated_640_separated": {
+        "workflow": 31368447316,
+        "status": "RUNNING",
+        "jobs": ["advantage_x4", "both_x4"],
         "roots_per_seed": 640,
-        "advantage_fit_target": 0.5,
-        "policy_fit_target": 0.105,
-        "policy_max_steps": 32768,
         "reservoir_capacity": 400000,
-        "rng_contract": "SEPARATE_EXPERIMENTAL",
-        "deck_semantics": "INDEPENDENT_BY_ALGORITHM_SEED_AS_ACCEPTANCE_RUN",
-        "frozen_gates_unchanged": true
+        "rng_contract": "SEPARATE_EXPERIMENTAL"
       },
-      "advantage_x4": {"advantage_replicates": 4, "strategy_replicates": 1, "status": "RUNNING"},
-      "both_x4": {"advantage_replicates": 4, "strategy_replicates": 4, "status": "RUNNING"},
-      "promotion_guard": "A gate pass still requires versioned replication/RNG checkpoint semantics and deterministic checkpoint-resume recertification before R7.3 can close."
+      "advantage_x4_coupled_640": {
+        "workflow": 31368894934,
+        "status": "RUNNING",
+        "roots_per_seed": 640,
+        "rng_contract": "RECOVERED_COUPLED",
+        "purpose": "Test whether x4 benefit survives without a new RNG stream schema."
+      },
+      "partial_exact_advantage_256": {
+        "workflow": 31369138285,
+        "status": "RUNNING",
+        "exact_opponent_levels": [0, 1, 2],
+        "level0_regression_reference_mean_tv": 0.3053824902,
+        "level0_regression_reference_p95_tv": 0.8705430627,
+        "level0_required_tolerance": 1e-9,
+        "purpose": "Measure lower-variance bounded opponent enumeration versus node cost while preserving expected external-sampling training distribution."
+      }
     }
   },
-  "next_physical_step": "Finish both parallel 640 replicated-path candidates. Prefer advantage_x4 if it is at least as good on frozen gates because it isolates the dominant mechanism and is cheaper; retain both_x4 only if its 640 acceptance behavior materially dominates. If neither approaches the frozen mean/p95 gates, move directly to a lower-variance Advantage estimator (paired/common-random-number, stratified/antithetic opponent-action sampling, or partial enumeration), not more unique roots.",
+  "next_physical_step": "Resolve the three 640 x4 candidates and the 256 partial-exact estimator screen in parallel. Prefer coupled advantage_x4 if it matches separated x4, because it preserves the recovered RNG-state contract. If x4 remains far from the frozen tail gate, promote the best partial-exact level or move to stratified/antithetic opponent sampling benchmarked against the exact Advantage oracle. Do not resume raw unique-root scaling.",
   "ready_for_tables": false
 }
