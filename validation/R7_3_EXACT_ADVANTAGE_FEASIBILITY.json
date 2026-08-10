@@ -1,0 +1,225 @@
+{
+  "acceptance_gate_changed": false,
+  "duration_seconds": 51.324918270111084,
+  "exact_opponent_expectation": {
+    "completed": true,
+    "completed_target_roots": 8,
+    "depth_cap": 128,
+    "duration_seconds": 15.911953687667847,
+    "max_depth": 45,
+    "node_cap_per_target_root": 1000000,
+    "requested_unique_roots": 4,
+    "rows": [
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 15.58249743039212,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 0,
+        "terminal_nodes": 111034,
+        "traverser": 1
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 26.782316529690824,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 0,
+        "terminal_nodes": 111034,
+        "traverser": 2
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 15.58249743039212,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 1,
+        "terminal_nodes": 111034,
+        "traverser": 1
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 26.782316529690824,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 1,
+        "terminal_nodes": 111034,
+        "traverser": 2
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 15.58249743039212,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 2,
+        "terminal_nodes": 111034,
+        "traverser": 1
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 26.782316529690824,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 2,
+        "terminal_nodes": 111034,
+        "traverser": 2
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 15.58249743039212,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 3,
+        "terminal_nodes": 111034,
+        "traverser": 1
+      },
+      {
+        "advantage_samples": 23555,
+        "advantage_weight_sum": 26.782316529690824,
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 3,
+        "terminal_nodes": 111034,
+        "traverser": 2
+      }
+    ],
+    "total_advantage_samples": 188440,
+    "total_advantage_weight": 169.45925584047365,
+    "total_nodes": 1265152
+  },
+  "generated_at_unix": 1786349493.6453257,
+  "interpretation_note": "Exact control for the recovered external-sampling Advantage estimator. Traverser actions remain enumerated as before; opponent actions are also enumerated, with downstream training-distribution mass weighted by opponent reach. This is the exact expectation of sampling one opponent action ~sigma. Sampled 1/4/8-path memories are compared directly to the exact target vectors and regret-matching policies on the same hidden deals. Diagnostic only; no production estimator or gate is changed.",
+  "production_sampling_schedule_changed": false,
+  "ready_for_tables": false,
+  "sampled_comparison": [
+    {
+      "advantage_samples": 73,
+      "advantage_seen": 73,
+      "comparison_to_exact": {
+        "poker_isomorphic": {
+          "exact_unique": 116192,
+          "exact_weight_coverage": 0.042562406604651055,
+          "regret_matching_p50_tv": 0.06239261926616292,
+          "regret_matching_p95_tv": 1.0,
+          "regret_matching_weighted_mean_tv": 0.38185974761136954,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 73,
+          "shared_unique": 73,
+          "target_relative_rmse_on_shared": 0.8358580030555972,
+          "weighted_greedy_action_agreement": 0.48023928054083653
+        },
+        "raw": {
+          "exact_unique": 116192,
+          "exact_weight_coverage": 0.042562406604651055,
+          "regret_matching_p50_tv": 0.06239261926616292,
+          "regret_matching_p95_tv": 1.0,
+          "regret_matching_weighted_mean_tv": 0.3818597476113696,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 73,
+          "shared_unique": 73,
+          "target_relative_rmse_on_shared": 0.8358580030555969,
+          "weighted_greedy_action_agreement": 0.48023928054083653
+        }
+      },
+      "nodes": 445,
+      "replicates": 1
+    },
+    {
+      "advantage_samples": 565,
+      "advantage_seen": 565,
+      "comparison_to_exact": {
+        "poker_isomorphic": {
+          "exact_unique": 116192,
+          "exact_weight_coverage": 0.11033607641150686,
+          "regret_matching_p50_tv": 0.020845589021984544,
+          "regret_matching_p95_tv": 1.0,
+          "regret_matching_weighted_mean_tv": 0.27044082906633105,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 540,
+          "shared_unique": 540,
+          "target_relative_rmse_on_shared": 0.6760233313925305,
+          "weighted_greedy_action_agreement": 0.7338421013065315
+        },
+        "raw": {
+          "exact_unique": 116192,
+          "exact_weight_coverage": 0.11033607641150692,
+          "regret_matching_p50_tv": 0.020845589021984544,
+          "regret_matching_p95_tv": 1.0,
+          "regret_matching_weighted_mean_tv": 0.27044082906633093,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 540,
+          "shared_unique": 540,
+          "target_relative_rmse_on_shared": 0.6760233313925302,
+          "weighted_greedy_action_agreement": 0.733842101306532
+        }
+      },
+      "nodes": 3297,
+      "replicates": 4
+    },
+    {
+      "advantage_samples": 1302,
+      "advantage_seen": 1302,
+      "comparison_to_exact": {
+        "poker_isomorphic": {
+          "exact_unique": 116192,
+          "exact_weight_coverage": 0.15754765551837924,
+          "regret_matching_p50_tv": 0.012939808083744718,
+          "regret_matching_p95_tv": 1.0,
+          "regret_matching_weighted_mean_tv": 0.2571491701368808,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 1185,
+          "shared_unique": 1185,
+          "target_relative_rmse_on_shared": 0.686965235513581,
+          "weighted_greedy_action_agreement": 0.7473383278822732
+        },
+        "raw": {
+          "exact_unique": 116192,
+          "exact_weight_coverage": 0.15754765551837946,
+          "regret_matching_p50_tv": 0.012939808083744718,
+          "regret_matching_p95_tv": 1.0,
+          "regret_matching_weighted_mean_tv": 0.25714917013688054,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 1185,
+          "shared_unique": 1185,
+          "target_relative_rmse_on_shared": 0.6869652355135778,
+          "weighted_greedy_action_agreement": 0.7473383278822732
+        }
+      },
+      "nodes": 7527,
+      "replicates": 8
+    }
+  ],
+  "schema": "SPINCORE_R7_3_EXACT_ADVANTAGE_FEASIBILITY_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "diagnosis": "EXACT_ADVANTAGE_OPPONENT_EXPECTATION_FEASIBLE_AT_BENCHMARK_SCALE",
+    "exact_completed": true,
+    "exact_total_advantage_samples": 188440,
+    "exact_total_advantage_weight": 169.45925584047365,
+    "exact_total_nodes": 1265152
+  },
+  "uniform_zero_regret_policy": true
+}
