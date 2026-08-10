@@ -20,8 +20,9 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - shared-deck + support-conditioned diagnostic — **DONE: common root cards not dominant; off-support extrapolation material**
     - exact/card-isomorphic support-overlap diagnostic — **DONE: support remains sparse and shared CFR targets strongly disagree**
     - traversal/training RNG-coupling screen — **DONE: coupling not dominant at screen scale**
-    - stronger AdvantageNet fit screen — **RUNNING**
-    - brute-force root scaling — **PAUSED until causal diagnosis closes**
+    - stronger AdvantageNet fit screen — **DONE: material improvement in iteration-2 support/target stability**
+    - strong-Advantage 640-root candidate — **RUNNING**
+    - brute-force root scaling — **PAUSED; only evidence-driven candidate runs allowed**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
 - R9 Strategic audit — TODO
@@ -33,15 +34,11 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 Corrected 640 roots/seed achieved individual fit gates but failed cross-seed stability: mean TV `0.47765`, p95 TV `0.90240`. Doubling to 1280 roots/seed left mean TV essentially flat at `0.47319`, so brute-force scaling was paused.
 
-The controlled variance decomposition showed that changing the CFR strategy memory while holding AveragePolicy initialization/optimizer seed fixed produced mean TV `0.46989`, versus `0.24265` average disagreement between replicas trained on the same memory. This identified strategy-memory/CFR variance as the larger source.
+The controlled variance decomposition identified strategy-memory/CFR variance as the larger source. Holding the root deal/future-board stream identical barely changed divergence, and card-isomorphic support analysis showed both very sparse shared support and large disagreement in the CFR targets themselves. A card-encoding rewrite is therefore deferred. Splitting traversal RNG from training RNG also produced only small support changes and worsened shared-target TV, so the production RNG/checkpoint contract remains unchanged.
 
-Holding the root deal/future-board stream identical across algorithm seeds barely changed across-memory divergence (`0.46007` shared-deck versus `0.46989` independent-deck reference). Off-support AveragePolicy replica disagreement was `0.29231`, versus `0.12031` on each memory's own support, so policy extrapolation is material but not sufficient to explain the strategy-memory disagreement.
+The stronger-Advantage screen then tested the approximation component most directly. With identical shared root decks and the same isolated traversal RNG setup, the current `0.70` internal fit target was compared against `0.50`. The stronger fits reached NRMSE `0.47118` / `0.47672` after iteration 1, versus `0.65302` / `0.68509` under the weak schedule. In iteration 2, poker-isomorphic Jaccard improved from `0.03696` to `0.04910` (`1.3287x`), mean LCFR-weight coverage from `0.08515` to `0.10888` (`1.2786x`), and shared-target weighted mean TV fell from `0.56144` to `0.52776` (ratio `0.9400`). Persisted diagnosis: `STRONGER_ADVANTAGE_FIT_MATERIAL_AT_SCREEN_SCALE`.
 
-The completed support-overlap diagnostic then compared the actual strategy samples rather than neural predictions. Raw exact support Jaccard was only `0.04343`; after diagnostic poker card isomorphism it was `0.02993`. LCFR-weight coverage improved modestly from `0.07773` to `0.09219`, and weighted shared-target TV fell from `0.53832` to `0.42455`, but the shared CFR targets still disagree strongly. Card canonicalization is therefore not promoted to a representation rewrite from current evidence.
-
-The 256-root traversal/training RNG-coupling screen also failed to identify the known shared `bundle.batch_rng` as a dominant mechanism. Splitting traversal from minibatch RNG changed poker-isomorphic Jaccard by only `+4.5%`, LCFR-weight coverage by `+5.5%`, and actually increased shared-target TV by about `10.4%`. Production RNG/checkpoint semantics remain unchanged.
-
-The active diagnostic now tests a more direct hypothesis: **the rebuilt AdvantageNet may be strategically underfit despite passing the frozen NRMSE gate**. Corrected runs commonly stop around NRMSE `0.65–0.70`, while historical pre-loss fits were materially lower (`~0.45–0.55`). A controlled 256-root screen compares the present internal target `0.70` against a stronger `0.50` target, with the same roots/shared decks and traversal RNG separated from optimizer RNG. Iteration 1 is collected before any fitted AdvantageNet exists; iteration-2 support and shared-target divergence therefore provide a direct screen of whether stronger advantage fitting stabilizes CFR dynamics.
+That effect is meaningful but still far from proving R7.3 convergence. A full two-seed **640-root strong-Advantage candidate** is therefore running now with the recovered acceptance semantics: independent deck stream by algorithm seed, current coupled production RNG semantics, Advantage internal target `0.50` with up to `4096` optimizer steps/iteration, AveragePolicy target `0.105` with up to `12288` steps, and all four frozen acceptance gates unchanged. This is not brute-force scaling; it is a direct validation of the only causal correction that has shown material benefit so far.
 
 ## Frozen R7.3 gates
 
