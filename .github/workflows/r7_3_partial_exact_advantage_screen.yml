@@ -1,4 +1,4 @@
-name: SpinCore R7.3 partial-exact Advantage screen
+name: SpinCore R7.3 partial-exact Advantage screen V2
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: spincore-r7-3-partial-exact-advantage-screen
+  group: spincore-r7-3-partial-exact-advantage-screen-v2
   cancel-in-progress: false
 
 jobs:
@@ -48,17 +48,17 @@ jobs:
           ctest --test-dir build --output-on-failure
           pytest -q python_tests
 
-      - name: Smoke partial-exact collector
+      - name: Smoke V2 baseline plus partial-exact level 1
         shell: bash
         env:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set -euo pipefail
-          python tools/run_r7_3_partial_exact_advantage_screen.py \
+          python tools/run_r7_3_partial_exact_advantage_screen_v2.py \
             --solver build/libspincore_solver_c.so \
-            --out validation/R7_3_PARTIAL_EXACT_ADVANTAGE_SMOKE.json \
+            --out validation/R7_3_PARTIAL_EXACT_ADVANTAGE_V2_SMOKE.json \
             --reference /tmp/nonexistent-reference.json \
-            --levels 0,1 \
+            --levels 1 \
             --iterations 2 \
             --roots-per-iteration 2 \
             --advantage-chunk-steps 8 \
@@ -71,19 +71,19 @@ jobs:
             --audit-size 32 \
             --cross-seed-per-seed 16 \
             --reservoir-capacity 5000
-          rm -f validation/R7_3_PARTIAL_EXACT_ADVANTAGE_SMOKE.json
+          rm -f validation/R7_3_PARTIAL_EXACT_ADVANTAGE_V2_SMOKE.json
 
-      - name: Run physical 256-root partial-exact Advantage screen
+      - name: Run physical 256-root partial-exact Advantage screen V2
         shell: bash
         env:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set -euo pipefail
-          python tools/run_r7_3_partial_exact_advantage_screen.py \
+          python tools/run_r7_3_partial_exact_advantage_screen_v2.py \
             --solver build/libspincore_solver_c.so \
-            --out validation/R7_3_PARTIAL_EXACT_ADVANTAGE_SCREEN_256.json \
+            --out validation/R7_3_PARTIAL_EXACT_ADVANTAGE_SCREEN_256_V2.json \
             --reference validation/R7_3_PATH_REPLICATION_SCREEN_256.json \
-            --levels 0,1,2 \
+            --levels 1,2 \
             --iterations 2 \
             --roots-per-iteration 128 \
             --advantage-chunk-steps 256 \
@@ -95,22 +95,22 @@ jobs:
             --batch-size 256 \
             --audit-size 512 \
             --cross-seed-per-seed 1024 \
-            --reservoir-capacity 250000
+            --reservoir-capacity 100000
 
-      - name: Persist partial-exact evidence
+      - name: Persist V2 partial-exact evidence
         if: always()
         shell: bash
         run: |
           set -euo pipefail
-          out=validation/R7_3_PARTIAL_EXACT_ADVANTAGE_SCREEN_256.json
+          out=validation/R7_3_PARTIAL_EXACT_ADVANTAGE_SCREEN_256_V2.json
           if [ ! -f "$out" ]; then
-            echo '{"schema":"SPINCORE_R7_3_PARTIAL_EXACT_ADVANTAGE_SCREEN_V1","runner_failed_before_report":true,"ready_for_tables":false}' > "$out"
+            echo '{"schema":"SPINCORE_R7_3_PARTIAL_EXACT_ADVANTAGE_SCREEN_V2","runner_failed_before_report":true,"ready_for_tables":false}' > "$out"
           fi
           git config user.name 'SpinCore R7 Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add -f "$out"
           if ! git diff --cached --quiet; then
-            git commit -m 'Record physical R7.3 partial-exact Advantage screen [r7-evidence-skip]'
+            git commit -m 'Record physical R7.3 partial-exact Advantage screen V2 [r7-evidence-skip]'
             for attempt in 1 2 3 4 5; do
               git pull --rebase origin main
               if git push origin HEAD:main; then break; fi
