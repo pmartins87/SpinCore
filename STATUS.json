@@ -5,7 +5,7 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "SHARED_DECK_NOT_MATERIAL_OFF_SUPPORT_MATERIAL_SUPPORT_OVERLAP_RUNNING",
+  "current_gate_status": "SUPPORT_OVERLAP_AND_RNG_COUPLING_DIAGNOSTICS_RUNNING",
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
@@ -140,11 +140,20 @@
     },
     "support_overlap_640": {
       "workflow_run_id": 31360839650,
-      "status": "RUNNING_OR_QUEUED",
+      "status": "RUNNING",
       "frozen_gates_unchanged": true,
-      "purpose": "Measure exact strategy-memory support intersection and LCFR-weighted target disagreement, then repeat after diagnostic global-suit canonicalization and after poker card isomorphism that also removes private-card order and flop-card order. This tests whether raw card representation is fragmenting support before changing SPNNIV1 semantics."
+      "purpose": "Measure exact strategy-memory support intersection and LCFR-weighted target disagreement, then repeat after diagnostic global-suit canonicalization and poker card isomorphism that also removes private-card order and flop-card order."
+    },
+    "rng_coupling_screen_256": {
+      "workflow_run_id": 31361125172,
+      "status": "RUNNING",
+      "roots_per_seed_per_mode": 256,
+      "modes": ["coupled", "split_traversal_training"],
+      "frozen_gates_unchanged": true,
+      "production_rng_contract_changed": false,
+      "purpose": "Screen the known recovered coupling where bundle.batch_rng drives both traversal/action sampling and optimizer minibatch sampling. The split diagnostic gives traversal its own RNG while leaving production semantics untouched, measuring whether adaptive training RNG consumption materially changes later strategy-memory support or shared-target TV."
     }
   },
-  "next_physical_step": "Complete the 640-root exact/card-isomorphic support-overlap diagnostic. If card isomorphism materially increases overlap while shared-target disagreement is low, prioritize a versioned canonical-card neural representation and recertify R2-R7 rather than scaling roots. If overlap remains low even after card isomorphism, isolate traversal/action RNG coupling and CFR path-support variance next. Frozen gates remain unchanged.",
+  "next_physical_step": "Complete the running support-overlap and RNG-coupling diagnostics. If card isomorphism materially increases overlap with low shared-target disagreement, prioritize a versioned canonical-card neural representation and recertify R2-R7. If overlap stays low, use the RNG screen to decide whether to version and checkpoint separate traversal/training RNG streams before another acceptance-scale run. Frozen gates remain unchanged.",
   "ready_for_tables": false
 }
