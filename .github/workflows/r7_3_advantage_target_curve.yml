@@ -1,0 +1,93 @@
+name: SpinCore R7.3 advantage target curve
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_advantage_target_curve.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-advantage-target-curve
+  cancel-in-progress: false
+
+jobs:
+  curve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Smoke advantage target curve
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_advantage_target_curve.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_ADVANTAGE_TARGET_CURVE_SMOKE.json \
+            --replicates 1,2 \
+            --unique-roots 4 \
+            --reservoir-capacity 5000
+          rm -f validation/R7_3_ADVANTAGE_TARGET_CURVE_SMOKE.json
+
+      - name: Run physical 256-root advantage target curve
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_advantage_target_curve.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_ADVANTAGE_TARGET_CURVE_256.json \
+            --replicates 1,2,4,8 \
+            --unique-roots 256 \
+            --reservoir-capacity 250000
+
+      - name: Persist advantage target curve evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f validation/R7_3_ADVANTAGE_TARGET_CURVE_256.json ]; then
+            echo '{"schema":"SPINCORE_R7_3_ADVANTAGE_TARGET_CURVE_V1","runner_failed_before_report":true,"ready_for_tables":false}' > validation/R7_3_ADVANTAGE_TARGET_CURVE_256.json
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_3_ADVANTAGE_TARGET_CURVE_256.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 advantage target curve [r7-evidence-skip]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
