@@ -1,0 +1,101 @@
+name: SpinCore R7.3 scale 1280
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_scale_1280.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-scale-1280
+  cancel-in-progress: false
+
+jobs:
+  scale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Run 1280-root two-seed convergence scale
+        id: r73scale
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set +e
+          python tools/run_r7_3_diagnostic.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_SCALE_1280.json \
+            --iterations 10 \
+            --roots-per-iteration 128 \
+            --advantage-steps 256 \
+            --advantage-max-steps-per-iteration 2048 \
+            --advantage-fit-target 0.70 \
+            --policy-chunk-steps 256 \
+            --policy-max-steps 8192 \
+            --policy-fit-target 0.105 \
+            --batch-size 256 \
+            --audit-size 1024 \
+            --cross-seed-per-seed 1024 \
+            --reservoir-capacity 100000 \
+            --strict
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Persist 1280-root evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f validation/R7_3_SCALE_1280.json ]; then
+            echo '{"schema":"SPINCORE_R7_3_DIAGNOSTIC_V2","runner_failed_before_report":true,"r7_3_pass":false,"ready_for_tables":false}' > validation/R7_3_SCALE_1280.json
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_3_SCALE_1280.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 1280-root scale [r7-evidence-skip]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Enforce frozen R7.3 gate
+        if: always()
+        shell: bash
+        run: |
+          code='${{ steps.r73scale.outputs.exit_code }}'
+          if [ -z "$code" ]; then code=3; fi
+          exit "$code"
