@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.8",
+  "version": "1.12.1-recovery.9",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "POLICY_MIXTURE_MATERIAL_256_COMPOUNDING_AND_DIRECT_BEHAVIOR_E2E_ACTIVE",
+  "current_gate_status": "POLICY_MIXTURE_COMPOUNDING_ACTIVE_DIRECT_BEHAVIOR_MEAN_GATE_PASS_P95_FAIL_CAUSAL_TRANSITION_CONFIRMED",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -74,8 +74,39 @@
     "iterations": 5,
     "roots_per_iteration": 64,
     "roots_per_seed": 320,
-    "status": "LAUNCHED",
+    "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS",
     "purpose": "Test whether the 256-root policy-mixture tail reduction survives a longer CFR feedback horizon before any 640 escalation."
+  },
+  "direct_behavior_e2e_256": {
+    "workflow": 31431672631,
+    "evidence_commit": "1d1ac9b23abd2afedec8390e3f8bb482c11b0625",
+    "mean_tv": 0.1425531655550003,
+    "p50_tv": 0.10089540481567383,
+    "p95_tv": 0.42685970664024353,
+    "max_tv": 0.8701338768005371,
+    "mean_gate_pass": true,
+    "p95_gate_pass": false,
+    "cross_seed_pass": false,
+    "per_seed_frozen_fit_pass": true,
+    "seed_20260829_advantage_nrmse": 0.5710286498069763,
+    "seed_20260829_final_policy_tv": 0.08627267181873322,
+    "surrogate_iteration1_tv_seed_20260829": 0.2722991108894348,
+    "surrogate_iteration2_tv_seed_20260829": 0.22050997614860535,
+    "surrogate_reference_policy_fit_gate_pass": false,
+    "theoretical_equivalence_claimed": false,
+    "production_algorithm_changed": false,
+    "diagnosis": "DIRECT_BEHAVIOR_E2E_PASSES_MEAN_GATE_BUT_FAILS_P95_AND_GAIN_OCCURS_DESPITE_SURROGATE_UNDERFIT"
+  },
+  "partial_exact_support_by_iteration_256": {
+    "workflow": 31431939967,
+    "evidence_commit": "086df6ed397ecc4a2e61728aa3b40f0f58593675",
+    "iteration1_poker_jaccard": 0.01258650085247217,
+    "iteration1_poker_shared_target_weighted_mean_tv": 0.0,
+    "iteration1_poker_shared_target_p95_tv": 0.0,
+    "iteration2_poker_jaccard": 0.028417127427028416,
+    "iteration2_poker_shared_target_weighted_mean_tv": 0.47394579759275396,
+    "iteration2_poker_shared_target_p95_tv": 1.0,
+    "diagnosis": "TARGET_DIVERGENCE_APPEARS_AFTER_FIRST_ADVANTAGE_FIT"
   },
   "final_average_policy_ensemble_256": {
     "workflow": 31427741160,
@@ -93,13 +124,6 @@
     "poker_isomorphic": {"jaccard": 0.02088876533894603, "mean_lcfr_weight_coverage": 0.07857154056221606, "shared_target_weighted_mean_tv": 0.34929598478275087, "shared_target_p95_tv": 0.8035348652099921},
     "shared_street_at_screen_scale": 0,
     "diagnosis": "STRATEGY_TARGET_AND_SUPPORT_DIVERGENCE_ALREADY_UPSTREAM_OF_FINAL_POLICY"
-  },
-  "controlled_iteration_split_reference": {
-    "file": "validation/R7_3_ADVANTAGE_FIT_SCREEN_256.json",
-    "iteration1_shared_target_tv": 0.0,
-    "iteration2_poker_shared_target_weighted_mean_tv": 0.5277572441806667,
-    "iteration2_poker_shared_target_p95_tv": 1.0,
-    "diagnosis": "FIRST_ADVANTAGE_FIT_AND_REGRET_MAP_FEEDBACK_CREATES_TARGET_DIVERGENCE"
   },
   "advantage_common_mode_centering_256": {
     "workflow": 31428588011,
@@ -122,34 +146,26 @@
     "diagnosis": "DIRECT_BEHAVIOR_SURROGATE_MATERIAL_SAME_MEMORY",
     "theoretical_equivalence_to_deep_cfr_claimed": false
   },
-  "corrected_behavior_aware_objective_v2": {
-    "workflow": 31427105766,
-    "baseline_mean_tv": 0.29443079233169556,
-    "baseline_p95_tv": 0.8028824329376221,
-    "candidate_mean_tv": 0.235531,
-    "candidate_p95_tv": 0.771797,
-    "candidate_advantage_fit_pass": false,
-    "diagnosis": "BEHAVIOR_AWARE_ADVANTAGE_OBJECTIVE_NOT_MATERIAL_END_TO_END"
-  },
-  "active_physical_runs": {
-    "policy_mixture_compounding_320": {"workflow": 31432403037, "status": "QUEUED_OR_STARTING", "purpose": "Five iterations to test feedback-depth durability."},
-    "direct_behavior_e2e_256": {"workflow": 31431672631, "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS", "purpose": "Causal E2E screen; isolated surrogate RNG; explicitly not yet a production algorithm."},
-    "partial_exact_support_by_iteration_256": {"workflow": 31431939967, "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS", "purpose": "Authoritative replication of iteration1 zero-target-divergence versus iteration2 feedback divergence."}
-  },
   "causal_state": {
     "cfr_strategy_support_fragmentation_material": true,
     "shared_strategy_targets_diverge_materially": true,
-    "first_advantage_fit_feedback_is_leading_causal_transition": true,
+    "first_advantage_fit_feedback_is_confirmed_causal_transition": true,
+    "iteration1_shared_strategy_targets_identical": true,
+    "iteration2_shared_strategy_target_tail_saturates_at_tv_one": true,
     "final_average_policy_is_primary_p95_source": false,
     "advantage_function_approximation_variance_material": true,
     "raw_advantage_ensembling_primary_solution": false,
     "policy_mixture_paired_signal_material": true,
-    "common_mode_advantage_offset_primary_solution": false,
-    "direct_behavior_surrogate_same_memory_signal_large": true,
+    "direct_behavior_e2e_mean_gate_pass": true,
+    "direct_behavior_e2e_p95_gate_pass": false,
+    "direct_behavior_surrogate_underfits_reference_behavior": true,
     "direct_behavior_surrogate_theoretical_review_required": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
-  "next_physical_step": "Complete five-iteration policy-mixture compounding, direct-behavior E2E, and authoritative support-by-iteration forensic. If policy-mixture retains large mean/p95 reductions with fit gates PASS across five iterations, it earns a 640 acceptance-scale test. If direct behavior is materially stronger, stop before production promotion and formalize/version its algorithmic regret semantics plus checkpoint/RNG deterministic resume contract. No gate relaxation.",
+  "active_physical_runs": {
+    "policy_mixture_compounding_320": {"workflow": 31432403037, "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS", "purpose": "Five iterations to test feedback-depth durability before 640 escalation."}
+  },
+  "next_physical_step": "Complete five-iteration policy-mixture compounding. If the size-4 policy mixture retains a large reduction in both mean and p95 with frozen fit gates PASS, launch the 640 acceptance-scale candidate under the same authoritative deck and primary-RNG contract. Direct behavior is retained as a causal smoothing signal, not promoted: its mean crosses the frozen gate but p95 still fails, its surrogate does not fit the sample-level regret-matched behavior within the reference 0.12 TV gate, and theoretical equivalence is not established. If policy-mixture compounding collapses, test an explicit, auditable behavior-smoothing/interpolation mechanism around the first Advantage-fit transition rather than promoting the opaque surrogate. No gate relaxation.",
   "ready_for_tables": false
 }
