@@ -17,9 +17,10 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - corrected 640-root fit gates — **PASS**, cross-seed — **FAIL**
     - 1280-root scale — **FAIL**, cross-seed essentially flat and policy fit degraded
     - controlled 640-root variance decomposition — **DONE: CFR-memory variance dominant**
-    - shared-deck + support-conditioned diagnostic — **DONE: common deck stream barely changes divergence; off-support extrapolation material**
-    - exact/card-isomorphic support-overlap diagnostic — **RUNNING**
-    - traversal/training RNG-coupling screen — **RUNNING (diagnostic only; production RNG semantics unchanged)**
+    - shared-deck + support-conditioned diagnostic — **DONE: common root cards not dominant; off-support extrapolation material**
+    - exact/card-isomorphic support-overlap diagnostic — **DONE: support remains sparse and shared CFR targets strongly disagree**
+    - traversal/training RNG-coupling screen — **DONE: coupling not dominant at screen scale**
+    - stronger AdvantageNet fit screen — **RUNNING**
     - brute-force root scaling — **PAUSED until causal diagnosis closes**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
@@ -30,32 +31,17 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 ## Current R7.3 evidence
 
-Corrected 640 roots/seed:
+Corrected 640 roots/seed achieved individual fit gates but failed cross-seed stability: mean TV `0.47765`, p95 TV `0.90240`. Doubling to 1280 roots/seed left mean TV essentially flat at `0.47319`, so brute-force scaling was paused.
 
-- seed 20260829 Advantage NRMSE `0.65364`, policy TV `0.10571` — fit gates PASS
-- seed 20260807 Advantage NRMSE `0.67165`, policy TV `0.11697` — fit gates PASS
-- cross-seed mean TV `0.47765` — FAIL
-- cross-seed p95 TV `0.90240` — FAIL
+The controlled variance decomposition showed that changing the CFR strategy memory while holding AveragePolicy initialization/optimizer seed fixed produced mean TV `0.46989`, versus `0.24265` average disagreement between replicas trained on the same memory. This identified strategy-memory/CFR variance as the larger source.
 
-1280 roots/seed:
+Holding the root deal/future-board stream identical across algorithm seeds barely changed across-memory divergence (`0.46007` shared-deck versus `0.46989` independent-deck reference). Off-support AveragePolicy replica disagreement was `0.29231`, versus `0.12031` on each memory's own support, so policy extrapolation is material but not sufficient to explain the strategy-memory disagreement.
 
-- cross-seed mean TV `0.47319`
-- cross-seed p95 TV `0.87528`
-- both Advantage fits still PASS
-- both AveragePolicy fits exceeded `0.12`
+The completed support-overlap diagnostic then compared the actual strategy samples rather than neural predictions. Raw exact support Jaccard was only `0.04343`; after diagnostic poker card isomorphism it was `0.02993`. LCFR-weight coverage improved modestly from `0.07773` to `0.09219`, and weighted shared-target TV fell from `0.53832` to `0.42455`, but the shared CFR targets still disagree strongly. Card canonicalization is therefore not promoted to a representation rewrite from current evidence.
 
-The 640-root controlled variance decomposition fit two controlled AveragePolicy replicas to each CFR memory. All four policy-fit gates passed, but changing CFR memory while holding policy optimizer/init seed fixed produced mean TV `0.46989`, versus `0.24265` average disagreement between replicas trained on the same memory. Ratio: `1.93647`. Persisted diagnosis: `CFR_MEMORY_VARIANCE_DOMINANT`.
+The 256-root traversal/training RNG-coupling screen also failed to identify the known shared `bundle.batch_rng` as a dominant mechanism. Splitting traversal from minibatch RNG changed poker-isomorphic Jaccard by only `+4.5%`, LCFR-weight coverage by `+5.5%`, and actually increased shared-target TV by about `10.4%`. Production RNG/checkpoint semantics remain unchanged.
 
-The support-conditioned shared-deck follow-up then held the root deal/future-board stream identical across the two algorithm seeds. Across-memory mean TV on the union was still `0.46007`, versus `0.46989` in the independent-deck reference; ratio `0.97909`. Thus card/chance-stream variation at the root explains only a small fraction of the observed instability. The classifier remained conservative because one controlled policy fit finished slightly above the frozen `0.12` gate.
-
-Support conditioning was more informative: same-memory replica disagreement averaged `0.12031` on the memory's own support but `0.29231` on the other memory's support, a `2.42959x` ratio. Persisted support diagnosis: `OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL`.
-
-Two lower-cost causal diagnostics are now running in parallel before any larger acceptance-scale training:
-
-1. **Exact/card-isomorphic support overlap (640 roots/seed).** This measures the strategy-memory support directly, including LCFR-weighted target disagreement on shared states, then repeats after global suit relabeling and after additionally removing private-card order and flop-card order. If poker card isomorphism substantially expands shared support with low shared-target disagreement, a versioned canonical-card representation becomes the leading correction.
-2. **Traversal/training RNG-coupling screen (256 roots/seed/mode).** The recovered implementation uses `bundle.batch_rng` both for traversal/action sampling and for optimizer minibatch sampling. Adaptive Advantage training can therefore consume a variable number of random draws and perturb later traversal paths. The screen compares current coupled semantics against a diagnostic split traversal RNG under the same explicit deck stream. Production/checkpoint RNG semantics are not changed by this screen.
-
-If card isomorphism does not explain the support fragmentation, the RNG screen determines whether the next implementation change should version and checkpoint separate traversal/training RNG streams. If neither mechanism is material, the next target is intrinsic CFR path-support variance rather than more brute-force roots.
+The active diagnostic now tests a more direct hypothesis: **the rebuilt AdvantageNet may be strategically underfit despite passing the frozen NRMSE gate**. Corrected runs commonly stop around NRMSE `0.65–0.70`, while historical pre-loss fits were materially lower (`~0.45–0.55`). A controlled 256-root screen compares the present internal target `0.70` against a stronger `0.50` target, with the same roots/shared decks and traversal RNG separated from optimizer RNG. Iteration 1 is collected before any fitted AdvantageNet exists; iteration-2 support and shared-target divergence therefore provide a direct screen of whether stronger advantage fitting stabilizes CFR dynamics.
 
 ## Frozen R7.3 gates
 
@@ -64,7 +50,7 @@ If card isomorphism does not explain the support fragmentation, the RNG screen d
 - Cross-seed mean TV <= 0.15
 - Cross-seed p95 TV <= 0.35
 
-Historical pre-loss checkpoint: 640 HU roots/seed, cross-seed mean TV 0.3714, p95 TV 0.6878. It remains evidence of the previous implementation, not a direct metric baseline for the rebuilt network.
+Historical pre-loss checkpoint: 640 HU roots/seed, cross-seed mean TV `0.3714`, p95 TV `0.6878`. It remains evidence of the previous implementation, not a direct metric baseline for the rebuilt network.
 
 ## Recovery invariants
 
@@ -74,4 +60,4 @@ Historical pre-loss checkpoint: 640 HU roots/seed, cross-seed mean TV 0.3714, p9
 - Production utility is exact explicit-payout ICM continuation delta; chip delta is diagnostics only.
 - Equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
 - Every meaningful step is persisted to GitHub `main`.
-- Root scaling is not resumed while a lower-cost causal diagnostic can distinguish approximation, chance-coverage, representation, RNG coupling, and CFR-dynamics failures.
+- Root scaling is not resumed while a lower-cost causal diagnostic can distinguish approximation, chance-coverage, representation, RNG coupling, advantage-fit quality, and CFR path-variance failures.
