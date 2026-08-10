@@ -23,7 +23,10 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - traversal/training RNG coupling — **DONE: not dominant at screen scale**
     - stronger AdvantageNet fit screen — **DONE: material at 256-root screen scale**
     - stronger AdvantageNet 640 candidate — **DONE: modest improvement only; still far from frozen cross-seed gates**
+    - own-reach bootstrap support-density curve — **DONE: sampling density strongly controls support overlap**
+    - Advantage bootstrap target-variance curve — **DONE: external sampling materially noisy, but 8x replication only modestly reduces regret-matching TV**
     - external-sampling path replication decomposition — **RUNNING: baseline vs strategy_x4 vs advantage_x4 vs both_x4**
+    - exact own-reach expectation feasibility benchmark — **RUNNING: versioned estimator redesign candidate only if computationally tractable**
     - brute-force root scaling — **PAUSED until causal diagnosis closes**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
@@ -57,7 +60,9 @@ Corrected 640 roots/seed:
 3. **Off-support neural extrapolation is material.** Same-memory replica disagreement averaged `0.120310` on own support and `0.292305` on the other memory's support (`2.43x`).
 4. **Card canonicalization is not the dominant correction.** Raw exact support Jaccard at 640 was `0.043432`; diagnostic poker-card isomorphism did not expand it (`0.029931`). It modestly improved LCFR-weight coverage and reduced shared-target TV, but shared CFR targets still disagreed strongly.
 5. **Training/traversal RNG coupling is not dominant at the 256-root screen scale.** Splitting those streams changed support only a few percent and worsened shared-target TV.
-6. **Stronger AdvantageNet fitting is beneficial but insufficient.** The 256-root screen showed more overlap and coverage when Advantage NRMSE was driven toward the historical `~0.45–0.55` range. At full 640 acceptance scale, however, mean TV improved only from `0.477649` to `0.464474` (`2.76%`) and p95 from `0.902403` to `0.886204` (`1.80%`). Both individual fit gates passed, so the remaining failure is genuine cross-seed instability rather than fit-gate failure.
+6. **Stronger AdvantageNet fitting is beneficial but insufficient.** At full 640 acceptance scale mean TV improved only from `0.477649` to `0.464474` (`2.76%`) and p95 from `0.902403` to `0.886204` (`1.80%`), despite both individual fit gates passing.
+7. **Own-reach Monte-Carlo sampling is a proven source of support fragmentation even under an identical exact policy.** With the same 256 root deals and exact zero-regret uniform behavior, increasing independent own-reach trajectories from 1 to 8 raised poker-isomorphic Jaccard `0.033946 -> 0.074383` (`2.191x`) and LCFR-weight coverage `0.083230 -> 0.204593` (`2.458x`). Shared strategy-target TV remained zero to floating-point precision, proving the difference is sampling support rather than true policy disagreement.
+8. **External-sampling Advantage targets are also noisy.** Under the same exact uniform policy and same root deals, 1->8 Advantage trajectories raised weight coverage `0.077203 -> 0.158538` (`2.054x`), but shared-target relative RMSE fell only `1.00943 -> 0.88105` and induced regret-matching mean TV only `0.42100 -> 0.37127`; p95 remained `1.0`. More Advantage paths help, but with weaker dose response than own-reach support density.
 
 Strong-Advantage 640 details:
 
@@ -67,25 +72,24 @@ Strong-Advantage 640 details:
 - cross-seed p95 TV `0.886204` — FAIL
 - evidence workflow `31364029367`, commit `75885791b5d8894d4c590a038233f96db5879925`
 
-## Active R7.3 experiment: path-variance decomposition
+## Active R7.3 experiment: downstream path-variance decomposition
 
-The remaining high-leverage mechanism is now the stochastic path estimator itself. The active 256-unique-root diagnostic runs four controlled modes under the same root-deck stream and historical-range Advantage fitting:
+The active 256-unique-root diagnostic runs four controlled modes under the same root-deck stream and historical-range Advantage fitting:
 
 - `baseline`: 1 advantage traversal replicate + 1 own-reach strategy replicate per unique deal
 - `strategy_x4`: 1 advantage replicate + 4 strategy replicates
 - `advantage_x4`: 4 advantage replicates + 1 strategy replicate
 - `both_x4`: 4 + 4
 
-The diagnostic separates advantage, strategy and optimizer RNG streams so `baseline` versus `strategy_x4` is a strict isolation test: CFR advantage memory/training must remain identical, while only average-policy own-reach sampling density changes. A workflow invariant fails the run if those Advantage checkpoint NRMSEs differ by more than numerical tolerance.
+The diagnostic separates advantage, strategy and optimizer RNG streams so `baseline` versus `strategy_x4` is a strict isolation test: CFR advantage memory/training must remain identical, while only average-policy own-reach sampling density changes. A workflow invariant fails the run if those Advantage checkpoint NRMSEs differ beyond numerical tolerance.
 
-Each mode also fits its AveragePolicy and measures acceptance-like cross-seed mean/p95 TV, iteration-specific strategy-memory support, LCFR-weight coverage and shared-target disagreement. This is designed to answer in one physical run whether the dominant remaining variance comes from:
-
-- sampled opponent paths in the Advantage external-sampling traversal;
-- sampled own paths in AveragePolicy collection;
-- both mechanisms together;
-- or neither, in which case the next target is estimator redesign/common-random-number or stratified external sampling rather than more raw roots.
+Each mode fits its AveragePolicy and measures acceptance-like cross-seed mean/p95 TV, the same models on the baseline common corpus, iteration-specific strategy-memory support, LCFR-weight coverage and shared-target disagreement. The already-completed exact bootstrap curves give causal priors; this downstream experiment decides which variance reduction actually improves the fitted policy metric.
 
 Workflow: `31366433008`.
+
+In parallel, workflow `31367407567` benchmarks exact own-reach expectation enumeration. Exact enumeration is mathematically the expectation of the current sampled own-reach estimator if each target-state sample is weighted by `LCFR_iteration * own_reach`, but it may be too expensive in the full NLHE action tree. It will only be considered as a versioned estimator redesign if the bounded feasibility benchmark succeeds.
+
+Detailed control evidence: `validation/R7_3_PATH_VARIANCE_CONTROLS_20260810.md`.
 
 ## Frozen R7.3 gates
 
