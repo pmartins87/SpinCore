@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.11",
+  "version": "1.12.1-recovery.12",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "SIZE4_POLICY_MIXTURE_NOT_DURABLE_RESIDUAL_TAIL_AND_TEMPORAL_DAMPING_MATRIX_RUNNING",
+  "current_gate_status": "SIZE4_POLICY_MIXTURE_NOT_DURABLE_TEMPORAL_DAMPING_FACTORIAL_AND_RESIDUAL_TAIL_TESTS_RUNNING",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -34,38 +34,27 @@
     "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA"
   },
-  "authoritative_640": {
-    "corrected": {"mean_tv": 0.4776491225, "p95_tv": 0.9024027586, "per_seed_fit_pass": true},
-    "strong_advantage": {"mean_tv": 0.4644736052, "p95_tv": 0.8862043619, "per_seed_fit_pass": true},
-    "partial_exact_level2": {"mean_tv": 0.4361102283, "p95_tv": 0.8882443905, "per_seed_fit_pass": true},
-    "partial_exact_level2_strongfit": {"mean_tv": 0.4128931165, "p95_tv": 0.8717077374, "per_seed_fit_pass": true}
-  },
-  "paired_partial_exact_256": {
-    "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413, "per_seed_fit_pass": true},
-    "size2_raw_advantage_ensemble": {"mean_tv": 0.2153794914484024, "p95_tv": 0.6321426630020142, "per_seed_fit_pass": true},
-    "size4_raw_advantage_ensemble": {"mean_tv": 0.2108692228794098, "p95_tv": 0.6279871463775635, "per_seed_fit_pass": true},
-    "diagnosis": "RAW_ADVANTAGE_ENSEMBLE_IMPROVES_MEAN_NOT_P95"
-  },
   "paired_policy_mixture_size4_256": {
     "workflow": 31428299914,
     "evidence_commit": "76ac23287961cc3c650a1b60891648bfe975b145",
     "mean_tv": 0.17194043099880219,
     "p95_tv": 0.4136051535606384,
     "per_seed_fit_pass": true,
-    "mean_ratio_to_size1": 0.699922001,
-    "p95_ratio_to_size1": 0.657868,
     "diagnosis": "STRONG_TWO_ITERATION_SIGNAL"
   },
   "policy_mixture_compounding_320": {
     "workflow": 31432403037,
     "iterations": 5,
-    "roots_per_iteration": 64,
     "roots_per_seed": 320,
     "duration_seconds": 6544.459480047226,
     "mean_tv": 0.2665907144546509,
     "p50_tv": 0.24680466949939728,
     "p95_tv": 0.5670017600059509,
     "max_tv": 0.9055466651916504,
+    "seed_20260829_ensemble_advantage_nrmse": 0.47699275612831116,
+    "seed_20260829_policy_tv": 0.09866710752248764,
+    "seed_20260807_ensemble_advantage_nrmse": 0.443852961063385,
+    "seed_20260807_policy_tv": 0.09976909309625626,
     "per_seed_fit_pass": true,
     "cross_seed_pass": false,
     "diagnosis": "SIZE4_POLICY_MIXTURE_GAIN_DECAYS_MATERIALLY_WITH_FIVE_ITERATION_FEEDBACK",
@@ -78,7 +67,6 @@
     "p95_tv": 0.42685970664024353,
     "mean_gate_pass": true,
     "p95_gate_pass": false,
-    "per_seed_frozen_fit_pass": true,
     "surrogate_reference_behavior_fit_pass": false,
     "theoretical_equivalence_claimed": false,
     "diagnosis": "SMOOTHING_SIGNAL_STRONG_BUT_SURROGATE_NOT_PROMOTABLE"
@@ -92,6 +80,17 @@
     "iteration2_poker_shared_target_p95_tv": 1.0,
     "diagnosis": "TARGET_DIVERGENCE_APPEARS_AFTER_FIRST_ADVANTAGE_FIT"
   },
+  "robust_policy_aggregation_same_memory_256": {
+    "workflow": 31440742014,
+    "evidence_commit": "b9a756af32341e7e6d51047ff584c94e606c8dce",
+    "mean_aggregation": {"mean_tv": 0.13742117002288864, "p95_tv": 0.3881133198738098},
+    "median_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
+    "trimmed_mean_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
+    "best_robust_to_mean_mean_ratio": 1.0452493014541298,
+    "best_robust_to_mean_p95_ratio": 1.259494604974214,
+    "diagnosis": "ROBUST_POLICY_AGGREGATION_NOT_MATERIAL",
+    "decision": "CLOSE_MEDIAN_AND_TRIMMED_AGGREGATION"
+  },
   "causal_state": {
     "first_advantage_fit_feedback_is_confirmed_causal_transition": true,
     "iteration1_shared_strategy_targets_identical": true,
@@ -99,65 +98,47 @@
     "advantage_function_approximation_variance_material": true,
     "strategy_support_fragmentation_material": true,
     "final_average_policy_is_primary_p95_source": false,
-    "raw_advantage_ensembling_primary_solution": false,
     "policy_mixture_size4_two_iteration_signal_material": true,
     "policy_mixture_size4_durable_over_five_iterations": false,
+    "robust_member_outlier_aggregation_primary_solution": false,
     "direct_behavior_smoothing_signal_material": true,
-    "direct_behavior_surrogate_theoretical_review_required": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
   "active_physical_runs": {
-    "policy_mixture_size8_256": {
-      "workflow": 31440425854,
-      "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Determine whether doubling independent regret-policy members further suppresses the short-horizon p95 tail."
-    },
-    "policy_mixture_plus_final_policy_ensemble_256": {
-      "workflow": 31440493410,
-      "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Measure residual final-policy ensemble tail reduction on top of size4 upstream policy mixture."
-    },
-    "policy_mixture_support_conditioned_256": {
-      "workflow": 31440576227,
-      "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Separate exact shared-state disagreement from one-sided/off-support extrapolation after policy-mixture CFR."
-    },
-    "robust_policy_aggregation_same_memory_256": {
-      "workflow": 31440742014,
-      "status": "PHYSICAL_SCREEN_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Compare mean, coordinatewise median, and trimmed probability aggregation after per-member hard regret matching."
-    },
+    "policy_mixture_size8_256": {"workflow": 31440425854, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
+    "policy_mixture_plus_final_policy_ensemble_256": {"workflow": 31440493410, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
+    "policy_mixture_support_conditioned_256": {"workflow": 31440576227, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
     "decaying_uniform_tremble_size4_320": {
       "workflow": 31441018067,
       "status": "THREE_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
       "epsilon0_matrix": [0.15, 0.30, 0.45],
-      "epsilon_decay": 0.50,
-      "purpose": "Dose-response test of explicit vanishing behavior damping at the first fitted-Advantage feedback transitions."
+      "epsilon_decay": 0.50
     },
     "tremble_factorial_size1_320": {
       "workflow": 31441110526,
       "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
       "epsilon0_matrix": [0.0, 0.30],
-      "epsilon_decay": 0.50,
-      "purpose": "Complete a 2x2 causal comparison: ensemble size1/4 crossed with no tremble versus epsilon0=0.30 at the five-iteration horizon."
+      "epsilon_decay": 0.50
     },
     "temporal_policy_blend_size4_320": {
       "workflow": 31441224117,
       "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
-      "current_policy_weight_matrix": [0.50, 0.75],
-      "purpose": "Test explicit temporal blending with uniform at first feedback and previous iteration policy mixture thereafter."
+      "current_policy_weight_matrix": [0.50, 0.75]
     },
-    "policy_mixture_size4_256_reproducibility": {
-      "workflow": 31440366942,
-      "status": "PHYSICAL_256_RUNNING",
-      "purpose": "Fresh-run determinism check against 0.17194043099880219 / 0.4136051535606384."
+    "first_transition_only_tremble_size4_320": {
+      "workflow": 31441567261,
+      "status": "STARTED",
+      "epsilon0": 0.30,
+      "epsilon_decay": 0.0
     },
-    "policy_mixture_compounding_320_reproducibility": {
-      "workflow": 31440366909,
-      "status": "PHYSICAL_320_RUNNING",
-      "purpose": "Fresh-run determinism check against 0.2665907144546509 / 0.5670017600059509."
-    }
+    "direct_behavior_compounding_320": {
+      "workflow": 31441650915,
+      "status": "BUILD_REGRESSION_RUNNING",
+      "purpose": "Causal durability control only; not a promotable algorithm."
+    },
+    "policy_mixture_size4_256_reproducibility": {"workflow": 31440366942, "status": "PHYSICAL_256_RUNNING"},
+    "policy_mixture_compounding_320_reproducibility": {"workflow": 31440366909, "status": "PHYSICAL_320_RUNNING"}
   },
   "prepared_but_blocked": {
     "policy_mixture_size4_640": {
@@ -165,6 +146,6 @@
       "reason": "Five-iteration size4 compounding failed durability; must not be triggered."
     }
   },
-  "next_physical_step": "Resolve the active short-horizon tail tests and the five-iteration damping factorials. No size4 640 escalation. A new mechanism must first improve the five-iteration 0.2665907/0.5670018 durability baseline with all frozen fit gates PASS. If size8 or robust aggregation improves short-horizon p95, it must separately pass a five-iteration compounding gate. Compare decaying tremble and temporal blend against both size1 and size4 no-damping baselines to identify whether smoothing or ensembling drives any durable gain. Then version only the smallest durable mechanism and recertify checkpoint/resume determinism before acceptance-scale testing. No gate relaxation.",
+  "next_physical_step": "Resolve active static-tail and five-iteration temporal-damping controls. A candidate must improve both mean and p95 versus the 5x64 baseline 0.2665907145/0.5670017600 with frozen fit gates PASS before any 640 consideration. Robust median/trimmed aggregation is closed. Use size1/no-tremble and size1/e30 together with size4/no-tremble and size4/e30 as a causal 2x2 ensemble-by-damping factorial. Compare geometric tremble, first-transition-only tremble, and previous-policy temporal blend to determine whether repeated or only initial feedback damping is required. No gate relaxation.",
   "ready_for_tables": false
 }
