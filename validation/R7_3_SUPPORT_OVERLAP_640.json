@@ -1,0 +1,355 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "collection": [
+    {
+      "advantage_samples": 29018,
+      "advantage_seen": 29018,
+      "algorithm_seed": 20260829,
+      "checkpoints": [
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.6660510301589966
+            }
+          ],
+          "advantage_samples": 5192,
+          "iteration": 1,
+          "roots": 128,
+          "strategy_samples": 10762
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.6619319915771484
+            }
+          ],
+          "advantage_samples": 9333,
+          "iteration": 2,
+          "roots": 256,
+          "strategy_samples": 18414
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.7157138586044312
+            },
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 512,
+              "weighted_nrmse": 0.6391448378562927
+            }
+          ],
+          "advantage_samples": 14821,
+          "iteration": 3,
+          "roots": 384,
+          "strategy_samples": 28128
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.7451395392417908
+            },
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 512,
+              "weighted_nrmse": 0.6542471647262573
+            }
+          ],
+          "advantage_samples": 17367,
+          "iteration": 4,
+          "roots": 512,
+          "strategy_samples": 33033
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": false,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.7701238393783569
+            },
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 512,
+              "weighted_nrmse": 0.6804139018058777
+            }
+          ],
+          "advantage_samples": 29018,
+          "iteration": 5,
+          "roots": 640,
+          "strategy_samples": 55270
+        }
+      ],
+      "deck_stream_seed": 222060269,
+      "roots": 640,
+      "strategy_samples": 55270,
+      "strategy_seen": 55270
+    },
+    {
+      "advantage_samples": 28170,
+      "advantage_seen": 28170,
+      "algorithm_seed": 20260807,
+      "checkpoints": [
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.6943168640136719
+            }
+          ],
+          "advantage_samples": 5771,
+          "iteration": 1,
+          "roots": 128,
+          "strategy_samples": 13215
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.6035510897636414
+            }
+          ],
+          "advantage_samples": 11483,
+          "iteration": 2,
+          "roots": 256,
+          "strategy_samples": 24788
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": false,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.7522268891334534
+            },
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 512,
+              "weighted_nrmse": 0.6417815685272217
+            }
+          ],
+          "advantage_samples": 21226,
+          "iteration": 3,
+          "roots": 384,
+          "strategy_samples": 44693
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": false,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.784608781337738
+            },
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 512,
+              "weighted_nrmse": 0.6612024903297424
+            }
+          ],
+          "advantage_samples": 23867,
+          "iteration": 4,
+          "roots": 512,
+          "strategy_samples": 49375
+        },
+        {
+          "advantage_progress": [
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": false,
+              "optimizer_steps": 256,
+              "weighted_nrmse": 0.8133195042610168
+            },
+            {
+              "fit_target_reached": false,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 512,
+              "weighted_nrmse": 0.7299677133560181
+            },
+            {
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "optimizer_steps": 768,
+              "weighted_nrmse": 0.6639561057090759
+            }
+          ],
+          "advantage_samples": 28170,
+          "iteration": 5,
+          "roots": 640,
+          "strategy_samples": 57723
+        }
+      ],
+      "deck_stream_seed": 222060269,
+      "roots": 640,
+      "strategy_samples": 57723,
+      "strategy_seen": 57723
+    }
+  ],
+  "duration_seconds": 383.7345554828644,
+  "generated_at_unix": 1786342508.3021126,
+  "interpretation_note": "This is a diagnostic, not an acceptance gate. poker_isomorphic keys identify observations equivalent under global suit relabeling, private-card order, and flop-card order while preserving turn/river street order.",
+  "overlap": {
+    "poker_isomorphic": {
+      "by_street": {
+        "0": {
+          "shared_unique": 1439,
+          "target_p50_tv": 0.3958583028573248,
+          "target_p95_tv": 0.959820256868797,
+          "weighted_target_mean_tv": 0.3771766413663002
+        },
+        "1": {
+          "shared_unique": 790,
+          "target_p50_tv": 0.46534327405507914,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.5822992066201463
+        },
+        "2": {
+          "shared_unique": 296,
+          "target_p50_tv": 0.39765891326106845,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.4984814863618454
+        },
+        "3": {
+          "shared_unique": 157,
+          "target_p50_tv": 0.6,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.5942375631612781
+        }
+      },
+      "intersection_unique": 2682,
+      "jaccard": 0.029931365437196586,
+      "lcfr_weight_coverage_A": 0.08253724202071898,
+      "lcfr_weight_coverage_B": 0.10184357113654947,
+      "shared_target_p50_tv": 0.4181695508793539,
+      "shared_target_p95_tv": 1.0,
+      "shared_target_unweighted_mean_tv": 0.43666434773738005,
+      "shared_target_weighted_mean_tv": 0.42454921841374754,
+      "union_unique": 89605,
+      "unique_A": 44867,
+      "unique_B": 47420,
+      "unique_coverage_A": 0.05977667327880179,
+      "unique_coverage_B": 0.05655841417123576
+    },
+    "raw": {
+      "by_street": {
+        "0": {
+          "shared_unique": 2784,
+          "target_p50_tv": 0.47279849581296113,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.5279854835044729
+        },
+        "1": {
+          "shared_unique": 790,
+          "target_p50_tv": 0.46534327405507914,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.5822992066201464
+        },
+        "2": {
+          "shared_unique": 296,
+          "target_p50_tv": 0.39765891326106845,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.49848148636184525
+        },
+        "3": {
+          "shared_unique": 157,
+          "target_p50_tv": 0.6,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.594237563161278
+        }
+      },
+      "intersection_unique": 4027,
+      "jaccard": 0.04343183779119931,
+      "lcfr_weight_coverage_A": 0.07097891007617747,
+      "lcfr_weight_coverage_B": 0.08448104047424367,
+      "shared_target_p50_tv": 0.46894698058273165,
+      "shared_target_p95_tv": 1.0,
+      "shared_target_unweighted_mean_tv": 0.4600890968699449,
+      "shared_target_weighted_mean_tv": 0.5383199138176927,
+      "union_unique": 92720,
+      "unique_A": 46976,
+      "unique_B": 49771,
+      "unique_coverage_A": 0.08572462534059945,
+      "unique_coverage_B": 0.0809105704124892
+    },
+    "suit_isomorphic": {
+      "by_street": {
+        "0": {
+          "shared_unique": 1796,
+          "target_p50_tv": 0.4275942838596264,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.42970454515695433
+        },
+        "1": {
+          "shared_unique": 790,
+          "target_p50_tv": 0.46534327405507914,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.582299206620146
+        },
+        "2": {
+          "shared_unique": 296,
+          "target_p50_tv": 0.39765891326106845,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.4984814863618454
+        },
+        "3": {
+          "shared_unique": 157,
+          "target_p50_tv": 0.6,
+          "target_p95_tv": 1.0,
+          "weighted_target_mean_tv": 0.594237563161278
+        }
+      },
+      "intersection_unique": 3039,
+      "jaccard": 0.03354897112072772,
+      "lcfr_weight_coverage_A": 0.07799992473644315,
+      "lcfr_weight_coverage_B": 0.09531505519215044,
+      "shared_target_p50_tv": 0.43830818636097035,
+      "shared_target_p95_tv": 1.0,
+      "shared_target_unweighted_mean_tv": 0.4452385322943444,
+      "shared_target_weighted_mean_tv": 0.46520164973103006,
+      "union_unique": 90584,
+      "unique_A": 45496,
+      "unique_B": 48127,
+      "unique_coverage_A": 0.06679708106207138,
+      "unique_coverage_B": 0.06314542772248426
+    }
+  },
+  "ready_for_tables": false,
+  "roots_per_seed": 640,
+  "schema": "SPINCORE_R7_3_SUPPORT_OVERLAP_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "poker_isomorphic_jaccard": 0.029931365437196586,
+    "poker_isomorphic_mean_lcfr_weight_coverage": 0.09219040657863423,
+    "poker_isomorphic_shared_target_weighted_mean_tv": 0.42454921841374754,
+    "poker_isomorphic_to_raw_jaccard_ratio": 0.6891572394678092,
+    "raw_jaccard": 0.04343183779119931,
+    "raw_mean_lcfr_weight_coverage": 0.07772997527521057,
+    "raw_shared_target_weighted_mean_tv": 0.5383199138176927
+  }
+}
