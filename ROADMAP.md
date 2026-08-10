@@ -1,6 +1,6 @@
 # SpinCore finite roadmap — canonical recovery generation 2
 
-Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until all gates pass.
+Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate passes.
 
 - R0 Foundation / canonical repository — **PASS REBUILT**
 - R1 Complete poker engine — **PASS REBUILT**
@@ -14,20 +14,6 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.1 native own-reach frontier — **PASS REBUILT**
   - R7.2 LCFR weighting / exact checkpoint+resume / fresh-process worker — **PASS REBUILT**
   - R7.3 multi-seed stability — **FAIL / ACTIVE**
-    - corrected 640 and strong-Advantage 640 — **FIT PASS / CROSS-SEED FAIL**
-    - 1280 unique-root scaling — **FAIL / PAUSED**
-    - CFR-memory/chance/support/card/RNG decomposition — **DONE**
-    - exact own-reach + exact Advantage path controls — **DONE**
-    - bounded partial-opponent expectation — **LEVELS 1/2 MATERIAL AT 256; 640 RUNNING**
-    - exhaustive opponent expectation — **DONE / IMPRACTICAL AND WORSE END-TO-END**
-    - common-path RNG — **DONE / NOT MATERIAL**
-    - antithetic x4 — **DONE / NOT MATERIAL**
-    - same-memory Advantage fit/sign sensitivity — **DONE / MATERIAL**
-    - Advantage init-versus-minibatch factorial — **DONE / MIXED; BOTH MATERIAL**
-    - five-iteration behavior compounding — **BASELINE DONE; x4 RUNNING**
-    - common Advantage fit randomness — **RUNNING**
-    - Advantage ensemble stability — **RUNNING**
-    - deck-exact x4 V2 — **RUNNING**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
 - R9 Strategic audit — TODO
@@ -44,115 +30,146 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 No gate is relaxed.
 
-## Authoritative paired acceptance control
+## Authoritative acceptance contract
 
-The generation-2 reference schedule is:
+Generation-2 deal schedule:
 
 ```text
 deck_seed = seed * 1_000_003 + global_root * 97 + iteration
 ```
 
-with `global_root` continuous across CFR iterations.
+with `global_root` continuous across CFR iterations. The recovered acceptance path preserves one persistent live `bundle.batch_rng` through collection and primary training in execution order unless a diagnostic explicitly declares otherwise.
 
-Corrected 640: `0.477649 / 0.902403` mean/p95, per-seed fits PASS.
-Strong-Advantage 640: `0.464474 / 0.886204`, per-seed fits PASS.
+Authoritative 640 references:
 
-Replicated-candidate V1 used a different deterministic deal formula. Its physical results remain valid independent-deal experiments, but not paired deltas against the authoritative references. The correction is recorded in `validation/R7_3_REPLICATED_V1_DECK_CONTROL_CORRECTION_20260810.md`. Deck-exact coupled x4 V2 is running as workflow `31414208511`.
+| candidate | mean TV | p95 TV | fit gates |
+|---|---:|---:|---|
+| corrected 640 | `0.477649` | `0.902403` | PASS |
+| strong-Advantage 640 | `0.464474` | `0.886204` | PASS |
+| partial-exact level 1, 640 | `0.437426` | `0.890053` | PASS |
+| partial-exact level 2, 640 | `0.436110` | `0.888244` | PASS |
+| partial-exact level 2 strong-fit, 640 | **`0.412893`** | **`0.871708`** | PASS |
 
-## Current causal model
+Partial opponent expectation helps, but by itself is nowhere near the frozen cross-seed gates.
 
-R7.3 now has **two distinct upstream variance sources**.
+## Current paired 256 control
 
-### A. CFR target / memory variance
-
-Exact controls prove:
-
-- own-reach Monte Carlo fragments strategy-memory support even under identical exact policy;
-- opponent external sampling injects material Advantage target noise;
-- x4 independent Advantage paths substantially help a two-iteration screen;
-- x8 gives little extra mean benefit against the exact oracle and still has p95 `1.0`;
-- common-random-number paths improve only modestly;
-- antithetic quarter-turn x4 barely improves mean and worsens p95;
-- exhaustive opponent enumeration costs ~`781x` tree nodes, saturates the reservoir, and worsens final policy stability.
-
-The best bounded target-variance result is partial exact level 2 at 256 roots:
-
-| estimator | mean TV | p95 TV | mean ratio | p95 ratio | node ratio |
-|---|---:|---:|---:|---:|---:|
-| authoritative level 0 | `0.313641` | `0.882657` | 1.000 | 1.000 | 1.000 |
-| level 1 | `0.223853` | `0.807704` | `0.7137` | `0.9151` | `2.667x` |
-| level 2 | **`0.191695`** | **`0.669413`** | **`0.6112`** | **`0.7584`** | `9.349x` |
-
-Workflow `31415605322` is physically running deck-exact 640 level-1 and level-2 candidates. Workflow `31415642047` runs level-2 with doubled Advantage fit ceiling (`8192`) to distinguish estimator quality from fitting capacity.
-
-### B. AdvantageNet function-approximation / sign-support variance
-
-Workflow `31414959700`, evidence `d0fa315ee79af013a7e7e3294b0877a0e656f820`, trained four AdvantageNets on the **exact same frozen Advantage memory**. Final weighted NRMSEs were all historical-quality (`0.472–0.487`), yet:
-
-- pairwise hard-regret-matching mean TV averaged **`0.224349`**;
-- pairwise p95 averaged **`0.757529`**;
-- identical positive-regret action support occurred on only **`55.49%`** of observations.
-
-Thus a network can pass the Advantage approximation gate comfortably and still induce a very different CFR behavior policy purely because training finds another approximation with different regret signs.
-
-Workflow `31415792326`, evidence `555df805e5f14814b1f3e742481bcff110d6cc49`, decomposed this on the same memory:
-
-- same initialization, different minibatch order: mean policy TV `0.201320`;
-- different initialization, same minibatch order: `0.221737`;
-- both different: `0.224532`;
-- init/batch ratio `1.1014`;
-- diagnosis `ADVANTAGE_INIT_AND_MINIBATCH_VARIANCE_MIXED`.
-
-Neither random initialization nor minibatch order alone explains the problem; both matter.
-
-Post-hoc smoothing confirms hard positive-regret thresholding is an amplifier but not the complete cause. A scale-normalized epsilon `0.10` floor reduced representative same-memory policy TV from `0.2254` to `0.1853`, still far above the R7.3 mean gate.
-
-## Five-iteration behavior divergence
-
-Workflow `31413646505` baseline completed. Freshly fitted AdvantageNets were converted through production regret matching after each iteration. Mean cross-seed behavior TV was:
+The new within-run authoritative partial-exact level-2 control is:
 
 ```text
-iteration 1  0.476820
-iteration 2  0.578266
-iteration 3  0.562001
-iteration 4  0.553982
-iteration 5  0.538547
+mean TV = 0.2456560284
+p95 TV  = 0.6287055612
+fit gates = PASS
 ```
 
-p95 was `1.0` at **every** iteration. Final AveragePolicy cross-seed mean/p95 was `0.453395 / 0.948678`.
+This exact size-1 result was reproduced independently by the final-AveragePolicy-ensemble diagnostic, giving a deterministic semantic cross-check.
 
-This changes the earlier narrative: the system does not first become unstable only after several feedback iterations. Severe regret-policy divergence is already present at the **first fitted AdvantageNet**, then iteration 2 amplifies it further. This is consistent with the same-memory fit experiment and makes Advantage function-approximation stability a primary R7.3 target, not a secondary detail.
+### Raw Advantage ensemble
 
-The parallel Advantage-x4 compounding job is still running and will show whether more path samples reduce the iteration-1 fit instability or merely alter later feedback.
+| size | mean TV | p95 TV | fit gates |
+|---:|---:|---:|---|
+| 1 | `0.245656` | `0.628706` | PASS |
+| 2 | `0.215379` | `0.632143` | PASS |
+| 4 | `0.210869` | `0.627987` | PASS |
 
-## Closed or deprioritized branches
+Raw model averaging improves the center by ~14% at size 4 but leaves the p95 essentially unchanged. **Raw Advantage ensembling is therefore not a primary solution.**
 
-- More unique roots: paused after 640 -> 1280 was essentially flat and worsened policy fit.
-- Independent x8/x16: not promoted; exact oracle shows diminishing returns and p95 remains saturated.
-- Common path RNG: `common4` mean/p95 `0.288607 / 0.804410` versus baseline `0.313641 / 0.882657`; improvement is too small relative to the problem, diagnosis NOT MATERIAL.
-- Antithetic x4: mean ratio `0.97395`, p95 ratio `1.05415`; NOT MATERIAL.
-- Full exact opponent expectation: ~`781x` nodes, ~`1.68M` Advantage samples seen/seed at only 64 roots, reservoir saturation, and worse final mean/p95; closed as a practical estimator.
-- Card/suit representation rewrite: not dominant in controlled support audit.
-- Merely increasing optimizer steps: not sufficient by itself.
+### Final AveragePolicy ensemble
+
+| size | mean TV | p95 TV |
+|---:|---:|---:|
+| 1 | `0.245656` | `0.628706` |
+| 2 | `0.226901` | `0.598557` |
+| 4 | `0.212912` | `0.599173` |
+
+All fit gates pass. Four final policy models improve mean ~13.3% but p95 only ~4.7%. Final-policy approximation is real but not the dominant tail source; this is retained only as a possible secondary component.
+
+## Strongest causal finding: target divergence already exists before final-policy fitting
+
+Authoritative partial-exact level-2 support forensic, 256 roots:
+
+### Exact/raw infosets
+
+- Jaccard support overlap: `0.0046825`
+- mean LCFR-weight mass coverage: `0.0094187`
+- shared-target weighted mean TV: `0.329293`
+- shared-target p95 TV: `0.750000`
+
+### Poker-isomorphic comparison key
+
+- Jaccard: `0.0208888`
+- mean LCFR-weight mass coverage: `0.0785715`
+- shared-target weighted mean TV: `0.349296`
+- shared-target p95 TV: `0.803535`
+
+Thus the two seeds share very little Strategy Memory support even after suit/hole/flop structural canonicalization, and **the sigma targets themselves already disagree strongly on the small shared subset**. The remaining p95 cannot be attributed mainly to final AveragePolicy training.
+
+At this scale all genuinely shared strategy-target keys in the forensic were preflop (`street=0`); exact postflop support overlap across the two independent deck streams was effectively absent under these comparison keys. Four-legal-action shared states were noisier than three-action states (`weighted mean TV ~0.3805` vs `~0.3177` in poker-isomorphic mode).
+
+## Advantage function-approximation / regret-map findings
+
+Same-memory AdvantageNet fitting remains an independent variance source:
+
+- hard-RM pairwise mean TV around `0.22–0.23`;
+- p95 around `0.76–0.82` despite good NRMSE;
+- initialization and minibatch order both matter.
+
+Legal-action common-mode centering was tested and closed:
+
+```text
+raw size-1 mean/p95      = 0.231120 / 0.803678
+best centering (midrange)= 0.219685 / 0.824299
+```
+
+Mean improves slightly while p95 worsens; diagnosis `ADVANTAGE_COMMON_MODE_CENTERING_NOT_MATERIAL`.
+
+## Direct behavior surrogate: large same-memory signal, algorithmically non-equivalent
+
+A direct policy surrogate trained on sample-level regret-matched Advantage targets reduced same-memory independent-fit disagreement from:
+
+```text
+AdvantageNet -> hard RM:
+mean = 0.230515
+p95  = 0.818211
+
+Direct behavior surrogate:
+mean = 0.110418
+p95  = 0.363998
+```
+
+Ratios: mean `0.4790`, p95 `0.4449`. Diagnosis: `DIRECT_BEHAVIOR_SURROGATE_MATERIAL_SAME_MEMORY`.
+
+This is **not assumed theoretically equivalent to Deep CFR** because regret matching is nonlinear. It has therefore advanced only to an explicitly experimental end-to-end causal screen that preserves the authoritative partial-exact collection, primary RNG stream, Advantage fit gate and final policy gate while isolating surrogate training on a side RNG.
 
 ## Active high-value physical work
 
-1. **Deck-exact coupled Advantage x4 640 V2** — `31414208511`.
-2. **Partial-exact level 1 + level 2 640** — `31415605322`.
-3. **Partial-exact level 2 strong-fit 640** — `31415642047`.
-4. **Advantage-x4 five-iteration compounding** — `31413646505`.
-5. **Common Advantage fit randomness** — `31415931101`; same Advantage init + same per-iteration minibatch RNG across seeds, traversal/final-policy RNG still seed-specific.
-6. **Advantage ensemble stability** — `31416468310`; eight independent same-memory fits, disjoint 1/2/4-model ensembles average raw Advantage predictions before unchanged hard regret matching.
+1. **Paired partial-exact size-4 policy mixture** — workflow `31428299914`; physical 256-root run active. Each Advantage member is regret-matched independently before policy probabilities are averaged. Same-memory evidence had reduced size-4 p95 from `0.472424` (raw averaging) to `0.360312` with this nonlinear mapping.
+2. **Direct behavior surrogate E2E** — workflow `31431672631`; launched after strong same-memory result. Build/regression/smoke precede the physical 256-root candidate; no production algorithm change is implied.
 
-## Decision tree
+## Closed / deprioritized primary branches
 
-- If partial exact survives 640, choose the cheapest level that satisfies both cross-seed gates; then version the estimator and recertify checkpoint/resume determinism.
-- If common deterministic Advantage fitting materially suppresses cross-seed behavior, make fit randomness deterministic as an explicit algorithm contract rather than multiplying traversals.
-- If ensembling collapses same-memory policy variance while retaining/improving NRMSE, test the smallest useful ensemble end-to-end; model averaging is then a candidate variance-control mechanism.
-- If neither common fit nor ensembling sufficiently fixes same-memory hard-regret policy variance, test sign-aware calibration/objectives or a rigorously validated continuous regret mapping; do not relax gates.
-- Combine partial exact with fit-stability changes only after each mechanism proves independent value; avoid stacking expensive changes without attribution.
+- raw root scaling beyond 1280;
+- independent x8/x16 path multiplication;
+- common-path RNG;
+- antithetic x4;
+- exhaustive opponent expectation;
+- merely raising Advantage optimizer ceiling;
+- behavior-aware MSE auxiliary objective (`V2` valid result improved mean but failed Advantage fit and barely moved p95);
+- exact weighted duplicate-target aggregation;
+- behavior-aware multistart model selection;
+- raw Advantage ensemble sizes 2/4 as standalone solution;
+- final AveragePolicy ensemble as standalone solution;
+- legal-action common-mode centering;
+- card/suit representation rewrite as the dominant explanation.
 
-Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is not substituted for generation-2 gates.
+## Immediate decision tree
+
+- If paired **policy mixture** materially reduces both mean and p95 while fit gates pass, test the smallest useful mixture over more CFR iterations before any 640 escalation.
+- If **direct behavior E2E** gives a very large tail reduction, do not promote immediately: first formalize its algorithmic objective, prove the intended regret semantics or explicitly version it as a new algorithm, then add checkpoint/resume determinism before acceptance-scale testing.
+- If neither changes the p95 enough, the new support forensic says the next intervention must target **CFR target/trajectory stability**, not merely final-policy smoothing. Candidate directions are regret-target aggregation/control variates or a rigorously justified smooth behavior update that operates before trajectory divergence compounds.
+- No estimator, objective, ensemble, RNG or mapping change becomes production semantics without explicit versioning and deterministic continuous-vs-stop/restore/continue recertification.
+
+Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is never substituted for generation-2 gates.
 
 ## Recovery invariants
 
@@ -160,6 +177,5 @@ Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is no
 - Production utility remains exact explicit-payout ICM continuation delta.
 - Ambiguous equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
 - Every meaningful recovery/evolution step is persisted directly to `main`.
-- Experimental estimator, RNG, ensemble or regret-map changes require explicit versioning and deterministic continuous-vs-stop/restore/continue recertification before R7.3 can close.
 
 `READY FOR TABLES = NO`.
