@@ -46,12 +46,16 @@ def episode():
     return Episode(1500, True, 0, 10, 20, (0, 750, 750), 1, (0,))
 
 
-def fill(b, roots=2):
-    session = DeepCFRDomainSession(
+def make_session(b):
+    return DeepCFRDomainSession(
         solver_library=SolverLibrary(LIB),
         bundle=b,
         terminal_utility=icm_delta_utility((0.5, 0.3, 0.2)),
     )
+
+
+def fill(b, roots=2):
+    session = make_session(b)
     for i in range(roots):
         session.collect_root(episode(), iteration=1, deck_seed=100 + i)
     return session
@@ -70,6 +74,32 @@ def test_weighted_metrics_exact_zero():
     weights = torch.tensor([1.0, 3.0])
     assert weighted_normalized_rmse(pred, target, mask, weights) == 0
     assert weighted_mean_tv(pred, target, weights) == 0
+
+
+def test_zero_regret_bootstrap_is_uniform_until_advantage_fit():
+    b = bundle(123)
+    session = make_session(b)
+    root = session.solver_library.create(episode(), 7)
+    try:
+        legal = root.legal_actions()
+        obs = root.neural_bytes()
+        p = session.behavior(root, obs, legal)
+    finally:
+        root.close()
+
+    expected = tuple(1.0 / len(legal) if a in legal else 0.0 for a in range(6))
+    assert p == expected
+    assert session.behavior.ready is False
+    assert b.counters["advantage_ready"] == 0
+
+    session.collect_root(episode(), iteration=1, deck_seed=77)
+    session.train_advantage(steps=1, batch_size=8)
+    assert session.behavior.ready is True
+    assert b.counters["advantage_ready"] == 1
+
+    session.reset_advantage_network(init_seed=99)
+    assert session.behavior.ready is False
+    assert b.counters["advantage_ready"] == 0
 
 
 def test_checkpoint_roundtrip_preserves_state(tmp_path):
@@ -149,6 +179,8 @@ def test_advantage_reset_is_deterministic_and_preserves_memories():
     assert a.adv_mem.items == adv_items
     assert a.pol_mem.items == pol_items
     assert sa.behavior.model is a.advantage
+    assert sa.behavior.ready is False
+    assert a.counters["advantage_ready"] == 0
     assert a.counters["advantage_resets"] == 1
     for x, y in zip(a.advantage.state_dict().values(), b.advantage.state_dict().values()):
         assert torch.equal(x, y)
@@ -185,6 +217,7 @@ def test_fresh_process_worker_updates_checkpoint(tmp_path):
     )
     b2, _progress, extra = load_checkpoint(path)
     assert b2.counters["adv_optimizer_steps"] == 1
+    assert b2.counters["advantage_ready"] == 1
     assert extra["last_worker"]["kind"] == "advantage"
 
 
@@ -202,11 +235,7 @@ def test_continuous_equals_stop_restore_continue(tmp_path):
                 MidIterationProgress(iteration=1, phase="collect", root_index=1),
             )
             b, _, _ = load_checkpoint(path)
-            session = DeepCFRDomainSession(
-                solver_library=SolverLibrary(LIB),
-                bundle=b,
-                terminal_utility=icm_delta_utility((0.5, 0.3, 0.2)),
-            )
+            session = make_session(b)
         session.collect_root(episode(), iteration=2, deck_seed=999)
         session.train_advantage(steps=1, batch_size=8)
         session.train_average_policy(steps=1, batch_size=8)
