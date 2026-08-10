@@ -1,0 +1,292 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "duration_seconds": 56.42617058753967,
+  "generated_at_unix": 1786347922.1154737,
+  "interpretation_note": "Exact bootstrap control: both algorithm seeds see the same unique deck stream and the exact uniform zero-regret policy; no neural fitting occurs. Any disagreement between aggregated Advantage targets on shared infosets therefore comes from external-sampling opponent-path variance. The regret-matching TV converts target noise into the policy-space quantity most relevant to subsequent CFR behavior. This diagnostic changes no production schedule or acceptance gate.",
+  "production_sampling_schedule_changed": false,
+  "ready_for_tables": false,
+  "replicate_counts": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "rows": [
+    {
+      "collection": [
+        {
+          "advantage_samples": 9385,
+          "advantage_seen": 9385,
+          "algorithm_seed": 20260829,
+          "nodes": 54983,
+          "replicates_per_traverser_per_unique_root": 1,
+          "samples_added": 9385,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "advantage_samples": 10307,
+          "advantage_seen": 10307,
+          "algorithm_seed": 20260807,
+          "nodes": 60099,
+          "replicates_per_traverser_per_unique_root": 1,
+          "samples_added": 10307,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "intersection_unique": 530,
+          "jaccard": 0.028509951586874662,
+          "shared_legal_coordinate_count": 1972,
+          "shared_regret_matching_p50_tv": 0.35047935620186355,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.4210043061104689,
+          "shared_target_relative_rmse": 1.0094315617223406,
+          "shared_weighted_greedy_action_agreement": 0.5198300283286119,
+          "union_unique": 18590,
+          "unique_A": 9093,
+          "unique_B": 10027,
+          "weight_coverage_A": 0.08076718167288226,
+          "weight_coverage_B": 0.0736392742796158
+        },
+        "raw": {
+          "intersection_unique": 596,
+          "jaccard": 0.03135356936188122,
+          "shared_legal_coordinate_count": 2263,
+          "shared_regret_matching_p50_tv": 0.2918918918918919,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.3862954299524397,
+          "shared_target_relative_rmse": 0.8990856064833429,
+          "shared_weighted_greedy_action_agreement": 0.541871921182266,
+          "union_unique": 19009,
+          "unique_A": 9344,
+          "unique_B": 10261,
+          "weight_coverage_A": 0.065210442194992,
+          "weight_coverage_B": 0.05947414378577666
+        }
+      },
+      "replicates": 1,
+      "summary": {
+        "mean_weight_coverage": 0.07720322797624903,
+        "poker_isomorphic_jaccard": 0.028509951586874662,
+        "shared_regret_matching_p95_tv": 1.0,
+        "shared_regret_matching_weighted_mean_tv": 0.4210043061104689,
+        "shared_target_relative_rmse": 1.0094315617223406,
+        "shared_weighted_greedy_action_agreement": 0.5198300283286119
+      }
+    },
+    {
+      "collection": [
+        {
+          "advantage_samples": 20645,
+          "advantage_seen": 20645,
+          "algorithm_seed": 20260829,
+          "nodes": 120937,
+          "replicates_per_traverser_per_unique_root": 2,
+          "samples_added": 20645,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "advantage_samples": 20195,
+          "advantage_seen": 20195,
+          "algorithm_seed": 20260807,
+          "nodes": 117823,
+          "replicates_per_traverser_per_unique_root": 2,
+          "samples_added": 20195,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "intersection_unique": 1044,
+          "jaccard": 0.02763952133855766,
+          "shared_legal_coordinate_count": 3920,
+          "shared_regret_matching_p50_tv": 0.30414605387907345,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.4074305342833877,
+          "shared_target_relative_rmse": 0.9654452708632653,
+          "shared_weighted_greedy_action_agreement": 0.5435582822085889,
+          "union_unique": 37772,
+          "unique_A": 19606,
+          "unique_B": 19210,
+          "weight_coverage_A": 0.0883506902397675,
+          "weight_coverage_B": 0.08987373112156474
+        },
+        "raw": {
+          "intersection_unique": 1160,
+          "jaccard": 0.030133783608260814,
+          "shared_legal_coordinate_count": 4389,
+          "shared_regret_matching_p50_tv": 0.2376912875007906,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.3530732399197708,
+          "shared_target_relative_rmse": 0.8645952147920893,
+          "shared_weighted_greedy_action_agreement": 0.5932553337921541,
+          "union_unique": 38495,
+          "unique_A": 20023,
+          "unique_B": 19632,
+          "weight_coverage_A": 0.07420682974085735,
+          "weight_coverage_B": 0.07541470661054717
+        }
+      },
+      "replicates": 2,
+      "summary": {
+        "mean_weight_coverage": 0.08911221068066612,
+        "poker_isomorphic_jaccard": 0.02763952133855766,
+        "shared_regret_matching_p95_tv": 1.0,
+        "shared_regret_matching_weighted_mean_tv": 0.4074305342833877,
+        "shared_target_relative_rmse": 0.9654452708632653,
+        "shared_weighted_greedy_action_agreement": 0.5435582822085889
+      }
+    },
+    {
+      "collection": [
+        {
+          "advantage_samples": 42359,
+          "advantage_seen": 42359,
+          "algorithm_seed": 20260829,
+          "nodes": 247822,
+          "replicates_per_traverser_per_unique_root": 4,
+          "samples_added": 42359,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "advantage_samples": 44293,
+          "advantage_seen": 44293,
+          "algorithm_seed": 20260807,
+          "nodes": 259090,
+          "replicates_per_traverser_per_unique_root": 4,
+          "samples_added": 44293,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "intersection_unique": 2609,
+          "jaccard": 0.033605543819877376,
+          "shared_legal_coordinate_count": 9982,
+          "shared_regret_matching_p50_tv": 0.3131313942652717,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.38297013961225596,
+          "shared_target_relative_rmse": 0.9129906035293242,
+          "shared_weighted_greedy_action_agreement": 0.6136363636363636,
+          "union_unique": 77636,
+          "unique_A": 39203,
+          "unique_B": 41042,
+          "weight_coverage_A": 0.11699992917679831,
+          "weight_coverage_B": 0.11168807712279592
+        },
+        "raw": {
+          "intersection_unique": 2925,
+          "jaccard": 0.037132012237695654,
+          "shared_legal_coordinate_count": 11146,
+          "shared_regret_matching_p50_tv": 0.22671006215010261,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.3248964962004553,
+          "shared_target_relative_rmse": 0.8134371519051241,
+          "shared_weighted_greedy_action_agreement": 0.6631979695431472,
+          "union_unique": 78773,
+          "unique_A": 39935,
+          "unique_B": 41763,
+          "weight_coverage_A": 0.10498359262494393,
+          "weight_coverage_B": 0.10055765019303275
+        }
+      },
+      "replicates": 4,
+      "summary": {
+        "mean_weight_coverage": 0.11434400314979712,
+        "poker_isomorphic_jaccard": 0.033605543819877376,
+        "shared_regret_matching_p95_tv": 1.0,
+        "shared_regret_matching_weighted_mean_tv": 0.38297013961225596,
+        "shared_target_relative_rmse": 0.9129906035293242,
+        "shared_weighted_greedy_action_agreement": 0.6136363636363636
+      }
+    },
+    {
+      "collection": [
+        {
+          "advantage_samples": 88415,
+          "advantage_seen": 88415,
+          "algorithm_seed": 20260829,
+          "nodes": 517136,
+          "replicates_per_traverser_per_unique_root": 8,
+          "samples_added": 88415,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "advantage_samples": 86457,
+          "advantage_seen": 86457,
+          "algorithm_seed": 20260807,
+          "nodes": 506083,
+          "replicates_per_traverser_per_unique_root": 8,
+          "samples_added": 86457,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "intersection_unique": 7168,
+          "jaccard": 0.04818791134177249,
+          "shared_legal_coordinate_count": 27885,
+          "shared_regret_matching_p50_tv": 0.28732745373366225,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.37126580260082437,
+          "shared_target_relative_rmse": 0.8810447602017719,
+          "shared_weighted_greedy_action_agreement": 0.6044219940377609,
+          "union_unique": 148751,
+          "unique_A": 78902,
+          "unique_B": 77017,
+          "weight_coverage_A": 0.15602556127353956,
+          "weight_coverage_B": 0.16105115837930994
+        },
+        "raw": {
+          "intersection_unique": 7904,
+          "jaccard": 0.05256822096743085,
+          "shared_legal_coordinate_count": 30479,
+          "shared_regret_matching_p50_tv": 0.2310268171753979,
+          "shared_regret_matching_p95_tv": 1.0,
+          "shared_regret_matching_weighted_mean_tv": 0.3165542049664969,
+          "shared_target_relative_rmse": 0.8094381481373918,
+          "shared_weighted_greedy_action_agreement": 0.6622539627242641,
+          "union_unique": 150357,
+          "unique_A": 80077,
+          "unique_B": 78184,
+          "weight_coverage_A": 0.14943165752417575,
+          "weight_coverage_B": 0.1548862440288236
+        }
+      },
+      "replicates": 8,
+      "summary": {
+        "mean_weight_coverage": 0.15853835982642475,
+        "poker_isomorphic_jaccard": 0.04818791134177249,
+        "shared_regret_matching_p95_tv": 1.0,
+        "shared_regret_matching_weighted_mean_tv": 0.37126580260082437,
+        "shared_target_relative_rmse": 0.8810447602017719,
+        "shared_weighted_greedy_action_agreement": 0.6044219940377609
+      }
+    }
+  ],
+  "schema": "SPINCORE_R7_3_ADVANTAGE_TARGET_CURVE_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "diagnosis": "EXTERNAL_SAMPLING_ADVANTAGE_TARGET_VARIANCE_MATERIAL",
+    "first_replicates": 1,
+    "last_replicates": 8,
+    "last_to_first_regret_matching_tv_ratio": 0.8818574945962822,
+    "last_to_first_target_relative_rmse_ratio": 0.872812772664341,
+    "last_to_first_weight_coverage_ratio": 2.053519833072237
+  },
+  "unique_roots_per_seed": 256
+}
