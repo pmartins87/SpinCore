@@ -1,0 +1,925 @@
+{
+  "acceptance_gate_changed": false,
+  "collection": {
+    "advantage_samples": 10565,
+    "advantage_seen": 10565,
+    "behavior": "EXACT_ZERO_REGRET_UNIFORM",
+    "nodes": 61966,
+    "roots": 256
+  },
+  "duration_seconds": 548.7688913345337,
+  "generated_at_unix": 1786393875.4770176,
+  "interpretation_note": "Diagnostic only. All fits use the same frozen Advantage memory. The experiment tests whether independent regressors mainly disagree by a legal-action common offset, which can flip hard-regret signs without representing relative action-value disagreement. Centering changes only the pre-regret-matching mapping in this diagnostic; production regret matching and gates are unchanged.",
+  "production_regret_mapping_changed": false,
+  "ready_for_tables": false,
+  "replica_count": 8,
+  "replicas": [
+    {
+      "batch_seed": 872704,
+      "final_weighted_nrmse": 0.4982917606830597,
+      "init_seed": 798976,
+      "optimizer_steps": 2304,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7331583499908447
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6311474442481995
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.592022180557251
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5543583631515503
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.5668115615844727
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5402665734291077
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.5187656283378601
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.5032588839530945
+        },
+        {
+          "optimizer_steps": 2304,
+          "weighted_nrmse": 0.4982917606830597
+        }
+      ]
+    },
+    {
+      "batch_seed": 873233,
+      "final_weighted_nrmse": 0.49255287647247314,
+      "init_seed": 799233,
+      "optimizer_steps": 2048,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7057781219482422
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6206045150756836
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.5866286158561707
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5804980993270874
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.5416940450668335
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5221125483512878
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.5093215107917786
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.49255287647247314
+        }
+      ]
+    },
+    {
+      "batch_seed": 873762,
+      "final_weighted_nrmse": 0.49744218587875366,
+      "init_seed": 799490,
+      "optimizer_steps": 2048,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7053709030151367
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6283553242683411
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.6013293266296387
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5566666126251221
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.5349899530410767
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5301055908203125
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.5370468497276306
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.49744218587875366
+        }
+      ]
+    },
+    {
+      "batch_seed": 874291,
+      "final_weighted_nrmse": 0.48634234070777893,
+      "init_seed": 799747,
+      "optimizer_steps": 2560,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7196290493011475
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6392326354980469
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.6104602813720703
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5530506372451782
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.5687410831451416
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5422442555427551
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.5298234224319458
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.5182048082351685
+        },
+        {
+          "optimizer_steps": 2304,
+          "weighted_nrmse": 0.5081539154052734
+        },
+        {
+          "optimizer_steps": 2560,
+          "weighted_nrmse": 0.48634234070777893
+        }
+      ]
+    },
+    {
+      "batch_seed": 874820,
+      "final_weighted_nrmse": 0.4974542260169983,
+      "init_seed": 800004,
+      "optimizer_steps": 2304,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7213028073310852
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6224910616874695
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.5848925113677979
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5659827589988708
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.548916220664978
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5324530005455017
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.5098853707313538
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.5093950033187866
+        },
+        {
+          "optimizer_steps": 2304,
+          "weighted_nrmse": 0.4974542260169983
+        }
+      ]
+    },
+    {
+      "batch_seed": 875349,
+      "final_weighted_nrmse": 0.49150967597961426,
+      "init_seed": 800261,
+      "optimizer_steps": 2048,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7424870133399963
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.624169111251831
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.6073694229125977
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5658046007156372
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.543740451335907
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5253567099571228
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.537032961845398
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.49150967597961426
+        }
+      ]
+    },
+    {
+      "batch_seed": 875878,
+      "final_weighted_nrmse": 0.4940829277038574,
+      "init_seed": 800518,
+      "optimizer_steps": 2048,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.721497654914856
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6452364921569824
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.6016361117362976
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5816596746444702
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.5533750653266907
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5326248407363892
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.506483256816864
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.4940829277038574
+        }
+      ]
+    },
+    {
+      "batch_seed": 876407,
+      "final_weighted_nrmse": 0.4812161326408386,
+      "init_seed": 800775,
+      "optimizer_steps": 2560,
+      "progress": [
+        {
+          "optimizer_steps": 256,
+          "weighted_nrmse": 0.7413088083267212
+        },
+        {
+          "optimizer_steps": 512,
+          "weighted_nrmse": 0.6644870638847351
+        },
+        {
+          "optimizer_steps": 768,
+          "weighted_nrmse": 0.5987808704376221
+        },
+        {
+          "optimizer_steps": 1024,
+          "weighted_nrmse": 0.5759469270706177
+        },
+        {
+          "optimizer_steps": 1280,
+          "weighted_nrmse": 0.5375283360481262
+        },
+        {
+          "optimizer_steps": 1536,
+          "weighted_nrmse": 0.5422342419624329
+        },
+        {
+          "optimizer_steps": 1792,
+          "weighted_nrmse": 0.5346102714538574
+        },
+        {
+          "optimizer_steps": 2048,
+          "weighted_nrmse": 0.5073192119598389
+        },
+        {
+          "optimizer_steps": 2304,
+          "weighted_nrmse": 0.5011582970619202
+        },
+        {
+          "optimizer_steps": 2560,
+          "weighted_nrmse": 0.4812161326408386
+        }
+      ]
+    }
+  ],
+  "results": {
+    "legal_mean": {
+      "size_1": {
+        "mean_abs_common_mode_difference": 0.004223087177369205,
+        "mean_centered_residual_rms_difference": 0.012635803107256078,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.8339295983314514,
+        "mean_tv": 0.22796383033595333,
+        "pairs": [
+          {
+            "left_members": [
+              0
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004036949705096046,
+            "mean_centered_residual_rms_difference": 0.013743207532116395,
+            "mean_tv": 0.21730361065786546,
+            "p50_tv": 0.125333771109581,
+            "p95_tv": 0.8055779337882996,
+            "right_members": [
+              4
+            ]
+          },
+          {
+            "left_members": [
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004162665229068813,
+            "mean_centered_residual_rms_difference": 0.011246987145282642,
+            "mean_tv": 0.2171846418587886,
+            "p50_tv": 0.124564990401268,
+            "p95_tv": 0.7840591669082642,
+            "right_members": [
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004422466276696469,
+            "mean_centered_residual_rms_difference": 0.011850736624351125,
+            "mean_tv": 0.23497009727547447,
+            "p50_tv": 0.13289180397987366,
+            "p95_tv": 0.8794605731964111,
+            "right_members": [
+              6
+            ]
+          },
+          {
+            "left_members": [
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004270267498615492,
+            "mean_centered_residual_rms_difference": 0.013702281127274155,
+            "mean_tv": 0.24239697155168483,
+            "p50_tv": 0.14864233136177063,
+            "p95_tv": 0.8666207194328308,
+            "right_members": [
+              7
+            ]
+          }
+        ]
+      },
+      "size_2": {
+        "mean_abs_common_mode_difference": 0.003042166950073976,
+        "mean_centered_residual_rms_difference": 0.009030843205004562,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.6818915903568268,
+        "mean_tv": 0.17181824010330854,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.0028418967434807505,
+            "mean_centered_residual_rms_difference": 0.008802165583339192,
+            "mean_tv": 0.16238678321067865,
+            "p50_tv": 0.08097631484270096,
+            "p95_tv": 0.6267092227935791,
+            "right_members": [
+              4,
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.003242437156667201,
+            "mean_centered_residual_rms_difference": 0.00925952082666993,
+            "mean_tv": 0.18124969699593843,
+            "p50_tv": 0.09458748996257782,
+            "p95_tv": 0.7370739579200745,
+            "right_members": [
+              6,
+              7
+            ]
+          }
+        ]
+      },
+      "size_4": {
+        "mean_abs_common_mode_difference": 0.002338219045434193,
+        "mean_centered_residual_rms_difference": 0.006011415497903567,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.48804548382759094,
+        "mean_tv": 0.12103427680737985,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.002338219045434193,
+            "mean_centered_residual_rms_difference": 0.006011415497903567,
+            "mean_tv": 0.12103427680737985,
+            "p50_tv": 0.051687829196453094,
+            "p95_tv": 0.48804548382759094,
+            "right_members": [
+              4,
+              5,
+              6,
+              7
+            ]
+          }
+        ]
+      }
+    },
+    "legal_median": {
+      "size_1": {
+        "mean_abs_common_mode_difference": 0.004223087177369205,
+        "mean_centered_residual_rms_difference": 0.012635803107256078,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 1.0,
+        "mean_tv": 0.31412131105309693,
+        "pairs": [
+          {
+            "left_members": [
+              0
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004036949705096046,
+            "mean_centered_residual_rms_difference": 0.013743207532116395,
+            "mean_tv": 0.286398684141012,
+            "p50_tv": 0.1243518590927124,
+            "p95_tv": 1.0,
+            "right_members": [
+              4
+            ]
+          },
+          {
+            "left_members": [
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004162665229068813,
+            "mean_centered_residual_rms_difference": 0.011246987145282642,
+            "mean_tv": 0.2994898042292728,
+            "p50_tv": 0.13035647571086884,
+            "p95_tv": 1.0,
+            "right_members": [
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004422466276696469,
+            "mean_centered_residual_rms_difference": 0.011850736624351125,
+            "mean_tv": 0.32312461060777603,
+            "p50_tv": 0.1560772955417633,
+            "p95_tv": 1.0,
+            "right_members": [
+              6
+            ]
+          },
+          {
+            "left_members": [
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004270267498615492,
+            "mean_centered_residual_rms_difference": 0.013702281127274155,
+            "mean_tv": 0.3474721452343269,
+            "p50_tv": 0.18827971816062927,
+            "p95_tv": 1.0,
+            "right_members": [
+              7
+            ]
+          }
+        ]
+      },
+      "size_2": {
+        "mean_abs_common_mode_difference": 0.003042166950073976,
+        "mean_centered_residual_rms_difference": 0.009030843205004562,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 1.0,
+        "mean_tv": 0.2641735087266962,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.0028418967434807505,
+            "mean_centered_residual_rms_difference": 0.008802165583339192,
+            "mean_tv": 0.26615004197067205,
+            "p50_tv": 0.0987534373998642,
+            "p95_tv": 1.0,
+            "right_members": [
+              4,
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.003242437156667201,
+            "mean_centered_residual_rms_difference": 0.00925952082666993,
+            "mean_tv": 0.26219697548272036,
+            "p50_tv": 0.09624972939491272,
+            "p95_tv": 1.0,
+            "right_members": [
+              6,
+              7
+            ]
+          }
+        ]
+      },
+      "size_4": {
+        "mean_abs_common_mode_difference": 0.002338219045434193,
+        "mean_centered_residual_rms_difference": 0.006011415497903567,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 1.0,
+        "mean_tv": 0.20626843478334786,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.002338219045434193,
+            "mean_centered_residual_rms_difference": 0.006011415497903567,
+            "mean_tv": 0.20626843478334786,
+            "p50_tv": 0.051936160773038864,
+            "p95_tv": 1.0,
+            "right_members": [
+              4,
+              5,
+              6,
+              7
+            ]
+          }
+        ]
+      }
+    },
+    "legal_midrange": {
+      "size_1": {
+        "mean_abs_common_mode_difference": 0.004223087177369205,
+        "mean_centered_residual_rms_difference": 0.012635803107256078,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.8242991864681244,
+        "mean_tv": 0.21968514521816063,
+        "pairs": [
+          {
+            "left_members": [
+              0
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004036949705096046,
+            "mean_centered_residual_rms_difference": 0.013743207532116395,
+            "mean_tv": 0.209945277725955,
+            "p50_tv": 0.1035805270075798,
+            "p95_tv": 0.7908915281295776,
+            "right_members": [
+              4
+            ]
+          },
+          {
+            "left_members": [
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004162665229068813,
+            "mean_centered_residual_rms_difference": 0.011246987145282642,
+            "mean_tv": 0.20723666826670498,
+            "p50_tv": 0.10565603524446487,
+            "p95_tv": 0.7559420466423035,
+            "right_members": [
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004422466276696469,
+            "mean_centered_residual_rms_difference": 0.011850736624351125,
+            "mean_tv": 0.22835045852178135,
+            "p50_tv": 0.11266198754310608,
+            "p95_tv": 0.8898390531539917,
+            "right_members": [
+              6
+            ]
+          },
+          {
+            "left_members": [
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004270267498615492,
+            "mean_centered_residual_rms_difference": 0.013702281127274155,
+            "mean_tv": 0.2332081763582011,
+            "p50_tv": 0.12580722570419312,
+            "p95_tv": 0.8605241179466248,
+            "right_members": [
+              7
+            ]
+          }
+        ]
+      },
+      "size_2": {
+        "mean_abs_common_mode_difference": 0.003042166950073976,
+        "mean_centered_residual_rms_difference": 0.009030843205004562,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.6545741558074951,
+        "mean_tv": 0.16411458688033972,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.0028418967434807505,
+            "mean_centered_residual_rms_difference": 0.008802165583339192,
+            "mean_tv": 0.15323920345869704,
+            "p50_tv": 0.0603983998298645,
+            "p95_tv": 0.6033136248588562,
+            "right_members": [
+              4,
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.003242437156667201,
+            "mean_centered_residual_rms_difference": 0.00925952082666993,
+            "mean_tv": 0.1749899703019824,
+            "p50_tv": 0.07518356293439865,
+            "p95_tv": 0.705834686756134,
+            "right_members": [
+              6,
+              7
+            ]
+          }
+        ]
+      },
+      "size_4": {
+        "mean_abs_common_mode_difference": 0.002338219045434193,
+        "mean_centered_residual_rms_difference": 0.006011415497903567,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.49639949202537537,
+        "mean_tv": 0.11498568605339284,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.002338219045434193,
+            "mean_centered_residual_rms_difference": 0.006011415497903567,
+            "mean_tv": 0.11498568605339284,
+            "p50_tv": 0.03620215877890587,
+            "p95_tv": 0.49639949202537537,
+            "right_members": [
+              4,
+              5,
+              6,
+              7
+            ]
+          }
+        ]
+      }
+    },
+    "raw": {
+      "size_1": {
+        "mean_abs_common_mode_difference": 0.004223087177369205,
+        "mean_centered_residual_rms_difference": 0.012635803107256078,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.8036775439977646,
+        "mean_tv": 0.2311197245990085,
+        "pairs": [
+          {
+            "left_members": [
+              0
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004036949705096046,
+            "mean_centered_residual_rms_difference": 0.013743207532116395,
+            "mean_tv": 0.2204218533286936,
+            "p50_tv": 0.13267071545124054,
+            "p95_tv": 0.7581751942634583,
+            "right_members": [
+              4
+            ]
+          },
+          {
+            "left_members": [
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004162665229068813,
+            "mean_centered_residual_rms_difference": 0.011246987145282642,
+            "mean_tv": 0.21731143770166228,
+            "p50_tv": 0.12157667428255081,
+            "p95_tv": 0.740921139717102,
+            "right_members": [
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004422466276696469,
+            "mean_centered_residual_rms_difference": 0.011850736624351125,
+            "mean_tv": 0.24585144854923507,
+            "p50_tv": 0.14339148998260498,
+            "p95_tv": 0.9024529457092285,
+            "right_members": [
+              6
+            ]
+          },
+          {
+            "left_members": [
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.004270267498615492,
+            "mean_centered_residual_rms_difference": 0.013702281127274155,
+            "mean_tv": 0.24089415881644313,
+            "p50_tv": 0.15528348088264465,
+            "p95_tv": 0.8131608963012695,
+            "right_members": [
+              7
+            ]
+          }
+        ]
+      },
+      "size_2": {
+        "mean_abs_common_mode_difference": 0.003042166950073976,
+        "mean_centered_residual_rms_difference": 0.009030843205004562,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.6545669734477997,
+        "mean_tv": 0.17438614272963562,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.0028418967434807505,
+            "mean_centered_residual_rms_difference": 0.008802165583339192,
+            "mean_tv": 0.1678029274861777,
+            "p50_tv": 0.08580133318901062,
+            "p95_tv": 0.6215131878852844,
+            "right_members": [
+              4,
+              5
+            ]
+          },
+          {
+            "left_members": [
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.003242437156667201,
+            "mean_centered_residual_rms_difference": 0.00925952082666993,
+            "mean_tv": 0.18096935797309355,
+            "p50_tv": 0.09838666021823883,
+            "p95_tv": 0.6876207590103149,
+            "right_members": [
+              6,
+              7
+            ]
+          }
+        ]
+      },
+      "size_4": {
+        "mean_abs_common_mode_difference": 0.002338219045434193,
+        "mean_centered_residual_rms_difference": 0.006011415497903567,
+        "mean_max_tv": 1.0,
+        "mean_p95_tv": 0.46609416604042053,
+        "mean_tv": 0.1235173483407067,
+        "pairs": [
+          {
+            "left_members": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "max_tv": 1.0,
+            "mean_abs_common_mode_difference": 0.002338219045434193,
+            "mean_centered_residual_rms_difference": 0.006011415497903567,
+            "mean_tv": 0.1235173483407067,
+            "p50_tv": 0.05445440113544464,
+            "p95_tv": 0.46609416604042053,
+            "right_members": [
+              4,
+              5,
+              6,
+              7
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "same_memory_for_all_replicas": true,
+  "schema": "SPINCORE_R7_3_ADVANTAGE_CENTERING_STABILITY_V1",
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "best_centering_mode": "legal_midrange",
+    "best_size1_mean_tv": 0.21968514521816063,
+    "best_size1_p95_tv": 0.8242991864681244,
+    "best_to_raw_mean_ratio": 0.9505252985192553,
+    "best_to_raw_p95_ratio": 1.0256591000014519,
+    "diagnosis": "ADVANTAGE_COMMON_MODE_CENTERING_NOT_MATERIAL",
+    "raw_size1_mean_tv": 0.2311197245990085,
+    "raw_size1_p95_tv": 0.8036775439977646
+  }
+}
