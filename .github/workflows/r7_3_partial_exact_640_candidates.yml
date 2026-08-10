@@ -63,7 +63,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set -euo pipefail
-          python tools/run_r7_3_partial_exact_640_candidate.py \
+          python tools/run_r7_3_partial_exact_640_candidate_entry.py \
             --solver build/libspincore_solver_c.so \
             --out /tmp/R7_3_PARTIAL_EXACT_640_SMOKE.json \
             --exact-opponent-levels '${{ matrix.level }}' \
@@ -96,7 +96,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set +e
-          python tools/run_r7_3_partial_exact_640_candidate.py \
+          python tools/run_r7_3_partial_exact_640_candidate_entry.py \
             --solver build/libspincore_solver_c.so \
             --out '${{ matrix.out }}' \
             --exact-opponent-levels '${{ matrix.level }}' \
