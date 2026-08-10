@@ -4,17 +4,18 @@
 
 ## 1. Established causal picture
 
-Physical experiments now support the following hierarchy:
+Physical experiments support:
 
-1. changing CFR memories explains much more cross-seed disagreement than changing AveragePolicy init/optimizer;
-2. hidden-card stream differences explain little;
-3. off-support extrapolation is material but downstream;
-4. stronger Advantage fitting helps, but is insufficient at 640;
-5. exact bootstrap controls prove that own-reach sampling fragments strategy support and opponent external sampling injects Advantage target noise;
-6. at two CFR iterations, four Advantage paths strongly improve fitted cross-seed stability;
-7. at five iterations / 640 roots, that x4 improvement largely disappears.
+1. CFR-memory differences dominate AveragePolicy optimizer/init variance;
+2. hidden-card stream differences are not dominant;
+3. off-support policy extrapolation is material but downstream;
+4. stronger Advantage fitting helps but is insufficient;
+5. exact controls prove own-reach support fragmentation and opponent external-sampling Advantage noise;
+6. at two CFR iterations, four Advantage paths materially improve fitted cross-seed stability;
+7. exact opponent expectation is available as a bounded oracle;
+8. independent 4 -> 8 path improvement against that oracle is small and the extreme tail remains severe.
 
-The remaining problem is therefore no longer “does external sampling have variance?” It does. The harder question is **which lower-variance estimator prevents small early errors from compounding through repeated regret matching and neural refits?**
+The remaining design problem is to find a lower-variance Advantage estimator that remains effective after repeated regret matching and neural refits.
 
 ## 2. Short-screen path decomposition
 
@@ -27,18 +28,16 @@ Workflow `31366433008`, evidence `a9c57fe6e3c9149ed3010ead280912295bd4f5f6`:
 | advantage_x4 | `0.219118` | `0.690974` |
 | both_x4 | `0.197598` | `0.726534` |
 
-All individual fit gates passed; the baseline-vs-strategy_x4 Advantage checkpoint isolation delta was exactly zero. Advantage replication is the strongest isolated short-screen lever.
+All individual fit gates passed; baseline versus `strategy_x4` kept Advantage checkpoint NRMSE exactly identical. Advantage replication is therefore the strongest isolated short-screen path lever.
 
 ## 3. Exact opponent-expectation oracle
 
-Workflow `31368837895`, evidence `45c68d2028ac658ae12870c97b9bf758e47f2a89`.
+Workflow `31368837895`, evidence `45c68d2028ac658ae12870c97b9bf758e47f2a89`:
 
-Four unique HU deals and both traversers:
-
-- exact nodes `1,265,152`;
-- exact Advantage samples `188,440`;
-- exact phase `15.91 s`;
-- max depth `45`.
+- exact nodes on four deals/both traversers: `1,265,152`
+- exact Advantage samples: `188,440`
+- exact phase: `15.91 s`
+- max depth: `45`.
 
 Sampled external-sampling memories versus exact expectation:
 
@@ -48,87 +47,119 @@ Sampled external-sampling memories versus exact expectation:
 | 4 | `0.110336` | `0.676023` | `0.270441` | `1.0` | `0.733842` |
 | 8 | `0.157548` | `0.686965` | `0.257149` | `1.0` | `0.747338` |
 
-This gives a direct engineering rule: x4 captures most of the inexpensive independent-replication improvement; x8 adds little average benefit and still fails catastrophically on a tail of states. Therefore independent x8/x16 is not the next preferred design.
+Independent x4 captures much of the readily available mean improvement. x8 adds little and leaves p95 `1.0`; x8/x16 is therefore not the preferred next step.
 
-## 4. Acceptance-scale x4 results
+## 4. Replicated-candidate V1: physical results retained, paired interpretation corrected
 
-Three full 640 candidates have now completed:
+Three 640 V1 candidates completed and all failed the frozen cross-seed gates:
 
-| candidate | mean TV | p95 TV | individual fits | evidence |
+| V1 candidate | mean TV | p95 TV | individual fits | evidence |
 |---|---:|---:|---|---|
 | separated Advantage x4 | `0.459596` | `0.898250` | PASS | `94b5e423fa51e1dad8445e6ce36b8832d8161648` |
 | separated both x4 | `0.458853` | `0.908883` | PASS | `871967f777f7cec17479ed3ec9f476543452912d` |
-| recovered-coupled Advantage x4 | **`0.451112`** | `0.893292` | PASS | `87547311076fd6a015b7d855de1a9c26124b924f` |
+| coupled Advantage x4 | `0.451112` | `0.893292` | PASS | `87547311076fd6a015b7d855de1a9c26124b924f` |
 
-For context, corrected 640 is `0.477649 / 0.902403` and strong-Advantage 640 is `0.464474 / 0.886204`.
+A post-run audit found that V1 did not actually use the deterministic deal schedule of the authoritative corrected/strong-Advantage runner.
 
-### Design consequence
+Authoritative:
 
-Coupled x4 is the best x4 mean and would have been operationally attractive because it preserves the recovered RNG state structure. But it is still far from `0.15 / 0.35`, and its p95 is not better than the strong-Advantage run. `both_x4` adds substantial collection/training cost with no tail benefit.
+```text
+deck_seed = seed*1_000_003 + global_root*97 + iteration
+```
 
-**Plain independent replication is closed as the primary convergence strategy.** It remains a possible component of a later estimator, but not the solution by itself.
+with `global_root` continuous across iterations.
 
-The contrast between the two-iteration x4 screen and five-iteration 640 runs is evidence of **iterative variance amplification**: a reduction that is clearly visible early is largely erased as independently learned regret policies feed back into later collections.
+V1:
 
-## 5. Partial-exact V1 — rejected diagnostic control
+```text
+deck_seed = (seed<<32) ^ (iteration<<16) ^ root_index_within_iteration
+```
 
-Workflow `31369138285` passed build, CTest and all 26 Python tests, then rejected its own physical experiment because an experimental reimplementation of level 0 failed an exact comparison to a separately persisted baseline. The fallback evidence intentionally states `runner_failed_before_report=true`.
+with root index restarting each iteration.
 
-No V1 positive-level result is accepted.
+Therefore:
 
-This is a diagnostic-design failure, not a solver regression.
+- V1 remains evidence that all three configurations are far from the gates on physical independent deal samples;
+- V1 must **not** be used for a tightly paired percentage-improvement claim versus corrected 640 or strong-Advantage 640;
+- any statement that V1 “matched the acceptance deck schedule” is retracted;
+- the exact x4 acceptance delta is being remeasured in V2.
 
-## 6. Partial-exact V2 — active, workflow `31412806987`
+Correction record: `validation/R7_3_REPLICATED_V1_DECK_CONTROL_CORRECTION_20260810.md`.
 
-V2 fixes the control architecture:
+## 5. Deck-exact coupled x4 V2 — active
 
-- level 0 is executed through the authoritative recovered `ExternalSamplingCollector` itself;
-- level 1 enumerates the next opponent decision exactly, probability-weights downstream Advantage samples, then resumes sampling;
-- level 2 enumerates the next two opponent decisions;
-- comparisons are against a fresh authoritative baseline in the same process and dependency image;
-- the old persisted baseline is informational only.
+`tools/run_r7_3_replicated_640_candidate_v2.py` preserves the V1 collection/fitting machinery but replaces the hidden-deal schedule with the exact generation-2 formula and self-checks continuity at iteration boundaries.
 
-The smoke passed; the physical 256-root V2 screen is running. This measures variance reduction per additional tree work rather than merely adding repeated trajectories.
+Workflow `31414208511` runs:
 
-## 7. Full-exact upper bound — active, workflow `31412933368`
+- 640 roots/seed;
+- four Advantage paths, one strategy path;
+- recovered coupled RNG contract;
+- exact authoritative deal formula;
+- strong Advantage target `0.50`;
+- policy target `0.105`, max `32768` steps;
+- reservoir `400000`;
+- unchanged frozen gates.
 
-A 64-root/seed screen compares the authoritative baseline to effectively full opponent-action enumeration (`exact level 128`, beyond observed max depth). This is deliberately an upper bound.
+This is the authoritative paired x4 acceptance candidate. V1 is not substituted for it.
 
-Interpretation:
+## 6. Partial-exact V1 — rejected control
 
-- large improvement => opponent external-sampling variance remains a sufficient high-leverage target, and the problem becomes finding the cheapest bounded approximation to exact expectation;
-- small improvement => external sampling is real but not sufficient; move downstream to regret-sign/policy-support dynamics and neural target processing.
+Workflow `31369138285` passed build, CTest and 26 Python tests but rejected its physical experiment because an experimental level-0 implementation failed its baseline-control assertion. No positive-level V1 result is accepted.
 
-## 8. Common-random-number path estimator — active, workflow `31413103901`
+## 7. Partial-exact V2 — active, `31412806987`
 
-Modes:
+V2 executes level 0 through the authoritative recovered `ExternalSamplingCollector`; only levels 1/2 use probability-weighted exact opponent branching. This removes the previous control ambiguity.
 
-- `independent_1`
-- `independent_4`
-- `common_1`
-- `common_4`
+- level 1: enumerate the next opponent decision, then resume external sampling;
+- level 2: enumerate the next two opponent decisions.
 
-Common modes derive opponent-action RNG from `(iteration, root, traverser, replicate)` rather than algorithm seed. With shared decks and iteration-1 uniform behavior, common-mode Advantage memories must be byte-identical between seeds; this is a hard invariant.
+The smoke passed and the 256-root physical run is active.
 
-The purpose is not to make two final training seeds artificially identical. It is to test a standard variance-reduction idea: correlate the stochastic estimator noise so random early branch choices do not become an avoidable source of divergence that regret matching later amplifies.
+## 8. Full-exact upper bound — active, `31412933368`
 
-If material, a production version would require a counter-based RNG contract and checkpoint/resume versioning.
+A bounded experiment compares the authoritative estimator against effectively complete opponent-action expectation (`exact level 128`, beyond observed max depth). It asks whether eliminating opponent path variance entirely produces a large enough stability upper bound to justify further estimator engineering.
 
-## 9. Current estimator ladder
+If the upper bound is weak, opponent external-sampling variance is real but not sufficient.
 
-The finite design order is now:
+## 9. Common-random-number estimator — active, `31413103901`
 
-1. **Common random numbers** if they substantially reduce iterative divergence at low cost.
-2. **Bounded partial opponent enumeration** if it captures most of the full-exact upper bound efficiently.
-3. If needed, stratified/antithetic opponent-action sampling or paired control-variate estimators benchmarked against the exact oracle.
-4. If the full-exact upper bound itself is weak, pivot away from opponent sampling to iteration-level regret-sign sensitivity, target aggregation and policy-support discontinuity.
+Modes `independent_1`, `independent_4`, `common_1`, `common_4` test whether correlating opponent-action randomness across training seeds suppresses avoidable iterative amplification.
 
-Not promoted without new evidence:
+Under shared decks and iteration-1 uniform behavior, common modes must generate byte-identical Advantage memories across seeds. This is a hard diagnostic invariant.
 
-- more unique roots;
-- x8/x16 independent replication;
-- more strategy-path replication;
-- card-representation rewrite;
-- simply increasing neural optimizer steps.
+A production version would require a counter-based RNG contract and checkpoint/resume versioning; the current screen changes no production semantics.
 
-Any estimator that eventually clears R7.3 must be explicitly versioned and deterministically recertified for continuous versus stop/restore/continue operation before R7.4 begins.
+## 10. Five-iteration divergence localization — active, `31413646505`
+
+Parallel baseline and Advantage x4 jobs measure cross-seed **regret-matching behavior** after every Advantage refit, before final AveragePolicy fitting can obscure upstream dynamics.
+
+For each of five iterations the diagnostic records:
+
+- mean/p50/p95/max regret-policy TV;
+- per-seed Advantage fit quality;
+- strategy-support overlap/target disagreement;
+- cumulative roots and memory sizes.
+
+Both jobs passed smoke and are in the physical five-iteration phase. This is the direct test of whether x4 delays divergence for one or two iterations and then loses its advantage at a specific refit.
+
+## 11. Antithetic/rotated-lattice x4 — active, `31413970227`
+
+Ordinary independent x4 is compared with a correlated four-path estimator. For each root/traverser group, all four trajectories share the same underlying Uniform sequence but use offsets `0`, `1/4`, `1/2`, `3/4` modulo 1.
+
+Each individual trajectory is still marginally Uniform and therefore obeys the recovered external-sampling action law. The four-path set is lower-discrepancy/antithetically correlated.
+
+This tests whether the **quality of four samples** can be improved without increasing path count.
+
+## 12. Finite estimator ladder
+
+1. Obtain deck-exact x4 V2 before making a paired acceptance claim about x4.
+2. Prefer common-path/counter-based randomness if it materially suppresses iterative divergence at low cost.
+3. Prefer bounded partial enumeration if it captures most of the full-exact upper-bound gain efficiently.
+4. Prefer antithetic x4 over independent x4 if it improves mean/tail at equal path count.
+5. If needed, proceed to stratified opponent-action estimators or control variates benchmarked against the exact oracle.
+6. If full exact itself is weak, pivot to regret-sign sensitivity, policy-support discontinuity and target aggregation rather than more opponent sampling.
+
+Not promoted without new causal evidence: more unique roots, independent x8/x16, extra strategy trajectories, card-representation rewrite, or merely more optimizer steps.
+
+Any successful estimator must be explicitly versioned and deterministically recertified for continuous versus stop/restore/continue behavior before R7.3 can close.
