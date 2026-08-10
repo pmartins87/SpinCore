@@ -5,7 +5,7 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "SUPPORT_OVERLAP_AND_RNG_COUPLING_DIAGNOSTICS_RUNNING",
+  "current_gate_status": "CFR_SHARED_TARGET_DIVERGENCE_ADVANTAGE_FIT_SCREEN_RUNNING",
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
@@ -111,21 +111,15 @@
       "evidence_commit": "efd732288cc0d1414cfe791208fb23433f608be1",
       "roots_per_seed": 640,
       "all_policy_fit_gates_pass": true,
-      "same_memory_A_different_optimizer_mean_tv": 0.2531768084,
-      "same_memory_B_different_optimizer_mean_tv": 0.2321299911,
       "within_memory_mean_tv_average": 0.2426533997,
-      "different_memory_same_optimizer_seed_0_mean_tv": 0.4699736536,
-      "different_memory_same_optimizer_seed_1_mean_tv": 0.4698107839,
       "across_memory_mean_tv_average": 0.4698922187,
       "across_to_within_mean_tv_ratio": 1.9364749032,
-      "diagnosis": "CFR_MEMORY_VARIANCE_DOMINANT",
-      "interpretation_limit": "The within-memory comparisons were evaluated on the union of both memories and therefore include off-support extrapolation."
+      "diagnosis": "CFR_MEMORY_VARIANCE_DOMINANT"
     },
     "shared_deck_support_640": {
       "schema": "SPINCORE_R7_3_SHARED_DECK_SUPPORT_V1",
       "workflow_run_id": 31358002704,
       "evidence_commit": "a953136d7542465798ff032499708f4e699f75c7",
-      "status": "DONE",
       "roots_per_seed": 640,
       "shared_deck_across_memory_union_mean_tv": 0.4600675106,
       "independent_deck_reference_mean_tv": 0.4698922187,
@@ -133,27 +127,54 @@
       "own_support_within_memory_mean_tv": 0.1203103587,
       "off_support_within_memory_mean_tv": 0.2923050523,
       "off_to_own_support_ratio": 2.4295917279,
-      "all_policy_fit_gates_pass": false,
-      "chance_diagnosis": "POLICY_FIT_INSUFFICIENT_FOR_CHANCE_DECOMPOSITION",
       "support_diagnosis": "OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL",
-      "interpretation": "Holding the hidden-card/future-board root stream common reduced across-memory mean TV only about 2.1%, so deck/chance-stream differences are not a plausible dominant explanation. The clean classifier remained conservative because one controlled policy fit finished slightly above the 0.12 gate. Off-support replica disagreement was about 2.43x own-support disagreement, making support fragmentation/generalization the next causal target."
+      "interpretation": "Common root cards barely reduced cross-memory divergence; support/generalization remained material."
     },
     "support_overlap_640": {
+      "schema": "SPINCORE_R7_3_SUPPORT_OVERLAP_V1",
       "workflow_run_id": 31360839650,
-      "status": "RUNNING",
-      "frozen_gates_unchanged": true,
-      "purpose": "Measure exact strategy-memory support intersection and LCFR-weighted target disagreement, then repeat after diagnostic global-suit canonicalization and poker card isomorphism that also removes private-card order and flop-card order."
+      "evidence_commit": "e4f62f1b9439a31afc4085275d0838828abecaf7",
+      "status": "DONE",
+      "roots_per_seed": 640,
+      "raw_jaccard": 0.0434318378,
+      "raw_mean_lcfr_weight_coverage": 0.0777299753,
+      "raw_shared_target_weighted_mean_tv": 0.5383199138,
+      "poker_isomorphic_jaccard": 0.0299313654,
+      "poker_isomorphic_mean_lcfr_weight_coverage": 0.0921904066,
+      "poker_isomorphic_shared_target_weighted_mean_tv": 0.4245492184,
+      "poker_isomorphic_to_raw_jaccard_ratio": 0.6891572395,
+      "interpretation": "Card isomorphism modestly increases LCFR-weight coverage and lowers shared-target TV, but support remains extremely sparse and shared targets still disagree strongly. A representation rewrite is not justified as the dominant correction from this evidence."
     },
     "rng_coupling_screen_256": {
+      "schema": "SPINCORE_R7_3_RNG_COUPLING_SCREEN_V1",
       "workflow_run_id": 31361125172,
-      "status": "RUNNING",
+      "evidence_commit": "f4bc94e8e94be13778dbaeb86c7cd580334f50cd",
+      "status": "DONE",
       "roots_per_seed_per_mode": 256,
-      "modes": ["coupled", "split_traversal_training"],
+      "coupled_poker_isomorphic_jaccard": 0.0337362543,
+      "split_poker_isomorphic_jaccard": 0.0352620121,
+      "split_to_coupled_jaccard_ratio": 1.0452260585,
+      "coupled_mean_lcfr_weight_coverage": 0.0831828187,
+      "split_mean_lcfr_weight_coverage": 0.0877961767,
+      "split_to_coupled_weight_coverage_ratio": 1.0554604675,
+      "coupled_shared_target_weighted_mean_tv": 0.3144886496,
+      "split_shared_target_weighted_mean_tv": 0.3473552806,
+      "split_to_coupled_shared_target_tv_ratio": 1.1045081629,
+      "diagnosis": "TRAINING_TRAVERSAL_RNG_COUPLING_NOT_DOMINANT_AT_SCREEN_SCALE",
+      "production_rng_contract_changed": false
+    },
+    "advantage_fit_screen_256": {
+      "workflow_run_id": 31362660281,
+      "status": "RUNNING_OR_QUEUED",
+      "roots_per_seed_per_mode": 256,
+      "weak_fit_target": 0.70,
+      "strong_fit_target": 0.50,
+      "strong_fit_max_steps_per_iteration": 4096,
       "frozen_gates_unchanged": true,
-      "production_rng_contract_changed": false,
-      "purpose": "Screen the known recovered coupling where bundle.batch_rng drives both traversal/action sampling and optimizer minibatch sampling. The split diagnostic gives traversal its own RNG while leaving production semantics untouched, measuring whether adaptive training RNG consumption materially changes later strategy-memory support or shared-target TV."
+      "production_training_schedule_changed": false,
+      "purpose": "Test whether the rebuilt AdvantageNet being stopped near NRMSE 0.65-0.70 is strategically underfit even though it passes the frozen 0.75 fit gate. Compare iteration-2 support and shared LCFR-target divergence against a stronger 0.50 internal fit target while holding roots, shared decks and separated traversal RNG semantics fixed."
     }
   },
-  "next_physical_step": "Complete the running support-overlap and RNG-coupling diagnostics. If card isomorphism materially increases overlap with low shared-target disagreement, prioritize a versioned canonical-card neural representation and recertify R2-R7. If overlap stays low, use the RNG screen to decide whether to version and checkpoint separate traversal/training RNG streams before another acceptance-scale run. Frozen gates remain unchanged.",
+  "next_physical_step": "Finish the 256-root stronger-AdvantageNet fit screen. If pushing Advantage NRMSE toward the historical 0.45-0.55 range materially reduces iteration-2 shared-target TV or increases support coverage, promote stronger fitting to a controlled 640-root R7.3 candidate without relaxing any frozen gate. If not, move to direct external-sampling path-variance reduction/common-random-number diagnostics. Card-representation rewrite and production RNG-contract changes remain deferred by current evidence.",
   "ready_for_tables": false
 }
