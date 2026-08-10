@@ -1,0 +1,396 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "cross_seed": {
+    "max_tv": 0.9989866018295288,
+    "mean_tv": 0.25569453835487366,
+    "p50_tv": 0.17257650196552277,
+    "p95_tv": 0.7289756536483765
+  },
+  "duration_seconds": 439.53964495658875,
+  "ensemble_size": 2,
+  "frozen_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "policy_weighted_mean_tv_max": 0.12
+  },
+  "generated_at_unix": 1786386017.018195,
+  "interpretation_note": "Diagnostic only. Every CFR iteration trains N independent AdvantageNets from scratch on the exact same accumulated Advantage reservoir. Their raw predicted advantages are averaged before the unchanged production hard regret-matching map; AveragePolicy collection/training remains single-network. This tests whether same-memory fit ensembling suppresses upstream behavior variance end-to-end.",
+  "iterations": 2,
+  "observation_count": 2048,
+  "per_seed": [
+    {
+      "advantage_samples": 8887,
+      "advantage_seen": 8887,
+      "algorithm_seed": 20260829,
+      "checkpoints": [
+        {
+          "advantage_samples": 5921,
+          "advantage_seen": 5921,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.4155917465686798,
+          "iteration": 1,
+          "members": [
+            {
+              "batch_seed": 1050830779,
+              "final_weighted_nrmse": 0.48945561051368713,
+              "init_seed": 286457985,
+              "member": 0,
+              "optimizer_steps": 1280,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6314091682434082
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.5891844630241394
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.5496703386306763
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.5445001125335693
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.48945561051368713
+                }
+              ]
+            },
+            {
+              "batch_seed": 4228958598,
+              "final_weighted_nrmse": 0.4936738908290863,
+              "init_seed": 357474234,
+              "member": 1,
+              "optimizer_steps": 2048,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6775628924369812
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.6090996265411377
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.5766128897666931
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.5617716908454895
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.5353036522865295
+                },
+                {
+                  "optimizer_steps": 1536,
+                  "weighted_nrmse": 0.5225723385810852
+                },
+                {
+                  "optimizer_steps": 1792,
+                  "weighted_nrmse": 0.5159785747528076
+                },
+                {
+                  "optimizer_steps": 2048,
+                  "weighted_nrmse": 0.4936738908290863
+                }
+              ]
+            }
+          ],
+          "nodes": 34455,
+          "roots": 128,
+          "strategy_samples": 11366,
+          "strategy_seen": 11366
+        },
+        {
+          "advantage_samples": 8887,
+          "advantage_seen": 8887,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.43754035234451294,
+          "iteration": 2,
+          "members": [
+            {
+              "batch_seed": 7258126626,
+              "final_weighted_nrmse": 0.4882615804672241,
+              "init_seed": 860523090,
+              "member": 0,
+              "optimizer_steps": 1024,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6536964178085327
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.5643947720527649
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.5810004472732544
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.4882615804672241
+                }
+              ]
+            },
+            {
+              "batch_seed": 6210492191,
+              "final_weighted_nrmse": 0.47573837637901306,
+              "init_seed": 924259689,
+              "member": 1,
+              "optimizer_steps": 1280,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6657593846321106
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.5987688899040222
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.5595325827598572
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.5183448791503906
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.47573837637901306
+                }
+              ]
+            }
+          ],
+          "nodes": 50515,
+          "roots": 256,
+          "strategy_samples": 17539,
+          "strategy_seen": 17539
+        }
+      ],
+      "ensemble_size": 2,
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "ensemble_advantage_weighted_nrmse": 0.44690725207328796,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.09909085184335709
+      },
+      "nodes": 50515,
+      "policy_progress": [
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.1953210085630417
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 512,
+          "weighted_mean_tv": 0.13732324540615082
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 768,
+          "weighted_mean_tv": 0.11475406587123871
+        },
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 1024,
+          "weighted_mean_tv": 0.09119265526533127
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 17539,
+      "strategy_seen": 17539
+    },
+    {
+      "advantage_samples": 11915,
+      "advantage_seen": 11915,
+      "algorithm_seed": 20260807,
+      "checkpoints": [
+        {
+          "advantage_samples": 6006,
+          "advantage_seen": 6006,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.43011265993118286,
+          "iteration": 1,
+          "members": [
+            {
+              "batch_seed": 1050830753,
+              "final_weighted_nrmse": 0.4996381402015686,
+              "init_seed": 286458011,
+              "member": 0,
+              "optimizer_steps": 768,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6159274578094482
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.542935311794281
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.4996381402015686
+                }
+              ]
+            },
+            {
+              "batch_seed": 4228958620,
+              "final_weighted_nrmse": 0.4962432384490967,
+              "init_seed": 357474208,
+              "member": 1,
+              "optimizer_steps": 768,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6276813745498657
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.5474851727485657
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.4962432384490967
+                }
+              ]
+            }
+          ],
+          "nodes": 35134,
+          "roots": 128,
+          "strategy_samples": 11774,
+          "strategy_seen": 11774
+        },
+        {
+          "advantage_samples": 11915,
+          "advantage_seen": 11915,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.4160504937171936,
+          "iteration": 2,
+          "members": [
+            {
+              "batch_seed": 7258126648,
+              "final_weighted_nrmse": 0.49788933992385864,
+              "init_seed": 860523080,
+              "member": 0,
+              "optimizer_steps": 1024,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6668685674667358
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.5699726343154907
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.5496054887771606
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.49788933992385864
+                }
+              ]
+            },
+            {
+              "batch_seed": 6210492165,
+              "final_weighted_nrmse": 0.49343201518058777,
+              "init_seed": 924259699,
+              "member": 1,
+              "optimizer_steps": 1024,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.648400604724884
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.5439944863319397
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.5110960602760315
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.49343201518058777
+                }
+              ]
+            }
+          ],
+          "nodes": 67107,
+          "roots": 256,
+          "strategy_samples": 23205,
+          "strategy_seen": 23205
+        }
+      ],
+      "ensemble_size": 2,
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "ensemble_advantage_weighted_nrmse": 0.3994901478290558,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.09588341414928436
+      },
+      "nodes": 67107,
+      "policy_progress": [
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.18035350739955902
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 512,
+          "weighted_mean_tv": 0.1408960521221161
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 768,
+          "weighted_mean_tv": 0.12347544729709625
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 1024,
+          "weighted_mean_tv": 0.10896048694849014
+        },
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 1280,
+          "weighted_mean_tv": 0.09674432873725891
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 23205,
+      "strategy_seen": 23205
+    }
+  ],
+  "per_seed_fit_pass": true,
+  "production_ensemble_changed": false,
+  "ready_for_tables": false,
+  "roots_per_iteration": 128,
+  "schema": "SPINCORE_R7_3_ADVANTAGE_ENSEMBLE_END_TO_END_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so"
+}
