@@ -48,7 +48,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set -euo pipefail
-          python tools/run_r7_3_replicated_640_candidate.py \
+          python tools/run_r7_3_replicated_candidate_entry.py \
             --solver build/libspincore_solver_c.so \
             --out /tmp/R7_3_REPLICATED_CANDIDATE_SMOKE.json \
             --iterations 2 \
