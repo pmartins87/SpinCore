@@ -1,182 +1,172 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.2",
+  "version": "1.12.1-recovery.7",
   "recovery_generation": 2,
-  "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
+  "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "PARTIAL_EXACT_LEVEL2_AND_ADVANTAGE_FIT_VARIANCE_PRIMARY_CANDIDATES_RUNNING",
+  "current_gate_status": "PAIRED_POLICY_MIXTURE_AND_DIRECT_BEHAVIOR_E2E_ACTIVE_AFTER_TARGET_TAIL_FORENSICS",
   "ready_for_tables": false,
-  "physical_regression": {
-    "cpp_release_pass": 47,
-    "cpp_release_fail": 0,
-    "cpp_asan_ubsan_pass": 47,
-    "cpp_asan_ubsan_fail": 0,
-    "python_pass": 26,
-    "python_fail": 0,
-    "solver_c_abi": "SPINCORE_SOLVER_C_ABI_V2",
-    "continuous_main_regression_workflow": 31355633653,
-    "continuous_main_regression_status": "PASS"
-  },
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
     "historical_recorded_params_per_network": 152434,
     "delta": 4,
     "byte_equivalence_claimed": false
   },
-  "r7": {
+  "frozen_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35
+  },
+  "roadmap": {
+    "R0_R6": "PASS_REBUILT",
     "R7_0": "PASS_REBUILT",
     "R7_1": "PASS_REBUILT",
     "R7_2": "PASS_REBUILT",
     "R7_3": "FAIL_GATE_ACTIVE",
-    "frozen_gates": {
-      "advantage_weighted_nrmse_max": 0.75,
-      "policy_weighted_mean_tv_max": 0.12,
-      "cross_seed_mean_tv_max": 0.15,
-      "cross_seed_p95_tv_max": 0.35
+    "R7_4": "BLOCKED_BY_R7_3",
+    "R8_R12": "TODO"
+  },
+  "authoritative_contract": {
+    "deck_formula": "seed*1000003 + global_root*97 + iteration",
+    "global_root_continuous_across_iterations": true,
+    "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
+    "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA"
+  },
+  "authoritative_640": {
+    "corrected": {
+      "mean_tv": 0.4776491225,
+      "p95_tv": 0.9024027586,
+      "per_seed_fit_pass": true,
+      "evidence_commit": "7275ada20279c6b18d93d0539c6b44989632a605"
     },
-    "authoritative_acceptance": {
-      "deck_formula": "seed*1000003 + global_root*97 + iteration",
-      "global_root_continuous_across_iterations": true,
-      "corrected_640": {
-        "workflow": 31348997168,
-        "evidence": "7275ada20279c6b18d93d0539c6b44989632a605",
-        "mean_tv": 0.4776491225,
-        "p95_tv": 0.9024027586,
-        "per_seed_fit_pass": true
-      },
-      "strong_advantage_640": {
-        "workflow": 31364029367,
-        "evidence": "75885791b5d8894d4c590a038233f96db5879925",
-        "mean_tv": 0.4644736052,
-        "p95_tv": 0.8862043619,
-        "per_seed_fit_pass": true
-      }
+    "strong_advantage": {
+      "mean_tv": 0.4644736052,
+      "p95_tv": 0.8862043619,
+      "per_seed_fit_pass": true,
+      "evidence_commit": "75885791b5d8894d4c590a038233f96db5879925"
     },
-    "replicated_v1_control_correction": {
-      "status": "PHYSICAL_RESULTS_VALID_NOT_PAIRED_TO_REFERENCE",
-      "document": "validation/R7_3_REPLICATED_V1_DECK_CONTROL_CORRECTION_20260810.md",
-      "v1_deck_formula": "(seed<<32) ^ (iteration<<16) ^ root_index_within_iteration",
-      "separated_advantage_x4": {"mean_tv": 0.4595958292, "p95_tv": 0.8982496858, "evidence": "94b5e423fa51e1dad8445e6ce36b8832d8161648"},
-      "separated_both_x4": {"mean_tv": 0.4588528872, "p95_tv": 0.9088827372, "evidence": "871967f777f7cec17479ed3ec9f476543452912d"},
-      "coupled_advantage_x4": {"mean_tv": 0.4511124194, "p95_tv": 0.8932918906, "evidence": "87547311076fd6a015b7d855de1a9c26124b924f"},
-      "paired_delta_claim_allowed": false
+    "partial_exact_level1": {
+      "mean_tv": 0.437426,
+      "p95_tv": 0.890053,
+      "per_seed_fit_pass": true
     },
-    "partial_exact_v2_256": {
-      "workflow": 31412806987,
-      "evidence": "9c23f9945ad543fa811d90ef2cfefb93d782cff3",
-      "status": "DONE",
-      "all_modes_fit_gates_pass": true,
-      "level0": {"mean_tv": 0.3136405349, "p95_tv": 0.8826571703, "nodes": 126065},
-      "level1": {"mean_tv": 0.2238528877, "p95_tv": 0.8077036142, "mean_ratio": 0.7137243527, "p95_ratio": 0.9150819156, "node_ratio": 2.6671161702},
-      "level2": {"mean_tv": 0.1916954666, "p95_tv": 0.6694129705, "mean_ratio": 0.6111948085, "p95_ratio": 0.75840654, "node_ratio": 9.3494387816, "seed29_advantage_seen": 93740, "seed07_advantage_seen": 109566},
-      "diagnosis": "PARTIAL_EXACT_OPPONENT_EXPECTATION_MATERIAL"
+    "partial_exact_level2": {
+      "mean_tv": 0.4361102283,
+      "p95_tv": 0.8882443905,
+      "per_seed_fit_pass": true
     },
-    "full_exact_end_to_end_64": {
-      "workflow": 31412933368,
-      "evidence": "ee016e41deba227fff2e99f9926118a8ad219329",
-      "level0_mean_tv": 0.300693661,
-      "level0_p95_tv": 0.8203598261,
-      "full_exact_mean_tv": 0.3286885321,
-      "full_exact_p95_tv": 0.8267166615,
-      "mean_ratio": 1.0931009688,
-      "p95_ratio": 1.007748838,
-      "node_ratio": 781.3016999157,
-      "full_exact_advantage_seen_per_seed_approx": 1679700,
-      "reservoir_capacity": 400000,
-      "interpretation": "Full enumeration explodes support/reservoir/function-approximation burden and worsens end-to-end stability; bounded partial exact, not exhaustive exact, is the useful regime."
-    },
-    "common_path_rng_256": {
-      "workflow": 31413103901,
-      "evidence": "819e0b760237801f17b3ee81796b0c5217d6bb61",
-      "status": "DONE",
-      "baseline_mean_tv": 0.3136405349,
-      "baseline_p95_tv": 0.8826571703,
-      "common1_mean_tv": 0.2949636579,
-      "common1_p95_tv": 0.8199386597,
-      "common1_mean_ratio": 0.940451329,
-      "common1_p95_ratio": 0.9289435211,
-      "common4_mean_tv": 0.2886065245,
-      "common4_p95_tv": 0.8044103384,
-      "common4_mean_ratio": 0.9201824776,
-      "common4_p95_ratio": 0.9113508228,
-      "independent4_mean_ratio": 0.7464895102,
-      "independent4_p95_ratio": 0.7836105947,
-      "iteration1_common_memory_digest_equal": true,
-      "diagnosis": "COMMON_RANDOM_NUMBERS_NOT_MATERIAL_AT_SCREEN_SCALE"
-    },
-    "antithetic_x4_256": {
-      "workflow": 31413970227,
-      "evidence": "0a1885d5d393118d890f13df0e71f33d47534171",
-      "status": "DONE",
-      "independent_x4_mean_tv": 0.2341293693,
-      "independent_x4_p95_tv": 0.6916595101,
-      "antithetic_x4_mean_tv": 0.2280294895,
-      "antithetic_x4_p95_tv": 0.7291120887,
-      "mean_ratio": 0.9739465418,
-      "p95_ratio": 1.0541488666,
-      "all_fit_gates_pass": true,
-      "diagnosis": "ANTITHETIC_ROTATED_LATTICE_X4_NOT_MATERIAL_AT_SCREEN_SCALE"
-    },
-    "advantage_fit_sign_sensitivity_256": {
-      "workflow": 31414959700,
-      "evidence": "d0fa315ee79af013a7e7e3294b0877a0e656f820",
-      "status": "DONE",
-      "same_frozen_memory": true,
-      "memory_samples": 10565,
-      "replica_final_nrmse": [0.4835306406, 0.4837696254, 0.4721727967, 0.487426877],
-      "pairwise_regret_matching_mean_tv_average": 0.2243488008,
-      "pairwise_regret_matching_p95_tv_average": 0.757529416,
-      "positive_regret_support_equal_fraction_average": 0.5548502604,
-      "diagnosis": "ADVANTAGE_FIT_REGRET_SIGN_INSTABILITY_MATERIAL",
-      "interpretation": "Even identical Advantage targets fitted to historical-quality NRMSE produce large hard-regret-policy disagreement. Function approximation/training randomness is an independent upstream variance source."
-    },
-    "advantage_fit_factorial_256": {
-      "workflow": 31415792326,
-      "evidence": "555df805e5f14814b1f3e742481bcff110d6cc49",
-      "status": "DONE",
-      "same_init_different_batch_mean_tv": 0.2013197562,
-      "different_init_same_batch_mean_tv": 0.2217367344,
-      "different_init_and_batch_mean_tv": 0.2245318487,
-      "init_to_batch_component_ratio": 1.1014156709,
-      "diagnosis": "ADVANTAGE_INIT_AND_MINIBATCH_VARIANCE_MIXED",
-      "interpretation": "Neither initialization nor minibatch order alone dominates; both are large enough that stabilizing only one is unlikely to solve fit-induced regret-policy variance."
-    },
-    "iteration_compounding_baseline": {
-      "workflow": 31413646505,
-      "evidence": "83e057dee6c2a66d46bf1eb64409855c51631748",
-      "status": "DONE_BASELINE_X4_STILL_RUNNING",
-      "advantage_regret_policy_mean_tv_by_iteration": [0.4768199623, 0.5782663822, 0.5620005727, 0.5539821982, 0.5385470986],
-      "advantage_regret_policy_p95_by_iteration": [1.0, 1.0, 1.0, 1.0, 1.0],
-      "final_average_policy_mean_tv": 0.45339486,
-      "final_average_policy_p95_tv": 0.948677659,
-      "interpretation": "Fresh Advantage regressors already disagree severely at iteration 1 despite exact uniform strategy targets there; divergence is not created only after several CFR feedback iterations. Iteration 2 increases mean further, but the upstream neural-fit/regret-map instability is present immediately."
-    },
-    "causal_state": {
-      "cfr_memory_variance_dominant_over_final_policy_optimizer": true,
-      "root_deck_variation_dominant": false,
-      "card_representation_dominant": false,
-      "own_reach_sampling_fragments_support": true,
-      "advantage_external_sampling_noisy": true,
-      "common_path_correlation_primary_solution": false,
-      "antithetic_x4_primary_solution": false,
-      "full_exact_opponent_enumeration_practical": false,
-      "bounded_partial_exact_promoted_to_acceptance": true,
-      "advantage_fit_function_approximation_variance_material": true,
-      "hard_regret_sign_support_sensitivity_material": true,
-      "advantage_fit_init_and_minibatch_both_material": true,
-      "raw_unique_root_scaling_paused": true,
-      "independent_x8_x16_paused": true
-    },
-    "active_physical_runs": {
-      "deck_exact_coupled_advantage_x4_640_v2": {"workflow": 31414208511, "status": "RUNNING", "roots_per_seed": 640},
-      "partial_exact_level1_level2_640": {"workflow": 31415605322, "status": "RUNNING_PHYSICAL", "levels": [1, 2], "roots_per_seed": 640, "reservoir_capacity": 400000},
-      "partial_exact_level2_strongfit_640": {"workflow": 31415642047, "status": "RUNNING_PHYSICAL", "max_advantage_steps_per_iteration": 8192},
-      "iteration_compounding_advantage_x4": {"workflow": 31413646505, "status": "RUNNING_PHYSICAL"},
-      "common_advantage_fit_rng": {"workflow": 31415931101, "status": "RUNNING_PHYSICAL_256", "purpose": "Use common Advantage init plus common per-iteration minibatch RNG across seeds while keeping traversal/final-policy RNG seed-specific."},
-      "advantage_ensemble_stability": {"workflow": 31416468310, "status": "RUNNING", "replicas": 8, "ensemble_sizes": [1, 2, 4], "purpose": "Test whether raw-Advantage model averaging reduces same-memory hard-regret-policy variance."}
+    "partial_exact_level2_strongfit": {
+      "mean_tv": 0.4128931165,
+      "p95_tv": 0.8717077374,
+      "per_seed_fit_pass": true
     }
   },
-  "next_physical_step": "Finish deck-exact x4 V2, partial-exact 640 levels 1/2 and strong-fit level2, x4 iteration compounding, common Advantage fit randomness, and Advantage ensemble stability. The new primary diagnosis is dual upstream variance: sampled target/memory variance plus large same-memory Advantage function-approximation/sign-support variance. If common deterministic fit or ensembling materially suppresses the latter, combine only with the cheapest partial-exact level needed after acceptance-scale evidence. Keep exhaustive exact, common-path CRN, antithetic x4, raw-root scaling, and independent x8/x16 off the primary path.",
+  "paired_partial_exact_256": {
+    "workflow": 31427702314,
+    "status": "DONE",
+    "size1": {
+      "mean_tv": 0.24565602838993073,
+      "p95_tv": 0.6287055611610413,
+      "per_seed_fit_pass": true,
+      "evidence_commit": "44ed648eec64c030cd7dbde40117b85fd19c0f8c"
+    },
+    "size2_raw_advantage_ensemble": {
+      "mean_tv": 0.2153794914484024,
+      "p95_tv": 0.6321426630020142,
+      "per_seed_fit_pass": true,
+      "evidence_commit": "ceb7d7d7196a0284f7fff85561eee16db802e44d"
+    },
+    "size4_raw_advantage_ensemble": {
+      "mean_tv": 0.2108692228794098,
+      "p95_tv": 0.6279871463775635,
+      "per_seed_fit_pass": true,
+      "evidence_commit": "59f83c73da755f40f6590a2a24785fed9e5b48bd"
+    },
+    "diagnosis": "RAW_ADVANTAGE_ENSEMBLE_IMPROVES_MEAN_NOT_P95"
+  },
+  "final_average_policy_ensemble_256": {
+    "workflow": 31427741160,
+    "evidence_commit": "70be0290fff93e2f38030ce9010fb7b544e8137e",
+    "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413},
+    "size2": {"mean_tv": 0.22690069675445557, "p95_tv": 0.5985572338104248},
+    "size4": {"mean_tv": 0.21291163563728333, "p95_tv": 0.5991727113723755},
+    "all_fit_gates_pass": true,
+    "diagnosis": "FINAL_POLICY_APPROXIMATION_MATERIAL_BUT_NOT_DOMINANT_P95_SOURCE"
+  },
+  "partial_exact_support_forensic_256": {
+    "workflow": 31429040423,
+    "evidence_commit": "4e1ce678e93b68c598b4762a70cca0a08b05dfc2",
+    "raw": {
+      "jaccard": 0.004682524817381532,
+      "mean_lcfr_weight_coverage": 0.009418669838313173,
+      "shared_target_weighted_mean_tv": 0.3292928938673414,
+      "shared_target_p95_tv": 0.75
+    },
+    "poker_isomorphic": {
+      "jaccard": 0.02088876533894603,
+      "mean_lcfr_weight_coverage": 0.07857154056221606,
+      "shared_target_weighted_mean_tv": 0.34929598478275087,
+      "shared_target_p95_tv": 0.8035348652099921
+    },
+    "shared_street_at_screen_scale": 0,
+    "diagnosis": "STRATEGY_TARGET_AND_SUPPORT_DIVERGENCE_ALREADY_UPSTREAM_OF_FINAL_POLICY"
+  },
+  "advantage_common_mode_centering_256": {
+    "workflow": 31428588011,
+    "raw_mean_tv": 0.2311197245990085,
+    "raw_p95_tv": 0.8036775439977646,
+    "best_mode": "legal_midrange",
+    "best_mean_tv": 0.21968514521816063,
+    "best_p95_tv": 0.8242991864681244,
+    "diagnosis": "ADVANTAGE_COMMON_MODE_CENTERING_NOT_MATERIAL"
+  },
+  "direct_behavior_same_memory_256": {
+    "workflow": 31429334213,
+    "evidence_commit": "7095b5180b7470f76f03118fe3d5ce75760238a8",
+    "advantage_hard_regret_mean_tv": 0.2305153285463651,
+    "advantage_hard_regret_p95_tv": 0.8182109793027242,
+    "behavior_surrogate_mean_tv": 0.11041835943857829,
+    "behavior_surrogate_p95_tv": 0.3639979163805644,
+    "mean_ratio": 0.47900658118867395,
+    "p95_ratio": 0.44487048644930405,
+    "diagnosis": "DIRECT_BEHAVIOR_SURROGATE_MATERIAL_SAME_MEMORY",
+    "theoretical_equivalence_to_deep_cfr_claimed": false
+  },
+  "corrected_behavior_aware_objective_v2": {
+    "workflow": 31427105766,
+    "baseline_mean_tv": 0.29443079233169556,
+    "baseline_p95_tv": 0.8028824329376221,
+    "candidate_mean_tv": 0.235531,
+    "candidate_p95_tv": 0.771797,
+    "candidate_advantage_fit_pass": false,
+    "diagnosis": "BEHAVIOR_AWARE_ADVANTAGE_OBJECTIVE_NOT_MATERIAL_END_TO_END"
+  },
+  "active_physical_runs": {
+    "partial_exact_policy_mixture_size4_256": {
+      "workflow": 31428299914,
+      "status": "RUNNING_PHYSICAL",
+      "purpose": "Regret-match each Advantage member before averaging behavior probabilities under the authoritative deck/primary-RNG contract."
+    },
+    "direct_behavior_e2e_256": {
+      "workflow": 31431672631,
+      "status": "RUNNING_SETUP_REGRESSION_SMOKE_THEN_PHYSICAL",
+      "purpose": "Causal E2E screen after same-memory p95 fell ~55.5%; surrogate training uses isolated side RNG and is explicitly not yet a production algorithm."
+    }
+  },
+  "causal_state": {
+    "cfr_strategy_support_fragmentation_material": true,
+    "shared_strategy_targets_diverge_materially": true,
+    "final_average_policy_is_primary_p95_source": false,
+    "advantage_function_approximation_variance_material": true,
+    "raw_advantage_ensembling_primary_solution": false,
+    "common_mode_advantage_offset_primary_solution": false,
+    "direct_behavior_surrogate_same_memory_signal_large": true,
+    "direct_behavior_surrogate_theoretical_review_required": true,
+    "raw_unique_root_scaling_paused": true,
+    "frozen_gates_unchanged": true
+  },
+  "next_physical_step": "Complete paired policy-mixture size4 and direct-behavior E2E. Promote neither automatically. If policy mixture materially reduces both mean and p95 with fit gates PASS, extend the smallest useful mixture across more CFR iterations before 640. If direct behavior materially reduces p95 end-to-end, first formalize/version its regret semantics and checkpoint/RNG contract before acceptance-scale testing. If both fail, target CFR strategy-target/trajectory stability directly; final-policy smoothing and raw model averaging are already ruled out as dominant solutions.",
   "ready_for_tables": false
 }
