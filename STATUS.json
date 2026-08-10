@@ -5,7 +5,8 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "ADVANTAGE_PATH_VARIANCE_DOMINANT_THREE_640_CANDIDATES_AND_PARTIAL_EXACT_SCREEN_RUNNING",
+  "current_gate_status": "X4_ACCEPTANCE_FAIL_ITERATIVE_DIVERGENCE_ESTIMATOR_REDESIGN_ACTIVE",
+  "ready_for_tables": false,
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
@@ -34,13 +35,70 @@
       "cross_seed_mean_tv_max": 0.15,
       "cross_seed_p95_tv_max": 0.35
     },
-    "corrected_640": {
-      "workflow": 31348997168,
-      "evidence": "7275ada20279c6b18d93d0539c6b44989632a605",
-      "mean_tv": 0.4776491225,
-      "p95_tv": 0.9024027586,
-      "per_seed_fit_pass": true,
-      "cross_seed_pass": false
+    "acceptance_scale": {
+      "corrected_640": {
+        "workflow": 31348997168,
+        "evidence": "7275ada20279c6b18d93d0539c6b44989632a605",
+        "mean_tv": 0.4776491225,
+        "p95_tv": 0.9024027586,
+        "per_seed_fit_pass": true,
+        "cross_seed_pass": false
+      },
+      "strong_advantage_640": {
+        "workflow": 31364029367,
+        "evidence": "75885791b5d8894d4c590a038233f96db5879925",
+        "mean_tv": 0.4644736052,
+        "p95_tv": 0.8862043619,
+        "per_seed_fit_pass": true,
+        "cross_seed_pass": false
+      },
+      "separated_advantage_x4_640": {
+        "workflow": 31368447316,
+        "evidence": "94b5e423fa51e1dad8445e6ce36b8832d8161648",
+        "duration_seconds": 1901.3666263,
+        "mean_tv": 0.4595958292,
+        "p50_tv": 0.4333748817,
+        "p95_tv": 0.8982496858,
+        "max_tv": 0.9986587167,
+        "seed29_advantage_nrmse": 0.5107818246,
+        "seed29_policy_tv": 0.1039337739,
+        "seed07_advantage_nrmse": 0.5100803971,
+        "seed07_policy_tv": 0.1048400477,
+        "per_seed_fit_pass": true,
+        "cross_seed_pass": false
+      },
+      "separated_both_x4_640": {
+        "workflow": 31368447316,
+        "evidence": "871967f777f7cec17479ed3ec9f476543452912d",
+        "duration_seconds": 2580.6543469,
+        "mean_tv": 0.4588528872,
+        "p50_tv": 0.4282659888,
+        "p95_tv": 0.9088827372,
+        "max_tv": 0.997759223,
+        "seed29_advantage_nrmse": 0.5107818246,
+        "seed29_policy_tv": 0.1005219519,
+        "seed07_advantage_nrmse": 0.5100803971,
+        "seed07_policy_tv": 0.1098142564,
+        "per_seed_fit_pass": true,
+        "cross_seed_pass": false
+      },
+      "coupled_advantage_x4_640": {
+        "workflow": 31368894934,
+        "evidence": "87547311076fd6a015b7d855de1a9c26124b924f",
+        "duration_seconds": 1902.3739986,
+        "mean_tv": 0.4511124194,
+        "p50_tv": 0.4213754833,
+        "p95_tv": 0.8932918906,
+        "max_tv": 0.9986610413,
+        "seed29_advantage_nrmse": 0.5079847574,
+        "seed29_policy_tv": 0.1014092788,
+        "seed07_advantage_nrmse": 0.5014516711,
+        "seed07_policy_tv": 0.1083698943,
+        "per_seed_fit_pass": true,
+        "cross_seed_pass": false,
+        "best_x4_mean": true
+      },
+      "x4_conclusion": "Plain independent Advantage-path replication is insufficient at five-iteration 640 scale. Coupled x4 improves corrected-640 mean about 5.6% but leaves the p95 tail essentially unchanged; both_x4 adds cost without a tail benefit. Do not promote x8/x16 blindly."
     },
     "scale_1280": {
       "workflow": 31353149504,
@@ -51,72 +109,43 @@
       "cross_seed_pass": false,
       "decision": "BRUTE_FORCE_UNIQUE_ROOT_SCALING_PAUSED"
     },
-    "strong_advantage_640": {
-      "workflow": 31364029367,
-      "evidence": "75885791b5d8894d4c590a038233f96db5879925",
-      "mean_tv": 0.4644736052,
-      "p95_tv": 0.8862043619,
-      "seed29_advantage_nrmse": 0.5048450232,
-      "seed29_policy_tv": 0.1068615764,
-      "seed07_advantage_nrmse": 0.4963337481,
-      "seed07_policy_tv": 0.103694886,
-      "per_seed_fit_pass": true,
-      "cross_seed_pass": false,
-      "interpretation": "Better Advantage fit alone improves 640 mean/p95 only 2.76%/1.80%."
+    "causal_summary": {
+      "cfr_memory_variance_dominant": true,
+      "root_deck_variation_dominant": false,
+      "off_support_policy_extrapolation_material": true,
+      "card_representation_dominant": false,
+      "rng_bookkeeping_coupling_dominant": false,
+      "stronger_advantage_fit_sufficient": false,
+      "own_reach_sampling_fragments_support": true,
+      "advantage_external_sampling_noisy": true,
+      "short_screen_advantage_x4_material": true,
+      "acceptance_scale_advantage_x4_sufficient": false,
+      "current_hypothesis": "Path noise is real but its short-screen benefit collapses as CFR iterations compound; investigate correlated/common paths, bounded expectation enumeration, and iteration-level regret-policy divergence rather than raw sampling volume."
     },
-    "causal_diagnostics": {
-      "cfr_memory_variance": {
-        "workflow": 31354594794,
-        "across_memory_mean_tv": 0.4698922187,
-        "within_memory_mean_tv": 0.2426533997,
-        "diagnosis": "CFR_MEMORY_VARIANCE_DOMINANT"
-      },
-      "shared_deck_support": {
-        "workflow": 31358002704,
-        "shared_deck_mean_tv": 0.4600675106,
-        "independent_reference_mean_tv": 0.4698922187,
-        "own_support_replica_tv": 0.1203103587,
-        "off_support_replica_tv": 0.2923050523,
-        "diagnosis": "OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL"
-      },
-      "card_isomorphism": {
-        "workflow": 31360839650,
-        "raw_jaccard": 0.0434318378,
-        "poker_isomorphic_jaccard": 0.0299313654,
-        "representation_rewrite_promoted": false
-      },
-      "rng_bookkeeping_coupling": {
-        "workflow": 31361125172,
-        "diagnosis": "TRAINING_TRAVERSAL_RNG_COUPLING_NOT_DOMINANT_AT_SCREEN_SCALE"
-      }
-    },
-    "exact_path_controls": {
+    "exact_controls": {
       "own_reach_support_curve": {
         "workflow": 31366894171,
         "evidence": "3f5130561f0e3d83e65f33b451af86ce80dfa04d",
         "rep1_jaccard": 0.0339460954,
         "rep8_jaccard": 0.074382623,
-        "rep1_weight_coverage": 0.0832295169,
-        "rep8_weight_coverage": 0.2045927503,
-        "shared_target_tv_zero_invariant": true,
-        "diagnosis": "OWN_REACH_SAMPLING_DENSITY_MATERIAL_FOR_SUPPORT"
+        "rep8_to_rep1_jaccard_ratio": 2.1911981976,
+        "rep8_to_rep1_weight_coverage_ratio": 2.4581753915,
+        "shared_target_tv_zero": true
       },
       "advantage_target_curve": {
         "workflow": 31366996254,
         "evidence": "d1ab3ebc7a905ce2b164e1bf1dee1d5c3efd0a87",
         "rep1_regret_matching_mean_tv": 0.4210043061,
+        "rep4_regret_matching_mean_tv": 0.382969826,
         "rep8_regret_matching_mean_tv": 0.3712658026,
-        "rep1_p95_tv": 1.0,
-        "rep8_p95_tv": 1.0,
-        "diagnosis": "EXTERNAL_SAMPLING_ADVANTAGE_TARGET_VARIANCE_MATERIAL"
+        "rep8_p95_tv": 1.0
       },
       "exact_own_reach": {
         "workflow": 31367407567,
         "evidence": "a16e043fffda04f2c2fa228611e3e352d7ca39b8",
         "four_deal_nodes": 1265152,
         "four_deal_target_samples": 188440,
-        "rep8_exact_support_coverage": 0.0210685761,
-        "diagnosis": "EXACT_OWN_REACH_ENUMERATION_FEASIBLE_AT_BENCHMARK_SCALE"
+        "rep8_exact_support_coverage": 0.0210685761
       },
       "exact_advantage_opponent_expectation": {
         "workflow": 31368837895,
@@ -124,62 +153,56 @@
         "four_deal_nodes": 1265152,
         "four_deal_advantage_samples": 188440,
         "exact_phase_seconds": 15.9119536877,
-        "rep1_exact_weight_coverage": 0.0425624066,
-        "rep4_exact_weight_coverage": 0.1103360764,
-        "rep8_exact_weight_coverage": 0.1575476555,
-        "rep1_exact_oracle_regret_matching_mean_tv": 0.3818597476,
-        "rep4_exact_oracle_regret_matching_mean_tv": 0.2704408291,
-        "rep8_exact_oracle_regret_matching_mean_tv": 0.2571491701,
+        "rep1_oracle_mean_tv": 0.3818597476,
+        "rep4_oracle_mean_tv": 0.2704408291,
+        "rep8_oracle_mean_tv": 0.2571491701,
         "rep1_greedy_agreement": 0.4802392805,
         "rep4_greedy_agreement": 0.7338421013,
         "rep8_greedy_agreement": 0.7473383279,
-        "p95_tv_all_sample_counts": 1.0,
-        "diagnosis": "EXACT_ADVANTAGE_OPPONENT_EXPECTATION_FEASIBLE_AT_BENCHMARK_SCALE",
-        "interpretation": "x4 captures much of the independent-replication gain; x8 has diminishing mean benefit and the extreme tail remains unresolved."
+        "p95_all_sample_counts": 1.0,
+        "interpretation": "Independent x4 captures much of the average benefit available before diminishing returns; the extreme tail remains unresolved."
       }
     },
     "path_replication_screen_256": {
       "workflow": 31366433008,
       "evidence": "a9c57fe6e3c9149ed3010ead280912295bd4f5f6",
-      "all_fit_gates_pass": true,
-      "baseline_vs_strategy_x4_advantage_checkpoint_nrmse_delta": 0.0,
       "baseline": {"mean_tv": 0.3053824902, "p95_tv": 0.8705430627},
       "strategy_x4": {"mean_tv": 0.2756419182, "p95_tv": 0.8659037352},
       "advantage_x4": {"mean_tv": 0.2191179842, "p95_tv": 0.6909738183},
       "both_x4": {"mean_tv": 0.1975979507, "p95_tv": 0.7265338302},
-      "advantage_x4_mean_ratio": 0.717519803,
-      "advantage_x4_p95_ratio": 0.7937273271,
-      "both_x4_mean_ratio": 0.6470506891,
-      "both_x4_p95_ratio": 0.8345754062,
-      "diagnosis": "ADVANTAGE_EXTERNAL_SAMPLING_VARIANCE_MATERIAL"
+      "diagnosis": "ADVANTAGE_EXTERNAL_SAMPLING_VARIANCE_MATERIAL_AT_SHORT_SCREEN_SCALE"
+    },
+    "invalid_diagnostic": {
+      "partial_exact_v1_workflow": 31369138285,
+      "status": "INVALID_CONTROL_NOT_ESTIMATOR_RESULT",
+      "fallback_persisted": true,
+      "build_ctest_python_regression_pass": true,
+      "failure": "Experimental level-0 reimplementation failed exact equality against a persisted baseline. Positive-level V1 results are not accepted as evidence.",
+      "replacement": "V2 uses the authoritative ExternalSamplingCollector itself as level 0 in the same physical run."
     },
     "active_physical_runs": {
-      "replicated_640_separated": {
-        "workflow": 31368447316,
-        "status": "RUNNING",
-        "jobs": ["advantage_x4", "both_x4"],
-        "roots_per_seed": 640,
-        "reservoir_capacity": 400000,
-        "rng_contract": "SEPARATE_EXPERIMENTAL"
+      "partial_exact_v2": {
+        "workflow": 31412806987,
+        "status": "RUNNING_PHYSICAL_256",
+        "levels": [1, 2],
+        "authoritative_level0": true,
+        "production_estimator_changed": false
       },
-      "advantage_x4_coupled_640": {
-        "workflow": 31368894934,
-        "status": "RUNNING",
-        "roots_per_seed": 640,
-        "rng_contract": "RECOVERED_COUPLED",
-        "purpose": "Test whether x4 benefit survives without a new RNG stream schema."
+      "full_exact_advantage_upper_bound": {
+        "workflow": 31412933368,
+        "status": "RUNNING_PHYSICAL_64",
+        "experimental_level": 128,
+        "purpose": "Measure the maximum short-scale benefit of eliminating opponent external-sampling variance entirely."
       },
-      "partial_exact_advantage_256": {
-        "workflow": 31369138285,
-        "status": "RUNNING",
-        "exact_opponent_levels": [0, 1, 2],
-        "level0_regression_reference_mean_tv": 0.3053824902,
-        "level0_regression_reference_p95_tv": 0.8705430627,
-        "level0_required_tolerance": 1e-9,
-        "purpose": "Measure lower-variance bounded opponent enumeration versus node cost while preserving expected external-sampling training distribution."
+      "common_path_rng_screen": {
+        "workflow": 31413103901,
+        "status": "RUNNING_PHYSICAL_256",
+        "modes": ["independent_1", "independent_4", "common_1", "common_4"],
+        "iteration1_common_memory_digest_invariant": "REQUIRED",
+        "purpose": "Test common-random-number variance reduction as a way to suppress iterative cross-seed divergence without blindly increasing paths."
       }
     }
   },
-  "next_physical_step": "Resolve the three 640 x4 candidates and the 256 partial-exact estimator screen in parallel. Prefer coupled advantage_x4 if it matches separated x4, because it preserves the recovered RNG-state contract. If x4 remains far from the frozen tail gate, promote the best partial-exact level or move to stratified/antithetic opponent sampling benchmarked against the exact Advantage oracle. Do not resume raw unique-root scaling.",
+  "next_physical_step": "Complete partial-exact V2, full-exact upper-bound, and common-path RNG screens. If bounded/full expectation or common random numbers materially reduce both mean and tail, promote the cheapest mechanism to an acceptance-scale candidate with versioned checkpoint semantics. If full exact still leaves large divergence, pivot immediately to iteration-level regret-sign/policy-support instability and target aggregation/control-variate diagnostics. Do not resume brute-force roots or x8/x16 replication without causal evidence.",
   "ready_for_tables": false
 }
