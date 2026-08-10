@@ -2,7 +2,7 @@
 
 `READY FOR TABLES = NO`. Frozen R7.3 gates are unchanged.
 
-This note records two exact bootstrap controls run after the strong-Advantage 640 candidate showed that better neural fit alone improves cross-seed stability only modestly. Both controls remove neural approximation from the experiment and use the same 256 unique hidden-deal stream for both algorithm seeds. Their purpose is to measure the two stochastic path estimators directly.
+This note records exact bootstrap controls run after the strong-Advantage 640 candidate showed that better neural fit alone improves cross-seed stability only modestly. The controls remove neural approximation from the causal measurements and use fixed hidden-deal schedules. Their purpose is to measure the two stochastic path estimators and the feasibility of a lower-variance own-reach estimator directly.
 
 ## 1. Own-reach AveragePolicy sampling curve
 
@@ -61,31 +61,52 @@ Persisted diagnosis: `EXTERNAL_SAMPLING_ADVANTAGE_TARGET_VARIANCE_MATERIAL`.
 
 Interpretation: the external-sampling Advantage estimator also carries substantial variance, including extreme policy-level disagreement on a tail of shared states. Increasing independent trajectories helps, but the response is much weaker than the own-reach support response: 8x compute produces only about a 12% reduction in mean regret-matching TV and leaves p95 saturated at 1.0.
 
-## 3. Combined inference before the downstream four-mode screen finishes
+## 3. Exact own-reach expectation feasibility
 
-These two exact controls establish that **both** Monte-Carlo path estimators contribute to generation-2 instability, but in different ways:
+Workflow `31367407567`; evidence commit `a16e043fffda04f2c2fa228611e3e352d7ca39b8`; schema `SPINCORE_R7_3_EXACT_OWN_REACH_FEASIBILITY_V1`.
+
+The exact estimator recursively enumerates target-player actions as well as non-target actions. At each target state it records sigma with weight `LCFR_iteration * own_reach`; after target action `a`, reach becomes `own_reach * sigma[a]`. This is the mathematical expectation of the existing sampled own-reach estimator.
+
+The capped four-deal HU benchmark completed without hitting either the one-million-node-per-target-root cap or the depth cap:
+
+- 4 unique deals x 2 target players = 8 exact target-root traversals;
+- `1,265,152` total visited nodes;
+- `188,440` target-state samples;
+- `116,192` unique raw observations;
+- maximum depth `45`;
+- exact traversal phase `4.95 s` on the GitHub CPU runner;
+- all eight target-root traversals had exactly `158,144` nodes and `23,555` target-state samples, reflecting the fixed public action-tree shape for this HU scenario.
+
+The sampled estimator covered only a tiny subset of the exact support on the same four deals:
+
+| sampled own-reach trajectories | sampled unique | exact-support coverage | sampled states outside exact support |
+|---:|---:|---:|---:|
+| 1 | 350 | 0.3012% | 0 |
+| 4 | 933 | 0.8030% | 0 |
+| 8 | 2,448 | 2.1069% | 0 |
+
+Persisted diagnosis: `EXACT_OWN_REACH_ENUMERATION_FEASIBLE_AT_BENCHMARK_SCALE`.
+
+This result changes the interpretation of the earlier root-scaling failure. The state/action support per deal is enormous: adding more unique deals spreads compute across more card observations while still observing only a tiny Monte-Carlo subset of the action-path support for each deal. That is a plausible reason why 640 -> 1280 unique roots barely moved cross-seed TV.
+
+However, exact enumeration is **not** ready to replace the recovered collector. Linear scaling from the benchmark would generate tens of millions of target-state samples at a 640-root HU acceptance run, far beyond the present 100k strategy reservoir. A production-quality exact or partially exact estimator therefore needs an explicit bounded-memory design (for example weighted streaming aggregation/reservoir or stratified reach sampling), versioned checkpoint semantics, and deterministic resume recertification.
+
+## 4. Combined inference while the downstream four-mode screen finishes
+
+The exact controls establish that **both** Monte-Carlo path estimators contribute to generation-2 instability, but in different ways:
 
 1. own-reach sampling is a strong source of **support fragmentation** even when the true policy is exactly the same;
 2. Advantage external sampling is a source of **target-value / regret-matching noise** even on states both seeds share;
-3. brute-force unique-deal scaling is therefore an inefficient way to attack the problem, because each unique deal currently receives only one stochastic trajectory for each estimator;
-4. the active four-mode screen (`31366433008`) is the downstream test that determines which variance source most strongly affects the actually fitted AveragePolicy cross-seed metric when Advantage fitting is in the historical-quality range.
+3. exact enumeration shows that one or even eight own-reach trajectories cover only a very small fraction of the action-path support available for a fixed deal;
+4. brute-force unique-deal scaling is therefore an inefficient way to attack the problem, because each deal currently receives only one stochastic trajectory for each estimator;
+5. the active four-mode screen (`31366433008`) is the downstream test that determines which variance source most strongly affects the actually fitted AveragePolicy cross-seed metric when Advantage fitting is in the historical-quality range.
 
 The four-mode screen compares `baseline`, `strategy_x4`, `advantage_x4`, and `both_x4` while explicitly isolating RNG streams. Its result, not the support curves alone, will choose the next 640-root candidate.
 
-## 4. Exact own-reach expectation as a possible estimator redesign
-
-A second follow-up has been launched as workflow `31367407567` to benchmark whether the Monte-Carlo own-reach action sample can be replaced, in a future versioned estimator, by exact own-reach expectation enumeration:
-
-- at a target-player node, record sigma with weight `LCFR_iteration * own_reach`;
-- enumerate all target actions and multiply `own_reach` by that action's sigma;
-- continue enumerating non-target actions without multiplying target-player reach, matching the current own-reach estimator's expectation.
-
-This is mathematically the expectation of the current sampled own-reach estimator, but it may be computationally too expensive in full NLHE. The benchmark is therefore fail-safe and capped; it is measuring feasibility only. No production collection contract or checkpoint format has been changed.
-
 ## 5. Decision rule
 
-- If `strategy_x4` materially lowers downstream cross-seed policy TV and keeps the controlled Advantage trajectory invariant exact, promote multiple own-reach trajectories to the next 640-root candidate.
-- If `advantage_x4` dominates, promote repeated Advantage external-sampling trajectories.
+- If `strategy_x4` materially lowers downstream cross-seed policy TV and keeps the controlled Advantage trajectory invariant exact, promote multiple own-reach trajectories to the next 640-root candidate. Increase strategy-reservoir capacity enough that the extra trajectories are not silently discarded by Algorithm-R before evaluating the benefit.
+- If `advantage_x4` dominates, promote repeated Advantage external-sampling trajectories and size the Advantage reservoir/optimizer budget to preserve the lower-variance samples.
 - If `both_x4` is the only material improvement, test the combined schedule.
-- If the exact own-reach expectation benchmark is computationally tractable and substantially more efficient than Monte-Carlo replication, consider it as a **versioned estimator redesign**, followed by checkpoint/resume and R7 recertification rather than silently replacing historical semantics.
-- If none of these mechanisms improves downstream cross-seed TV enough, move to paired/common-random-number or stratified external-sampling estimators rather than adding raw roots.
+- Exact own-reach expectation remains a **versioned estimator-redesign option**, not a drop-in change. Its benchmark compute is tractable, but its raw sample volume is not compatible with the current memory contract at 640 roots.
+- If independent replication does not improve downstream cross-seed TV enough, the next estimator-design candidates are stratified/antithetic own-reach sampling and paired or stratified external sampling, not another increase in unique roots.
