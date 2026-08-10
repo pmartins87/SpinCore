@@ -25,8 +25,8 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - stronger AdvantageNet 640 candidate — **DONE: modest improvement only; still far from frozen cross-seed gates**
     - own-reach bootstrap support-density curve — **DONE: sampling density strongly controls support overlap**
     - Advantage bootstrap target-variance curve — **DONE: external sampling materially noisy, but 8x replication only modestly reduces regret-matching TV**
+    - exact own-reach expectation feasibility benchmark — **DONE: feasible at 4-root benchmark, but exact support is enormous; 8 sampled paths covered only 2.11%**
     - external-sampling path replication decomposition — **RUNNING: baseline vs strategy_x4 vs advantage_x4 vs both_x4**
-    - exact own-reach expectation feasibility benchmark — **RUNNING: versioned estimator redesign candidate only if computationally tractable**
     - brute-force root scaling — **PAUSED until causal diagnosis closes**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
@@ -63,6 +63,7 @@ Corrected 640 roots/seed:
 6. **Stronger AdvantageNet fitting is beneficial but insufficient.** At full 640 acceptance scale mean TV improved only from `0.477649` to `0.464474` (`2.76%`) and p95 from `0.902403` to `0.886204` (`1.80%`), despite both individual fit gates passing.
 7. **Own-reach Monte-Carlo sampling is a proven source of support fragmentation even under an identical exact policy.** With the same 256 root deals and exact zero-regret uniform behavior, increasing independent own-reach trajectories from 1 to 8 raised poker-isomorphic Jaccard `0.033946 -> 0.074383` (`2.191x`) and LCFR-weight coverage `0.083230 -> 0.204593` (`2.458x`). Shared strategy-target TV remained zero to floating-point precision, proving the difference is sampling support rather than true policy disagreement.
 8. **External-sampling Advantage targets are also noisy.** Under the same exact uniform policy and same root deals, 1->8 Advantage trajectories raised weight coverage `0.077203 -> 0.158538` (`2.054x`), but shared-target relative RMSE fell only `1.00943 -> 0.88105` and induced regret-matching mean TV only `0.42100 -> 0.37127`; p95 remained `1.0`. More Advantage paths help, but with weaker dose response than own-reach support density.
+9. **Exact own-reach expectation is computationally possible on a bounded benchmark, but exposes the scale of the support problem.** Four unique HU deals (both target players) required `1,265,152` tree nodes and `188,440` target-state samples in `4.95 s`, yielding `116,192` unique raw observations. On those same four deals, 1 sampled own-reach trajectory covered only `0.301%` of exact support, 4 trajectories `0.803%`, and 8 trajectories `2.107%`. Exact enumeration is therefore a plausible estimator-design direction, not a drop-in production change: at acceptance scale its raw sample volume would be enormous and would interact with reservoir design/capacity.
 
 Strong-Advantage 640 details:
 
@@ -87,7 +88,7 @@ Each mode fits its AveragePolicy and measures acceptance-like cross-seed mean/p9
 
 Workflow: `31366433008`.
 
-In parallel, workflow `31367407567` benchmarks exact own-reach expectation enumeration. Exact enumeration is mathematically the expectation of the current sampled own-reach estimator if each target-state sample is weighted by `LCFR_iteration * own_reach`, but it may be too expensive in the full NLHE action tree. It will only be considered as a versioned estimator redesign if the bounded feasibility benchmark succeeds.
+The exact own-reach feasibility evidence is workflow `31367407567`, commit `a16e043fffda04f2c2fa228611e3e352d7ca39b8`. The result justifies keeping exact expectation/stratified reach as an estimator-redesign option, but **not** replacing the recovered sampled own-reach contract without a versioned design, bounded-memory strategy and checkpoint/resume recertification.
 
 Detailed control evidence: `validation/R7_3_PATH_VARIANCE_CONTROLS_20260810.md`.
 
