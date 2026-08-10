@@ -1,0 +1,120 @@
+name: SpinCore R7.3 diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'python/spincore_nn/models.py'
+      - 'python/spincore/deep_cfr.py'
+      - 'python/spincore/r7.py'
+      - 'python_tests/**'
+      - 'tools/run_r7_3_diagnostic.py'
+      - '.github/workflows/r7_3_diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build authoritative solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+
+      - name: Run Python regression suite
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          pytest -q python_tests
+
+      - name: Run short scheduling smoke test
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_diagnostic.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_SMOKE.json \
+            --iterations 2 \
+            --roots-per-iteration 8 \
+            --advantage-steps 16 \
+            --policy-chunk-steps 16 \
+            --policy-max-steps 32 \
+            --batch-size 32 \
+            --audit-size 64 \
+            --cross-seed-per-seed 64 \
+            --reservoir-capacity 10000
+
+      - name: Run frozen 640-root two-seed diagnostic
+        id: r73
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set +e
+          python tools/run_r7_3_diagnostic.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_DIAGNOSTIC_640.json \
+            --strict
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Persist R7.3 physical evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f validation/R7_3_SMOKE.json
+          if [ ! -f validation/R7_3_DIAGNOSTIC_640.json ]; then
+            echo '{"schema":"SPINCORE_R7_3_DIAGNOSTIC_V1","runner_failed_before_report":true,"r7_3_pass":false,"ready_for_tables":false}' > validation/R7_3_DIAGNOSTIC_640.json
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add validation/R7_3_DIAGNOSTIC_640.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 640-root diagnostic [r7-evidence-skip]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Enforce frozen R7.3 gate
+        if: always()
+        shell: bash
+        run: |
+          code='${{ steps.r73.outputs.exit_code }}'
+          if [ -z "$code" ]; then code=3; fi
+          exit "$code"
