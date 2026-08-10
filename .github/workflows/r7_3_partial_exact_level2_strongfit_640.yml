@@ -55,7 +55,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set +e
-          python tools/run_r7_3_partial_exact_640_candidate.py \
+          python tools/run_r7_3_partial_exact_640_candidate_entry.py \
             --solver build/libspincore_solver_c.so \
             --out validation/R7_3_PARTIAL_EXACT_LEVEL2_STRONGFIT_640_CANDIDATE.json \
             --exact-opponent-levels 2 \
