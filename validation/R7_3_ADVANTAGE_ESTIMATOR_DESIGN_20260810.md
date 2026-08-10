@@ -2,109 +2,133 @@
 
 `READY FOR TABLES = NO`. Frozen R7.3 gates remain unchanged.
 
-This record narrows the remaining R7.3 failure to the Advantage external-sampling estimator and defines the next estimator-design ladder without changing production semantics prematurely.
+## 1. Established causal picture
 
-## 1. Why Advantage sampling is now the primary target
+Physical experiments now support the following hierarchy:
 
-The causal chain is supported by multiple independent physical experiments:
+1. changing CFR memories explains much more cross-seed disagreement than changing AveragePolicy init/optimizer;
+2. hidden-card stream differences explain little;
+3. off-support extrapolation is material but downstream;
+4. stronger Advantage fitting helps, but is insufficient at 640;
+5. exact bootstrap controls prove that own-reach sampling fragments strategy support and opponent external sampling injects Advantage target noise;
+6. at two CFR iterations, four Advantage paths strongly improve fitted cross-seed stability;
+7. at five iterations / 640 roots, that x4 improvement largely disappears.
 
-1. changing CFR memories explains much more cross-seed policy disagreement than changing AveragePolicy optimizer/init;
-2. common hidden cards barely reduce that disagreement;
-3. exact uniform-policy controls prove that own-reach sampling fragments support and that opponent-action external sampling injects Advantage target noise;
-4. stronger neural fitting alone improves the 640 acceptance metric only modestly;
-5. the controlled four-mode downstream screen shows that four Advantage trajectories reduce fitted cross-seed mean TV far more than four strategy trajectories, and also improve p95 materially.
+The remaining problem is therefore no longer “does external sampling have variance?” It does. The harder question is **which lower-variance estimator prevents small early errors from compounding through repeated regret matching and neural refits?**
 
-The downstream path screen (`31366433008`, evidence `a9c57fe6e3c9149ed3010ead280912295bd4f5f6`) produced:
+## 2. Short-screen path decomposition
 
-- baseline mean/p95: `0.305382 / 0.870543`
-- strategy_x4: `0.275642 / 0.865904`
-- advantage_x4: `0.219118 / 0.690974`
-- both_x4: `0.197598 / 0.726534`
+Workflow `31366433008`, evidence `a9c57fe6e3c9149ed3010ead280912295bd4f5f6`:
 
-All individual fit gates passed and the baseline-vs-strategy_x4 Advantage checkpoint isolation delta was exactly zero. Persisted diagnosis: `ADVANTAGE_EXTERNAL_SAMPLING_VARIANCE_MATERIAL`.
+| mode | mean TV | p95 TV |
+|---|---:|---:|
+| baseline | `0.305382` | `0.870543` |
+| strategy_x4 | `0.275642` | `0.865904` |
+| advantage_x4 | `0.219118` | `0.690974` |
+| both_x4 | `0.197598` | `0.726534` |
 
-## 2. Exact opponent-expectation Advantage oracle
+All individual fit gates passed; the baseline-vs-strategy_x4 Advantage checkpoint isolation delta was exactly zero. Advantage replication is the strongest isolated short-screen lever.
 
-Workflow `31368837895`, evidence commit `45c68d2028ac658ae12870c97b9bf758e47f2a89`, schema `SPINCORE_R7_3_EXACT_ADVANTAGE_FEASIBILITY_V1`.
+## 3. Exact opponent-expectation oracle
 
-The oracle keeps traverser actions enumerated exactly as the recovered external-sampling collector does, but also enumerates opponent actions. Returned utility is the exact sigma-weighted opponent expectation. Downstream Advantage training-distribution mass is weighted by explicit opponent reach, making this the mathematical expectation of sampling one opponent action from sigma.
+Workflow `31368837895`, evidence `45c68d2028ac658ae12870c97b9bf758e47f2a89`.
 
-Under the exact zero-regret uniform policy, four unique HU deals and both traversers required:
+Four unique HU deals and both traversers:
 
-- `1,265,152` nodes;
-- `188,440` Advantage samples before aggregation;
-- exact opponent-expectation phase `15.91 s` on the GitHub CPU runner;
-- max depth `45`;
-- all eight target-root traversals completed below the one-million-node cap.
+- exact nodes `1,265,152`;
+- exact Advantage samples `188,440`;
+- exact phase `15.91 s`;
+- max depth `45`.
 
-This establishes an exact oracle for small-scale estimator evaluation.
+Sampled external-sampling memories versus exact expectation:
 
-## 3. Independent sampled paths measured against the exact oracle
+| paths | exact weight coverage | target relative RMSE | regret-match mean TV | p95 | greedy agreement |
+|---:|---:|---:|---:|---:|---:|
+| 1 | `0.042562` | `0.835858` | `0.381860` | `1.0` | `0.480239` |
+| 4 | `0.110336` | `0.676023` | `0.270441` | `1.0` | `0.733842` |
+| 8 | `0.157548` | `0.686965` | `0.257149` | `1.0` | `0.747338` |
 
-On the same four deals, sampled external-sampling memories were compared directly to exact target vectors and exact regret-matching policies.
+This gives a direct engineering rule: x4 captures most of the inexpensive independent-replication improvement; x8 adds little average benefit and still fails catastrophically on a tail of states. Therefore independent x8/x16 is not the next preferred design.
 
-| sampled Advantage trajectories | sampled unique | exact weight coverage | target relative RMSE | regret-matching mean TV | p50 TV | p95 TV | weighted greedy agreement |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 73 | 0.042562 | 0.835858 | 0.381860 | 0.062393 | 1.000000 | 0.480239 |
-| 4 | 540 | 0.110336 | 0.676023 | 0.270441 | 0.020846 | 1.000000 | 0.733842 |
-| 8 | 1,185 | 0.157548 | 0.686965 | 0.257149 | 0.012940 | 1.000000 | 0.747338 |
+## 4. Acceptance-scale x4 results
 
-Every sampled observation belonged to the exact support (`sampled_precision_against_exact = 1.0`).
+Three full 640 candidates have now completed:
 
-The most important engineering result is the dose response:
+| candidate | mean TV | p95 TV | individual fits | evidence |
+|---|---:|---:|---|---|
+| separated Advantage x4 | `0.459596` | `0.898250` | PASS | `94b5e423fa51e1dad8445e6ce36b8832d8161648` |
+| separated both x4 | `0.458853` | `0.908883` | PASS | `871967f777f7cec17479ed3ec9f476543452912d` |
+| recovered-coupled Advantage x4 | **`0.451112`** | `0.893292` | PASS | `87547311076fd6a015b7d855de1a9c26124b924f` |
 
-- 1 -> 4 paths cuts exact-oracle regret-matching mean TV by roughly **29%** and improves weighted greedy-action agreement from `0.48` to `0.73`;
-- 4 -> 8 yields only a further small mean-TV reduction (`0.2704 -> 0.2571`), while p95 remains saturated at `1.0`;
-- four paths therefore capture a large fraction of the readily available independent-replication benefit, consistent with the downstream four-mode screen where `advantage_x4` was the strongest isolated lever.
+For context, corrected 640 is `0.477649 / 0.902403` and strong-Advantage 640 is `0.464474 / 0.886204`.
 
-This independently supports the choice of x4 rather than blindly escalating to x8 or more at acceptance scale.
+### Design consequence
 
-## 4. Exact enumeration is an oracle, not yet the production solution
+Coupled x4 is the best x4 mean and would have been operationally attractive because it preserves the recovered RNG state structure. But it is still far from `0.15 / 0.35`, and its p95 is not better than the strong-Advantage run. `both_x4` adds substantial collection/training cost with no tail benefit.
 
-Full exact opponent expectation is much more expensive than four sampled trajectories. Extrapolating the bounded bootstrap tree directly to every root and every CFR iteration would dramatically increase node count and raw Advantage sample volume. The exact oracle is therefore used to evaluate cheaper unbiased estimators rather than being silently promoted.
+**Plain independent replication is closed as the primary convergence strategy.** It remains a possible component of a later estimator, but not the solution by itself.
 
-The desired production estimator should approach exact target/regret-matching quality with a bounded compute and memory factor.
+The contrast between the two-iteration x4 screen and five-iteration 640 runs is evidence of **iterative variance amplification**: a reduction that is clearly visible early is largely erased as independently learned regret policies feed back into later collections.
 
-## 5. Partial-exact opponent estimator now under physical test
+## 5. Partial-exact V1 — rejected diagnostic control
 
-Workflow `31369138285` tests a versioned estimator candidate at 256 unique roots/seed with exact-opponent levels `0`, `1`, and `2`.
+Workflow `31369138285` passed build, CTest and all 26 Python tests, then rejected its own physical experiment because an experimental reimplementation of level 0 failed an exact comparison to a separately persisted baseline. The fallback evidence intentionally states `runner_failed_before_report=true`.
 
-Semantics:
+No V1 positive-level result is accepted.
 
-- level `0`: recovered external sampling; one opponent action is sampled at every non-traverser node;
-- level `1`: enumerate the next opponent decision exactly on each path, then resume external sampling;
-- level `2`: enumerate the next two opponent decisions exactly on each path, then resume sampling.
+This is a diagnostic-design failure, not a solver regression.
 
-At enumerated opponent branches, downstream Advantage samples receive an explicit probability-mass multiplier. Later sampled opponent decisions remain represented by Monte-Carlo occurrence probability. This preserves the expected training distribution rather than overrepresenting low-probability enumerated branches.
+## 6. Partial-exact V2 — active, workflow `31412806987`
 
-The level-0 implementation is required to reproduce the previously persisted controlled baseline (`mean TV 0.3053824902`, `p95 0.8705430627`) to `1e-9`; otherwise the workflow fails. That turns the previous physical result into a regression oracle for the new estimator implementation.
+V2 fixes the control architecture:
 
-Each level then trains strong Advantage and AveragePolicy networks and reports fitted cross-seed TV plus total node cost. This measures **variance reduction per unit tree work**, not merely whether more computation helps.
+- level 0 is executed through the authoritative recovered `ExternalSamplingCollector` itself;
+- level 1 enumerates the next opponent decision exactly, probability-weights downstream Advantage samples, then resumes sampling;
+- level 2 enumerates the next two opponent decisions;
+- comparisons are against a fresh authoritative baseline in the same process and dependency image;
+- the old persisted baseline is informational only.
 
-## 6. Acceptance-scale candidates running in parallel
+The smoke passed; the physical 256-root V2 screen is running. This measures variance reduction per additional tree work rather than merely adding repeated trajectories.
 
-While the estimator-design screen runs, the already-supported x4 schedule is being tested at full 640 roots so no wall-clock time is wasted.
+## 7. Full-exact upper bound — active, workflow `31412933368`
 
-Workflow `31368447316` runs simultaneously:
+A 64-root/seed screen compares the authoritative baseline to effectively full opponent-action enumeration (`exact level 128`, beyond observed max depth). This is deliberately an upper bound.
 
-- `advantage_x4`: four Advantage paths, one strategy path, separated diagnostic RNG streams;
-- `both_x4`: four Advantage paths, four strategy paths, same separated streams.
+Interpretation:
 
-Workflow `31368894934` runs a third 640 candidate:
+- large improvement => opponent external-sampling variance remains a sufficient high-leverage target, and the problem becomes finding the cheapest bounded approximation to exact expectation;
+- small improvement => external sampling is real but not sufficient; move downstream to regret-sign/policy-support dynamics and neural target processing.
 
-- `advantage_x4` under the **recovered coupled RNG contract**.
+## 8. Common-random-number path estimator — active, workflow `31413103901`
 
-The coupled run is important because it answers whether the x4 benefit survives without introducing a new RNG-stream schema. If it performs comparably to separated x4, it becomes operationally preferable because only the sampling schedule—not the RNG state structure—needs versioning and checkpoint/resume recertification.
+Modes:
 
-All three candidates keep the frozen R7.3 gates unchanged, use the acceptance independent hidden-deal schedule, use strong Advantage fitting, and enlarge the reservoir to `400000` so x4 data is not silently discarded by the old 100k cap.
+- `independent_1`
+- `independent_4`
+- `common_1`
+- `common_4`
 
-## 7. Promotion hierarchy
+Common modes derive opponent-action RNG from `(iteration, root, traverser, replicate)` rather than algorithm seed. With shared decks and iteration-1 uniform behavior, common-mode Advantage memories must be byte-identical between seeds; this is a hard invariant.
 
-The next production-facing decision is deliberately finite:
+The purpose is not to make two final training seeds artificially identical. It is to test a standard variance-reduction idea: correlate the stochastic estimator noise so random early branch choices do not become an avoidable source of divergence that regret matching later amplifies.
 
-1. Prefer **coupled advantage_x4** if its 640 result matches or beats separated x4 closely enough, because it preserves the recovered RNG-state contract.
-2. Otherwise prefer **separated advantage_x4** if it has the best frozen-gate balance, especially p95.
-3. Use **both_x4** only if its 640 improvement justifies the added strategy cost and it does not sacrifice the p95 gate.
-4. If independent x4 remains far from the gates, use the partial-exact screen to choose bounded opponent enumeration.
-5. If partial exact is still insufficient, move to a versioned stratified/antithetic or paired/common-random-number opponent estimator and benchmark it against the exact oracle above.
-6. Do not resume brute-force unique-root scaling until the per-deal path estimator is stable enough that additional deals add coverage rather than mostly new Monte-Carlo path noise.
+If material, a production version would require a counter-based RNG contract and checkpoint/resume versioning.
+
+## 9. Current estimator ladder
+
+The finite design order is now:
+
+1. **Common random numbers** if they substantially reduce iterative divergence at low cost.
+2. **Bounded partial opponent enumeration** if it captures most of the full-exact upper bound efficiently.
+3. If needed, stratified/antithetic opponent-action sampling or paired control-variate estimators benchmarked against the exact oracle.
+4. If the full-exact upper bound itself is weak, pivot away from opponent sampling to iteration-level regret-sign sensitivity, target aggregation and policy-support discontinuity.
+
+Not promoted without new evidence:
+
+- more unique roots;
+- x8/x16 independent replication;
+- more strategy-path replication;
+- card-representation rewrite;
+- simply increasing neural optimizer steps.
+
+Any estimator that eventually clears R7.3 must be explicitly versioned and deterministically recertified for continuous versus stop/restore/continue operation before R7.4 begins.
