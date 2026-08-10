@@ -17,6 +17,7 @@ from spincore_nn import AdvantageNet, AveragePolicyNet, DomainBundle, NetworkCon
 
 DEFAULT_SEEDS = (20260829, 20260807)
 PAYOUT = (0.5, 0.3, 0.2)
+HISTORICAL_PARAMS_PER_NETWORK = 152_434
 
 # These are training targets, not acceptance gates.  They deliberately leave a
 # small safety margin below the frozen R7.3 fit gates so a second stratified
@@ -108,10 +109,6 @@ def run_seed(
             session.collect_root(episode, iteration=iteration, deck_seed=deck_seed)
             global_root += 1
 
-        # Deep CFR fits a fresh advantage network to the accumulated memory.
-        # Fixed optimizer steps caused later iterations to receive progressively
-        # fewer effective epochs as the reservoir grew.  Train in bounded chunks
-        # until a stable fit margin is reached, without changing the frozen gate.
         reset_seed = (int(seed) ^ (iteration * 0x9E3779B1)) & 0x7FFFFFFF
         session.reset_advantage_network(init_seed=reset_seed, lr=lr)
         local_steps = 0
@@ -169,10 +166,6 @@ def run_seed(
             }
         )
 
-    # Fit the average-policy approximator only after CFR collection.  The 640
-    # baseline showed monotonic improvement but hit the old 3072-step cap at
-    # TV ~= 0.16.  The larger bounded cap below separates model-fit failure from
-    # genuine cross-seed strategic instability.
     policy_progress: list[dict] = []
     policy_audit_seed = int(seed) ^ 0x13579BDF
     while int(bundle.counters["policy_optimizer_steps"]) < int(policy_max_steps):
@@ -250,8 +243,6 @@ def main() -> int:
     ap.add_argument("--seeds", default=",".join(str(x) for x in DEFAULT_SEEDS))
     ap.add_argument("--iterations", type=int, default=5)
     ap.add_argument("--roots-per-iteration", type=int, default=128)
-    # --advantage-steps remains the chunk-size spelling for compatibility with
-    # the first physical diagnostic and existing run commands.
     ap.add_argument("--advantage-steps", type=int, default=256)
     ap.add_argument("--advantage-max-steps-per-iteration", type=int, default=2048)
     ap.add_argument("--advantage-fit-target", type=float, default=DEFAULT_ADVANTAGE_FIT_TARGET)
@@ -324,6 +315,7 @@ def main() -> int:
     per_seed_pass = all(x["advantage_gate_pass"] and x["policy_gate_pass"] for x in seed_reports)
     overall_pass = bool(per_seed_pass and cross_pass)
 
+    recovered_params = parameter_count(bundles[0].advantage)
     payload = {
         "schema": "SPINCORE_R7_3_DIAGNOSTIC_V2",
         "generated_at_unix": time.time(),
@@ -338,9 +330,9 @@ def main() -> int:
             "policy_fit_target": float(args.policy_fit_target),
             "policy_max_steps": int(args.policy_max_steps),
         },
-        "historical_parameter_count_recorded": 152434,
-        "recovered_parameter_count": parameter_count(bundles[0].advantage),
-        "parameter_count_delta": parameter_count(bundles[0].advantage) - 152434,
+        "historical_parameter_count_recorded": HISTORICAL_PARAMS_PER_NETWORK,
+        "recovered_parameter_count": recovered_params,
+        "parameter_count_delta": recovered_params - HISTORICAL_PARAMS_PER_NETWORK,
         "seed_reports": seed_reports,
         "cross_seed_observation_count": len(common_obs),
         "cross_seed": {k: float(v) for k, v in cross.items()},
