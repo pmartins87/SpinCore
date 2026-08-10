@@ -1,0 +1,195 @@
+{
+  "acceptance_gate_changed": false,
+  "duration_seconds": 23.333595275878906,
+  "exact_enumeration": {
+    "completed": true,
+    "completed_target_roots": 8,
+    "depth_cap": 128,
+    "duration_seconds": 4.94817590713501,
+    "max_depth": 45,
+    "node_cap_per_target_root": 1000000,
+    "requested_unique_roots": 4,
+    "rows": [
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 0,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 55.35122732012242,
+        "target_player": 1,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 0,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 31.809289242943763,
+        "target_player": 2,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 1,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 55.35122732012242,
+        "target_player": 1,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 1,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 31.809289242943763,
+        "target_player": 2,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 2,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 55.35122732012242,
+        "target_player": 1,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 2,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 31.809289242943763,
+        "target_player": 2,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 3,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 55.35122732012242,
+        "target_player": 1,
+        "terminal_nodes": 111034
+      },
+      {
+        "completed": true,
+        "failure": null,
+        "max_depth": 45,
+        "nodes": 158144,
+        "root_index": 3,
+        "strategy_samples": 23555,
+        "strategy_weight_sum": 31.809289242943763,
+        "target_player": 2,
+        "terminal_nodes": 111034
+      }
+    ],
+    "total_nodes": 1265152,
+    "total_strategy_samples": 188440,
+    "unique_raw_observations": 116192
+  },
+  "generated_at_unix": 1786348215.6345918,
+  "interpretation_note": "Diagnostic only. Exact enumeration records every target-player infoset with its mathematically correct own-reach expectation weight by recursively enumerating target actions and multiplying reach by sigma. Non-target actions remain enumerated without entering target-player reach, matching the recovered own-reach estimator. The benchmark tests computational feasibility and measures how much of that exact support is covered by 1/4/8 sampled own-reach trajectories. No production contract or acceptance gate is changed.",
+  "production_sampling_schedule_changed": false,
+  "ready_for_tables": false,
+  "sampled_comparison": [
+    {
+      "coverage": {
+        "poker_isomorphic": {
+          "exact_support_coverage": 0.0030122555769760396,
+          "exact_unique": 116192,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 350,
+          "shared_unique": 350
+        },
+        "raw": {
+          "exact_support_coverage": 0.0030122555769760396,
+          "exact_unique": 116192,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 350,
+          "shared_unique": 350
+        }
+      },
+      "replicates": 1,
+      "strategy_samples": 422,
+      "strategy_seen": 422,
+      "unique_raw_observations": 350
+    },
+    {
+      "coverage": {
+        "poker_isomorphic": {
+          "exact_support_coverage": 0.008029812723767557,
+          "exact_unique": 116192,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 933,
+          "shared_unique": 933
+        },
+        "raw": {
+          "exact_support_coverage": 0.008029812723767557,
+          "exact_unique": 116192,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 933,
+          "shared_unique": 933
+        }
+      },
+      "replicates": 4,
+      "strategy_samples": 1189,
+      "strategy_seen": 1189,
+      "unique_raw_observations": 933
+    },
+    {
+      "coverage": {
+        "poker_isomorphic": {
+          "exact_support_coverage": 0.021068576149820988,
+          "exact_unique": 116192,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 2448,
+          "shared_unique": 2448
+        },
+        "raw": {
+          "exact_support_coverage": 0.021068576149820988,
+          "exact_unique": 116192,
+          "sampled_outside_exact": 0,
+          "sampled_precision_against_exact": 1.0,
+          "sampled_unique": 2448,
+          "shared_unique": 2448
+        }
+      },
+      "replicates": 8,
+      "strategy_samples": 3243,
+      "strategy_seen": 3243,
+      "unique_raw_observations": 2448
+    }
+  ],
+  "schema": "SPINCORE_R7_3_EXACT_OWN_REACH_FEASIBILITY_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "diagnosis": "EXACT_OWN_REACH_ENUMERATION_FEASIBLE_AT_BENCHMARK_SCALE",
+    "exact_completed": true,
+    "exact_total_nodes": 1265152,
+    "exact_total_strategy_samples": 188440,
+    "exact_unique_raw_observations": 116192
+  },
+  "uniform_zero_regret_policy": true
+}
