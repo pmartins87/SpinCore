@@ -1,0 +1,128 @@
+name: SpinCore R7.3 decaying-tremble policy-mixture compounding
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_policy_mixture_decay_tremble.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: e15
+            epsilon0: '0.15'
+          - label: e30
+            epsilon0: '0.30'
+          - label: e45
+            epsilon0: '0.45'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+      - name: Smoke five-iteration decaying tremble
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'
+          eps='${{ matrix.epsilon0 }}'
+          python tools/run_r7_3_policy_mixture_decay_tremble.py \
+            --solver build/libspincore_solver_c.so \
+            --out "/tmp/R7_3_DECAY_TREMBLE_${label}_SMOKE.json" \
+            --epsilon0 "$eps" --epsilon-decay 0.50 \
+            --ensemble-size 4 --exact-opponent-levels 2 \
+            --iterations 5 --roots-per-iteration 1 \
+            --advantage-chunk-steps 8 --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 \
+            --policy-chunk-steps 8 --policy-max-steps 8 --policy-fit-target 10 \
+            --batch-size 16 --audit-size 32 --cross-seed-per-seed 16 \
+            --reservoir-capacity 5000
+          python - "$label" "$eps" <<'PY'
+          import json,sys
+          label,eps=sys.argv[1],float(sys.argv[2])
+          d=json.load(open(f'/tmp/R7_3_DECAY_TREMBLE_{label}_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_POLICY_MIXTURE_DECAY_TREMBLE_V1'
+          assert d['ensemble_size']==4 and d['iterations']==5
+          assert abs(d['tremble_schedule']['epsilon0_after_first_fit']-eps)<1e-12
+          assert abs(d['tremble_schedule']['geometric_decay_per_fit']-0.5)<1e-12
+          assert d['deck_formula']=='seed*1000003 + global_root*97 + iteration'
+          assert d['extra_members_perturb_primary_rng'] is False
+          assert d['theoretical_equivalence_claimed'] is False
+          assert d['production_policy_mapping_changed'] is False
+          assert d['ready_for_tables'] is False
+          print('decaying-tremble smoke OK', label)
+          PY
+      - name: Run physical five-iteration 320-root tremble candidate
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'
+          eps='${{ matrix.epsilon0 }}'
+          python tools/run_r7_3_policy_mixture_decay_tremble.py \
+            --solver build/libspincore_solver_c.so \
+            --out "validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_${label}_320.json" \
+            --epsilon0 "$eps" --epsilon-decay 0.50 \
+            --ensemble-size 4 --exact-opponent-levels 2 \
+            --iterations 5 --roots-per-iteration 64 \
+            --advantage-chunk-steps 256 --advantage-max-steps-per-iteration 4096 \
+            --advantage-fit-target 0.50 \
+            --policy-chunk-steps 256 --policy-max-steps 16384 --policy-fit-target 0.105 \
+            --batch-size 256 --audit-size 512 --cross-seed-per-seed 1024 \
+            --reservoir-capacity 100000
+      - name: Persist tremble evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'
+          eps='${{ matrix.epsilon0 }}'
+          out="validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_${label}_320.json"
+          if [ ! -f "$out" ]; then
+            printf '{"schema":"SPINCORE_R7_3_POLICY_MIXTURE_DECAY_TREMBLE_V1","epsilon0":%s,"epsilon_decay":0.5,"runner_failed_before_report":true,"ready_for_tables":false}\n' "$eps" > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m "Record R7.3 decaying-tremble ${label} 320 [r7-evidence-skip]"
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
