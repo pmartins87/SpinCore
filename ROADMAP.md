@@ -38,42 +38,26 @@ deck_seed = seed * 1_000_003 + global_root * 97 + iteration
 
 `global_root` is continuous across CFR iterations. The recovered acceptance path preserves one persistent live `bundle.batch_rng` through collection and primary training in execution order unless a diagnostic explicitly declares otherwise.
 
-Authoritative 640 references remain failures:
-
-| candidate | mean TV | p95 TV | fit gates |
-|---|---:|---:|---|
-| corrected 640 | `0.477649` | `0.902403` | PASS |
-| strong-Advantage 640 | `0.464474` | `0.886204` | PASS |
-| partial-exact level 2 | `0.436110` | `0.888244` | PASS |
-| partial-exact level 2 strong-fit | `0.412893` | `0.871708` | PASS |
-
 ## Causal transition — confirmed
 
-Under the current authoritative partial-exact contract, iteration 1 shared strategy targets are identical:
-
-```text
-shared-target weighted mean TV = 0.0
-shared-target p95 TV           = 0.0
-```
-
-After the first fitted Advantage behavior feeds back into collection, iteration 2 becomes:
+Under authoritative partial-exact level 2, iteration-1 shared strategy targets are identical (`mean/p95 TV = 0/0`). Immediately after the first fitted Advantage behavior feeds back into collection, iteration 2 reaches:
 
 ```text
 shared-target weighted mean TV = 0.473946
 shared-target p95 TV           = 1.0
 ```
 
-Therefore the dominant known transition remains:
+The dominant known transition is therefore:
 
 ```text
-Advantage approximation -> regret mapping -> behavior -> sampled trajectories -> next strategy targets
+Advantage approximation -> regret map -> behavior -> sampled trajectories -> next strategy targets
 ```
 
-The final AveragePolicy is downstream of an already-divergent target distribution.
+Final AveragePolicy approximation is downstream of already-divergent targets.
 
-## Policy-mixture size 4 — strong short-horizon signal, failed durability test
+## Policy-mixture size 4 — short-horizon success, durability failure
 
-At 2 iterations × 128 roots, paired partial-exact level 2 plus four independently fitted Advantage members, each hard-regret-matched before probability averaging, gave:
+Authoritative paired 2×128:
 
 ```text
 mean TV = 0.171940
@@ -81,9 +65,7 @@ p95 TV  = 0.413605
 fit gates = PASS
 ```
 
-This was a ~30% mean and ~34% p95 reduction versus the paired size-1 control (`0.245656 / 0.628706`).
-
-The mandatory longer-feedback test completed in workflow `31432403037`, 5 iterations × 64 roots = 320 roots/seed:
+Mandatory 5×64 durability run `31432403037`:
 
 ```text
 mean TV = 0.266591
@@ -93,83 +75,116 @@ max TV  = 0.905547
 fit gates = PASS
 ```
 
-The two-iteration gain therefore **decays materially under five CFR feedback cycles**. This is a decisive negative result for immediate size-4 acceptance escalation.
+The short-horizon improvement decays materially. **The prepared size-4 640 workflow remains dormant and must not be launched.** A new mechanism must first beat `0.266591 / 0.567002` at the five-iteration horizon.
 
-**Decision: do not launch the prepared size-4 640 candidate.** More roots would not answer the feedback-depth failure.
+## Direct Behavior — strong smoothing clue, not recovered Deep CFR
 
-## Direct Behavior — useful causal clue, not a production algorithm
-
-Authoritative 256 E2E:
+At 2×128, Direct Behavior reached:
 
 ```text
-mean TV = 0.142553   PASS
-p95 TV  = 0.426860   FAIL
+mean TV = 0.142553  PASS
+p95 TV  = 0.426860  FAIL
 ```
 
-The surrogate itself underfits the sample-level regret-matched targets well above the reference `0.12` TV threshold. Because regret matching is nonlinear, this is not theoretically equivalent to recovered Deep CFR. The result is retained as causal evidence that **explicit smoothing around the first feedback transition can materially reduce instability**.
+Its surrogate itself underfits the sample-level regret-matched targets, and theoretical equivalence to Deep CFR is not claimed. A new 5×64 durability control (`31441650915`) is running solely to determine whether the smoothing effect survives repeated feedback.
 
-## Parallel residual-tail program
+## Static residual-tail program
 
-### A. Static ensemble tail tests
+### Policy-mixture size 8
 
-1. **Policy-mixture size 8** — corrected workflow `31440425854`; build/regression and smoke PASS, physical 256-root candidate running. It asks whether doubling the number of regret-policy members pushes the two-iteration tail lower or whether size 4 has saturated. Any success must still survive five iterations before 640.
-2. **Policy-mixture + final AveragePolicy ensemble** — workflow `31440493410`; physical 256-root factorial running after smoke PASS. Final policy sizes 1/2/4 are evaluated on the same size-4 policy-mixture CFR memory.
-3. **Robust probability aggregation** — workflow `31440742014`; same-memory physical screen running after smoke PASS. It compares ordinary mean, coordinatewise median and trimmed mean after per-member hard regret matching. Only a large p95 reduction earns E2E testing.
-4. **Support-conditioned tail forensic** — workflow `31440576227`; physical 256-root run active. It separates exact shared SPNNIV1 observations from one-sided/off-support observations after policy-mixture CFR.
+Corrected run `31440425854`: build/regression PASS, smoke PASS, physical paired 256-root candidate running. A size-8 win still requires its own 5×64 durability test before any scale-up.
 
-### B. Five-iteration temporal damping program
+### Policy-mixture + final AveragePolicy ensemble
 
-Because size-4 policy mixture improves two iterations but decays over five, temporal damping is tested **directly at the failing 5×64 horizon**, not on another short proxy.
+Run `31440493410`: build/regression PASS, smoke PASS, physical 256-root factorial running. CFR uses size-4 policy mixture; final AveragePolicy sizes 1/2/4 are fitted only after collection is frozen.
 
-#### Decaying uniform tremble — workflow `31441018067`
+### Support-conditioned tail forensic
 
-Three size-4 candidates run in parallel, all after smoke PASS:
+Run `31440576227`: build/regression PASS, smoke PASS, physical 256-root forensic running. It separates disagreement on seed-A support, seed-B support, exact byte-identical shared SPNNIV1 observations, and exact one-sided observations.
+
+### Robust probability aggregation — CLOSED
+
+Run `31440742014`, evidence `b9a756af32341e7e6d51047ff584c94e606c8dce`:
 
 ```text
-epsilon0 = 0.15, 0.30, 0.45
-decay    = 0.50 per fitted iteration
+ordinary mean: mean 0.137421 / p95 0.388113
+median:        mean 0.143639 / p95 0.488827
+trimmed mean: mean 0.143639 / p95 0.488827
 ```
 
-The behavior used for subsequent collection is:
+Median/trimmed aggregation worsens the p95 by ~26%. Diagnosis `ROBUST_POLICY_AGGREGATION_NOT_MATERIAL`. Rare individual-member outliers are not the primary explanation; this branch is closed.
+
+### Behavior-target aggregation order
+
+Run `31441852607`: regression + smoke PASS, physical same-memory screen running. It compares:
+
+1. hard regret matching per stored Advantage sample;
+2. weighted mean of those sample-level policies per exact observation/legal mask;
+3. hard regret matching of the weighted mean regret vector per exact observation/legal mask.
+
+This tests whether the Direct Behavior surrogate's target construction itself is injecting avoidable nonlinearity/noise. No production algorithm change is assumed.
+
+## Five-iteration temporal-damping program
+
+All candidates below are tested directly at the failing 5×64 horizon, not on another short proxy.
+
+### Decaying uniform tremble — `31441018067`
+
+Three size-4 jobs, all smoke PASS and physical 320 running:
 
 ```text
-pi_used = (1 - epsilon_k) * pi_policy_mixture + epsilon_k * uniform
+epsilon0 = 0.15 / 0.30 / 0.45
+decay    = 0.50 per fit
+pi_used  = (1-epsilon_k)*pi_policy_mixture + epsilon_k*uniform
 ```
 
-with a geometrically vanishing intervention. This tests whether explicit early-feedback regularization can prevent divergence without permanently flattening the policy.
+### Ensemble × tremble 2×2 factorial — `31441110526`
 
-#### Size-1 tremble factorial — workflow `31441110526`
-
-Two 5×64 candidates run after smoke PASS:
+Physical size-1 jobs running after smoke PASS:
 
 ```text
-ensemble size 1, epsilon0 = 0.00
-ensemble size 1, epsilon0 = 0.30
+size1, epsilon0 = 0.00
+size1, epsilon0 = 0.30, decay=.50
 ```
 
-Together with the completed size-4/no-tremble baseline and size-4/epsilon0=0.30 candidate, this yields a causal 2×2 comparison of **ensemble × temporal damping** rather than attributing any improvement to both at once.
+Together with size4/no-tremble and size4/e30, this isolates the contributions of ensembling versus explicit damping.
 
-#### Temporal previous-policy blending — workflow `31441224117`
+### Previous-policy temporal blending — `31441224117`
 
-Two size-4 5×64 candidates run after smoke PASS:
+Two size-4 physical 320 jobs running after smoke PASS:
 
 ```text
-current policy weight = 0.50
-current policy weight = 0.75
+current weight = 0.50 / 0.75
 ```
 
-At the first feedback transition, the reference policy is exact zero-regret uniform. At later transitions, current policy mixture is blended with the **previous iteration's fitted policy mixture**. This directly tests whether abrupt iteration-to-iteration behavior replacement is the mechanism behind the compounding failure.
+The first reference is exact uniform; later references are the previous iteration's fitted policy mixture. This tests whether abrupt model replacement drives the feedback instability.
 
-All temporal damping/blending variants are explicitly algorithmic diagnostics. They are **not** declared equivalent to recovered Deep CFR and cannot become production semantics without versioning, strategic audit, and deterministic checkpoint/resume recertification.
+### First-transition-only damping — `31441567261`
 
-### C. Physical reproducibility controls
+Smoke PASS; physical 320 running:
 
-Parser compatibility changes unintentionally triggered fresh copies of the existing size-4 256 and size-4 320 workflows. They are retained as useful deterministic fresh-run controls:
+```text
+epsilon schedule = [0.30, 0, 0, 0]
+```
 
-- size-4 paired 256 reproduction: workflow `31440366942`, expected `0.171940 / 0.413605`;
-- size-4 320 reproduction: workflow `31440366909`, expected `0.266591 / 0.567002`.
+If this matches repeated damping, the first break seeds most later divergence. If repeated damping wins but this fails, stabilization is needed across multiple iterations.
 
-A mismatch beyond numerical roundoff is itself a blocker requiring nondeterminism investigation before any checkpoint/RNG semantic work.
+### Direct Behavior durability control — `31441650915`
+
+Regression + smoke PASS; physical 320 running. This remains a causal control only, not a promotion candidate.
+
+## Reproducibility and automatic consolidation
+
+Fresh duplicate physical runs are retained as determinism checks:
+
+- paired size4 256: `31440366942`, expected `0.171940 / 0.413605`;
+- size4 320 compounding: `31440366909`, expected `0.266591 / 0.567002`.
+
+`tools/check_r7_3_fresh_run_reproducibility.py` plus workflow `r7_3_fresh_run_reproducibility.yml` automatically compare the latest two evidence commits, requiring exact structural/sample/node counters and cross-seed metrics within `1e-9`. This is fresh-run determinism only; checkpoint/resume recertification remains mandatory for any new production semantic.
+
+`tools/summarize_r7_3_durability_matrix.py` plus `r7_3_durability_matrix_summary.yml` automatically consolidate the completed five-iteration matrix. Direct Behavior is included as a causal control but excluded from conservative automatic promotion because equivalence is unproven.
+
+Detailed design record: `validation/R7_3_DURABILITY_PROGRAM_20260810.md`.
 
 ## Closed / deprioritized primary branches
 
@@ -181,29 +196,24 @@ A mismatch beyond numerical roundoff is itself a blocker requiring nondeterminis
 - merely raising Advantage optimizer ceiling;
 - behavior-aware MSE auxiliary objective;
 - exact weighted duplicate-target aggregation;
-- behavior-aware multistart model selection;
-- raw Advantage ensemble sizes 2/4 as standalone solution;
-- final AveragePolicy ensemble as standalone solution;
-- legal-action common-mode centering;
-- card/suit representation rewrite as dominant explanation;
-- policy-mixture size 4 direct escalation to 640.
+- behavior-aware multistart selection;
+- raw Advantage ensemble 2/4 standalone;
+- final AveragePolicy ensemble standalone;
+- legal common-mode centering;
+- robust median/trimmed policy aggregation;
+- card/suit rewrite as dominant explanation;
+- direct size4 policy-mixture 640 escalation.
 
-## Immediate decision tree
+## Promotion rule
 
-1. No 640 escalation unless a candidate first beats the five-iteration durability baseline `0.266591 / 0.567002` with every frozen fit gate PASS.
-2. Resolve size 8, robust aggregation, combined final-policy ensemble and support-conditioned tail forensic to determine whether a better *static* mapping exists.
-3. Resolve the five-iteration tremble dose-response, size-1 factorial and temporal previous-policy blend. Prefer the **smallest and most interpretable** mechanism that improves both mean and p95 durably.
-4. If a static size-8/robust mapping wins at two iterations, it still requires its own five-iteration compounding gate before 640.
-5. If temporal damping wins, first freeze/version its exact schedule and add continuous-vs-stop/restore/continue determinism before acceptance-scale testing.
-6. No gate relaxation.
+A candidate does not advance merely by ranking first. Before 640 it must:
 
-Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is never substituted for generation-2 gates.
-
-## Recovery invariants
-
-- `TRUE_HEADS_UP` and `THREE_HANDED` remain separate whole-hand domains.
-- Production utility remains exact explicit-payout ICM continuation delta.
-- Ambiguous equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
-- Every meaningful recovery/evolution step is persisted directly to `main`.
+1. PASS every frozen per-seed fit gate;
+2. materially improve **both** mean and p95 versus the 5×64 durability baseline `0.266591 / 0.567002`;
+3. survive fresh-run reproducibility checks;
+4. be the smallest/interpretable mechanism among statistically comparable candidates;
+5. have any new behavior semantics explicitly versioned;
+6. pass deterministic continuous-vs-stop/restore/continue checkpoint recertification;
+7. keep the frozen acceptance gates unchanged.
 
 `READY FOR TABLES = NO`.
