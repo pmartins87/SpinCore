@@ -192,11 +192,23 @@ def icm_delta_utility(payout_by_place: Sequence[float]) -> TerminalUtility:
 
 
 class NeuralAdvantagePolicy:
-    def __init__(self, model, *, device="cpu"):
+    """Regret-matching behavior with an explicit zero-regret bootstrap state.
+
+    An untrained random neural network is not a valid representation of the
+    initial CFR regret table: initial cumulative regret is exactly zero, so the
+    first behavior policy must be uniform over legal actions.  `ready=False`
+    enforces that invariant until the first fitted AdvantageNet exists.
+    """
+
+    def __init__(self, model, *, device="cpu", ready: bool = True):
         self.model = model
         self.device = device
+        self.ready = bool(ready)
 
     def __call__(self, _state, observation, legal):
+        if not self.ready:
+            return uniform_policy(_state, observation, legal)
+
         import torch
         from spincore_nn.codec import collate_inputs, decode_spnniv1
 
@@ -223,14 +235,7 @@ class DeepCFRDomainSession:
         self.bundle = bundle
         self.terminal_utility = terminal_utility
         self.device = device
-        self.behavior = NeuralAdvantagePolicy(bundle.advantage, device=device)
-        self.collector = ExternalSamplingCollector(
-            policy=self.behavior,
-            terminal_utility=terminal_utility,
-            rng=bundle.batch_rng,
-            advantage_memory=bundle.adv_mem,
-            strategy_memory=bundle.pol_mem,
-        )
+
         for key in (
             "iteration",
             "roots",
@@ -242,6 +247,22 @@ class DeepCFRDomainSession:
             "advantage_resets",
         ):
             bundle.counters.setdefault(key, 0)
+        bundle.counters.setdefault(
+            "advantage_ready", 1 if int(bundle.counters.get("adv_optimizer_steps", 0)) > 0 else 0
+        )
+
+        self.behavior = NeuralAdvantagePolicy(
+            bundle.advantage,
+            device=device,
+            ready=bool(bundle.counters["advantage_ready"]),
+        )
+        self.collector = ExternalSamplingCollector(
+            policy=self.behavior,
+            terminal_utility=terminal_utility,
+            rng=bundle.batch_rng,
+            advantage_memory=bundle.adv_mem,
+            strategy_memory=bundle.pol_mem,
+        )
 
     def collect_root(self, episode, *, iteration, deck_seed=None):
         if deck_seed is None:
@@ -298,6 +319,9 @@ class DeepCFRDomainSession:
             batch_size,
         )
         self.bundle.counters["adv_optimizer_steps"] += len(losses)
+        if losses:
+            self.behavior.ready = True
+            self.bundle.counters["advantage_ready"] = 1
         return losses
 
     def train_average_policy(self, *, steps, batch_size):
@@ -313,13 +337,12 @@ class DeepCFRDomainSession:
         return losses
 
     def reset_advantage_network(self, *, init_seed: int, lr: float | None = None):
-        """Reinitialize AdvantageNet and its optimizer without clearing memory.
+        """Reinitialize AdvantageNet and optimizer without clearing memories.
 
-        Deep CFR's advantage approximator is trained from scratch after each CFR
-        iteration over the accumulated reservoir.  The generation-2 recovery
-        initially continued training the same network, which materially changed
-        the R7.3 behavior.  This method restores the recovered R4 scheduling
-        contract while keeping the reservoir and average-policy memory intact.
+        Deep CFR fits a fresh advantage approximator after each CFR iteration.
+        Between reset and fit the neural model is explicitly *not* a valid regret
+        approximator, so behavior reverts to zero-regret uniform until training
+        marks the new model ready.
         """
         import torch
         from spincore_nn import AdvantageNet
@@ -334,5 +357,7 @@ class DeepCFRDomainSession:
         self.bundle.advantage = model
         self.bundle.adv_opt = optimizer
         self.behavior.model = model
+        self.behavior.ready = False
+        self.bundle.counters["advantage_ready"] = 0
         self.bundle.counters["advantage_resets"] += 1
         return model
