@@ -54,7 +54,7 @@ Partial opponent expectation helps, but by itself is nowhere near the frozen cro
 
 ## Current paired 256 control
 
-The new within-run authoritative partial-exact level-2 control is:
+The within-run authoritative partial-exact level-2 control is:
 
 ```text
 mean TV = 0.2456560284
@@ -72,7 +72,36 @@ This exact size-1 result was reproduced independently by the final-AveragePolicy
 | 2 | `0.215379` | `0.632143` | PASS |
 | 4 | `0.210869` | `0.627987` | PASS |
 
-Raw model averaging improves the center by ~14% at size 4 but leaves the p95 essentially unchanged. **Raw Advantage ensembling is therefore not a primary solution.**
+Raw model averaging improves the center by ~14% at size 4 but leaves p95 essentially unchanged. **Raw Advantage ensembling is not a primary solution.**
+
+### Policy-mixture Advantage ensemble — first materially tail-sensitive paired candidate
+
+Instead of averaging raw Advantage values before regret matching, size-4 policy mixture applies the production hard-regret map to each independently fitted AdvantageNet first and then averages the resulting legal-action probabilities.
+
+Authoritative paired 256 physical result, workflow `31428299914`, evidence `76ac23287961cc3c650a1b60891648bfe975b145`:
+
+```text
+size-1 baseline:
+mean = 0.2456560284
+p95  = 0.6287055612
+
+size-4 policy mixture:
+mean = 0.1719404310
+p95  = 0.4136051536
+p50  = 0.1451251805
+max  = 0.7699102759
+```
+
+Relative to the paired control:
+
+- mean ratio `~0.6999` (~30.0% reduction);
+- p95 ratio `~0.6579` (~34.2% reduction).
+
+Both per-seed fit gates pass. Final ensemble Advantage NRMSEs are `0.501434` and `0.542430`; final AveragePolicy weighted TVs are `0.096840` and `0.094627`.
+
+This is the first theory-conservative candidate in generation 2 to reduce **both** the center and tail strongly under the authoritative deck/primary-RNG contract. It still fails the frozen cross-seed gates (`0.17194 > 0.15`, `0.41361 > 0.35`) and is not production-promoted.
+
+Because the effect may decay as CFR feedback compounds, the next escalation is deliberately **not 640**. Workflow `31432403037` runs five CFR iterations × 64 roots = 320 roots/seed with the same size-4 policy-mixture semantics. Promotion to an acceptance-scale test requires the improvement to survive this longer feedback horizon.
 
 ### Final AveragePolicy ensemble
 
@@ -104,7 +133,7 @@ Authoritative partial-exact level-2 support forensic, 256 roots:
 
 Thus the two seeds share very little Strategy Memory support even after suit/hole/flop structural canonicalization, and **the sigma targets themselves already disagree strongly on the small shared subset**. The remaining p95 cannot be attributed mainly to final AveragePolicy training.
 
-At this scale all genuinely shared strategy-target keys in the forensic were preflop (`street=0`); exact postflop support overlap across the two independent deck streams was effectively absent under these comparison keys. Four-legal-action shared states were noisier than three-action states (`weighted mean TV ~0.3805` vs `~0.3177` in poker-isomorphic mode).
+A prior controlled iteration-split physical experiment already showed the mechanism sharply: with exact zero-regret uniform behavior, iteration-1 shared sigma targets had TV exactly `0`; after the first fitted Advantage behavior, iteration-2 shared-target p95 jumped to `1.0` and weighted mean TV to about `0.528` in poker-isomorphic mode. An authoritative partial-exact iteration-split replication is running as workflow `31431939967`.
 
 ## Advantage function-approximation / regret-map findings
 
@@ -117,8 +146,8 @@ Same-memory AdvantageNet fitting remains an independent variance source:
 Legal-action common-mode centering was tested and closed:
 
 ```text
-raw size-1 mean/p95      = 0.231120 / 0.803678
-best centering (midrange)= 0.219685 / 0.824299
+raw size-1 mean/p95       = 0.231120 / 0.803678
+best centering (midrange) = 0.219685 / 0.824299
 ```
 
 Mean improves slightly while p95 worsens; diagnosis `ADVANTAGE_COMMON_MODE_CENTERING_NOT_MATERIAL`.
@@ -139,12 +168,13 @@ p95  = 0.363998
 
 Ratios: mean `0.4790`, p95 `0.4449`. Diagnosis: `DIRECT_BEHAVIOR_SURROGATE_MATERIAL_SAME_MEMORY`.
 
-This is **not assumed theoretically equivalent to Deep CFR** because regret matching is nonlinear. It has therefore advanced only to an explicitly experimental end-to-end causal screen that preserves the authoritative partial-exact collection, primary RNG stream, Advantage fit gate and final policy gate while isolating surrogate training on a side RNG.
+This is **not assumed theoretically equivalent to Deep CFR** because regret matching is nonlinear. Workflow `31431672631` has passed build/regression and smoke and is physically testing the 256-root E2E causal effect while leaving production semantics unchanged.
 
 ## Active high-value physical work
 
-1. **Paired partial-exact size-4 policy mixture** — workflow `31428299914`; physical 256-root run active. Each Advantage member is regret-matched independently before policy probabilities are averaged. Same-memory evidence had reduced size-4 p95 from `0.472424` (raw averaging) to `0.360312` with this nonlinear mapping.
-2. **Direct behavior surrogate E2E** — workflow `31431672631`; launched after strong same-memory result. Build/regression/smoke precede the physical 256-root candidate; no production algorithm change is implied.
+1. **Five-iteration policy-mixture compounding** — workflow `31432403037`, 5 × 64 = 320 roots/seed. This decides whether the strongest paired candidate survives a longer CFR feedback horizon before any 640 escalation.
+2. **Direct behavior surrogate E2E** — workflow `31431672631`; physical 256-root candidate running after smoke PASS. It is algorithmically experimental and cannot be promoted without a separate semantics/versioning review.
+3. **Authoritative partial-exact support by iteration** — workflow `31431939967`; physical 256-root forensic running after smoke PASS to reproduce the iteration-1-zero / iteration-2-divergence causal chain under the current paired contract.
 
 ## Closed / deprioritized primary branches
 
@@ -164,9 +194,9 @@ This is **not assumed theoretically equivalent to Deep CFR** because regret matc
 
 ## Immediate decision tree
 
-- If paired **policy mixture** materially reduces both mean and p95 while fit gates pass, test the smallest useful mixture over more CFR iterations before any 640 escalation.
+- If five-iteration **policy mixture** retains a large reduction in both mean and p95 with fit gates PASS, it earns the next acceptance-scale 640 test; if the effect collapses with feedback depth, do not brute-force it.
 - If **direct behavior E2E** gives a very large tail reduction, do not promote immediately: first formalize its algorithmic objective, prove the intended regret semantics or explicitly version it as a new algorithm, then add checkpoint/resume determinism before acceptance-scale testing.
-- If neither changes the p95 enough, the new support forensic says the next intervention must target **CFR target/trajectory stability**, not merely final-policy smoothing. Candidate directions are regret-target aggregation/control variates or a rigorously justified smooth behavior update that operates before trajectory divergence compounds.
+- If the authoritative iteration split confirms zero shared-target disagreement in iteration 1 and large disagreement in iteration 2, the causal chain is pinned to first Advantage fit/regret-map instability feeding back into trajectories; subsequent work should stabilize that transition rather than smooth the final AveragePolicy.
 - No estimator, objective, ensemble, RNG or mapping change becomes production semantics without explicit versioning and deterministic continuous-vs-stop/restore/continue recertification.
 
 Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is never substituted for generation-2 gates.
