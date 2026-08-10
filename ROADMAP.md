@@ -14,21 +14,17 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.1 native own-reach frontier — **PASS REBUILT**
   - R7.2 LCFR weighting / exact checkpoint+resume / fresh-process worker — **PASS REBUILT**
   - R7.3 multi-seed stability — **FAIL / ACTIVE**
-    - corrected 640-root fit gates — **PASS**, cross-seed — **FAIL**
-    - 1280-root brute-force unique-deal scale — **FAIL**, essentially flat and policy fit degraded
-    - variance decomposition — **DONE: CFR-memory variance dominant**
-    - common-deck / support conditioning — **DONE: chance stream not dominant; off-support extrapolation material**
-    - card-isomorphic support audit — **DONE: card representation not dominant**
-    - traversal/training RNG coupling — **DONE: bookkeeping coupling not dominant**
-    - strong Advantage fitting — **DONE: useful, but only modest 640 improvement**
-    - exact own-reach support curve — **DONE: own-reach sampling strongly fragments support**
-    - exact Advantage target curve — **DONE: external sampling materially noisy**
-    - exact own-reach expectation benchmark — **DONE: feasible oracle, enormous support volume**
-    - downstream four-mode path decomposition — **DONE: Advantage external-sampling variance is the dominant isolated fitted-policy lever**
-    - exact opponent-expectation Advantage oracle — **DONE: x4 captures much of independent-replication benefit; p95 tail remains severe**
-    - partial-exact opponent estimator screen — **RUNNING: exact levels 0/1/2 with level-0 regression oracle**
-    - 640 replicated candidates — **RUNNING IN PARALLEL: separated advantage_x4, separated both_x4, recovered-coupled advantage_x4**
-    - brute-force unique-root scaling — **PAUSED**
+    - corrected 640 — **FIT PASS / CROSS-SEED FAIL**
+    - 1280 unique-root scale — **FAIL; brute-force root scaling paused**
+    - CFR-memory / support / chance / card / RNG / fit decomposition — **DONE**
+    - exact own-reach and exact Advantage bootstrap controls — **DONE**
+    - four-mode path replication screen — **DONE: Advantage external-sampling variance is the strongest isolated path lever**
+    - exact opponent-expectation Advantage oracle — **DONE**
+    - three x4 acceptance-scale candidates — **DONE: ALL CROSS-SEED FAIL**
+    - partial-exact V1 — **INVALID DIAGNOSTIC CONTROL; solver/regressions PASS**
+    - partial-exact V2 — **RUNNING**
+    - full-exact opponent-expectation upper bound — **RUNNING**
+    - common-random-number Advantage path screen — **RUNNING**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
 - R9 Strategic audit — TODO
@@ -36,90 +32,81 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 - R11 Safe exploitation — TODO
 - R12 Operational homologation — TODO
 
-## Current R7.3 evidence
-
-### Acceptance-scale baselines
-
-Corrected 640 roots/seed: individual fit gates PASS, cross-seed mean TV `0.477649`, p95 `0.902403`.
-
-1280 roots/seed: mean `0.473190`, p95 `0.875278`; both AveragePolicy fits exceeded `0.12`. Doubling unique deals therefore did not solve convergence and brute-force root scaling remains paused.
-
-Strong-Advantage 640: both individual fit gates PASS; mean `0.464474`, p95 `0.886204`, only `2.76% / 1.80%` better than corrected 640. Better neural fit is beneficial but not the main remaining problem.
-
-### Causal path-variance evidence
-
-Under an identical exact uniform policy and identical hidden deals:
-
-- own-reach strategy sampling 1->8 trajectories raises poker-isomorphic support Jaccard `0.033946 -> 0.074383` (`2.191x`) and LCFR-weight coverage `0.083230 -> 0.204593` (`2.458x`) while shared target TV stays zero;
-- Advantage external sampling 1->8 trajectories raises weight coverage `0.077203 -> 0.158538`, lowers target relative RMSE `1.00943 -> 0.88105`, and lowers induced regret-matching mean TV `0.42100 -> 0.37127`, while p95 remains `1.0`.
-
-Exact own-reach expectation on four HU deals required `1,265,152` nodes and `188,440` target-state samples; eight sampled own-reach paths covered only `2.107%` of exact action-path support.
-
-The downstream controlled four-mode experiment (`31366433008`, evidence `a9c57fe6e3c9149ed3010ead280912295bd4f5f6`) restored fitted networks and isolated the two path estimators. All individual fit gates passed and baseline-vs-`strategy_x4` Advantage checkpoint NRMSE was exactly identical.
-
-| mode | Adv reps | Strategy reps | mean TV | p95 TV | mean ratio vs baseline | p95 ratio vs baseline |
-|---|---:|---:|---:|---:|---:|---:|
-| baseline | 1 | 1 | `0.305382` | `0.870543` | 1.000 | 1.000 |
-| strategy_x4 | 1 | 4 | `0.275642` | `0.865904` | `0.9026` | `0.9947` |
-| advantage_x4 | 4 | 1 | `0.219118` | `0.690974` | `0.7175` | `0.7937` |
-| both_x4 | 4 | 4 | `0.197598` | `0.726534` | `0.6471` | `0.8346` |
-
-Persisted diagnosis: `ADVANTAGE_EXTERNAL_SAMPLING_VARIANCE_MATERIAL`. `advantage_x4` is the strongest isolated lever and has the best p95; `both_x4` has the best mean at higher cost.
-
-### Exact Advantage oracle
-
-Workflow `31368837895`, evidence `45c68d2028ac658ae12870c97b9bf758e47f2a89`, exactly enumerated opponent expectation on the same four-deal bootstrap tree:
-
-- exact nodes `1,265,152`
-- exact Advantage samples `188,440`
-- exact phase `15.91 s`
-
-Sampled memories versus the exact oracle:
-
-| paths | exact weight coverage | target relative RMSE | regret-matching mean TV | p95 TV | weighted greedy agreement |
-|---:|---:|---:|---:|---:|---:|
-| 1 | `0.04256` | `0.83586` | `0.38186` | `1.0` | `0.48024` |
-| 4 | `0.11034` | `0.67602` | `0.27044` | `1.0` | `0.73384` |
-| 8 | `0.15755` | `0.68697` | `0.25715` | `1.0` | `0.74734` |
-
-The large 1->4 gain and small 4->8 incremental gain independently support x4 as the first acceptance-scale replication factor. The persistent p95=`1.0` motivates bounded partial-exact or stratified opponent estimators if x4 still misses the frozen tail gate.
-
-## Active physical work
-
-### Three 640 acceptance-scale candidates
-
-1. Workflow `31368447316`, `advantage_x4`: 4 Advantage paths + 1 strategy path, separated Advantage/strategy/optimizer RNG streams.
-2. Same workflow, `both_x4`: 4 + 4, same separated streams.
-3. Workflow `31368894934`, `advantage_x4` using the **recovered coupled RNG contract**.
-
-All use 640 unique roots/seed, independent per-seed acceptance deck schedules, Advantage target `0.50`, AveragePolicy target `0.105`, policy max `32768`, reservoir capacity `400000`, and unchanged frozen gates.
-
-The coupled x4 candidate is operationally important: if it matches separated x4, the recovery can preserve the existing RNG-state structure and version only the sampling schedule before checkpoint/resume recertification.
-
-### Partial-exact opponent estimator
-
-Workflow `31369138285` tests exact-opponent levels `0`, `1`, and `2` at 256 roots. Level 0 must reproduce the prior controlled baseline to `1e-9`. Positive levels enumerate the next N opponent decisions exactly and probability-weight downstream Advantage samples, then resume ordinary external sampling. This is an unbiased bounded-variance estimator candidate and reports cross-seed improvement versus total node cost.
-
-Detailed records:
-
-- `validation/R7_3_CONVERGENCE_640_1280_20260810.md`
-- `validation/R7_3_PATH_VARIANCE_CONTROLS_20260810.md`
-- `validation/R7_3_ADVANTAGE_ESTIMATOR_DESIGN_20260810.md`
-
-## Frozen R7.3 gates
+## Frozen R7.3 acceptance gates
 
 - Advantage weighted normalized RMSE `<= 0.75`
-- Average-policy weighted mean TV `<= 0.12`
-- Cross-seed mean TV `<= 0.15`
-- Cross-seed p95 TV `<= 0.35`
+- AveragePolicy weighted mean TV `<= 0.12`
+- cross-seed mean TV `<= 0.15`
+- cross-seed p95 TV `<= 0.35`
 
-Historical pre-loss 640 checkpoint: cross-seed mean `0.3714`, p95 `0.6878`. It remains historical evidence, not a directly comparable generation-2 gate result.
+No gate has been relaxed.
+
+## Acceptance-scale evidence
+
+| candidate | mean TV | p95 TV | individual fits | result |
+|---|---:|---:|---|---|
+| corrected 640 | `0.477649` | `0.902403` | PASS | FAIL |
+| strong-Advantage 640 | `0.464474` | `0.886204` | PASS | FAIL |
+| separated Advantage x4 640 | `0.459596` | `0.898250` | PASS | FAIL |
+| separated both x4 640 | `0.458853` | `0.908883` | PASS | FAIL |
+| recovered-coupled Advantage x4 640 | **`0.451112`** | `0.893292` | PASS | FAIL |
+
+Physical x4 evidence:
+
+- separated `advantage_x4`: workflow `31368447316`, commit `94b5e423fa51e1dad8445e6ce36b8832d8161648`;
+- separated `both_x4`: workflow `31368447316`, commit `871967f777f7cec17479ed3ec9f476543452912d`;
+- coupled `advantage_x4`: workflow `31368894934`, commit `87547311076fd6a015b7d855de1a9c26124b924f`.
+
+All three x4 candidates cleanly passed Advantage and AveragePolicy fit gates. The coupled x4 schedule produced the best mean (`0.451112`), but even that is still roughly 3x the frozen `0.15` mean gate and its p95 (`0.893292`) is essentially unchanged from the failing baseline tail. Therefore **plain independent path replication is not an acceptance-scale solution**. The large improvement seen in the two-iteration 256-root screen does not survive five CFR iterations at 640 roots, which points to variance/divergence compounding through the iterative regret-learning dynamics.
+
+`both_x4` is especially unattractive: it costs substantially more policy collection/training and does not improve the tail. No x8 acceptance run is promoted because the exact Advantage oracle already showed strong diminishing returns from 4 to 8 independent paths while p95 remained saturated at 1.0.
+
+## Causal evidence retained
+
+The investigation has established:
+
+1. CFR-memory variance dominates AveragePolicy optimizer/init variance.
+2. Root card/deck variation is not dominant.
+3. Off-support AveragePolicy extrapolation is material but downstream.
+4. Card/suit representation alone is not dominant.
+5. Training/traversal RNG bookkeeping coupling alone is not dominant.
+6. Stronger Advantage fitting helps but is insufficient.
+7. Own-reach sampling provably fragments strategy support under an identical exact policy.
+8. Advantage external sampling provably injects target/regret-matching noise.
+9. Four independent Advantage paths materially improve a short controlled screen, but that gain collapses at five-iteration acceptance scale.
+10. Exact opponent expectation provides a small-scale oracle; 1 -> 4 sampled paths gives a large gain versus exact, while 4 -> 8 gives little extra and leaves the p95 tail unresolved.
+
+## Active estimator-design experiments
+
+### Partial-exact V2 — workflow `31412806987`
+
+The first partial-exact workflow (`31369138285`) is **not valid evidence about levels 1/2** because its experimental reimplementation of level 0 did not reproduce the persisted baseline exactly. Build, CTest and 26 Python tests passed; the failure was the diagnostic-control assertion itself.
+
+V2 removes that ambiguity. Level 0 is now executed through the authoritative recovered `ExternalSamplingCollector`; only positive levels use the experimental partial-exact estimator. Levels 1 and 2 enumerate the next one/two opponent decisions, probability-weight downstream Advantage samples, then return to ordinary external sampling. The physical 256-root V2 run is active.
+
+### Full-exact opponent upper bound — workflow `31412933368`
+
+A bounded 64-root/seed experiment compares the authoritative estimator against effectively full opponent-action enumeration (`exact level 128`, safely beyond the observed max depth). Its purpose is to answer the decisive question: **if opponent external-sampling variance is removed entirely, how much cross-seed instability remains?** This is an upper-bound diagnostic, not a proposed production schedule.
+
+### Common-random-number path screen — workflow `31413103901`
+
+Modes `independent_1`, `independent_4`, `common_1`, `common_4` test whether synchronizing opponent-action random numbers across algorithm seeds suppresses iterative divergence more efficiently than adding independent paths. Under iteration-1 uniform behavior and shared decks, common-path Advantage memories are required to be byte-identical across seeds; the workflow fails if that invariant does not hold.
+
+## Decision tree after active runs
+
+- If common random numbers materially reduce cross-seed TV, promote a counter-based/common-path RNG estimator as a **versioned** candidate and recertify checkpoint/resume semantics.
+- If partial/full exact opponent expectation is materially stronger, promote the cheapest bounded enumeration level that captures most of the gain.
+- If full exact still leaves large divergence, stop treating external-sampling opponent variance as sufficient explanation and move directly to iteration-to-iteration regret-policy instability / neural regret-sign sensitivity and target aggregation diagnostics.
+- Do **not** resume brute-force unique-root scaling or x8/x16 replication without new causal evidence.
+
+Historical pre-loss 640 mean/p95 `0.3714 / 0.6878` remains historical evidence only and is not substituted for the generation-2 acceptance gate.
 
 ## Recovery invariants
 
-- No frozen gate may be relaxed.
 - `TRUE_HEADS_UP` and `THREE_HANDED` remain separate whole-hand domains.
 - Production utility remains exact explicit-payout ICM continuation delta.
 - Ambiguous equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
 - Every meaningful step is persisted directly to `main`.
-- A successful experimental estimator/sampling schedule must be versioned into checkpoint/resume semantics and deterministically recertified before R7.3 can close.
+- Experimental estimator/RNG/sampling changes require explicit versioning and deterministic checkpoint-resume recertification before R7.3 can close.
+
+`READY FOR TABLES = NO`.
