@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.10",
+  "version": "1.12.1-recovery.11",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "POLICY_MIXTURE_SIZE4_COLLAPSES_WITH_FEEDBACK_DEPTH_SIZE8_AND_RESIDUAL_TAIL_TESTS_ACTIVE",
+  "current_gate_status": "SIZE4_POLICY_MIXTURE_NOT_DURABLE_RESIDUAL_TAIL_AND_TEMPORAL_DAMPING_MATRIX_RUNNING",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -92,11 +92,6 @@
     "iteration2_poker_shared_target_p95_tv": 1.0,
     "diagnosis": "TARGET_DIVERGENCE_APPEARS_AFTER_FIRST_ADVANTAGE_FIT"
   },
-  "final_average_policy_ensemble_256": {
-    "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413},
-    "size4": {"mean_tv": 0.21291163563728333, "p95_tv": 0.5991727113723755},
-    "diagnosis": "FINAL_POLICY_APPROXIMATION_MATERIAL_BUT_NOT_DOMINANT_P95_SOURCE"
-  },
   "causal_state": {
     "first_advantage_fit_feedback_is_confirmed_causal_transition": true,
     "iteration1_shared_strategy_targets_identical": true,
@@ -115,28 +110,61 @@
   "active_physical_runs": {
     "policy_mixture_size8_256": {
       "workflow": 31440425854,
-      "status": "RUNNING_AFTER_SIZE8_PARSER_FIX",
-      "purpose": "Determine whether additional independent regret-policy members further suppress the two-iteration p95 tail."
+      "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS",
+      "purpose": "Determine whether doubling independent regret-policy members further suppresses the short-horizon p95 tail."
     },
     "policy_mixture_plus_final_policy_ensemble_256": {
       "workflow": 31440493410,
-      "status": "RUNNING",
-      "purpose": "Measure whether final-policy ensemble gives useful residual tail reduction on top of size4 upstream policy mixture."
+      "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS",
+      "purpose": "Measure residual final-policy ensemble tail reduction on top of size4 upstream policy mixture."
     },
     "policy_mixture_support_conditioned_256": {
-      "status": "LAUNCHED",
+      "workflow": 31440576227,
+      "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS",
       "purpose": "Separate exact shared-state disagreement from one-sided/off-support extrapolation after policy-mixture CFR."
     },
     "robust_policy_aggregation_same_memory_256": {
-      "status": "LAUNCHED",
-      "purpose": "Test median/trimmed policy aggregation to suppress rare ensemble-member outliers before another E2E mapping change."
+      "workflow": 31440742014,
+      "status": "PHYSICAL_SCREEN_RUNNING_AFTER_SMOKE_PASS",
+      "purpose": "Compare mean, coordinatewise median, and trimmed probability aggregation after per-member hard regret matching."
     },
-    "policy_mixture_compounding_reproducibility_replica": {
+    "decaying_uniform_tremble_size4_320": {
+      "workflow": 31441018067,
+      "status": "THREE_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
+      "epsilon0_matrix": [0.15, 0.30, 0.45],
+      "epsilon_decay": 0.50,
+      "purpose": "Dose-response test of explicit vanishing behavior damping at the first fitted-Advantage feedback transitions."
+    },
+    "tremble_factorial_size1_320": {
+      "workflow": 31441110526,
+      "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
+      "epsilon0_matrix": [0.0, 0.30],
+      "epsilon_decay": 0.50,
+      "purpose": "Complete a 2x2 causal comparison: ensemble size1/4 crossed with no tremble versus epsilon0=0.30 at the five-iteration horizon."
+    },
+    "temporal_policy_blend_size4_320": {
+      "workflow": 31441224117,
+      "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
+      "current_policy_weight_matrix": [0.50, 0.75],
+      "purpose": "Test explicit temporal blending with uniform at first feedback and previous iteration policy mixture thereafter."
+    },
+    "policy_mixture_size4_256_reproducibility": {
+      "workflow": 31440366942,
+      "status": "PHYSICAL_256_RUNNING",
+      "purpose": "Fresh-run determinism check against 0.17194043099880219 / 0.4136051535606384."
+    },
+    "policy_mixture_compounding_320_reproducibility": {
       "workflow": 31440366909,
-      "status": "RUNNING",
-      "purpose": "Unplanned duplicate from parser compatibility edit; retained as an independent physical determinism/reproducibility check rather than discarded."
+      "status": "PHYSICAL_320_RUNNING",
+      "purpose": "Fresh-run determinism check against 0.2665907144546509 / 0.5670017600059509."
     }
   },
-  "next_physical_step": "Do not launch the prepared size4 640 candidate: five-iteration compounding disproved durability at size4. Resolve size8, combined final-policy ensemble, support-conditioned residual-tail decomposition, robust aggregation, and the independent compounding reproducibility run. If size8 or a robust aggregation preserves the large two-iteration tail reduction, require a five-iteration compounding screen before any 640 escalation. Otherwise move to an explicit versioned temporal behavior-damping/interpolation diagnostic around the first Advantage-fit feedback transition. Direct Behavior remains causal evidence only, not production semantics. No gate relaxation.",
+  "prepared_but_blocked": {
+    "policy_mixture_size4_640": {
+      "status": "DORMANT",
+      "reason": "Five-iteration size4 compounding failed durability; must not be triggered."
+    }
+  },
+  "next_physical_step": "Resolve the active short-horizon tail tests and the five-iteration damping factorials. No size4 640 escalation. A new mechanism must first improve the five-iteration 0.2665907/0.5670018 durability baseline with all frozen fit gates PASS. If size8 or robust aggregation improves short-horizon p95, it must separately pass a five-iteration compounding gate. Compare decaying tremble and temporal blend against both size1 and size4 no-damping baselines to identify whether smoothing or ensembling drives any durable gain. Then version only the smallest durable mechanism and recertify checkpoint/resume determinism before acceptance-scale testing. No gate relaxation.",
   "ready_for_tables": false
 }
