@@ -1,0 +1,446 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "cross_seed": {
+    "max_tv": 0.9642184972763062,
+    "mean_tv": 0.1344028264284134,
+    "p50_tv": 0.05565705895423889,
+    "p95_tv": 0.5656348466873169
+  },
+  "duration_seconds": 586.9969878196716,
+  "ensemble_size": 1,
+  "exact_opponent_levels": 2,
+  "frozen_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "policy_weighted_mean_tv_max": 0.12
+  },
+  "generated_at_unix": 1786387035.4853263,
+  "interpretation_note": "Diagnostic only. The strongest bounded path-variance mechanism (partial exact opponent expectation) is combined with raw-Advantage model ensembling before the unchanged hard regret-matching map. This factorial follow-up tests whether target variance and same-memory fit variance reductions are complementary end-to-end.",
+  "iterations": 2,
+  "observation_count": 2048,
+  "per_seed": [
+    {
+      "advantage_samples": 93005,
+      "advantage_seen": 93005,
+      "algorithm_seed": 20260829,
+      "checkpoints": [
+        {
+          "advantage_samples": 81439,
+          "advantage_seen": 81439,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.5485023856163025,
+          "iteration": 1,
+          "members": [
+            {
+              "batch_seed": 1050830779,
+              "final_weighted_nrmse": 0.6194074749946594,
+              "init_seed": 286457985,
+              "member": 0,
+              "optimizer_steps": 4096,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.778766393661499
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.6866607666015625
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.6630091667175293
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.6834664344787598
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.6699802875518799
+                },
+                {
+                  "optimizer_steps": 1536,
+                  "weighted_nrmse": 0.6621510982513428
+                },
+                {
+                  "optimizer_steps": 1792,
+                  "weighted_nrmse": 0.6528429985046387
+                },
+                {
+                  "optimizer_steps": 2048,
+                  "weighted_nrmse": 0.6523985266685486
+                },
+                {
+                  "optimizer_steps": 2304,
+                  "weighted_nrmse": 0.6573723554611206
+                },
+                {
+                  "optimizer_steps": 2560,
+                  "weighted_nrmse": 0.6395511031150818
+                },
+                {
+                  "optimizer_steps": 2816,
+                  "weighted_nrmse": 0.6344698071479797
+                },
+                {
+                  "optimizer_steps": 3072,
+                  "weighted_nrmse": 0.6296243667602539
+                },
+                {
+                  "optimizer_steps": 3328,
+                  "weighted_nrmse": 0.6382558941841125
+                },
+                {
+                  "optimizer_steps": 3584,
+                  "weighted_nrmse": 0.6217297911643982
+                },
+                {
+                  "optimizer_steps": 3840,
+                  "weighted_nrmse": 0.6302502155303955
+                },
+                {
+                  "optimizer_steps": 4096,
+                  "weighted_nrmse": 0.6194074749946594
+                }
+              ]
+            }
+          ],
+          "nodes": 478142,
+          "roots": 128,
+          "strategy_samples": 11366,
+          "strategy_seen": 11366
+        },
+        {
+          "advantage_samples": 93005,
+          "advantage_seen": 93005,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.5519049167633057,
+          "iteration": 2,
+          "members": [
+            {
+              "batch_seed": 7258126626,
+              "final_weighted_nrmse": 0.5393016934394836,
+              "init_seed": 860523090,
+              "member": 0,
+              "optimizer_steps": 4096,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.8644909858703613
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.7796921133995056
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.7282053232192993
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.7019920349121094
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.7005957365036011
+                },
+                {
+                  "optimizer_steps": 1536,
+                  "weighted_nrmse": 0.6621757745742798
+                },
+                {
+                  "optimizer_steps": 1792,
+                  "weighted_nrmse": 0.6034380197525024
+                },
+                {
+                  "optimizer_steps": 2048,
+                  "weighted_nrmse": 0.6176934242248535
+                },
+                {
+                  "optimizer_steps": 2304,
+                  "weighted_nrmse": 0.5742906928062439
+                },
+                {
+                  "optimizer_steps": 2560,
+                  "weighted_nrmse": 0.6397421360015869
+                },
+                {
+                  "optimizer_steps": 2816,
+                  "weighted_nrmse": 0.5714581608772278
+                },
+                {
+                  "optimizer_steps": 3072,
+                  "weighted_nrmse": 0.5584732294082642
+                },
+                {
+                  "optimizer_steps": 3328,
+                  "weighted_nrmse": 0.5554262399673462
+                },
+                {
+                  "optimizer_steps": 3584,
+                  "weighted_nrmse": 0.5932143926620483
+                },
+                {
+                  "optimizer_steps": 3840,
+                  "weighted_nrmse": 0.5438830256462097
+                },
+                {
+                  "optimizer_steps": 4096,
+                  "weighted_nrmse": 0.5393016934394836
+                }
+              ]
+            }
+          ],
+          "nodes": 541006,
+          "roots": 256,
+          "strategy_samples": 14041,
+          "strategy_seen": 14041
+        }
+      ],
+      "ensemble_size": 1,
+      "exact_opponent_levels": 2,
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "ensemble_advantage_weighted_nrmse": 0.5507386326789856,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.09554563462734222
+      },
+      "nodes": 541006,
+      "policy_progress": [
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.13532906770706177
+        },
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 512,
+          "weighted_mean_tv": 0.09933896362781525
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 14041,
+      "strategy_seen": 14041
+    },
+    {
+      "advantage_samples": 91317,
+      "advantage_seen": 91317,
+      "algorithm_seed": 20260807,
+      "checkpoints": [
+        {
+          "advantage_samples": 81952,
+          "advantage_seen": 81952,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.5235726237297058,
+          "iteration": 1,
+          "members": [
+            {
+              "batch_seed": 1050830753,
+              "final_weighted_nrmse": 0.6384355425834656,
+              "init_seed": 286458011,
+              "member": 0,
+              "optimizer_steps": 4096,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.7624792456626892
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.7029232978820801
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.6849072575569153
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.6575538516044617
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.6856766939163208
+                },
+                {
+                  "optimizer_steps": 1536,
+                  "weighted_nrmse": 0.6605530381202698
+                },
+                {
+                  "optimizer_steps": 1792,
+                  "weighted_nrmse": 0.6456485986709595
+                },
+                {
+                  "optimizer_steps": 2048,
+                  "weighted_nrmse": 0.6467570066452026
+                },
+                {
+                  "optimizer_steps": 2304,
+                  "weighted_nrmse": 0.6509199738502502
+                },
+                {
+                  "optimizer_steps": 2560,
+                  "weighted_nrmse": 0.6525707244873047
+                },
+                {
+                  "optimizer_steps": 2816,
+                  "weighted_nrmse": 0.6359176635742188
+                },
+                {
+                  "optimizer_steps": 3072,
+                  "weighted_nrmse": 0.6384926438331604
+                },
+                {
+                  "optimizer_steps": 3328,
+                  "weighted_nrmse": 0.631004273891449
+                },
+                {
+                  "optimizer_steps": 3584,
+                  "weighted_nrmse": 0.6273244023323059
+                },
+                {
+                  "optimizer_steps": 3840,
+                  "weighted_nrmse": 0.6301187872886658
+                },
+                {
+                  "optimizer_steps": 4096,
+                  "weighted_nrmse": 0.6384355425834656
+                }
+              ]
+            }
+          ],
+          "nodes": 481511,
+          "roots": 128,
+          "strategy_samples": 11774,
+          "strategy_seen": 11774
+        },
+        {
+          "advantage_samples": 91317,
+          "advantage_seen": 91317,
+          "ensemble_frozen_fit_gate_pass": true,
+          "ensemble_weighted_nrmse": 0.4875337481498718,
+          "iteration": 2,
+          "members": [
+            {
+              "batch_seed": 7258126648,
+              "final_weighted_nrmse": 0.5766643285751343,
+              "init_seed": 860523080,
+              "member": 0,
+              "optimizer_steps": 4096,
+              "progress": [
+                {
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.8554907441139221
+                },
+                {
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.7783949375152588
+                },
+                {
+                  "optimizer_steps": 768,
+                  "weighted_nrmse": 0.7093492150306702
+                },
+                {
+                  "optimizer_steps": 1024,
+                  "weighted_nrmse": 0.6962052583694458
+                },
+                {
+                  "optimizer_steps": 1280,
+                  "weighted_nrmse": 0.6498154997825623
+                },
+                {
+                  "optimizer_steps": 1536,
+                  "weighted_nrmse": 0.6199776530265808
+                },
+                {
+                  "optimizer_steps": 1792,
+                  "weighted_nrmse": 0.6323853135108948
+                },
+                {
+                  "optimizer_steps": 2048,
+                  "weighted_nrmse": 0.6032190322875977
+                },
+                {
+                  "optimizer_steps": 2304,
+                  "weighted_nrmse": 0.606322705745697
+                },
+                {
+                  "optimizer_steps": 2560,
+                  "weighted_nrmse": 0.6285807490348816
+                },
+                {
+                  "optimizer_steps": 2816,
+                  "weighted_nrmse": 0.605193555355072
+                },
+                {
+                  "optimizer_steps": 3072,
+                  "weighted_nrmse": 0.611668586730957
+                },
+                {
+                  "optimizer_steps": 3328,
+                  "weighted_nrmse": 0.5906229615211487
+                },
+                {
+                  "optimizer_steps": 3584,
+                  "weighted_nrmse": 0.5661357045173645
+                },
+                {
+                  "optimizer_steps": 3840,
+                  "weighted_nrmse": 0.5916476845741272
+                },
+                {
+                  "optimizer_steps": 4096,
+                  "weighted_nrmse": 0.5766643285751343
+                }
+              ]
+            }
+          ],
+          "nodes": 531149,
+          "roots": 256,
+          "strategy_samples": 13884,
+          "strategy_seen": 13884
+        }
+      ],
+      "ensemble_size": 1,
+      "exact_opponent_levels": 2,
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "ensemble_advantage_weighted_nrmse": 0.5606527328491211,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.08507677167654037
+      },
+      "nodes": 531149,
+      "policy_progress": [
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.10558497905731201
+        },
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 512,
+          "weighted_mean_tv": 0.07967880368232727
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 13884,
+      "strategy_seen": 13884
+    }
+  ],
+  "per_seed_fit_pass": true,
+  "production_ensemble_changed": false,
+  "production_estimator_changed": false,
+  "ready_for_tables": false,
+  "roots_per_iteration": 128,
+  "schema": "SPINCORE_R7_3_PARTIAL_EXACT_ENSEMBLE_E2E_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so"
+}
