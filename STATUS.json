@@ -5,13 +5,13 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "FAIL_GATE_ACTIVE_CORRECTED_DIAGNOSTIC_RUNNING",
+  "current_gate_status": "FIT_GATES_PASS_CROSS_SEED_FAIL_SCALING_1280",
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
     "cpp_asan_ubsan_pass": 47,
     "cpp_asan_ubsan_fail": 0,
-    "python_pass": 23,
+    "python_pass": 26,
     "python_fail": 0,
     "solver_c_abi": "SPINCORE_SOLVER_C_ABI_V2"
   },
@@ -32,7 +32,9 @@
     "atomic checkpoint with model/optimizer/reservoir/RNG/mid-iteration state",
     "continuous == stop/restore/continue deterministic regression",
     "fresh-process optimizer worker",
-    "zero-regret uniform behavior before first fitted AdvantageNet"
+    "zero-regret uniform behavior before first fitted AdvantageNet",
+    "bounded adaptive advantage fitting without relaxing frozen gates",
+    "bounded adaptive average-policy fitting without relaxing frozen gates"
   ],
   "r7": {
     "R7_0": "PASS_REBUILT",
@@ -60,21 +62,37 @@
       "seed_20260829_policy_tv": 0.1597589105,
       "seed_20260807_advantage_nrmse": 0.7999528050,
       "seed_20260807_policy_tv": 0.1764907241,
-      "pass": false,
-      "diagnosis": [
-        "first iteration incorrectly used a random untrained neural policy instead of zero-regret uniform behavior",
-        "fixed 256 advantage optimizer steps underfit later, larger reservoirs",
-        "policy fit was still improving monotonically when the 3072-step cap was reached"
-      ]
+      "per_seed_fit_pass": false,
+      "cross_seed_pass": false,
+      "pass": false
     },
-    "corrected_diagnostic": {
+    "generation2_corrected_physical_640": {
+      "schema": "SPINCORE_R7_3_DIAGNOSTIC_V2",
       "workflow_run_id": 31348997168,
-      "zero_regret_uniform_bootstrap": true,
-      "advantage_fit_mode": "bounded adaptive chunks to target 0.70; frozen gate remains 0.75",
-      "policy_fit_mode": "bounded adaptive chunks to target 0.105; frozen gate remains 0.12",
-      "status": "RUNNING_OR_QUEUED"
+      "evidence_commit": "7275ada20279c6b18d93d0539c6b44989632a605",
+      "roots_per_seed": 640,
+      "initial_zero_regret_uniform": true,
+      "mean_tv": 0.4776491225,
+      "p95_tv": 0.9024027586,
+      "seed_20260829_advantage_nrmse": 0.6536425948,
+      "seed_20260829_policy_tv": 0.1057102904,
+      "seed_20260807_advantage_nrmse": 0.6716514826,
+      "seed_20260807_policy_tv": 0.1169664338,
+      "per_seed_fit_pass": true,
+      "cross_seed_pass": false,
+      "pass": false,
+      "interpretation": "Approximation gates are now satisfied for both seeds; remaining R7.3 failure is strategic cross-seed instability rather than model underfit at this diagnostic scale."
+    },
+    "scale_1280": {
+      "workflow_run_id": 31353149504,
+      "roots_per_seed": 1280,
+      "iterations": 10,
+      "roots_per_iteration": 128,
+      "frozen_gates_unchanged": true,
+      "purpose": "Measure convergence slope before committing to a much larger training run.",
+      "status": "RUNNING"
     }
   },
-  "next_physical_step": "Complete corrected 640-root two-seed diagnostic. If fit gates pass but cross-seed still fails, scale roots/iterations without changing frozen gates; if fit gates still fail, fix approximation/training before scaling game samples.",
+  "next_physical_step": "Complete the 1280-root two-seed scale. If cross-seed TV falls materially, continue scaling with the same frozen gates; if it remains roughly flat, stop brute-force scaling and diagnose strategic/average-policy variance sources before R7.4.",
   "ready_for_tables": false
 }
