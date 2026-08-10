@@ -32,131 +32,120 @@ No gate is relaxed.
 
 ## Authoritative acceptance contract
 
-Generation-2 deal schedule:
-
 ```text
 deck_seed = seed * 1_000_003 + global_root * 97 + iteration
 ```
 
-with `global_root` continuous across CFR iterations. The recovered acceptance path preserves one persistent live `bundle.batch_rng` through collection and primary training in execution order unless a diagnostic explicitly declares otherwise.
+`global_root` is continuous across CFR iterations. The recovered acceptance path preserves one persistent live `bundle.batch_rng` through collection and primary training in execution order unless a diagnostic explicitly declares otherwise.
 
-Authoritative 640 references:
+Authoritative 640 references remain failures:
 
 | candidate | mean TV | p95 TV | fit gates |
 |---|---:|---:|---|
 | corrected 640 | `0.477649` | `0.902403` | PASS |
 | strong-Advantage 640 | `0.464474` | `0.886204` | PASS |
-| partial-exact level 1, 640 | `0.437426` | `0.890053` | PASS |
-| partial-exact level 2, 640 | `0.436110` | `0.888244` | PASS |
-| partial-exact level 2 strong-fit, 640 | **`0.412893`** | **`0.871708`** | PASS |
+| partial-exact level 2 | `0.436110` | `0.888244` | PASS |
+| partial-exact level 2 strong-fit | `0.412893` | `0.871708` | PASS |
 
-Partial opponent expectation helps, but by itself is nowhere near the frozen cross-seed gates.
+## Causal transition — confirmed
 
-## Current paired 256 control
-
-The within-run authoritative partial-exact level-2 control is:
+Under the current authoritative partial-exact contract, iteration 1 shared strategy targets are identical:
 
 ```text
-mean TV = 0.2456560284
-p95 TV  = 0.6287055612
+shared-target weighted mean TV = 0.0
+shared-target p95 TV           = 0.0
+```
+
+After the first fitted Advantage behavior feeds back into collection, iteration 2 becomes:
+
+```text
+shared-target weighted mean TV = 0.473946
+shared-target p95 TV           = 1.0
+```
+
+Therefore the dominant known transition remains:
+
+```text
+Advantage approximation -> regret mapping -> behavior -> sampled trajectories -> next strategy targets
+```
+
+The final AveragePolicy is downstream of an already-divergent target distribution.
+
+## Policy-mixture size 4 — strong short-horizon signal, failed durability test
+
+At 2 iterations × 128 roots, paired partial-exact level 2 plus four independently fitted Advantage members, each hard-regret-matched before probability averaging, gave:
+
+```text
+mean TV = 0.171940
+p95 TV  = 0.413605
 fit gates = PASS
 ```
 
-### Raw Advantage ensemble
+This was a ~30% mean and ~34% p95 reduction versus the paired size-1 control (`0.245656 / 0.628706`).
 
-| size | mean TV | p95 TV | fit gates |
-|---:|---:|---:|---|
-| 1 | `0.245656` | `0.628706` | PASS |
-| 2 | `0.215379` | `0.632143` | PASS |
-| 4 | `0.210869` | `0.627987` | PASS |
-
-Raw averaging improves the center but not the tail, so it remains closed as a primary solution.
-
-## Policy-mixture Advantage ensemble — strongest conservative candidate
-
-Each independently fitted AdvantageNet is first converted through hard regret matching and the resulting legal-action policies are averaged. Authoritative paired 256 result, workflow `31428299914`, evidence `76ac23287961cc3c650a1b60891648bfe975b145`:
+The mandatory longer-feedback test has now completed: workflow `31432403037`, 5 iterations × 64 roots = 320 roots/seed.
 
 ```text
-baseline size 1:
-mean = 0.2456560284
-p95  = 0.6287055612
-
-policy-mixture size 4:
-mean = 0.1719404310
-p95  = 0.4136051536
-p50  = 0.1451251805
-max  = 0.7699102759
+mean TV = 0.266591
+p50 TV  = 0.246805
+p95 TV  = 0.567002
+max TV  = 0.905547
+fit gates = PASS
 ```
 
-Mean falls ~30.0% and p95 ~34.2%, with both per-seed frozen fit gates PASS. This is the first generation-2 candidate to materially reduce both center and tail while staying close to the recovered Deep-CFR behavior semantics. It still fails the frozen cross-seed gates (`0.17194 > 0.15`, `0.41361 > 0.35`).
+The two-iteration gain therefore **decays materially under five CFR feedback cycles**. This is a decisive negative result for immediate size-4 acceptance escalation.
 
-Workflow `31432403037` is physically running a five-iteration × 64-root = 320-root/seed compounding screen. This deliberately precedes any 640 escalation: the candidate must first show that its gain survives a longer feedback horizon.
+**Decision: do not launch the prepared size-4 640 candidate.** More roots would not answer the feedback-depth failure.
 
-## Causal transition now physically confirmed
+## Direct Behavior — useful causal clue, not a production algorithm
 
-Authoritative partial-exact support-by-iteration workflow `31431939967`, evidence `086df6ed397ecc4a2e61728aa3b40f0f58593675`, reproduced the expected causal break under the current paired contract.
-
-### Iteration 1 — before any fitted AdvantageNet can affect behavior
-
-Poker-isomorphic shared Strategy Memory:
+Authoritative 256 E2E:
 
 ```text
-Jaccard                      = 0.0125865
-shared-target weighted TV    = 0.0000000
-shared-target p95 TV         = 0.0000000
+mean TV = 0.142553   PASS
+p95 TV  = 0.426860   FAIL
 ```
 
-The shared sigma targets are exactly identical.
+The surrogate itself underfits the sample-level regret-matched targets well above the reference `0.12` TV threshold. Because regret matching is nonlinear, this is not theoretically equivalent to recovered Deep CFR. The result is retained only as evidence that **explicit smoothing around the first feedback transition can materially reduce instability**.
 
-### Iteration 2 — after the first Advantage fit/regret map feeds behavior back into collection
+## Current residual-tail program
 
-```text
-Jaccard                      = 0.0284171
-shared-target weighted TV    = 0.4739458
-shared-target p95 TV         = 1.0000000
-```
+### 1. Policy-mixture size 8
 
-Diagnosis: `TARGET_DIVERGENCE_APPEARS_AFTER_FIRST_ADVANTAGE_FIT`.
+The first size-8 smoke attempt correctly failed before physical evidence because the shared paired runner only allowed sizes 1/2/4. That compatibility limit was explicitly extended to 8; no failed-run fallback JSON is treated as evidence.
 
-This pins the main generation-2 instability to the transition:
+Corrected workflow `31440425854` is active. Its question is narrow: does doubling independent regret-policy members continue to reduce the two-iteration p95, or has the ensemble already saturated?
 
-```text
-Advantage approximation -> regret mapping -> sampled behavior -> next CFR trajectories -> next strategy targets
-```
+Any size-8 success still requires a five-iteration compounding screen before 640.
 
-The final AveragePolicy is downstream of an already-divergent target distribution and cannot be the primary cause.
+### 2. Policy-mixture + final AveragePolicy ensemble
 
-## Final AveragePolicy ensemble — secondary only
+Workflow `31440493410` is active. It keeps size-4 policy-mixture behavior during CFR, then trains final AveragePolicy ensembles of sizes 1/2/4 on the frozen strategy memory without perturbing the primary RNG stream.
 
-| size | mean TV | p95 TV |
-|---:|---:|---:|
-| 1 | `0.245656` | `0.628706` |
-| 2 | `0.226901` | `0.598557` |
-| 4 | `0.212912` | `0.599173` |
+This is a factorial residual-tail test. Prior final-policy ensembling alone reduced p95 only ~4.7%, so it will be promoted only if the combination is materially stronger than that.
 
-All fits pass, but size 4 only reduces p95 ~4.7%. Final-policy approximation remains a secondary component.
+### 3. Support-conditioned residual-tail forensic
 
-## Direct behavior surrogate E2E — strong causal signal, not promotable as-is
+A new authoritative 256 diagnostic separates final-policy disagreement on:
 
-Same-memory evidence had reduced independent-fit behavior disagreement from `0.230515 / 0.818211` to `0.110418 / 0.363998` mean/p95. The authoritative E2E run then completed successfully: workflow `31431672631`, evidence `1d1ac9b23abd2afedec8390e3f8bb482c11b0625`.
+- seed-A support;
+- seed-B support;
+- exact byte-identical shared SPNNIV1 observations;
+- exact one-sided observations unique to A or B.
 
-```text
-baseline partial-exact:
-mean = 0.245656
-p95  = 0.628706
+This determines how much of the remaining p95 is true shared-state disagreement versus off-support generalization/extrapolation after upstream policy-mixture stabilization.
 
-Direct Behavior E2E:
-mean = 0.142553   PASS against 0.15
-p95  = 0.426860   FAIL against 0.35
-p50  = 0.100895
-max  = 0.870134
-```
+### 4. Robust policy aggregation
 
-The ordinary frozen Advantage/final-AveragePolicy fits pass. However, the surrogate itself does **not** faithfully fit the sample-level regret-matched behavior target within the reference `0.12` TV threshold: for seed `20260829`, its iteration-1/iteration-2 audit TVs are about `0.2723 / 0.2205` even after the 4096-step ceiling. Therefore the stability gain is at least partly a smoothing/regularization effect rather than evidence that the surrogate is a faithful implementation of the recovered regret behavior.
+A same-memory eight-replica diagnostic compares ordinary probability averaging with coordinatewise median and trimmed-mean aggregation **after each member has already been hard-regret-matched**.
 
-Because regret matching is nonlinear, theoretical equivalence is not claimed. This branch is retained as a causal clue — **smoothing the first feedback transition can strongly improve stability** — but it is not eligible for production promotion as currently defined.
+This directly tests whether rare ensemble-member outliers dominate the p95 tail. Only a large same-memory tail reduction earns an E2E mapping test.
 
-## Other closed / deprioritized primary branches
+### 5. Independent five-iteration reproducibility run
+
+A parser-compatibility edit unintentionally triggered a second physical copy of the 320 compounding workflow. Rather than discard it, it is retained as a determinism check. Because the edit changes only allowed parser choices and not size-4 semantics, its numerical output should reproduce the completed `0.266591 / 0.567002` result if the physical pipeline is deterministic across fresh runners.
+
+## Closed / deprioritized primary branches
 
 - raw root scaling beyond 1280;
 - independent x8/x16 path multiplication;
@@ -170,15 +159,16 @@ Because regret matching is nonlinear, theoretical equivalence is not claimed. Th
 - raw Advantage ensemble sizes 2/4 as standalone solution;
 - final AveragePolicy ensemble as standalone solution;
 - legal-action common-mode centering;
-- card/suit representation rewrite as dominant explanation.
+- card/suit representation rewrite as dominant explanation;
+- policy-mixture size 4 direct escalation to 640.
 
 ## Immediate decision tree
 
-1. Complete workflow `31432403037`.
-2. If five-iteration policy mixture retains a large reduction in both mean and p95 with frozen fit gates PASS, launch the 640 acceptance-scale candidate under exactly the same authoritative deal/RNG contract.
-3. If the policy-mixture gain collapses with feedback depth, do not brute-force more roots. Use the direct-behavior result only as evidence that behavior smoothing is valuable, then test an explicit and auditable smoothing/interpolation mechanism around the first Advantage-fit transition rather than promoting an opaque underfit surrogate.
-4. Even if direct behavior were to meet both cross-seed gates later, it requires an explicit algorithm/versioning decision plus checkpoint/resume determinism before acceptance-scale production status.
-5. No estimator, objective, ensemble, RNG or policy mapping becomes production semantics without recertification. No gate relaxation.
+1. Resolve size 8, robust aggregation, support-conditioned tail decomposition, combined final-policy ensemble, and the independent 320 reproducibility run.
+2. If size 8 or robust aggregation gives a materially better p95 at two iterations, require a five-iteration compounding screen before 640.
+3. If all static ensemble variants still decay with feedback depth, move to an **explicit versioned temporal behavior damping/interpolation** diagnostic around the first Advantage-fit transition. This is the next algorithmic lever already justified by the Direct Behavior result.
+4. Any new behavior semantics must be explicitly versioned and must pass deterministic continuous-vs-stop/restore/continue recertification before acceptance-scale promotion.
+5. No gate relaxation.
 
 Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is never substituted for generation-2 gates.
 
