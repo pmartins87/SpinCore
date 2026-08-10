@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.12",
+  "version": "1.12.1-recovery.13",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "SIZE4_POLICY_MIXTURE_NOT_DURABLE_TEMPORAL_DAMPING_FACTORIAL_AND_RESIDUAL_TAIL_TESTS_RUNNING",
+  "current_gate_status": "FIVE_ITERATION_DURABILITY_OPTIMIZATION_ACTIVE_NO_640_ESCALATION",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -86,10 +86,8 @@
     "mean_aggregation": {"mean_tv": 0.13742117002288864, "p95_tv": 0.3881133198738098},
     "median_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
     "trimmed_mean_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
-    "best_robust_to_mean_mean_ratio": 1.0452493014541298,
-    "best_robust_to_mean_p95_ratio": 1.259494604974214,
     "diagnosis": "ROBUST_POLICY_AGGREGATION_NOT_MATERIAL",
-    "decision": "CLOSE_MEDIAN_AND_TRIMMED_AGGREGATION"
+    "decision": "CLOSED"
   },
   "causal_state": {
     "first_advantage_fit_feedback_is_confirmed_causal_transition": true,
@@ -109,6 +107,11 @@
     "policy_mixture_size8_256": {"workflow": 31440425854, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
     "policy_mixture_plus_final_policy_ensemble_256": {"workflow": 31440493410, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
     "policy_mixture_support_conditioned_256": {"workflow": 31440576227, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
+    "behavior_target_aggregation_order_256": {
+      "workflow": 31441852607,
+      "status": "PHYSICAL_SCREEN_RUNNING_AFTER_SMOKE_PASS",
+      "purpose": "Compare sample-level RM, mean sample-RM, and RM of weighted mean regret on exact duplicate observations."
+    },
     "decaying_uniform_tremble_size4_320": {
       "workflow": 31441018067,
       "status": "THREE_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
@@ -128,17 +131,36 @@
     },
     "first_transition_only_tremble_size4_320": {
       "workflow": 31441567261,
-      "status": "STARTED",
-      "epsilon0": 0.30,
-      "epsilon_decay": 0.0
+      "status": "PHYSICAL_320_RUNNING_AFTER_SMOKE_PASS",
+      "epsilon_schedule": [0.30, 0.0, 0.0, 0.0]
     },
     "direct_behavior_compounding_320": {
       "workflow": 31441650915,
-      "status": "BUILD_REGRESSION_RUNNING",
+      "status": "PHYSICAL_320_RUNNING_AFTER_SMOKE_PASS",
       "purpose": "Causal durability control only; not a promotable algorithm."
+    },
+    "uncertainty_adaptive_damping_size4_320": {
+      "workflow": 31442367579,
+      "status": "STARTING_TWO_JOB_MATRIX",
+      "epsilon_scale_matrix": [0.50, 1.00],
+      "epsilon_cap": 0.50,
+      "purpose": "Damp only states where fitted regret-policy ensemble members disagree, avoiding global flattening of stable states."
     },
     "policy_mixture_size4_256_reproducibility": {"workflow": 31440366942, "status": "PHYSICAL_256_RUNNING"},
     "policy_mixture_compounding_320_reproducibility": {"workflow": 31440366909, "status": "PHYSICAL_320_RUNNING"}
+  },
+  "automation": {
+    "durability_matrix_summary": {
+      "tool": "tools/summarize_r7_3_durability_matrix.py",
+      "workflow": "r7_3_durability_matrix_summary.yml",
+      "behavior": "Auto-commit consolidated ranking only when all expected five-iteration evidence files exist."
+    },
+    "fresh_run_reproducibility": {
+      "tool": "tools/check_r7_3_fresh_run_reproducibility.py",
+      "workflow": "r7_3_fresh_run_reproducibility.yml",
+      "tolerance": 1e-9,
+      "behavior": "Compare latest two 256/320 evidence commits for exact structural/sample/node counters and cross-seed numerical reproducibility."
+    }
   },
   "prepared_but_blocked": {
     "policy_mixture_size4_640": {
@@ -146,6 +168,6 @@
       "reason": "Five-iteration size4 compounding failed durability; must not be triggered."
     }
   },
-  "next_physical_step": "Resolve active static-tail and five-iteration temporal-damping controls. A candidate must improve both mean and p95 versus the 5x64 baseline 0.2665907145/0.5670017600 with frozen fit gates PASS before any 640 consideration. Robust median/trimmed aggregation is closed. Use size1/no-tremble and size1/e30 together with size4/no-tremble and size4/e30 as a causal 2x2 ensemble-by-damping factorial. Compare geometric tremble, first-transition-only tremble, and previous-policy temporal blend to determine whether repeated or only initial feedback damping is required. No gate relaxation.",
+  "next_physical_step": "Resolve the static residual-tail screens and five-iteration damping matrix. No 640 escalation. A candidate must materially beat both mean and p95 of 0.2665907145/0.5670017600 with frozen fit gates PASS at 5x64. Compare global decaying tremble, first-transition-only tremble, previous-policy temporal blending, and ensemble-disagreement adaptive damping. Use size1/no-tremble and size1/e30 to separate ensemble versus damping effects. Behavior-target aggregation order may suggest a cleaner direct-policy target but cannot be promoted without an E2E and semantic review. Then require fresh-run reproducibility, explicit versioning and checkpoint/resume recertification before acceptance scale. No gate relaxation.",
   "ready_for_tables": false
 }
