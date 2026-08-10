@@ -5,7 +5,7 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "FIT_GATES_PASS_CROSS_SEED_FAIL_SCALING_1280",
+  "current_gate_status": "CROSS_SEED_FLAT_POLICY_FIT_DEGRADES_VARIANCE_DECOMPOSITION_RUNNING",
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
@@ -80,19 +80,34 @@
       "seed_20260807_policy_tv": 0.1169664338,
       "per_seed_fit_pass": true,
       "cross_seed_pass": false,
-      "pass": false,
-      "interpretation": "Approximation gates are now satisfied for both seeds; remaining R7.3 failure is strategic cross-seed instability rather than model underfit at this diagnostic scale."
+      "pass": false
     },
     "scale_1280": {
+      "schema": "SPINCORE_R7_3_DIAGNOSTIC_V2",
       "workflow_run_id": 31353149504,
+      "evidence_commit": "b23a11ea71535477ab89f84395cbc42173bde479",
       "roots_per_seed": 1280,
       "iterations": 10,
       "roots_per_iteration": 128,
+      "mean_tv": 0.4731900096,
+      "p95_tv": 0.8752781749,
+      "seed_20260829_advantage_nrmse": 0.6841323376,
+      "seed_20260829_policy_tv": 0.1564466953,
+      "seed_20260807_advantage_nrmse": 0.6813563108,
+      "seed_20260807_policy_tv": 0.1603679657,
+      "per_seed_fit_pass": false,
+      "cross_seed_pass": false,
+      "pass": false,
       "frozen_gates_unchanged": true,
-      "purpose": "Measure convergence slope before committing to a much larger training run.",
-      "status": "RUNNING"
+      "interpretation": "Doubling roots from 640 to 1280 produced essentially flat cross-seed mean TV (0.47765 to 0.47319) while average-policy fit degraded above the frozen 0.12 gate on both seeds. Brute-force root scaling is paused."
+    },
+    "variance_decomposition_640": {
+      "workflow_run_id": 31354594794,
+      "status": "RUNNING",
+      "purpose": "Separate policy-network initialization/optimizer variance from variance in the CFR strategy memories by fitting controlled policy seeds on the same and different memories.",
+      "decision_rule": "If same-memory/different-optimizer TV is small but different-memory/same-optimizer TV is large, CFR/chance-memory variance dominates. If same-memory TV is also large, policy approximation/optimization is itself unstable."
     }
   },
-  "next_physical_step": "Complete the 1280-root two-seed scale. If cross-seed TV falls materially, continue scaling with the same frozen gates; if it remains roughly flat, stop brute-force scaling and diagnose strategic/average-policy variance sources before R7.4.",
+  "next_physical_step": "Finish the controlled 640-root variance decomposition before any further root scaling. Use its same-memory versus different-memory TV split to choose between fixing average-policy approximation/optimization and reducing CFR/chance strategy-memory variance. Frozen R7.3 gates remain unchanged.",
   "ready_for_tables": false
 }
