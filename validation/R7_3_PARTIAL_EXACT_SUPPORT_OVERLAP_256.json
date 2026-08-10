@@ -1,0 +1,415 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "collection": [
+    {
+      "advantage_optimizer_steps": 8192,
+      "advantage_samples": 100000,
+      "advantage_seen": 102837,
+      "algorithm_seed": 20260829,
+      "checkpoints": [
+        {
+          "advantage_samples": 81571,
+          "advantage_seen": 81571,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.6046990752220154
+          },
+          "iteration": 1,
+          "nodes": 478190,
+          "roots": 128,
+          "strategy_samples": 13741,
+          "strategy_seen": 13741
+        },
+        {
+          "advantage_samples": 100000,
+          "advantage_seen": 102837,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.573745846748352
+          },
+          "iteration": 2,
+          "nodes": 592854,
+          "roots": 256,
+          "strategy_samples": 17184,
+          "strategy_seen": 17184
+        }
+      ],
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "advantage_weighted_nrmse": 0.515490710735321,
+        "policy_gate_pass": false,
+        "policy_weighted_mean_tv": 0.17909035086631775
+      },
+      "nodes": 592854,
+      "policy_optimizer_steps": 128,
+      "policy_progress": [
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 128,
+          "weighted_mean_tv": 0.18036341667175293
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 17184,
+      "strategy_seen": 17184
+    },
+    {
+      "advantage_optimizer_steps": 7936,
+      "advantage_samples": 100000,
+      "advantage_seen": 102890,
+      "algorithm_seed": 20260807,
+      "checkpoints": [
+        {
+          "advantage_samples": 81767,
+          "advantage_seen": 81767,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.6212266087532043
+          },
+          "iteration": 1,
+          "nodes": 480148,
+          "roots": 128,
+          "strategy_samples": 10430,
+          "strategy_seen": 10430
+        },
+        {
+          "advantage_samples": 100000,
+          "advantage_seen": 102890,
+          "final_advantage_fit": {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 3840,
+            "weighted_nrmse": 0.49815985560417175
+          },
+          "iteration": 2,
+          "nodes": 593086,
+          "roots": 256,
+          "strategy_samples": 13709,
+          "strategy_seen": 13709
+        }
+      ],
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "advantage_weighted_nrmse": 0.564872145652771,
+        "policy_gate_pass": false,
+        "policy_weighted_mean_tv": 0.19947147369384766
+      },
+      "nodes": 593086,
+      "policy_optimizer_steps": 128,
+      "policy_progress": [
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 128,
+          "weighted_mean_tv": 0.1968199610710144
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 13709,
+      "strategy_seen": 13709
+    }
+  ],
+  "deck_formula": "seed*1000003 + global_root*97 + iteration",
+  "deck_semantics": "GENERATION2_AUTHORITATIVE_GLOBAL_ROOT_FORMULA_EXACT",
+  "duration_seconds": 376.06986021995544,
+  "exact_opponent_levels": 2,
+  "generated_at_unix": 1786394009.7142482,
+  "interpretation_note": "Diagnostic only. This measures strategy-memory support and target disagreement after the authoritative paired partial-exact level-2 CFR collection. It answers whether bounded opponent enumeration actually stabilizes sigma targets on genuinely shared infosets, and decomposes the remaining tail by street, legal-action count and history length.",
+  "iterations": 2,
+  "overlap": {
+    "poker_isomorphic": {
+      "by_history_len": {
+        "2": {
+          "pair_weight": 213.0,
+          "shared_unique": 93,
+          "target_p50_tv": 0.3945970695970695,
+          "target_p95_tv": 0.8604280680580667,
+          "target_unweighted_mean_tv": 0.41678138288190103,
+          "weighted_target_mean_tv": 0.40570276913391995
+        },
+        "3": {
+          "pair_weight": 618.0,
+          "shared_unique": 279,
+          "target_p50_tv": 0.32277806343394233,
+          "target_p95_tv": 0.6832393188930457,
+          "target_unweighted_mean_tv": 0.3218197233022259,
+          "weighted_target_mean_tv": 0.33301411526469854
+        },
+        "4": {
+          "pair_weight": 60.0,
+          "shared_unique": 52,
+          "target_p50_tv": 0.306846663933385,
+          "target_p95_tv": 0.6732554057283693,
+          "target_unweighted_mean_tv": 0.24068800654341457,
+          "weighted_target_mean_tv": 0.24909897327487834
+        },
+        "5": {
+          "pair_weight": 120.0,
+          "shared_unique": 92,
+          "target_p50_tv": 0.4021100494855333,
+          "target_p95_tv": 0.7932320302371065,
+          "target_unweighted_mean_tv": 0.36319158406310775,
+          "weighted_target_mean_tv": 0.3839446608912935
+        },
+        "6": {
+          "pair_weight": 2.0,
+          "shared_unique": 2,
+          "target_p50_tv": 0.5416666666666667,
+          "target_p95_tv": 0.7291666666666666,
+          "target_unweighted_mean_tv": 0.5416666666666667,
+          "weighted_target_mean_tv": 0.5416666666666667
+        },
+        "7": {
+          "pair_weight": 8.0,
+          "shared_unique": 8,
+          "target_p50_tv": 0.15890484470767685,
+          "target_p95_tv": 0.6666666666666666,
+          "target_unweighted_mean_tv": 0.2888945459123066,
+          "weighted_target_mean_tv": 0.2888945459123066
+        }
+      },
+      "by_legal_action_count": {
+        "3": {
+          "pair_weight": 507.0,
+          "shared_unique": 263,
+          "target_p50_tv": 0.33333333333333326,
+          "target_p95_tv": 0.6934373433572736,
+          "target_unweighted_mean_tv": 0.3078361764180588,
+          "weighted_target_mean_tv": 0.31766758838984516
+        },
+        "4": {
+          "pair_weight": 514.0,
+          "shared_unique": 263,
+          "target_p50_tv": 0.37513179279615444,
+          "target_p95_tv": 0.8162049538750132,
+          "target_unweighted_mean_tv": 0.3684842159166676,
+          "weighted_target_mean_tv": 0.3804936442597992
+        }
+      },
+      "by_street": {
+        "0": {
+          "pair_weight": 1021.0,
+          "shared_unique": 526,
+          "target_p50_tv": 0.33333333333333337,
+          "target_p95_tv": 0.8035348652099921,
+          "target_unweighted_mean_tv": 0.33816019616736354,
+          "weighted_target_mean_tv": 0.34929598478275087
+        }
+      },
+      "intersection_unique": 526,
+      "jaccard": 0.02088876533894603,
+      "lcfr_weight_coverage_A": 0.07184757841663839,
+      "lcfr_weight_coverage_B": 0.08529550270779374,
+      "shared_target_max_tv": 1.0,
+      "shared_target_p50_tv": 0.33333333333333337,
+      "shared_target_p95_tv": 0.8035348652099921,
+      "shared_target_unweighted_mean_tv": 0.33816019616736354,
+      "shared_target_weighted_mean_tv": 0.34929598478275087,
+      "union_unique": 25181,
+      "unique_A": 14274,
+      "unique_B": 11433,
+      "unique_coverage_A": 0.03685021717808603,
+      "unique_coverage_B": 0.046007172220764454
+    },
+    "raw": {
+      "by_history_len": {
+        "2": {
+          "pair_weight": 27.0,
+          "shared_unique": 19,
+          "target_p50_tv": 0.44020813408819603,
+          "target_p95_tv": 0.8459072537049738,
+          "target_unweighted_mean_tv": 0.41871133959957985,
+          "weighted_target_mean_tv": 0.428350204118771
+        },
+        "3": {
+          "pair_weight": 93.0,
+          "shared_unique": 84,
+          "target_p50_tv": 0.33333333333333337,
+          "target_p95_tv": 0.75,
+          "target_unweighted_mean_tv": 0.3253141847121744,
+          "weighted_target_mean_tv": 0.3445533041908842
+        },
+        "4": {
+          "pair_weight": 6.0,
+          "shared_unique": 6,
+          "target_p50_tv": 0.0,
+          "target_p95_tv": 0.4159549860614693,
+          "target_unweighted_mean_tv": 0.12358555185070837,
+          "weighted_target_mean_tv": 0.12358555185070837
+        },
+        "5": {
+          "pair_weight": 12.0,
+          "shared_unique": 12,
+          "target_p50_tv": 0.0,
+          "target_p95_tv": 0.7041666666666666,
+          "target_unweighted_mean_tv": 0.20076373475826648,
+          "weighted_target_mean_tv": 0.20076373475826648
+        },
+        "7": {
+          "pair_weight": 4.0,
+          "shared_unique": 4,
+          "target_p50_tv": 0.0,
+          "target_p95_tv": 0.0,
+          "target_unweighted_mean_tv": 0.0,
+          "weighted_target_mean_tv": 0.0
+        }
+      },
+      "by_legal_action_count": {
+        "3": {
+          "pair_weight": 73.0,
+          "shared_unique": 67,
+          "target_p50_tv": 0.3333333333333333,
+          "target_p95_tv": 0.6666666666666667,
+          "target_unweighted_mean_tv": 0.27214634084460615,
+          "weighted_target_mean_tv": 0.28898652956165116
+        },
+        "4": {
+          "pair_weight": 69.0,
+          "shared_unique": 58,
+          "target_p50_tv": 0.37526949244710595,
+          "target_p95_tv": 0.7625593183015396,
+          "target_unweighted_mean_tv": 0.34825483206602587,
+          "weighted_target_mean_tv": 0.3719358590023472
+        }
+      },
+      "by_street": {
+        "0": {
+          "pair_weight": 142.0,
+          "shared_unique": 125,
+          "target_p50_tv": 0.33333333333333337,
+          "target_p95_tv": 0.75,
+          "target_unweighted_mean_tv": 0.3074606807713449,
+          "weighted_target_mean_tv": 0.3292928938673414
+        }
+      },
+      "intersection_unique": 125,
+      "jaccard": 0.004682524817381532,
+      "lcfr_weight_coverage_A": 0.008241625054540166,
+      "lcfr_weight_coverage_B": 0.010595714622086179,
+      "shared_target_max_tv": 1.0,
+      "shared_target_p50_tv": 0.33333333333333337,
+      "shared_target_p95_tv": 0.75,
+      "shared_target_unweighted_mean_tv": 0.3074606807713449,
+      "shared_target_weighted_mean_tv": 0.3292928938673414,
+      "union_unique": 26695,
+      "unique_A": 14846,
+      "unique_B": 11974,
+      "unique_coverage_A": 0.008419776370739594,
+      "unique_coverage_B": 0.010439285117755137
+    },
+    "suit_isomorphic": {
+      "by_history_len": {
+        "2": {
+          "pair_weight": 164.0,
+          "shared_unique": 98,
+          "target_p50_tv": 0.46114219894838193,
+          "target_p95_tv": 0.9842184998254873,
+          "target_unweighted_mean_tv": 0.442119601963468,
+          "weighted_target_mean_tv": 0.4536742470463076
+        },
+        "3": {
+          "pair_weight": 453.0,
+          "shared_unique": 282,
+          "target_p50_tv": 0.33333333333333337,
+          "target_p95_tv": 0.8881944444444443,
+          "target_unweighted_mean_tv": 0.36793447052934536,
+          "weighted_target_mean_tv": 0.39895754180694376
+        },
+        "4": {
+          "pair_weight": 36.0,
+          "shared_unique": 34,
+          "target_p50_tv": 0.0,
+          "target_p95_tv": 0.6717912414924354,
+          "target_unweighted_mean_tv": 0.2132558325785208,
+          "weighted_target_mean_tv": 0.2220058782992766
+        },
+        "5": {
+          "pair_weight": 58.0,
+          "shared_unique": 52,
+          "target_p50_tv": 0.37036494236000705,
+          "target_p95_tv": 0.6910135795410832,
+          "target_unweighted_mean_tv": 0.3411650401997139,
+          "weighted_target_mean_tv": 0.3618013083480949
+        },
+        "7": {
+          "pair_weight": 6.0,
+          "shared_unique": 6,
+          "target_p50_tv": 0.0,
+          "target_p95_tv": 0.6650033361374414,
+          "target_unweighted_mean_tv": 0.2211133352027388,
+          "weighted_target_mean_tv": 0.2211133352027388
+        }
+      },
+      "by_legal_action_count": {
+        "3": {
+          "pair_weight": 352.0,
+          "shared_unique": 234,
+          "target_p50_tv": 0.33333333333333337,
+          "target_p95_tv": 0.8403064792562496,
+          "target_unweighted_mean_tv": 0.339011670508909,
+          "weighted_target_mean_tv": 0.3717733380566069
+        },
+        "4": {
+          "pair_weight": 365.0,
+          "shared_unique": 238,
+          "target_p50_tv": 0.3992170034133261,
+          "target_p95_tv": 0.8958253873305275,
+          "target_unweighted_mean_tv": 0.39527088736084787,
+          "weighted_target_mean_tv": 0.42347806978738123
+        }
+      },
+      "by_street": {
+        "0": {
+          "pair_weight": 717.0,
+          "shared_unique": 472,
+          "target_p50_tv": 0.3334964543831465,
+          "target_p95_tv": 0.8812499999999999,
+          "target_unweighted_mean_tv": 0.36737966544696304,
+          "weighted_target_mean_tv": 0.3980944357996094
+        }
+      },
+      "intersection_unique": 472,
+      "jaccard": 0.018413763507977996,
+      "lcfr_weight_coverage_A": 0.05061327386435255,
+      "lcfr_weight_coverage_B": 0.06010124793972216,
+      "shared_target_max_tv": 1.0,
+      "shared_target_p50_tv": 0.3334964543831465,
+      "shared_target_p95_tv": 0.8812499999999999,
+      "shared_target_unweighted_mean_tv": 0.36737966544696304,
+      "shared_target_weighted_mean_tv": 0.3980944357996094,
+      "union_unique": 25633,
+      "unique_A": 14485,
+      "unique_B": 11620,
+      "unique_coverage_A": 0.03258543320676562,
+      "unique_coverage_B": 0.04061962134251291
+    }
+  },
+  "production_estimator_changed": false,
+  "ready_for_tables": false,
+  "rng_contract": "RECOVERED_SINGLE_COUPLED_BATCH_RNG",
+  "roots_per_iteration": 128,
+  "roots_per_seed": 256,
+  "schema": "SPINCORE_R7_3_PARTIAL_EXACT_SUPPORT_OVERLAP_V1",
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "poker_isomorphic_jaccard": 0.02088876533894603,
+    "poker_isomorphic_mean_lcfr_weight_coverage": 0.07857154056221606,
+    "poker_isomorphic_shared_target_p95_tv": 0.8035348652099921,
+    "poker_isomorphic_shared_target_weighted_mean_tv": 0.34929598478275087,
+    "raw_jaccard": 0.004682524817381532,
+    "raw_mean_lcfr_weight_coverage": 0.009418669838313173,
+    "raw_shared_target_p95_tv": 0.75,
+    "raw_shared_target_weighted_mean_tv": 0.3292928938673414
+  }
+}
