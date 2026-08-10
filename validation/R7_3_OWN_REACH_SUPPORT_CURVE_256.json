@@ -1,0 +1,487 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "duration_seconds": 64.47654366493225,
+  "generated_at_unix": 1786347823.053292,
+  "interpretation_note": "Exact control: every run uses the same unique root-deck stream and the exact zero-regret uniform behavior policy. The only stochastic difference between the two algorithm seeds is own-reach action sampling. Shared strategy targets must therefore have TV exactly zero; only support coverage is being measured. This diagnostic does not modify production collection or acceptance gates.",
+  "production_sampling_schedule_changed": false,
+  "ready_for_tables": false,
+  "replicate_counts": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "rows": [
+    {
+      "collection": [
+        {
+          "algorithm_seed": 20260829,
+          "replicates_per_target_player_per_unique_root": 1,
+          "samples_added": 23437,
+          "strategy_samples": 23437,
+          "strategy_seen": 23437,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "algorithm_seed": 20260807,
+          "replicates_per_target_player_per_unique_root": 1,
+          "samples_added": 21563,
+          "strategy_samples": 21563,
+          "strategy_seen": 21563,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "by_street": {
+            "0": {
+              "shared_unique": 727,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "1": {
+              "shared_unique": 348,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "2": {
+              "shared_unique": 114,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "3": {
+              "shared_unique": 39,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 1228,
+          "jaccard": 0.03394609536973048,
+          "lcfr_weight_coverage_A": 0.07931902547254341,
+          "lcfr_weight_coverage_B": 0.08714000834763252,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 0.0,
+          "shared_target_weighted_mean_tv": 0.0,
+          "union_unique": 36175,
+          "unique_A": 19519,
+          "unique_B": 17884,
+          "unique_coverage_A": 0.0629130590706491,
+          "unique_coverage_B": 0.06866472824871393
+        },
+        "raw": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1167,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "1": {
+              "shared_unique": 348,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "2": {
+              "shared_unique": 114,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "3": {
+              "shared_unique": 39,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 1668,
+          "jaccard": 0.04509204941742586,
+          "lcfr_weight_coverage_A": 0.073430899859197,
+          "lcfr_weight_coverage_B": 0.07981264202569216,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 0.0,
+          "shared_target_weighted_mean_tv": 0.0,
+          "union_unique": 36991,
+          "unique_A": 20137,
+          "unique_B": 18522,
+          "unique_coverage_A": 0.08283259671251925,
+          "unique_coverage_B": 0.09005506964690638
+        }
+      },
+      "replicates": 1,
+      "summary": {
+        "mean_lcfr_weight_coverage": 0.08322951691008797,
+        "poker_isomorphic_jaccard": 0.03394609536973048,
+        "shared_target_weighted_mean_tv": 0.0,
+        "shared_unique": 1228,
+        "union_unique": 36175
+      }
+    },
+    {
+      "collection": [
+        {
+          "algorithm_seed": 20260829,
+          "replicates_per_target_player_per_unique_root": 2,
+          "samples_added": 46936,
+          "strategy_samples": 46936,
+          "strategy_seen": 46936,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "algorithm_seed": 20260807,
+          "replicates_per_target_player_per_unique_root": 2,
+          "samples_added": 44038,
+          "strategy_samples": 44038,
+          "strategy_seen": 44038,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1049,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "1": {
+              "shared_unique": 1118,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "2": {
+              "shared_unique": 503,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "3": {
+              "shared_unique": 215,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 2885,
+          "jaccard": 0.0410471651134666,
+          "lcfr_weight_coverage_A": 0.10957474007158684,
+          "lcfr_weight_coverage_B": 0.11669467278259685,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 0.0,
+          "shared_target_weighted_mean_tv": 0.0,
+          "union_unique": 70285,
+          "unique_A": 37842,
+          "unique_B": 35328,
+          "unique_coverage_A": 0.07623804238676603,
+          "unique_coverage_B": 0.08166326992753623
+        },
+        "raw": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1503,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "1": {
+              "shared_unique": 1118,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "2": {
+              "shared_unique": 503,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "3": {
+              "shared_unique": 215,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 3339,
+          "jaccard": 0.046694729187352284,
+          "lcfr_weight_coverage_A": 0.10105249701721493,
+          "lcfr_weight_coverage_B": 0.10833825332667242,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 0.0,
+          "shared_target_weighted_mean_tv": 0.0,
+          "union_unique": 71507,
+          "unique_A": 38692,
+          "unique_B": 36154,
+          "unique_coverage_A": 0.08629690892174093,
+          "unique_coverage_B": 0.09235492614925044
+        }
+      },
+      "replicates": 2,
+      "summary": {
+        "mean_lcfr_weight_coverage": 0.11313470642709184,
+        "poker_isomorphic_jaccard": 0.0410471651134666,
+        "shared_target_weighted_mean_tv": 0.0,
+        "shared_unique": 2885,
+        "union_unique": 70285
+      }
+    },
+    {
+      "collection": [
+        {
+          "algorithm_seed": 20260829,
+          "replicates_per_target_player_per_unique_root": 4,
+          "samples_added": 82932,
+          "strategy_samples": 82932,
+          "strategy_seen": 82932,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "algorithm_seed": 20260807,
+          "replicates_per_target_player_per_unique_root": 4,
+          "samples_added": 84786,
+          "strategy_samples": 84786,
+          "strategy_seen": 84786,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1387,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 5.69150559445569e-20
+            },
+            "1": {
+              "shared_unique": 2944,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 1.1903904077195806e-18
+            },
+            "2": {
+              "shared_unique": 1521,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "3": {
+              "shared_unique": 599,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 6451,
+          "jaccard": 0.05239518526339728,
+          "lcfr_weight_coverage_A": 0.15062943134133988,
+          "lcfr_weight_coverage_B": 0.14771306583634092,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 4.969414018919763e-19,
+          "shared_target_weighted_mean_tv": 3.6533355824410305e-19,
+          "union_unique": 123122,
+          "unique_A": 64022,
+          "unique_B": 65551,
+          "unique_coverage_A": 0.10076223798069414,
+          "unique_coverage_B": 0.09841192354044942
+        },
+        "raw": {
+          "by_street": {
+            "0": {
+              "shared_unique": 2141,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "1": {
+              "shared_unique": 2944,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 1.1903904077195806e-18
+            },
+            "2": {
+              "shared_unique": 1521,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "3": {
+              "shared_unique": 599,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 7205,
+          "jaccard": 0.05776291949268043,
+          "lcfr_weight_coverage_A": 0.14491390536825352,
+          "lcfr_weight_coverage_B": 0.1409194914254712,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 4.3337991072286644e-19,
+          "shared_target_weighted_mean_tv": 3.4783008085572144e-19,
+          "union_unique": 124734,
+          "unique_A": 65184,
+          "unique_B": 66755,
+          "unique_coverage_A": 0.11053325969563083,
+          "unique_coverage_B": 0.10793199011310015
+        }
+      },
+      "replicates": 4,
+      "summary": {
+        "mean_lcfr_weight_coverage": 0.1491712485888404,
+        "poker_isomorphic_jaccard": 0.05239518526339728,
+        "shared_target_weighted_mean_tv": 3.6533355824410305e-19,
+        "shared_unique": 6451,
+        "union_unique": 123122
+      }
+    },
+    {
+      "collection": [
+        {
+          "algorithm_seed": 20260829,
+          "replicates_per_target_player_per_unique_root": 8,
+          "samples_added": 178575,
+          "strategy_samples": 178575,
+          "strategy_seen": 178575,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        },
+        {
+          "algorithm_seed": 20260807,
+          "replicates_per_target_player_per_unique_root": 8,
+          "samples_added": 175669,
+          "strategy_samples": 175669,
+          "strategy_seen": 175669,
+          "uniform_zero_regret_policy": true,
+          "unique_roots": 256
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1889,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 2.9164282469478735e-18
+            },
+            "1": {
+              "shared_unique": 7629,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 6.938893903907228e-17,
+              "weighted_target_mean_tv": 4.902401936627822e-18
+            },
+            "2": {
+              "shared_unique": 5849,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 7.652789873538774e-19
+            },
+            "3": {
+              "shared_unique": 2642,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 18009,
+          "jaccard": 0.07438262299009141,
+          "lcfr_weight_coverage_A": 0.2029567408651827,
+          "lcfr_weight_coverage_B": 0.20622875976979432,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 2.1946770879368966e-18,
+          "shared_target_weighted_mean_tv": 2.807227948953149e-18,
+          "union_unique": 242113,
+          "unique_A": 130834,
+          "unique_B": 129288,
+          "unique_coverage_A": 0.1376477062537261,
+          "unique_coverage_B": 0.1392936699461667
+        },
+        "raw": {
+          "by_street": {
+            "0": {
+              "shared_unique": 3049,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            },
+            "1": {
+              "shared_unique": 7629,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 6.938893903907228e-17,
+              "weighted_target_mean_tv": 4.902401936627822e-18
+            },
+            "2": {
+              "shared_unique": 5849,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 7.652789873538774e-19
+            },
+            "3": {
+              "shared_unique": 2642,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.0,
+              "weighted_target_mean_tv": 0.0
+            }
+          },
+          "intersection_unique": 19169,
+          "jaccard": 0.0784852417938314,
+          "lcfr_weight_coverage_A": 0.19936161276774464,
+          "lcfr_weight_coverage_B": 0.2026652397406486,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 0.0,
+          "shared_target_unweighted_mean_tv": 1.8533641185249627e-18,
+          "shared_target_weighted_mean_tv": 1.7052527490473606e-18,
+          "union_unique": 244237,
+          "unique_A": 132468,
+          "unique_B": 130938,
+          "unique_coverage_A": 0.1447066461334058,
+          "unique_coverage_B": 0.1463975316562037
+        }
+      },
+      "replicates": 8,
+      "summary": {
+        "mean_lcfr_weight_coverage": 0.20459275031748853,
+        "poker_isomorphic_jaccard": 0.07438262299009141,
+        "shared_target_weighted_mean_tv": 2.807227948953149e-18,
+        "shared_unique": 18009,
+        "union_unique": 242113
+      }
+    }
+  ],
+  "schema": "SPINCORE_R7_3_OWN_REACH_SUPPORT_CURVE_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "diagnosis": "OWN_REACH_SAMPLING_DENSITY_MATERIAL_FOR_SUPPORT",
+    "first_replicates": 1,
+    "last_replicates": 8,
+    "last_to_first_jaccard_ratio": 2.1911981976112025,
+    "last_to_first_weight_coverage_ratio": 2.458175391532166
+  },
+  "unique_roots_per_seed": 256
+}
