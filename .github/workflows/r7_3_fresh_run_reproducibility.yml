@@ -1,0 +1,69 @@
+name: SpinCore R7.3 fresh-run reproducibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_PAIRED_SIZE4_256.json'
+      - 'validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_COMPOUNDING_320.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compare latest two evidence commits
+        id: compare
+        shell: bash
+        run: |
+          set +e
+          python tools/check_r7_3_fresh_run_reproducibility.py \
+            --out validation/R7_3_FRESH_RUN_REPRODUCIBILITY.json
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo 'complete=true' >> "$GITHUB_OUTPUT"
+          elif [ "$rc" -eq 3 ]; then
+            echo 'complete=false' >> "$GITHUB_OUTPUT"
+            echo 'Waiting for both second physical evidence commits.'
+          else
+            exit "$rc"
+          fi
+      - name: Validate completed comparison
+        if: steps.compare.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FRESH_RUN_REPRODUCIBILITY.json'))
+          assert d['schema']=='SPINCORE_R7_3_FRESH_RUN_REPRODUCIBILITY_V1'
+          assert d['complete'] is True
+          assert d['ready_for_tables'] is False
+          print('fresh-run reproducibility comparison complete:',d['all_core_reproducible'])
+          PY
+      - name: Persist completed comparison
+        if: steps.compare.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_FRESH_RUN_REPRODUCIBILITY.json
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record R7.3 fresh-run reproducibility [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
