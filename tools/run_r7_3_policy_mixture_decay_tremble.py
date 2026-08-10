@@ -65,10 +65,10 @@ def main() -> int:
     EPSILON0 = float(known.epsilon0)
     DECAY = float(known.epsilon_decay)
 
-    # Remove wrapper-only arguments before delegating to the authoritative
-    # paired runner's parser.
+    # Remove wrapper-only arguments while preserving the authoritative runner's
+    # required output argument.
     import sys
-    sys.argv = [sys.argv[0]] + remaining
+    sys.argv = [sys.argv[0], "--out", str(known.out)] + remaining
     base.EnsembleAdvantagePolicy = DecayingTremblePolicyMixture
     rc = int(base.main())
 
