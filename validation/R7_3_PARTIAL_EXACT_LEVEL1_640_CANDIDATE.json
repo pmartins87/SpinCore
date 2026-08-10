@@ -1,1 +1,464 @@
-{"schema":"SPINCORE_R7_3_PARTIAL_EXACT_640_CANDIDATE_V1","runner_failed_before_report":true,"ready_for_tables":false}
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "cross_seed": {
+    "max_tv": 0.9996153116226196,
+    "mean_tv": 0.43743956089019775,
+    "p50_tv": 0.4064314067363739,
+    "p95_tv": 0.8900629878044128
+  },
+  "cross_seed_observation_count": 2048,
+  "cross_seed_pass": false,
+  "deck_formula": "seed*1000003 + global_root*97 + iteration",
+  "deck_semantics": "GENERATION2_AUTHORITATIVE_GLOBAL_ROOT_FORMULA_EXACT",
+  "duration_seconds": 1642.139685869217,
+  "exact_opponent_levels": 1,
+  "frozen_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "policy_weighted_mean_tv_max": 0.12
+  },
+  "generated_at_unix": 1786385622.103751,
+  "per_seed": [
+    {
+      "advantage_optimizer_steps": 17920,
+      "advantage_samples": 61296,
+      "advantage_seen": 61296,
+      "algorithm_seed": 20260829,
+      "checkpoints": [
+        {
+          "advantage_samples": 20653,
+          "advantage_seen": 20653,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.5386953949928284
+          },
+          "iteration": 1,
+          "nodes": 120346,
+          "roots": 128,
+          "strategy_samples": 11014,
+          "strategy_seen": 11014
+        },
+        {
+          "advantage_samples": 28949,
+          "advantage_seen": 28949,
+          "final_advantage_fit": {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 2304,
+            "weighted_nrmse": 0.4845253825187683
+          },
+          "iteration": 2,
+          "nodes": 166139,
+          "roots": 256,
+          "strategy_samples": 17605,
+          "strategy_seen": 17605
+        },
+        {
+          "advantage_samples": 38306,
+          "advantage_seen": 38306,
+          "final_advantage_fit": {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 3584,
+            "weighted_nrmse": 0.49768295884132385
+          },
+          "iteration": 3,
+          "nodes": 217807,
+          "roots": 384,
+          "strategy_samples": 24371,
+          "strategy_seen": 24371
+        },
+        {
+          "advantage_samples": 44816,
+          "advantage_seen": 44816,
+          "final_advantage_fit": {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 3840,
+            "weighted_nrmse": 0.4884025454521179
+          },
+          "iteration": 4,
+          "nodes": 254572,
+          "roots": 512,
+          "strategy_samples": 29406,
+          "strategy_seen": 29406
+        },
+        {
+          "advantage_samples": 61296,
+          "advantage_seen": 61296,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.5164568424224854
+          },
+          "iteration": 5,
+          "nodes": 347381,
+          "roots": 640,
+          "strategy_samples": 43186,
+          "strategy_seen": 43186
+        }
+      ],
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "advantage_weighted_nrmse": 0.5269134044647217,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.1151166707277298
+      },
+      "nodes": 347381,
+      "policy_optimizer_steps": 4864,
+      "policy_progress": [
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.30471304059028625
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 512,
+          "weighted_mean_tv": 0.25473931431770325
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 768,
+          "weighted_mean_tv": 0.22119207680225372
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1024,
+          "weighted_mean_tv": 0.19598866999149323
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1280,
+          "weighted_mean_tv": 0.1845664083957672
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1536,
+          "weighted_mean_tv": 0.1715063452720642
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1792,
+          "weighted_mean_tv": 0.1632063090801239
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2048,
+          "weighted_mean_tv": 0.15375986695289612
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2304,
+          "weighted_mean_tv": 0.15192686021327972
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2560,
+          "weighted_mean_tv": 0.14309823513031006
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2816,
+          "weighted_mean_tv": 0.13716235756874084
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3072,
+          "weighted_mean_tv": 0.13305561244487762
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3328,
+          "weighted_mean_tv": 0.1265067756175995
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3584,
+          "weighted_mean_tv": 0.13047297298908234
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 3840,
+          "weighted_mean_tv": 0.1194152757525444
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4096,
+          "weighted_mean_tv": 0.11594033241271973
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4352,
+          "weighted_mean_tv": 0.11475713551044464
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4608,
+          "weighted_mean_tv": 0.1095801368355751
+        },
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4864,
+          "weighted_mean_tv": 0.10477246344089508
+        }
+      ],
+      "roots": 640,
+      "strategy_samples": 43186,
+      "strategy_seen": 43186
+    },
+    {
+      "advantage_optimizer_steps": 19200,
+      "advantage_samples": 58979,
+      "advantage_seen": 58979,
+      "algorithm_seed": 20260807,
+      "checkpoints": [
+        {
+          "advantage_samples": 20564,
+          "advantage_seen": 20564,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.575869619846344
+          },
+          "iteration": 1,
+          "nodes": 120576,
+          "roots": 128,
+          "strategy_samples": 12746,
+          "strategy_seen": 12746
+        },
+        {
+          "advantage_samples": 26620,
+          "advantage_seen": 26620,
+          "final_advantage_fit": {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 3840,
+            "weighted_nrmse": 0.4992924928665161
+          },
+          "iteration": 2,
+          "nodes": 153460,
+          "roots": 256,
+          "strategy_samples": 15584,
+          "strategy_seen": 15584
+        },
+        {
+          "advantage_samples": 37088,
+          "advantage_seen": 37088,
+          "final_advantage_fit": {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 3072,
+            "weighted_nrmse": 0.48397770524024963
+          },
+          "iteration": 3,
+          "nodes": 213359,
+          "roots": 384,
+          "strategy_samples": 24009,
+          "strategy_seen": 24009
+        },
+        {
+          "advantage_samples": 48885,
+          "advantage_seen": 48885,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.5570368766784668
+          },
+          "iteration": 4,
+          "nodes": 279801,
+          "roots": 512,
+          "strategy_samples": 33984,
+          "strategy_seen": 33984
+        },
+        {
+          "advantage_samples": 58979,
+          "advantage_seen": 58979,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.5179780125617981
+          },
+          "iteration": 5,
+          "nodes": 336971,
+          "roots": 640,
+          "strategy_samples": 41625,
+          "strategy_seen": 41625
+        }
+      ],
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "advantage_weighted_nrmse": 0.5617756843566895,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.10980357229709625
+      },
+      "nodes": 336971,
+      "policy_optimizer_steps": 5120,
+      "policy_progress": [
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.2891741394996643
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 512,
+          "weighted_mean_tv": 0.24524587392807007
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 768,
+          "weighted_mean_tv": 0.22668451070785522
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1024,
+          "weighted_mean_tv": 0.198470339179039
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1280,
+          "weighted_mean_tv": 0.17721354961395264
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1536,
+          "weighted_mean_tv": 0.1744052767753601
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 1792,
+          "weighted_mean_tv": 0.16668608784675598
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2048,
+          "weighted_mean_tv": 0.14720052480697632
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2304,
+          "weighted_mean_tv": 0.14904312789440155
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2560,
+          "weighted_mean_tv": 0.1407160758972168
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 2816,
+          "weighted_mean_tv": 0.13375677168369293
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3072,
+          "weighted_mean_tv": 0.12770682573318481
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3328,
+          "weighted_mean_tv": 0.12324194610118866
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3584,
+          "weighted_mean_tv": 0.12377344071865082
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": false,
+          "optimizer_steps": 3840,
+          "weighted_mean_tv": 0.12030377238988876
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4096,
+          "weighted_mean_tv": 0.10837332159280777
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4352,
+          "weighted_mean_tv": 0.11342769116163254
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4608,
+          "weighted_mean_tv": 0.10709229111671448
+        },
+        {
+          "fit_target_reached": false,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 4864,
+          "weighted_mean_tv": 0.11420829594135284
+        },
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 5120,
+          "weighted_mean_tv": 0.10205214470624924
+        }
+      ],
+      "roots": 640,
+      "strategy_samples": 41625,
+      "strategy_seen": 41625
+    }
+  ],
+  "per_seed_fit_pass": true,
+  "production_estimator_changed": true,
+  "promotion_note": "Experimental acceptance candidate only. Positive exact-opponent levels change the Advantage estimator and must be explicitly versioned and checkpoint/resume recertified before any production promotion.",
+  "r7_3_pass": false,
+  "ready_for_tables": false,
+  "reservoir_capacity": 400000,
+  "rng_contract": "RECOVERED_SINGLE_COUPLED_BATCH_RNG",
+  "roots_per_seed": 640,
+  "schema": "SPINCORE_R7_3_PARTIAL_EXACT_640_CANDIDATE_V1",
+  "solver": "build/libspincore_solver_c.so"
+}
