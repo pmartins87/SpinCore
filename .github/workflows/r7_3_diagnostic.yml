@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: spincore-r7-3-diagnostic
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   diagnostic:
@@ -70,14 +70,17 @@ jobs:
             --iterations 2 \
             --roots-per-iteration 8 \
             --advantage-steps 16 \
+            --advantage-max-steps-per-iteration 32 \
+            --advantage-fit-target 10 \
             --policy-chunk-steps 16 \
             --policy-max-steps 32 \
+            --policy-fit-target 10 \
             --batch-size 32 \
             --audit-size 64 \
             --cross-seed-per-seed 64 \
             --reservoir-capacity 10000
 
-      - name: Run frozen 640-root two-seed diagnostic
+      - name: Run corrected 640-root two-seed diagnostic
         id: r73
         shell: bash
         env:
@@ -99,13 +102,13 @@ jobs:
           set -euo pipefail
           rm -f validation/R7_3_SMOKE.json
           if [ ! -f validation/R7_3_DIAGNOSTIC_640.json ]; then
-            echo '{"schema":"SPINCORE_R7_3_DIAGNOSTIC_V1","runner_failed_before_report":true,"r7_3_pass":false,"ready_for_tables":false}' > validation/R7_3_DIAGNOSTIC_640.json
+            echo '{"schema":"SPINCORE_R7_3_DIAGNOSTIC_V2","runner_failed_before_report":true,"r7_3_pass":false,"ready_for_tables":false}' > validation/R7_3_DIAGNOSTIC_640.json
           fi
           git config user.name 'SpinCore R7 Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add -f validation/R7_3_DIAGNOSTIC_640.json
           if ! git diff --cached --quiet; then
-            git commit -m 'Record physical R7.3 640-root diagnostic [r7-evidence-skip]'
+            git commit -m 'Record corrected physical R7.3 640-root diagnostic [r7-evidence-skip]'
             git pull --rebase origin main
             git push origin HEAD:main
           fi
