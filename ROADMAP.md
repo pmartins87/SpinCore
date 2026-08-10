@@ -19,6 +19,7 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - controlled 640-root variance decomposition — **DONE: CFR-memory variance dominant**
     - shared-deck + support-conditioned diagnostic — **DONE: common deck stream barely changes divergence; off-support extrapolation material**
     - exact/card-isomorphic support-overlap diagnostic — **RUNNING**
+    - traversal/training RNG-coupling screen — **RUNNING (diagnostic only; production RNG semantics unchanged)**
     - brute-force root scaling — **PAUSED until causal diagnosis closes**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
@@ -49,7 +50,12 @@ The support-conditioned shared-deck follow-up then held the root deal/future-boa
 
 Support conditioning was more informative: same-memory replica disagreement averaged `0.12031` on the memory's own support but `0.29231` on the other memory's support, a `2.42959x` ratio. Persisted support diagnosis: `OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL`.
 
-The active follow-up therefore measures the **memory support itself**, without relying on neural predictions: exact observation overlap, LCFR-weighted target disagreement on the exact intersection, overlap after global suit relabeling, and overlap after also removing private-card order and flop-card order. This is diagnostic only; it does not change `SPNNIV1` or any acceptance gate. If poker card isomorphism substantially expands the shared support, a versioned canonical-card representation becomes the leading correction. If it does not, traversal/action RNG coupling and CFR path-support variance are next.
+Two lower-cost causal diagnostics are now running in parallel before any larger acceptance-scale training:
+
+1. **Exact/card-isomorphic support overlap (640 roots/seed).** This measures the strategy-memory support directly, including LCFR-weighted target disagreement on shared states, then repeats after global suit relabeling and after additionally removing private-card order and flop-card order. If poker card isomorphism substantially expands shared support with low shared-target disagreement, a versioned canonical-card representation becomes the leading correction.
+2. **Traversal/training RNG-coupling screen (256 roots/seed/mode).** The recovered implementation uses `bundle.batch_rng` both for traversal/action sampling and for optimizer minibatch sampling. Adaptive Advantage training can therefore consume a variable number of random draws and perturb later traversal paths. The screen compares current coupled semantics against a diagnostic split traversal RNG under the same explicit deck stream. Production/checkpoint RNG semantics are not changed by this screen.
+
+If card isomorphism does not explain the support fragmentation, the RNG screen determines whether the next implementation change should version and checkpoint separate traversal/training RNG streams. If neither mechanism is material, the next target is intrinsic CFR path-support variance rather than more brute-force roots.
 
 ## Frozen R7.3 gates
 
@@ -68,4 +74,4 @@ Historical pre-loss checkpoint: 640 HU roots/seed, cross-seed mean TV 0.3714, p9
 - Production utility is exact explicit-payout ICM continuation delta; chip delta is diagnostics only.
 - Equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
 - Every meaningful step is persisted to GitHub `main`.
-- Root scaling is not resumed while a lower-cost causal diagnostic can distinguish approximation, chance-coverage, representation, and CFR-dynamics failures.
+- Root scaling is not resumed while a lower-cost causal diagnostic can distinguish approximation, chance-coverage, representation, RNG coupling, and CFR-dynamics failures.
