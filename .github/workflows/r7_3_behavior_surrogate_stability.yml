@@ -1,0 +1,96 @@
+name: SpinCore R7.3 direct behavior surrogate stability
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_behavior_surrogate_stability.yml'
+      - 'tools/run_r7_3_behavior_surrogate_stability.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+      - name: Smoke direct behavior surrogate
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_behavior_surrogate_stability.py \
+            --solver build/libspincore_solver_c.so \
+            --out /tmp/R7_3_BEHAVIOR_SURROGATE_SMOKE.json \
+            --roots 4 --chunk-steps 8 --max-steps 8 --fit-target 10 \
+            --batch-size 16 --audit-size 32 --eval-size 32 --reservoir-capacity 5000
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/R7_3_BEHAVIOR_SURROGATE_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_BEHAVIOR_SURROGATE_STABILITY_V1'
+          assert d['same_advantage_memory'] is True
+          assert d['regret_policy_targets_derived_from_each_advantage_sample'] is True
+          assert d['production_algorithm_changed'] is False
+          assert d['ready_for_tables'] is False
+          print('direct behavior surrogate smoke OK')
+          PY
+      - name: Run physical 256-root direct behavior surrogate screen
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_behavior_surrogate_stability.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_BEHAVIOR_SURROGATE_STABILITY_256.json \
+            --roots 256 --chunk-steps 256 --max-steps 4096 --fit-target 0.08 \
+            --batch-size 256 --audit-size 1024 --eval-size 2048 --reservoir-capacity 100000
+      - name: Persist behavior surrogate evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_BEHAVIOR_SURROGATE_STABILITY_256.json
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_3_BEHAVIOR_SURROGATE_STABILITY_V1","runner_failed_before_report":true,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 direct behavior surrogate stability [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
