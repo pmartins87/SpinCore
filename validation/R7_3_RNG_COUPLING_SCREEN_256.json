@@ -1,0 +1,374 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "duration_seconds": 178.20285820960999,
+  "generated_at_unix": 1786342610.7955694,
+  "interpretation_note": "Diagnostic only. Current production/recovered semantics remain unchanged. The split mode gives traversal/action sampling its own persistent RNG while optimizer minibatch sampling retains bundle.batch_rng. Because deck seeds are explicit and common, changes in overlap/target TV isolate the effect of training RNG consumption feeding back into later traversal RNG state.",
+  "iterations": 2,
+  "mode_reports": {
+    "coupled": {
+      "collection": [
+        {
+          "advantage_samples": 9333,
+          "advantage_seen": 9333,
+          "algorithm_seed": 20260829,
+          "checkpoints": [
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6811478137969971
+                }
+              ],
+              "advantage_samples": 5192,
+              "iteration": 1,
+              "roots": 128,
+              "strategy_samples": 10762
+            },
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6289573311805725
+                }
+              ],
+              "advantage_samples": 9333,
+              "iteration": 2,
+              "roots": 256,
+              "strategy_samples": 18414
+            }
+          ],
+          "deck_stream_seed": 222060269,
+          "roots": 256,
+          "split_traversal_rng": false,
+          "strategy_samples": 18414,
+          "strategy_seen": 18414
+        },
+        {
+          "advantage_samples": 11483,
+          "advantage_seen": 11483,
+          "algorithm_seed": 20260807,
+          "checkpoints": [
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6970791220664978
+                }
+              ],
+              "advantage_samples": 5771,
+              "iteration": 1,
+              "roots": 128,
+              "strategy_samples": 13215
+            },
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.599303662776947
+                }
+              ],
+              "advantage_samples": 11483,
+              "iteration": 2,
+              "roots": 256,
+              "strategy_samples": 24788
+            }
+          ],
+          "deck_stream_seed": 222060269,
+          "roots": 256,
+          "split_traversal_rng": false,
+          "strategy_samples": 24788,
+          "strategy_seen": 24788
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "by_street": {
+            "0": {
+              "shared_unique": 688,
+              "target_p50_tv": 0.24159705423814812,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.33923668019638586
+            },
+            "1": {
+              "shared_unique": 279,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.937719631723176,
+              "weighted_target_mean_tv": 0.21007702289355418
+            },
+            "2": {
+              "shared_unique": 139,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.8389073587045495,
+              "weighted_target_mean_tv": 0.22759806333691573
+            },
+            "3": {
+              "shared_unique": 69,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.37333750204001176
+            }
+          },
+          "intersection_unique": 1175,
+          "jaccard": 0.03373625427086623,
+          "lcfr_weight_coverage_A": 0.09725312667843167,
+          "lcfr_weight_coverage_B": 0.06911251065702263,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 1.0,
+          "shared_target_unweighted_mean_tv": 0.24110146193742657,
+          "shared_target_weighted_mean_tv": 0.3144886496181167,
+          "union_unique": 34829,
+          "unique_A": 15217,
+          "unique_B": 20787,
+          "unique_coverage_A": 0.07721627127554709,
+          "unique_coverage_B": 0.056525713186125946
+        },
+        "raw": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1126,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.38262994016972673
+            },
+            "1": {
+              "shared_unique": 279,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.937719631723176,
+              "weighted_target_mean_tv": 0.21007702289355426
+            },
+            "2": {
+              "shared_unique": 139,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.8389073587045495,
+              "weighted_target_mean_tv": 0.22759806333691582
+            },
+            "3": {
+              "shared_unique": 69,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.37333750204001165
+            }
+          },
+          "intersection_unique": 1613,
+          "jaccard": 0.04533573175187611,
+          "lcfr_weight_coverage_A": 0.09042430752704672,
+          "lcfr_weight_coverage_B": 0.06471219163389345,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 1.0,
+          "shared_target_unweighted_mean_tv": 0.24801764363631737,
+          "shared_target_weighted_mean_tv": 0.345351089346532,
+          "union_unique": 35579,
+          "unique_A": 15801,
+          "unique_B": 21391,
+          "unique_coverage_A": 0.10208214669957598,
+          "unique_coverage_B": 0.07540554438782665
+        }
+      }
+    },
+    "split_traversal_training": {
+      "collection": [
+        {
+          "advantage_samples": 9622,
+          "advantage_seen": 9622,
+          "algorithm_seed": 20260829,
+          "checkpoints": [
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6530205011367798
+                }
+              ],
+              "advantage_samples": 5912,
+              "iteration": 1,
+              "roots": 128,
+              "strategy_samples": 11162
+            },
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": false,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.7214129567146301
+                },
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 512,
+                  "weighted_nrmse": 0.6273342967033386
+                }
+              ],
+              "advantage_samples": 9622,
+              "iteration": 2,
+              "roots": 256,
+              "strategy_samples": 18361
+            }
+          ],
+          "deck_stream_seed": 222060269,
+          "roots": 256,
+          "split_traversal_rng": true,
+          "strategy_samples": 18361,
+          "strategy_seen": 18361
+        },
+        {
+          "advantage_samples": 12052,
+          "advantage_seen": 12052,
+          "algorithm_seed": 20260807,
+          "checkpoints": [
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6850872039794922
+                }
+              ],
+              "advantage_samples": 5118,
+              "iteration": 1,
+              "roots": 128,
+              "strategy_samples": 10542
+            },
+            {
+              "advantage_progress": [
+                {
+                  "fit_target_reached": true,
+                  "frozen_gate_pass": true,
+                  "optimizer_steps": 256,
+                  "weighted_nrmse": 0.6626107692718506
+                }
+              ],
+              "advantage_samples": 12052,
+              "iteration": 2,
+              "roots": 256,
+              "strategy_samples": 21692
+            }
+          ],
+          "deck_stream_seed": 222060269,
+          "roots": 256,
+          "split_traversal_rng": true,
+          "strategy_samples": 21692,
+          "strategy_seen": 21692
+        }
+      ],
+      "overlap": {
+        "poker_isomorphic": {
+          "by_street": {
+            "0": {
+              "shared_unique": 710,
+              "target_p50_tv": 0.2458895723321348,
+              "target_p95_tv": 0.9999999999999998,
+              "weighted_target_mean_tv": 0.35902043756295043
+            },
+            "1": {
+              "shared_unique": 323,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.9666320620141726,
+              "weighted_target_mean_tv": 0.3116874333041991
+            },
+            "2": {
+              "shared_unique": 99,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.2854406342560364
+            },
+            "3": {
+              "shared_unique": 18,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.4486685485178025
+            }
+          },
+          "intersection_unique": 1150,
+          "jaccard": 0.035262012081071964,
+          "lcfr_weight_coverage_A": 0.09843505477308294,
+          "lcfr_weight_coverage_B": 0.07715729858108519,
+          "shared_target_p50_tv": 0.07836785078382691,
+          "shared_target_p95_tv": 1.0,
+          "shared_target_unweighted_mean_tv": 0.27192401609127653,
+          "shared_target_weighted_mean_tv": 0.34735528062812565,
+          "union_unique": 32613,
+          "unique_A": 15387,
+          "unique_B": 18376,
+          "unique_coverage_A": 0.07473841554559044,
+          "unique_coverage_B": 0.06258162821070962
+        },
+        "raw": {
+          "by_street": {
+            "0": {
+              "shared_unique": 1132,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.411092153999391
+            },
+            "1": {
+              "shared_unique": 323,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 0.9666320620141726,
+              "weighted_target_mean_tv": 0.3116874333041989
+            },
+            "2": {
+              "shared_unique": 99,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.2854406342560364
+            },
+            "3": {
+              "shared_unique": 18,
+              "target_p50_tv": 0.0,
+              "target_p95_tv": 1.0,
+              "weighted_target_mean_tv": 0.44866854851780247
+            }
+          },
+          "intersection_unique": 1572,
+          "jaccard": 0.04711524052150457,
+          "lcfr_weight_coverage_A": 0.09100156494522692,
+          "lcfr_weight_coverage_B": 0.07088484257962366,
+          "shared_target_p50_tv": 0.0,
+          "shared_target_p95_tv": 1.0,
+          "shared_target_unweighted_mean_tv": 0.2792123909705431,
+          "shared_target_weighted_mean_tv": 0.3852340642194265,
+          "union_unique": 33365,
+          "unique_A": 15977,
+          "unique_B": 18960,
+          "unique_coverage_A": 0.0983914376916818,
+          "unique_coverage_B": 0.08291139240506329
+        }
+      }
+    }
+  },
+  "production_rng_contract_changed": false,
+  "ready_for_tables": false,
+  "roots_per_iteration": 128,
+  "roots_per_seed_per_mode": 256,
+  "schema": "SPINCORE_R7_3_RNG_COUPLING_SCREEN_V1",
+  "shared_deck_stream_seed": 222060269,
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "coupled_mean_lcfr_weight_coverage": 0.08318281866772714,
+    "coupled_poker_isomorphic_jaccard": 0.03373625427086623,
+    "coupled_shared_target_weighted_mean_tv": 0.3144886496181167,
+    "diagnosis": "TRAINING_TRAVERSAL_RNG_COUPLING_NOT_DOMINANT_AT_SCREEN_SCALE",
+    "split_mean_lcfr_weight_coverage": 0.08779617667708406,
+    "split_poker_isomorphic_jaccard": 0.035262012081071964,
+    "split_shared_target_weighted_mean_tv": 0.34735528062812565,
+    "split_to_coupled_jaccard_ratio": 1.0452260585290685,
+    "split_to_coupled_shared_target_tv_ratio": 1.1045081628539501,
+    "split_to_coupled_weight_coverage_ratio": 1.0554604674768828
+  }
+}
