@@ -1,0 +1,66 @@
+name: SpinCore main regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'include/**'
+      - 'src/**'
+      - 'python/**'
+      - 'tests/**'
+      - 'python_tests/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/main_regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-main-regression
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build C++ Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+
+      - name: C++ regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          ctest --test-dir build --output-on-failure
+
+      - name: Python regression
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          pytest -q python_tests
