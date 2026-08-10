@@ -1,0 +1,79 @@
+name: SpinCore R7.3 durability matrix summary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e15_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e30_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e45_320.json'
+      - 'validation/R7_3_SIZE1_TREMBLE_baseline_e0_320.json'
+      - 'validation/R7_3_SIZE1_TREMBLE_tremble_e30_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w50_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w75_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_FIRST_TRANSITION_TREMBLE_E30_320.json'
+      - 'validation/R7_3_DIRECT_BEHAVIOR_COMPOUNDING_320.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check matrix completeness and summarize
+        id: summarize
+        shell: bash
+        run: |
+          set +e
+          python tools/summarize_r7_3_durability_matrix.py \
+            --repo-root . \
+            --out validation/R7_3_DURABILITY_MATRIX_SUMMARY.json
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo 'complete=true' >> "$GITHUB_OUTPUT"
+          elif [ "$rc" -eq 3 ]; then
+            echo 'complete=false' >> "$GITHUB_OUTPUT"
+            echo 'Durability matrix is not complete yet; no summary evidence committed.'
+          else
+            exit "$rc"
+          fi
+      - name: Validate completed summary
+        if: steps.summarize.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_DURABILITY_MATRIX_SUMMARY.json'))
+          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V1'
+          assert d['complete'] is True
+          assert len(d['rows'])==10
+          assert d['acceptance_gate_changed'] is False
+          assert d['ready_for_tables'] is False
+          print('durability matrix summary validation OK')
+          PY
+      - name: Persist completed durability summary
+        if: steps.summarize.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_DURABILITY_MATRIX_SUMMARY.json
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Consolidate physical R7.3 durability matrix [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
