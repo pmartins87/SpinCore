@@ -5,7 +5,7 @@
   "byte_identical_to_lost_r5": false,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2",
   "current_gate": "R7.3",
-  "current_gate_status": "CFR_MEMORY_VARIANCE_DOMINANT_SHARED_DECK_SUPPORT_DIAGNOSTIC_RUNNING",
+  "current_gate_status": "SHARED_DECK_NOT_MATERIAL_OFF_SUPPORT_MATERIAL_SUPPORT_OVERLAP_RUNNING",
   "physical_regression": {
     "cpp_release_pass": 47,
     "cpp_release_fail": 0,
@@ -119,15 +119,32 @@
       "across_memory_mean_tv_average": 0.4698922187,
       "across_to_within_mean_tv_ratio": 1.9364749032,
       "diagnosis": "CFR_MEMORY_VARIANCE_DOMINANT",
-      "interpretation_limit": "The within-memory comparisons were evaluated on the union of both memories and therefore include off-support extrapolation; a support-conditioned follow-up is required before calling 0.24265 pure optimizer variance."
+      "interpretation_limit": "The within-memory comparisons were evaluated on the union of both memories and therefore include off-support extrapolation."
     },
     "shared_deck_support_640": {
+      "schema": "SPINCORE_R7_3_SHARED_DECK_SUPPORT_V1",
       "workflow_run_id": 31358002704,
+      "evidence_commit": "a953136d7542465798ff032499708f4e699f75c7",
+      "status": "DONE",
+      "roots_per_seed": 640,
+      "shared_deck_across_memory_union_mean_tv": 0.4600675106,
+      "independent_deck_reference_mean_tv": 0.4698922187,
+      "shared_to_independent_deck_ratio": 0.9790915710,
+      "own_support_within_memory_mean_tv": 0.1203103587,
+      "off_support_within_memory_mean_tv": 0.2923050523,
+      "off_to_own_support_ratio": 2.4295917279,
+      "all_policy_fit_gates_pass": false,
+      "chance_diagnosis": "POLICY_FIT_INSUFFICIENT_FOR_CHANCE_DECOMPOSITION",
+      "support_diagnosis": "OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL",
+      "interpretation": "Holding the hidden-card/future-board root stream common reduced across-memory mean TV only about 2.1%, so deck/chance-stream differences are not a plausible dominant explanation. The clean classifier remained conservative because one controlled policy fit finished slightly above the 0.12 gate. Off-support replica disagreement was about 2.43x own-support disagreement, making support fragmentation/generalization the next causal target."
+    },
+    "support_overlap_640": {
+      "workflow_run_id": 31360839650,
       "status": "RUNNING_OR_QUEUED",
       "frozen_gates_unchanged": true,
-      "purpose": "Use common hidden-card/future-board roots across algorithm seeds and evaluate TV separately on each memory support and their union, isolating card/chance coverage from algorithmic CFR divergence and off-support policy extrapolation."
+      "purpose": "Measure exact strategy-memory support intersection and LCFR-weighted target disagreement, then repeat after diagnostic global-suit canonicalization and after poker card isomorphism that also removes private-card order and flop-card order. This tests whether raw card representation is fragmenting support before changing SPNNIV1 semantics."
     }
   },
-  "next_physical_step": "Complete the 640-root shared-deck support-conditioned diagnostic. If common decks materially reduce across-memory TV, prioritize chance/card coverage and sampling efficiency; if they do not, diagnose algorithmic CFR dynamics/RNG coupling. Independently, use own-support versus off-support TV to decide whether AveragePolicy generalization must be improved before any larger R7.3 acceptance scale. Frozen gates remain unchanged.",
+  "next_physical_step": "Complete the 640-root exact/card-isomorphic support-overlap diagnostic. If card isomorphism materially increases overlap while shared-target disagreement is low, prioritize a versioned canonical-card neural representation and recertify R2-R7 rather than scaling roots. If overlap remains low even after card isomorphism, isolate traversal/action RNG coupling and CFR path-support variance next. Frozen gates remain unchanged.",
   "ready_for_tables": false
 }
