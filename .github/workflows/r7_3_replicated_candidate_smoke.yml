@@ -1,0 +1,77 @@
+name: SpinCore R7.3 replicated candidate smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_replicated_candidate_smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Smoke configurable replicated candidate runner
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_replicated_640_candidate.py \
+            --solver build/libspincore_solver_c.so \
+            --out /tmp/R7_3_REPLICATED_CANDIDATE_SMOKE.json \
+            --iterations 2 \
+            --roots-per-iteration 2 \
+            --advantage-replicates 1 \
+            --strategy-replicates 2 \
+            --rng-contract separate \
+            --advantage-chunk-steps 8 \
+            --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 \
+            --policy-chunk-steps 8 \
+            --policy-max-steps 8 \
+            --policy-fit-target 10 \
+            --batch-size 16 \
+            --audit-size 32 \
+            --cross-seed-per-seed 16 \
+            --reservoir-capacity 5000
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/R7_3_REPLICATED_CANDIDATE_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_REPLICATED_640_CANDIDATE_V1'
+          assert d['sampling_schedule']['strategy_replicates']==2
+          assert d['sampling_schedule']['rng_contract']=='separate'
+          assert d['ready_for_tables'] is False
+          print('replicated candidate smoke schema OK')
+          PY
