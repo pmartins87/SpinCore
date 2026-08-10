@@ -25,6 +25,8 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - partial-exact V2 — **RUNNING**
     - full-exact opponent-expectation upper bound — **RUNNING**
     - common-random-number Advantage path screen — **RUNNING**
+    - five-iteration divergence/compounding diagnostic — **RUNNING IN PARALLEL: baseline + Advantage x4**
+    - antithetic/rotated-lattice Advantage x4 screen — **RUNNING**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
 - R9 Strategic audit — TODO
@@ -57,7 +59,7 @@ Physical x4 evidence:
 - separated `both_x4`: workflow `31368447316`, commit `871967f777f7cec17479ed3ec9f476543452912d`;
 - coupled `advantage_x4`: workflow `31368894934`, commit `87547311076fd6a015b7d855de1a9c26124b924f`.
 
-All three x4 candidates cleanly passed Advantage and AveragePolicy fit gates. The coupled x4 schedule produced the best mean (`0.451112`), but even that is still roughly 3x the frozen `0.15` mean gate and its p95 (`0.893292`) is essentially unchanged from the failing baseline tail. Therefore **plain independent path replication is not an acceptance-scale solution**. The large improvement seen in the two-iteration 256-root screen does not survive five CFR iterations at 640 roots, which points to variance/divergence compounding through the iterative regret-learning dynamics.
+All three x4 candidates cleanly passed Advantage and AveragePolicy fit gates. The coupled x4 schedule produced the best mean (`0.451112`), but even that is still roughly 3x the frozen `0.15` mean gate and its p95 (`0.893292`) is essentially unchanged from the failing baseline tail. Therefore **plain independent path replication is not an acceptance-scale solution**. The large improvement seen in the two-iteration 256-root screen does not survive five CFR iterations at 640 roots, which points to variance/divergence compounding through iterative regret learning.
 
 `both_x4` is especially unattractive: it costs substantially more policy collection/training and does not improve the tail. No x8 acceptance run is promoted because the exact Advantage oracle already showed strong diminishing returns from 4 to 8 independent paths while p95 remained saturated at 1.0.
 
@@ -86,17 +88,27 @@ V2 removes that ambiguity. Level 0 is now executed through the authoritative rec
 
 ### Full-exact opponent upper bound — workflow `31412933368`
 
-A bounded 64-root/seed experiment compares the authoritative estimator against effectively full opponent-action enumeration (`exact level 128`, safely beyond the observed max depth). Its purpose is to answer the decisive question: **if opponent external-sampling variance is removed entirely, how much cross-seed instability remains?** This is an upper-bound diagnostic, not a proposed production schedule.
+A bounded experiment compares the authoritative estimator against effectively full opponent-action enumeration (`exact level 128`, safely beyond the observed max depth). Its purpose is to answer the decisive question: **if opponent external-sampling variance is removed entirely, how much cross-seed instability remains?** This is an upper-bound diagnostic, not a proposed production schedule.
 
 ### Common-random-number path screen — workflow `31413103901`
 
 Modes `independent_1`, `independent_4`, `common_1`, `common_4` test whether synchronizing opponent-action random numbers across algorithm seeds suppresses iterative divergence more efficiently than adding independent paths. Under iteration-1 uniform behavior and shared decks, common-path Advantage memories are required to be byte-identical across seeds; the workflow fails if that invariant does not hold.
 
+### Iteration compounding — workflow `31413646505`
+
+Baseline and Advantage x4 run as parallel five-iteration jobs with the same deck schedule. After every Advantage refit, the diagnostic converts both freshly fitted AdvantageNets through exact regret matching on a common corpus and records cross-seed mean/p50/p95/max TV plus strategy-support metrics. This locates **which CFR iteration amplifies divergence** and whether x4 merely delays rather than prevents it. Both jobs passed smoke and are in the physical five-iteration phase.
+
+### Antithetic x4 — workflow `31413970227`
+
+A four-path estimator uses the same underlying Uniform sequence for all four external-sampling trajectories but applies offsets `0, 1/4, 1/2, 3/4 (mod 1)`. Each individual trajectory remains marginally distributed exactly as the recovered sampler, while the four paths become low-discrepancy/antithetically correlated. It is compared against ordinary independent x4 at the same 256-root compute scale. This tests whether **better correlation structure**, rather than more paths, improves variance per unit work.
+
 ## Decision tree after active runs
 
 - If common random numbers materially reduce cross-seed TV, promote a counter-based/common-path RNG estimator as a **versioned** candidate and recertify checkpoint/resume semantics.
 - If partial/full exact opponent expectation is materially stronger, promote the cheapest bounded enumeration level that captures most of the gain.
-- If full exact still leaves large divergence, stop treating external-sampling opponent variance as sufficient explanation and move directly to iteration-to-iteration regret-policy instability / neural regret-sign sensitivity and target aggregation diagnostics.
+- If antithetic x4 beats independent x4 materially, retain x4 compute but replace independent trajectories with the lower-discrepancy estimator in the next acceptance candidate.
+- Use the five-iteration diagnostic to target the exact iteration/refit where divergence accelerates.
+- If full exact still leaves large divergence, stop treating external-sampling opponent variance as sufficient explanation and move directly to regret-sign sensitivity / policy-support discontinuity / target aggregation diagnostics.
 - Do **not** resume brute-force unique-root scaling or x8/x16 replication without new causal evidence.
 
 Historical pre-loss 640 mean/p95 `0.3714 / 0.6878` remains historical evidence only and is not substituted for the generation-2 acceptance gate.
