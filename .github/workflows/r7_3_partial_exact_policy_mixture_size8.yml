@@ -50,6 +50,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           set -euo pipefail
+          # The paired base runner explicitly supports size 8 as of recovery.10.
           python tools/run_r7_3_partial_exact_policy_mixture_paired.py \
             --solver build/libspincore_solver_c.so \
             --out /tmp/R7_3_POLICY_MIXTURE_SIZE8_SMOKE.json \
