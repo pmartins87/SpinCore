@@ -1,0 +1,414 @@
+{
+  "acceptance_gate_changed": false,
+  "baseline_mse": {
+    "all_behavior_ready_after_fit": true,
+    "all_fit_gates_pass": true,
+    "aux_weight": 0.0,
+    "cross_seed": {
+      "max_tv": 0.9970865249633789,
+      "mean_tv": 0.29443079233169556,
+      "p50_tv": 0.2248791605234146,
+      "p95_tv": 0.8028824329376221
+    },
+    "objective": "mse",
+    "observation_count": 2048,
+    "per_seed": [
+      {
+        "advantage_optimizer_steps": 2816,
+        "advantage_samples": 11503,
+        "advantage_seen": 11503,
+        "algorithm_seed": 20260829,
+        "checkpoints": [
+          {
+            "advantage_optimizer_steps_total": 1792,
+            "advantage_samples": 5921,
+            "advantage_seen": 5921,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "mean_training_loss": 0.0004199463299414674,
+              "optimizer_steps": 1792,
+              "weighted_nrmse": 0.46582862734794617
+            },
+            "iteration": 1,
+            "roots": 128,
+            "strategy_samples": 11366,
+            "strategy_seen": 11366
+          },
+          {
+            "advantage_optimizer_steps_total": 2816,
+            "advantage_samples": 11503,
+            "advantage_seen": 11503,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "mean_training_loss": 0.0007939811998767254,
+              "optimizer_steps": 1024,
+              "weighted_nrmse": 0.4817623794078827
+            },
+            "iteration": 2,
+            "roots": 256,
+            "strategy_samples": 20214,
+            "strategy_seen": 20214
+          }
+        ],
+        "final_fit": {
+          "advantage_gate_pass": true,
+          "advantage_weighted_nrmse": 0.511635422706604,
+          "policy_gate_pass": true,
+          "policy_weighted_mean_tv": 0.10157538205385208
+        },
+        "nodes": 65070,
+        "policy_progress": [
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 256,
+            "weighted_mean_tv": 0.22418911755084991
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 512,
+            "weighted_mean_tv": 0.17494478821754456
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 768,
+            "weighted_mean_tv": 0.13880115747451782
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 1024,
+            "weighted_mean_tv": 0.12251216918230057
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1280,
+            "weighted_mean_tv": 0.1142045259475708
+          },
+          {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1536,
+            "weighted_mean_tv": 0.10133503377437592
+          }
+        ],
+        "roots": 256,
+        "strategy_samples": 20214,
+        "strategy_seen": 20214
+      },
+      {
+        "advantage_optimizer_steps": 1792,
+        "advantage_samples": 11620,
+        "advantage_seen": 11620,
+        "algorithm_seed": 20260807,
+        "checkpoints": [
+          {
+            "advantage_optimizer_steps_total": 1024,
+            "advantage_samples": 6006,
+            "advantage_seen": 6006,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "mean_training_loss": 0.00046111721985653276,
+              "optimizer_steps": 1024,
+              "weighted_nrmse": 0.4737747609615326
+            },
+            "iteration": 1,
+            "roots": 128,
+            "strategy_samples": 11774,
+            "strategy_seen": 11774
+          },
+          {
+            "advantage_optimizer_steps_total": 1792,
+            "advantage_samples": 11620,
+            "advantage_seen": 11620,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": true,
+              "frozen_gate_pass": true,
+              "mean_training_loss": 0.0008213777277887857,
+              "optimizer_steps": 768,
+              "weighted_nrmse": 0.46894633769989014
+            },
+            "iteration": 2,
+            "roots": 256,
+            "strategy_samples": 22541,
+            "strategy_seen": 22541
+          }
+        ],
+        "final_fit": {
+          "advantage_gate_pass": true,
+          "advantage_weighted_nrmse": 0.47647932171821594,
+          "policy_gate_pass": true,
+          "policy_weighted_mean_tv": 0.08938124775886536
+        },
+        "nodes": 65901,
+        "policy_progress": [
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 256,
+            "weighted_mean_tv": 0.21007448434829712
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 512,
+            "weighted_mean_tv": 0.168191060423851
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 768,
+            "weighted_mean_tv": 0.13249844312667847
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 1024,
+            "weighted_mean_tv": 0.1253269910812378
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1280,
+            "weighted_mean_tv": 0.10683275014162064
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1536,
+            "weighted_mean_tv": 0.10848592221736908
+          },
+          {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1792,
+            "weighted_mean_tv": 0.09431551396846771
+          }
+        ],
+        "roots": 256,
+        "strategy_samples": 22541,
+        "strategy_seen": 22541
+      }
+    ]
+  },
+  "duration_seconds": 504.557657957077,
+  "generated_at_unix": 1786392725.3596156,
+  "interpretation_note": "Diagnostic only. V2 explicitly activates neural CFR behavior after each custom Advantage fit. Baseline uses recovered weighted MSE; the candidate adds the smooth regret-policy auxiliary objective. Shared decks and split traversal RNGs remain a controlled diagnostic design, not the authoritative acceptance RNG/deck contract.",
+  "mse_policy_candidate": {
+    "all_behavior_ready_after_fit": true,
+    "all_fit_gates_pass": false,
+    "aux_weight": 0.1,
+    "cross_seed": {
+      "max_tv": 0.9993036985397339,
+      "mean_tv": 0.23553118109703064,
+      "p50_tv": 0.12706884741783142,
+      "p95_tv": 0.7717974185943604
+    },
+    "objective": "mse_policy",
+    "observation_count": 2048,
+    "per_seed": [
+      {
+        "advantage_optimizer_steps": 8192,
+        "advantage_samples": 10021,
+        "advantage_seen": 10021,
+        "algorithm_seed": 20260829,
+        "checkpoints": [
+          {
+            "advantage_optimizer_steps_total": 4096,
+            "advantage_samples": 5921,
+            "advantage_seen": 5921,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": false,
+              "frozen_gate_pass": true,
+              "mean_training_loss": 0.06605522999598179,
+              "optimizer_steps": 4096,
+              "weighted_nrmse": 0.6884942054748535
+            },
+            "iteration": 1,
+            "roots": 128,
+            "strategy_samples": 11366,
+            "strategy_seen": 11366
+          },
+          {
+            "advantage_optimizer_steps_total": 8192,
+            "advantage_samples": 10021,
+            "advantage_seen": 10021,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": false,
+              "frozen_gate_pass": false,
+              "mean_training_loss": 0.09042017429601401,
+              "optimizer_steps": 4096,
+              "weighted_nrmse": 0.9398208856582642
+            },
+            "iteration": 2,
+            "roots": 256,
+            "strategy_samples": 17942,
+            "strategy_seen": 17942
+          }
+        ],
+        "final_fit": {
+          "advantage_gate_pass": false,
+          "advantage_weighted_nrmse": 0.8923941850662231,
+          "policy_gate_pass": true,
+          "policy_weighted_mean_tv": 0.10439523309469223
+        },
+        "nodes": 56647,
+        "policy_progress": [
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 256,
+            "weighted_mean_tv": 0.21395990252494812
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 512,
+            "weighted_mean_tv": 0.17374372482299805
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 768,
+            "weighted_mean_tv": 0.1437123715877533
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 1024,
+            "weighted_mean_tv": 0.12163593620061874
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1280,
+            "weighted_mean_tv": 0.1063939779996872
+          },
+          {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1536,
+            "weighted_mean_tv": 0.09241797029972076
+          }
+        ],
+        "roots": 256,
+        "strategy_samples": 17942,
+        "strategy_seen": 17942
+      },
+      {
+        "advantage_optimizer_steps": 8192,
+        "advantage_samples": 9857,
+        "advantage_seen": 9857,
+        "algorithm_seed": 20260807,
+        "checkpoints": [
+          {
+            "advantage_optimizer_steps_total": 4096,
+            "advantage_samples": 6006,
+            "advantage_seen": 6006,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": false,
+              "frozen_gate_pass": true,
+              "mean_training_loss": 0.06780472434184048,
+              "optimizer_steps": 4096,
+              "weighted_nrmse": 0.7110690474510193
+            },
+            "iteration": 1,
+            "roots": 128,
+            "strategy_samples": 11774,
+            "strategy_seen": 11774
+          },
+          {
+            "advantage_optimizer_steps_total": 8192,
+            "advantage_samples": 9857,
+            "advantage_seen": 9857,
+            "final_advantage_fit": {
+              "behavior_ready_after_fit": true,
+              "fit_target_reached": false,
+              "frozen_gate_pass": false,
+              "mean_training_loss": 0.08641926842392422,
+              "optimizer_steps": 4096,
+              "weighted_nrmse": 0.8272456526756287
+            },
+            "iteration": 2,
+            "roots": 256,
+            "strategy_samples": 18844,
+            "strategy_seen": 18844
+          }
+        ],
+        "final_fit": {
+          "advantage_gate_pass": false,
+          "advantage_weighted_nrmse": 0.8360720276832581,
+          "policy_gate_pass": true,
+          "policy_weighted_mean_tv": 0.09679284691810608
+        },
+        "nodes": 56097,
+        "policy_progress": [
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 256,
+            "weighted_mean_tv": 0.20259994268417358
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 512,
+            "weighted_mean_tv": 0.16676297783851624
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 768,
+            "weighted_mean_tv": 0.14107125997543335
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": false,
+            "optimizer_steps": 1024,
+            "weighted_mean_tv": 0.12471052259206772
+          },
+          {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1280,
+            "weighted_mean_tv": 0.11196868121623993
+          },
+          {
+            "fit_target_reached": true,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 1536,
+            "weighted_mean_tv": 0.10401223599910736
+          }
+        ],
+        "roots": 256,
+        "strategy_samples": 18844,
+        "strategy_seen": 18844
+      }
+    ]
+  },
+  "production_advantage_objective_changed": false,
+  "ready_for_tables": false,
+  "schema": "SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V2",
+  "solver": "build/libspincore_solver_c.so",
+  "summary": {
+    "aux_weight": 0.1,
+    "candidate_to_baseline_mean_tv_ratio": 0.7999543092343729,
+    "candidate_to_baseline_p95_tv_ratio": 0.9612832301866084,
+    "diagnosis": "BEHAVIOR_AWARE_ADVANTAGE_OBJECTIVE_NOT_MATERIAL_END_TO_END"
+  },
+  "v1_evidence_invalidated": true,
+  "v1_invalid_reason": "V1 custom Advantage training bypassed DeepCFRDomainSession.train_advantage and failed to set NeuralAdvantagePolicy.ready=True; subsequent CFR iterations therefore remained on zero-regret uniform behavior."
+}
