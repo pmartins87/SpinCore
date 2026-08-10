@@ -1,0 +1,126 @@
+name: SpinCore R7.3 path replication screen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_path_replication_screen.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-path-replication-screen
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Smoke path replication diagnostic
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_path_replication_screen.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_PATH_REPLICATION_SMOKE.json \
+            --iterations 2 \
+            --roots-per-iteration 2 \
+            --advantage-chunk-steps 8 \
+            --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 \
+            --policy-chunk-steps 8 \
+            --policy-max-steps 8 \
+            --policy-fit-target 10 \
+            --batch-size 16 \
+            --audit-size 32 \
+            --cross-seed-per-seed 16 \
+            --reservoir-capacity 5000
+          rm -f validation/R7_3_PATH_REPLICATION_SMOKE.json
+
+      - name: Run physical 256-root path replication decomposition
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_path_replication_screen.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_PATH_REPLICATION_SCREEN_256.json \
+            --iterations 2 \
+            --roots-per-iteration 128 \
+            --advantage-chunk-steps 256 \
+            --advantage-max-steps-per-iteration 4096 \
+            --advantage-fit-target 0.50 \
+            --policy-chunk-steps 256 \
+            --policy-max-steps 16384 \
+            --policy-fit-target 0.105 \
+            --batch-size 256 \
+            --audit-size 512 \
+            --cross-seed-per-seed 1024 \
+            --reservoir-capacity 100000
+
+      - name: Verify controlled isolation invariant
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('validation/R7_3_PATH_REPLICATION_SCREEN_256.json')
+          d = json.loads(p.read_text())
+          delta = float(d['summary']['max_baseline_vs_strategy_x4_advantage_checkpoint_nrmse_delta'])
+          print('max baseline-vs-strategy_x4 advantage checkpoint NRMSE delta:', delta)
+          if delta > 1e-10:
+              raise SystemExit('strategy replication contaminated controlled advantage dynamics')
+          PY
+
+      - name: Persist path replication evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f validation/R7_3_PATH_REPLICATION_SCREEN_256.json ]; then
+            echo '{"schema":"SPINCORE_R7_3_PATH_REPLICATION_SCREEN_V1","runner_failed_before_report":true,"ready_for_tables":false}' > validation/R7_3_PATH_REPLICATION_SCREEN_256.json
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_3_PATH_REPLICATION_SCREEN_256.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 path replication screen [r7-evidence-skip]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
