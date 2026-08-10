@@ -14,22 +14,20 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.1 native own-reach frontier — **PASS REBUILT**
   - R7.2 LCFR weighting / exact checkpoint+resume / fresh-process worker — **PASS REBUILT**
   - R7.3 multi-seed stability — **FAIL / ACTIVE**
-    - corrected 640 — **FIT PASS / CROSS-SEED FAIL**
-    - 1280 unique-root scale — **FAIL; brute-force root scaling paused**
-    - CFR-memory / support / chance / card / RNG / fit decomposition — **DONE**
-    - exact own-reach and exact Advantage bootstrap controls — **DONE**
-    - two-iteration path replication decomposition — **DONE**
-    - exact opponent-expectation Advantage oracle — **DONE**
-    - replicated-candidate V1 deck-control audit — **DONE; V1 not paired to acceptance reference**
-    - deck-exact coupled Advantage x4 640 V2 — **RUNNING**
-    - partial-exact V1 — **INVALID CONTROL; not scientific evidence**
-    - partial-exact V2 256 — **DONE: levels 1/2 MATERIAL, level 2 strongest**
-    - full-exact end-to-end 64 — **DONE: NOT BENEFICIAL, memory/model bottleneck exposed**
-    - deck-exact partial-exact 640 levels 1/2 — **RUNNING IN PARALLEL**
-    - common-random-number Advantage screen — **RUNNING**
-    - five-iteration divergence/compounding diagnostic — **RUNNING IN PARALLEL**
-    - antithetic/rotated-lattice Advantage x4 — **RUNNING**
-    - same-memory Advantage fit/regret-sign sensitivity — **RUNNING**
+    - corrected 640 and strong-Advantage 640 — **FIT PASS / CROSS-SEED FAIL**
+    - 1280 unique-root scaling — **FAIL / PAUSED**
+    - CFR-memory/chance/support/card/RNG decomposition — **DONE**
+    - exact own-reach + exact Advantage path controls — **DONE**
+    - bounded partial-opponent expectation — **LEVELS 1/2 MATERIAL AT 256; 640 RUNNING**
+    - exhaustive opponent expectation — **DONE / IMPRACTICAL AND WORSE END-TO-END**
+    - common-path RNG — **DONE / NOT MATERIAL**
+    - antithetic x4 — **DONE / NOT MATERIAL**
+    - same-memory Advantage fit/sign sensitivity — **DONE / MATERIAL**
+    - Advantage init-versus-minibatch factorial — **DONE / MIXED; BOTH MATERIAL**
+    - five-iteration behavior compounding — **BASELINE DONE; x4 RUNNING**
+    - common Advantage fit randomness — **RUNNING**
+    - Advantage ensemble stability — **RUNNING**
+    - deck-exact x4 V2 — **RUNNING**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
 - R9 Strategic audit — TODO
@@ -37,126 +35,131 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 - R11 Safe exploitation — TODO
 - R12 Operational homologation — TODO
 
-## Frozen R7.3 acceptance gates
+## Frozen R7.3 gates
 
 - Advantage weighted normalized RMSE `<= 0.75`
 - AveragePolicy weighted mean TV `<= 0.12`
 - cross-seed mean TV `<= 0.15`
 - cross-seed p95 TV `<= 0.35`
 
-No gate has been relaxed.
+No gate is relaxed.
 
-## Authoritative generation-2 acceptance schedule
+## Authoritative paired acceptance control
 
-The deterministic deal schedule is frozen for paired acceptance experiments:
+The generation-2 reference schedule is:
 
 ```text
 deck_seed = seed * 1_000_003 + global_root * 97 + iteration
 ```
 
-`global_root` is continuous across CFR iterations. Replicated-candidate V1 used a different formula and its metrics remain independent physical experiments, not paired deltas. Correction: `validation/R7_3_REPLICATED_V1_DECK_CONTROL_CORRECTION_20260810.md`.
+with `global_root` continuous across CFR iterations.
 
-Authoritative references:
+Corrected 640: `0.477649 / 0.902403` mean/p95, per-seed fits PASS.
+Strong-Advantage 640: `0.464474 / 0.886204`, per-seed fits PASS.
 
-- corrected 640: mean `0.477649`, p95 `0.902403`, per-seed fits PASS;
-- strong-Advantage 640: mean `0.464474`, p95 `0.886204`, per-seed fits PASS.
+Replicated-candidate V1 used a different deterministic deal formula. Its physical results remain valid independent-deal experiments, but not paired deltas against the authoritative references. The correction is recorded in `validation/R7_3_REPLICATED_V1_DECK_CONTROL_CORRECTION_20260810.md`. Deck-exact coupled x4 V2 is running as workflow `31414208511`.
 
-## Partial-exact V2 — decisive short-screen result
+## Current causal model
 
-Workflow `31412806987`, evidence `9c23f9945ad543fa811d90ef2cfefb93d782cff3` used the authoritative recovered `ExternalSamplingCollector` for level 0 and probability-weighted experimental opponent enumeration only for positive levels. All modes passed individual Advantage/AveragePolicy fit gates.
+R7.3 now has **two distinct upstream variance sources**.
 
-At 256 roots/seed, two CFR iterations:
+### A. CFR target / memory variance
 
-| estimator | mean TV | p95 TV | mean ratio vs level 0 | p95 ratio | node ratio |
+Exact controls prove:
+
+- own-reach Monte Carlo fragments strategy-memory support even under identical exact policy;
+- opponent external sampling injects material Advantage target noise;
+- x4 independent Advantage paths substantially help a two-iteration screen;
+- x8 gives little extra mean benefit against the exact oracle and still has p95 `1.0`;
+- common-random-number paths improve only modestly;
+- antithetic quarter-turn x4 barely improves mean and worsens p95;
+- exhaustive opponent enumeration costs ~`781x` tree nodes, saturates the reservoir, and worsens final policy stability.
+
+The best bounded target-variance result is partial exact level 2 at 256 roots:
+
+| estimator | mean TV | p95 TV | mean ratio | p95 ratio | node ratio |
 |---|---:|---:|---:|---:|---:|
 | authoritative level 0 | `0.313641` | `0.882657` | 1.000 | 1.000 | 1.000 |
-| exact next 1 opponent decision | `0.223853` | `0.807704` | `0.7137` | `0.9151` | `2.667x` |
-| exact next 2 opponent decisions | **`0.191695`** | **`0.669413`** | **`0.6112`** | **`0.7584`** | `9.349x` |
+| level 1 | `0.223853` | `0.807704` | `0.7137` | `0.9151` | `2.667x` |
+| level 2 | **`0.191695`** | **`0.669413`** | **`0.6112`** | **`0.7584`** | `9.349x` |
 
-Persisted diagnosis: `PARTIAL_EXACT_OPPONENT_EXPECTATION_MATERIAL`.
+Workflow `31415605322` is physically running deck-exact 640 level-1 and level-2 candidates. Workflow `31415642047` runs level-2 with doubled Advantage fit ceiling (`8192`) to distinguish estimator quality from fitting capacity.
 
-Level 2 reduced mean cross-seed TV by about 38.9% and p95 by about 24.2% at two iterations. Its Advantage memories remained within/near the 100k screen cap (`93,740` retained/seen for seed29; `100,000` retained from `109,566` seen for seed07), and all frozen fit gates still passed even though the internal stricter `0.50` Advantage target was not reached at the 4096-step ceiling. This makes level 2 a credible bounded-estimator candidate rather than merely “more optimizer”.
+### B. AdvantageNet function-approximation / sign-support variance
 
-## Full-exact end-to-end result — why more exact is not always better
+Workflow `31414959700`, evidence `d0fa315ee79af013a7e7e3294b0877a0e656f820`, trained four AdvantageNets on the **exact same frozen Advantage memory**. Final weighted NRMSEs were all historical-quality (`0.472–0.487`), yet:
 
-Workflow `31412933368`, evidence `ee016e41deba227fff2e99f9926118a8ad219329`, compared authoritative level 0 to effectively full opponent enumeration (`level 128`) at 64 roots/seed.
+- pairwise hard-regret-matching mean TV averaged **`0.224349`**;
+- pairwise p95 averaged **`0.757529`**;
+- identical positive-regret action support occurred on only **`55.49%`** of observations.
 
-Authoritative level 0:
+Thus a network can pass the Advantage approximation gate comfortably and still induce a very different CFR behavior policy purely because training finds another approximation with different regret signs.
 
-- mean `0.300694`
-- p95 `0.820360`
-- total nodes `28,472`
-- all fit gates PASS.
+Workflow `31415792326`, evidence `555df805e5f14814b1f3e742481bcff110d6cc49`, decomposed this on the same memory:
 
-Full exact:
+- same initialization, different minibatch order: mean policy TV `0.201320`;
+- different initialization, same minibatch order: `0.221737`;
+- both different: `0.224532`;
+- init/batch ratio `1.1014`;
+- diagnosis `ADVANTAGE_INIT_AND_MINIBATCH_VARIANCE_MIXED`.
 
-- mean `0.328689`
-- p95 `0.826717`
-- mean ratio `1.0931` — worse
-- p95 ratio `1.00775` — worse
-- total nodes `22,245,222`
-- node ratio **`781.30x`**
-- all fit gates PASS.
+Neither random initialization nor minibatch order alone explains the problem; both matter.
 
-The full-exact traversal generated about `1.68M` Advantage samples per seed and saturated the `400k` reservoir even at only 64 roots. Thus full tree expectation removes opponent-action Monte Carlo variance but simultaneously explodes support/memory/function-approximation burden. It is **not** an end-to-end policy-stability upper bound once the finite reservoir and neural approximator are included. The useful regime is bounded variance reduction, not exhaustive enumeration.
+Post-hoc smoothing confirms hard positive-regret thresholding is an amplifier but not the complete cause. A scale-normalized epsilon `0.10` floor reduced representative same-memory policy TV from `0.2254` to `0.1853`, still far above the R7.3 mean gate.
 
-## Acceptance-scale promotion of partial exact
+## Five-iteration behavior divergence
 
-Because level 1 and especially level 2 materially improved both mean and tail while full exact crossed into a memory/model bottleneck, workflow `31415196119` now runs two **deck-exact 640-root candidates in parallel**:
+Workflow `31413646505` baseline completed. Freshly fitted AdvantageNets were converted through production regret matching after each iteration. Mean cross-seed behavior TV was:
 
-- level 1: exact next opponent decision;
-- level 2: exact next two opponent decisions.
+```text
+iteration 1  0.476820
+iteration 2  0.578266
+iteration 3  0.562001
+iteration 4  0.553982
+iteration 5  0.538547
+```
 
-Both use:
+p95 was `1.0` at **every** iteration. Final AveragePolicy cross-seed mean/p95 was `0.453395 / 0.948678`.
 
-- exact authoritative generation-2 deal schedule;
-- 5 x 128 = 640 roots/seed;
-- recovered single coupled `batch_rng` state for partial sampling, own-reach sampling and optimizer minibatches;
-- strong Advantage fitting target `0.50` with max `4096` steps/iteration;
-- AveragePolicy target `0.105`, max `32768` steps;
-- reservoir `400000`;
-- unchanged frozen gates.
+This changes the earlier narrative: the system does not first become unstable only after several feedback iterations. Severe regret-policy divergence is already present at the **first fitted AdvantageNet**, then iteration 2 amplifies it further. This is consistent with the same-memory fit experiment and makes Advantage function-approximation stability a primary R7.3 target, not a secondary detail.
 
-This is an explicit experimental estimator change. Any PASS must be versioned and checkpoint/resume recertified before R7.3 closes.
+The parallel Advantage-x4 compounding job is still running and will show whether more path samples reduce the iteration-1 fit instability or merely alter later feedback.
 
-## Other active causal screens
+## Closed or deprioritized branches
 
-### Deck-exact coupled Advantage x4 640 V2 — `31414208511`
+- More unique roots: paused after 640 -> 1280 was essentially flat and worsened policy fit.
+- Independent x8/x16: not promoted; exact oracle shows diminishing returns and p95 remains saturated.
+- Common path RNG: `common4` mean/p95 `0.288607 / 0.804410` versus baseline `0.313641 / 0.882657`; improvement is too small relative to the problem, diagnosis NOT MATERIAL.
+- Antithetic x4: mean ratio `0.97395`, p95 ratio `1.05415`; NOT MATERIAL.
+- Full exact opponent expectation: ~`781x` nodes, ~`1.68M` Advantage samples seen/seed at only 64 roots, reservoir saturation, and worse final mean/p95; closed as a practical estimator.
+- Card/suit representation rewrite: not dominant in controlled support audit.
+- Merely increasing optimizer steps: not sufficient by itself.
 
-Corrects the V1 deal-schedule error and measures x4 on the exact authoritative deals. Use V2, not V1, for any paired x4 acceptance conclusion.
+## Active high-value physical work
 
-### Common-random-number screen — `31413103901`
-
-`independent_1`, `independent_4`, `common_1`, `common_4`. Common modes require byte-identical iteration-1 Advantage memories under shared decks/uniform behavior.
-
-### Five-iteration compounding — `31413646505`
-
-Baseline and Advantage x4 measure freshly fitted regret-matching behavior TV after every CFR iteration to locate when divergence amplifies.
-
-### Antithetic x4 — `31413970227`
-
-Four marginally correct trajectories use quarter-turn shifted Uniform streams. This tests lower-discrepancy correlation at the same x4 path cost.
-
-### Same-memory Advantage fit/sign sensitivity — `31414959700`
-
-Four AdvantageNets train on the **exact same frozen Advantage reservoir** with different init/minibatch seeds. Pairwise raw outputs are converted through the production hard regret-matching rule. The diagnostic measures sign-support disagreement, near-zero regret fragility, policy TV, and post-hoc epsilon-floor sensitivity. This directly tests whether neural fit variance plus hard sign thresholding amplifies a common target memory into different policies.
+1. **Deck-exact coupled Advantage x4 640 V2** — `31414208511`.
+2. **Partial-exact level 1 + level 2 640** — `31415605322`.
+3. **Partial-exact level 2 strong-fit 640** — `31415642047`.
+4. **Advantage-x4 five-iteration compounding** — `31413646505`.
+5. **Common Advantage fit randomness** — `31415931101`; same Advantage init + same per-iteration minibatch RNG across seeds, traversal/final-policy RNG still seed-specific.
+6. **Advantage ensemble stability** — `31416468310`; eight independent same-memory fits, disjoint 1/2/4-model ensembles average raw Advantage predictions before unchanged hard regret matching.
 
 ## Decision tree
 
-- If partial-exact level 1/2 survives five-iteration 640 scale, prefer the cheapest level satisfying both frozen cross-seed gates, then version/checkpoint-recertify it.
-- If common-path or antithetic correlation materially outperforms independent paths, combine only if the partial-exact acceptance result still needs more variance reduction.
-- If same-memory Advantage fits yield large regret-policy disagreement despite similar NRMSE, the next primary target becomes regret-sign/function-approximation stability, not traversal sampling.
-- Full exact is closed as a practical estimator: `781x` tree work plus reservoir saturation with no final stability gain.
-- Keep raw unique-root scaling and independent x8/x16 paused.
+- If partial exact survives 640, choose the cheapest level that satisfies both cross-seed gates; then version the estimator and recertify checkpoint/resume determinism.
+- If common deterministic Advantage fitting materially suppresses cross-seed behavior, make fit randomness deterministic as an explicit algorithm contract rather than multiplying traversals.
+- If ensembling collapses same-memory policy variance while retaining/improving NRMSE, test the smallest useful ensemble end-to-end; model averaging is then a candidate variance-control mechanism.
+- If neither common fit nor ensembling sufficiently fixes same-memory hard-regret policy variance, test sign-aware calibration/objectives or a rigorously validated continuous regret mapping; do not relax gates.
+- Combine partial exact with fit-stability changes only after each mechanism proves independent value; avoid stacking expensive changes without attribution.
 
-Historical pre-loss mean/p95 `0.3714 / 0.6878` remains historical evidence only.
+Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is not substituted for generation-2 gates.
 
 ## Recovery invariants
 
 - `TRUE_HEADS_UP` and `THREE_HANDED` remain separate whole-hand domains.
 - Production utility remains exact explicit-payout ICM continuation delta.
 - Ambiguous equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
-- Every meaningful step is persisted directly to `main`.
-- Experimental estimator/RNG/sampling changes require explicit versioning and deterministic checkpoint-resume recertification before R7.3 can close.
+- Every meaningful recovery/evolution step is persisted directly to `main`.
+- Experimental estimator, RNG, ensemble or regret-map changes require explicit versioning and deterministic continuous-vs-stop/restore/continue recertification before R7.3 can close.
 
 `READY FOR TABLES = NO`.
