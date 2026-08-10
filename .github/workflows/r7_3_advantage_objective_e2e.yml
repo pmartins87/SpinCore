@@ -1,10 +1,11 @@
-name: SpinCore R7.3 Advantage objective end-to-end
+name: SpinCore R7.3 Advantage objective end-to-end V2
 
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/r7_3_advantage_objective_e2e.yml'
+      - 'tools/run_r7_3_advantage_objective_e2e.py'
   workflow_dispatch:
 
 permissions:
@@ -44,7 +45,7 @@ jobs:
           ctest --test-dir build --output-on-failure
           pytest -q python_tests
 
-      - name: Smoke objective E2E runner
+      - name: Smoke corrected objective E2E runner
         shell: bash
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -52,7 +53,7 @@ jobs:
           set -euo pipefail
           python tools/run_r7_3_advantage_objective_e2e.py \
             --solver build/libspincore_solver_c.so \
-            --out /tmp/R7_3_ADV_OBJECTIVE_E2E_SMOKE.json \
+            --out /tmp/R7_3_ADV_OBJECTIVE_E2E_V2_SMOKE.json \
             --aux-weight 0.10 \
             --iterations 2 \
             --roots-per-iteration 2 \
@@ -68,13 +69,17 @@ jobs:
             --reservoir-capacity 5000
           python - <<'PY'
           import json
-          d=json.load(open('/tmp/R7_3_ADV_OBJECTIVE_E2E_SMOKE.json'))
-          assert d['schema']=='SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V1'
+          d=json.load(open('/tmp/R7_3_ADV_OBJECTIVE_E2E_V2_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V2'
+          assert d['v1_evidence_invalidated'] is True
+          assert d['baseline_mse']['all_behavior_ready_after_fit'] is True
+          assert d['mse_policy_candidate']['all_behavior_ready_after_fit'] is True
+          assert all(c['final_advantage_fit']['behavior_ready_after_fit'] for m in (d['baseline_mse'], d['mse_policy_candidate']) for s in m['per_seed'] for c in s['checkpoints'])
           assert d['ready_for_tables'] is False
-          print('Advantage objective E2E smoke OK')
+          print('Advantage objective E2E V2 readiness smoke OK')
           PY
 
-      - name: Run physical 256-root objective E2E screen
+      - name: Run physical corrected 256-root objective E2E screen
         shell: bash
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -82,7 +87,7 @@ jobs:
           set -euo pipefail
           python tools/run_r7_3_advantage_objective_e2e.py \
             --solver build/libspincore_solver_c.so \
-            --out validation/R7_3_ADVANTAGE_OBJECTIVE_E2E_256.json \
+            --out validation/R7_3_ADVANTAGE_OBJECTIVE_E2E_V2_256.json \
             --aux-weight 0.10 \
             --iterations 2 \
             --roots-per-iteration 128 \
@@ -97,20 +102,20 @@ jobs:
             --cross-seed-per-seed 1024 \
             --reservoir-capacity 100000
 
-      - name: Persist objective E2E evidence
+      - name: Persist corrected objective E2E evidence
         if: always()
         shell: bash
         run: |
           set -euo pipefail
-          out=validation/R7_3_ADVANTAGE_OBJECTIVE_E2E_256.json
+          out=validation/R7_3_ADVANTAGE_OBJECTIVE_E2E_V2_256.json
           if [ ! -f "$out" ]; then
-            echo '{"schema":"SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V1","runner_failed_before_report":true,"ready_for_tables":false}' > "$out"
+            echo '{"schema":"SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V2","runner_failed_before_report":true,"ready_for_tables":false}' > "$out"
           fi
           git config user.name 'SpinCore R7 Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add -f "$out"
           if ! git diff --cached --quiet; then
-            git commit -m 'Record physical R7.3 Advantage objective E2E [r7-evidence-skip]'
+            git commit -m 'Record corrected physical R7.3 Advantage objective E2E V2 [r7-evidence-skip]'
             for attempt in 1 2 3 4 5; do
               git pull --rebase origin main
               if git push origin HEAD:main; then break; fi
