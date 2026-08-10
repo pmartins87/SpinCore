@@ -51,6 +51,18 @@ def _fit_advantage(session, bundle, *, seed: int, iteration: int, objective: str
                 )
             )
         local_steps += chunk
+        # Custom training bypasses DeepCFRDomainSession.train_advantage(), so V1
+        # accidentally left NeuralAdvantagePolicy.ready=False after every fit.
+        # That forced every later CFR iteration to use the zero-regret uniform
+        # bootstrap and made baseline/candidate cross-seed policies spuriously
+        # almost identical.  Mirror the authoritative session state transition
+        # explicitly and fail closed if it ever regresses again.
+        bundle.counters["adv_optimizer_steps"] += int(chunk)
+        session.behavior.ready = True
+        bundle.counters["advantage_ready"] = 1
+        if not session.behavior.ready or int(bundle.counters["advantage_ready"]) != 1:
+            raise RuntimeError("custom Advantage fit did not activate neural CFR behavior")
+
         nrmse = _advantage_fit_nrmse(
             bundle,
             sample_size=int(args.audit_size),
@@ -66,6 +78,7 @@ def _fit_advantage(session, bundle, *, seed: int, iteration: int, objective: str
                 and float(nrmse) <= float(args.advantage_fit_target),
                 "frozen_gate_pass": _finite(nrmse)
                 and float(nrmse) <= FROZEN_GATES["advantage_weighted_nrmse_max"],
+                "behavior_ready_after_fit": bool(session.behavior.ready),
             }
         )
         if progress[-1]["fit_target_reached"]:
@@ -146,6 +159,8 @@ def run_mode(*, objective: str, aux_weight: float, seeds: list[int], solver: Sol
                 aux_weight=float(aux_weight),
                 args=args,
             )
+            if not progress[-1]["behavior_ready_after_fit"]:
+                raise RuntimeError("Advantage fit readiness invariant failed")
             checkpoints.append(
                 {
                     "iteration": int(iteration),
@@ -154,6 +169,7 @@ def run_mode(*, objective: str, aux_weight: float, seeds: list[int], solver: Sol
                     "advantage_seen": int(bundle.adv_mem.seen),
                     "strategy_samples": len(bundle.pol_mem.items),
                     "strategy_seen": int(bundle.pol_mem.seen),
+                    "advantage_optimizer_steps_total": int(bundle.counters["adv_optimizer_steps"]),
                     "final_advantage_fit": progress[-1],
                 }
             )
@@ -185,6 +201,7 @@ def run_mode(*, objective: str, aux_weight: float, seeds: list[int], solver: Sol
                 "advantage_seen": int(bundle.adv_mem.seen),
                 "strategy_samples": len(bundle.pol_mem.items),
                 "strategy_seen": int(bundle.pol_mem.seen),
+                "advantage_optimizer_steps": int(bundle.counters["adv_optimizer_steps"]),
                 "checkpoints": checkpoints,
                 "policy_progress": policy_progress,
                 "final_fit": {
@@ -220,13 +237,17 @@ def run_mode(*, objective: str, aux_weight: float, seeds: list[int], solver: Sol
             x["final_fit"]["advantage_gate_pass"] and x["final_fit"]["policy_gate_pass"]
             for x in reports
         ),
+        "all_behavior_ready_after_fit": all(
+            c["final_advantage_fit"]["behavior_ready_after_fit"]
+            for x in reports for c in x["checkpoints"]
+        ),
     }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="End-to-end behavior-aware Advantage objective screen")
     ap.add_argument("--solver", type=Path, default=Path("build/libspincore_solver_c.so"))
-    ap.add_argument("--out", type=Path, default=Path("validation/R7_3_ADV_OBJECTIVE_E2E_256.json"))
+    ap.add_argument("--out", type=Path, default=Path("validation/R7_3_ADVANTAGE_OBJECTIVE_E2E_V2_256.json"))
     ap.add_argument("--aux-weight", type=float, default=0.10)
     ap.add_argument("--seeds", default=",".join(str(x) for x in DEFAULT_SEEDS))
     ap.add_argument("--deck-stream-seed", type=int, default=DEFAULT_SHARED_DECK_STREAM_SEED)
@@ -260,6 +281,8 @@ def main() -> int:
         solver=solver,
         args=args,
     )
+    if not baseline["all_behavior_ready_after_fit"] or not candidate["all_behavior_ready_after_fit"]:
+        raise RuntimeError("behavior readiness invariant failed in end-to-end objective screen")
     mean_ratio = float(candidate["cross_seed"]["mean_tv"]) / max(
         float(baseline["cross_seed"]["mean_tv"]), 1e-12
     )
@@ -267,7 +290,7 @@ def main() -> int:
         float(baseline["cross_seed"]["p95_tv"]), 1e-12
     )
     payload = {
-        "schema": "SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V1",
+        "schema": "SPINCORE_R7_3_ADVANTAGE_OBJECTIVE_E2E_V2",
         "generated_at_unix": time.time(),
         "duration_seconds": time.time() - started,
         "solver": str(args.solver),
@@ -283,11 +306,17 @@ def main() -> int:
                 else "BEHAVIOR_AWARE_ADVANTAGE_OBJECTIVE_NOT_MATERIAL_END_TO_END"
             ),
         },
+        "v1_evidence_invalidated": True,
+        "v1_invalid_reason": (
+            "V1 custom Advantage training bypassed DeepCFRDomainSession.train_advantage and failed "
+            "to set NeuralAdvantagePolicy.ready=True; subsequent CFR iterations therefore remained "
+            "on zero-regret uniform behavior."
+        ),
         "interpretation_note": (
-            "Diagnostic only. Baseline uses the recovered weighted MSE Advantage objective. The "
-            "candidate adds a smooth auxiliary regret-policy cross-entropy with the selected "
-            "gate-safe weight from the same-memory sweep. Traversal, final hard regret matching, "
-            "AveragePolicy training, and frozen gates remain unchanged."
+            "Diagnostic only. V2 explicitly activates neural CFR behavior after each custom "
+            "Advantage fit. Baseline uses recovered weighted MSE; the candidate adds the smooth "
+            "regret-policy auxiliary objective. Shared decks and split traversal RNGs remain a "
+            "controlled diagnostic design, not the authoritative acceptance RNG/deck contract."
         ),
         "acceptance_gate_changed": False,
         "production_advantage_objective_changed": False,
