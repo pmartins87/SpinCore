@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.9",
+  "version": "1.12.1-recovery.10",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "POLICY_MIXTURE_COMPOUNDING_ACTIVE_DIRECT_BEHAVIOR_MEAN_GATE_PASS_P95_FAIL_CAUSAL_TRANSITION_CONFIRMED",
+  "current_gate_status": "POLICY_MIXTURE_SIZE4_COLLAPSES_WITH_FEEDBACK_DEPTH_SIZE8_AND_RESIDUAL_TAIL_TESTS_ACTIVE",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -35,137 +35,108 @@
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA"
   },
   "authoritative_640": {
-    "corrected": {"mean_tv": 0.4776491225, "p95_tv": 0.9024027586, "per_seed_fit_pass": true, "evidence_commit": "7275ada20279c6b18d93d0539c6b44989632a605"},
-    "strong_advantage": {"mean_tv": 0.4644736052, "p95_tv": 0.8862043619, "per_seed_fit_pass": true, "evidence_commit": "75885791b5d8894d4c590a038233f96db5879925"},
-    "partial_exact_level1": {"mean_tv": 0.437426, "p95_tv": 0.890053, "per_seed_fit_pass": true},
+    "corrected": {"mean_tv": 0.4776491225, "p95_tv": 0.9024027586, "per_seed_fit_pass": true},
+    "strong_advantage": {"mean_tv": 0.4644736052, "p95_tv": 0.8862043619, "per_seed_fit_pass": true},
     "partial_exact_level2": {"mean_tv": 0.4361102283, "p95_tv": 0.8882443905, "per_seed_fit_pass": true},
     "partial_exact_level2_strongfit": {"mean_tv": 0.4128931165, "p95_tv": 0.8717077374, "per_seed_fit_pass": true}
   },
   "paired_partial_exact_256": {
-    "workflow": 31427702314,
-    "status": "DONE",
-    "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413, "per_seed_fit_pass": true, "evidence_commit": "44ed648eec64c030cd7dbde40117b85fd19c0f8c"},
-    "size2_raw_advantage_ensemble": {"mean_tv": 0.2153794914484024, "p95_tv": 0.6321426630020142, "per_seed_fit_pass": true, "evidence_commit": "ceb7d7d7196a0284f7fff85561eee16db802e44d"},
-    "size4_raw_advantage_ensemble": {"mean_tv": 0.2108692228794098, "p95_tv": 0.6279871463775635, "per_seed_fit_pass": true, "evidence_commit": "59f83c73da755f40f6590a2a24785fed9e5b48bd"},
+    "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413, "per_seed_fit_pass": true},
+    "size2_raw_advantage_ensemble": {"mean_tv": 0.2153794914484024, "p95_tv": 0.6321426630020142, "per_seed_fit_pass": true},
+    "size4_raw_advantage_ensemble": {"mean_tv": 0.2108692228794098, "p95_tv": 0.6279871463775635, "per_seed_fit_pass": true},
     "diagnosis": "RAW_ADVANTAGE_ENSEMBLE_IMPROVES_MEAN_NOT_P95"
   },
   "paired_policy_mixture_size4_256": {
     "workflow": 31428299914,
     "evidence_commit": "76ac23287961cc3c650a1b60891648bfe975b145",
     "mean_tv": 0.17194043099880219,
-    "p50_tv": 0.14512518048286438,
     "p95_tv": 0.4136051535606384,
-    "max_tv": 0.7699102759361267,
-    "baseline_mean_tv": 0.24565602838993073,
-    "baseline_p95_tv": 0.6287055611610413,
-    "mean_ratio_to_baseline": 0.699922001,
-    "p95_ratio_to_baseline": 0.657868,
     "per_seed_fit_pass": true,
-    "seed_20260829_ensemble_advantage_nrmse": 0.5014342665672302,
-    "seed_20260829_policy_tv": 0.0968395322561264,
-    "seed_20260807_ensemble_advantage_nrmse": 0.5424296259880066,
-    "seed_20260807_policy_tv": 0.09462741762399673,
-    "cross_seed_pass": false,
-    "production_policy_mapping_changed": false,
-    "diagnosis": "FIRST_PAIRED_CANDIDATE_WITH_LARGE_MEAN_AND_P95_REDUCTION_BUT_FROZEN_GATES_STILL_FAIL"
+    "mean_ratio_to_size1": 0.699922001,
+    "p95_ratio_to_size1": 0.657868,
+    "diagnosis": "STRONG_TWO_ITERATION_SIGNAL"
   },
   "policy_mixture_compounding_320": {
     "workflow": 31432403037,
     "iterations": 5,
     "roots_per_iteration": 64,
     "roots_per_seed": 320,
-    "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS",
-    "purpose": "Test whether the 256-root policy-mixture tail reduction survives a longer CFR feedback horizon before any 640 escalation."
+    "duration_seconds": 6544.459480047226,
+    "mean_tv": 0.2665907144546509,
+    "p50_tv": 0.24680466949939728,
+    "p95_tv": 0.5670017600059509,
+    "max_tv": 0.9055466651916504,
+    "per_seed_fit_pass": true,
+    "cross_seed_pass": false,
+    "diagnosis": "SIZE4_POLICY_MIXTURE_GAIN_DECAYS_MATERIALLY_WITH_FIVE_ITERATION_FEEDBACK",
+    "decision": "DO_NOT_ESCALATE_SIZE4_TO_640"
   },
   "direct_behavior_e2e_256": {
     "workflow": 31431672631,
     "evidence_commit": "1d1ac9b23abd2afedec8390e3f8bb482c11b0625",
     "mean_tv": 0.1425531655550003,
-    "p50_tv": 0.10089540481567383,
     "p95_tv": 0.42685970664024353,
-    "max_tv": 0.8701338768005371,
     "mean_gate_pass": true,
     "p95_gate_pass": false,
-    "cross_seed_pass": false,
     "per_seed_frozen_fit_pass": true,
-    "seed_20260829_advantage_nrmse": 0.5710286498069763,
-    "seed_20260829_final_policy_tv": 0.08627267181873322,
-    "surrogate_iteration1_tv_seed_20260829": 0.2722991108894348,
-    "surrogate_iteration2_tv_seed_20260829": 0.22050997614860535,
-    "surrogate_reference_policy_fit_gate_pass": false,
+    "surrogate_reference_behavior_fit_pass": false,
     "theoretical_equivalence_claimed": false,
-    "production_algorithm_changed": false,
-    "diagnosis": "DIRECT_BEHAVIOR_E2E_PASSES_MEAN_GATE_BUT_FAILS_P95_AND_GAIN_OCCURS_DESPITE_SURROGATE_UNDERFIT"
+    "diagnosis": "SMOOTHING_SIGNAL_STRONG_BUT_SURROGATE_NOT_PROMOTABLE"
   },
   "partial_exact_support_by_iteration_256": {
     "workflow": 31431939967,
     "evidence_commit": "086df6ed397ecc4a2e61728aa3b40f0f58593675",
-    "iteration1_poker_jaccard": 0.01258650085247217,
     "iteration1_poker_shared_target_weighted_mean_tv": 0.0,
     "iteration1_poker_shared_target_p95_tv": 0.0,
-    "iteration2_poker_jaccard": 0.028417127427028416,
     "iteration2_poker_shared_target_weighted_mean_tv": 0.47394579759275396,
     "iteration2_poker_shared_target_p95_tv": 1.0,
     "diagnosis": "TARGET_DIVERGENCE_APPEARS_AFTER_FIRST_ADVANTAGE_FIT"
   },
   "final_average_policy_ensemble_256": {
-    "workflow": 31427741160,
-    "evidence_commit": "70be0290fff93e2f38030ce9010fb7b544e8137e",
     "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413},
-    "size2": {"mean_tv": 0.22690069675445557, "p95_tv": 0.5985572338104248},
     "size4": {"mean_tv": 0.21291163563728333, "p95_tv": 0.5991727113723755},
-    "all_fit_gates_pass": true,
     "diagnosis": "FINAL_POLICY_APPROXIMATION_MATERIAL_BUT_NOT_DOMINANT_P95_SOURCE"
   },
-  "partial_exact_support_forensic_256": {
-    "workflow": 31429040423,
-    "evidence_commit": "4e1ce678e93b68c598b4762a70cca0a08b05dfc2",
-    "raw": {"jaccard": 0.004682524817381532, "mean_lcfr_weight_coverage": 0.009418669838313173, "shared_target_weighted_mean_tv": 0.3292928938673414, "shared_target_p95_tv": 0.75},
-    "poker_isomorphic": {"jaccard": 0.02088876533894603, "mean_lcfr_weight_coverage": 0.07857154056221606, "shared_target_weighted_mean_tv": 0.34929598478275087, "shared_target_p95_tv": 0.8035348652099921},
-    "shared_street_at_screen_scale": 0,
-    "diagnosis": "STRATEGY_TARGET_AND_SUPPORT_DIVERGENCE_ALREADY_UPSTREAM_OF_FINAL_POLICY"
-  },
-  "advantage_common_mode_centering_256": {
-    "workflow": 31428588011,
-    "raw_mean_tv": 0.2311197245990085,
-    "raw_p95_tv": 0.8036775439977646,
-    "best_mode": "legal_midrange",
-    "best_mean_tv": 0.21968514521816063,
-    "best_p95_tv": 0.8242991864681244,
-    "diagnosis": "ADVANTAGE_COMMON_MODE_CENTERING_NOT_MATERIAL"
-  },
-  "direct_behavior_same_memory_256": {
-    "workflow": 31429334213,
-    "evidence_commit": "7095b5180b7470f76f03118fe3d5ce75760238a8",
-    "advantage_hard_regret_mean_tv": 0.2305153285463651,
-    "advantage_hard_regret_p95_tv": 0.8182109793027242,
-    "behavior_surrogate_mean_tv": 0.11041835943857829,
-    "behavior_surrogate_p95_tv": 0.3639979163805644,
-    "mean_ratio": 0.47900658118867395,
-    "p95_ratio": 0.44487048644930405,
-    "diagnosis": "DIRECT_BEHAVIOR_SURROGATE_MATERIAL_SAME_MEMORY",
-    "theoretical_equivalence_to_deep_cfr_claimed": false
-  },
   "causal_state": {
-    "cfr_strategy_support_fragmentation_material": true,
-    "shared_strategy_targets_diverge_materially": true,
     "first_advantage_fit_feedback_is_confirmed_causal_transition": true,
     "iteration1_shared_strategy_targets_identical": true,
     "iteration2_shared_strategy_target_tail_saturates_at_tv_one": true,
-    "final_average_policy_is_primary_p95_source": false,
     "advantage_function_approximation_variance_material": true,
+    "strategy_support_fragmentation_material": true,
+    "final_average_policy_is_primary_p95_source": false,
     "raw_advantage_ensembling_primary_solution": false,
-    "policy_mixture_paired_signal_material": true,
-    "direct_behavior_e2e_mean_gate_pass": true,
-    "direct_behavior_e2e_p95_gate_pass": false,
-    "direct_behavior_surrogate_underfits_reference_behavior": true,
+    "policy_mixture_size4_two_iteration_signal_material": true,
+    "policy_mixture_size4_durable_over_five_iterations": false,
+    "direct_behavior_smoothing_signal_material": true,
     "direct_behavior_surrogate_theoretical_review_required": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
   "active_physical_runs": {
-    "policy_mixture_compounding_320": {"workflow": 31432403037, "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS", "purpose": "Five iterations to test feedback-depth durability before 640 escalation."}
+    "policy_mixture_size8_256": {
+      "workflow": 31440425854,
+      "status": "RUNNING_AFTER_SIZE8_PARSER_FIX",
+      "purpose": "Determine whether additional independent regret-policy members further suppress the two-iteration p95 tail."
+    },
+    "policy_mixture_plus_final_policy_ensemble_256": {
+      "workflow": 31440493410,
+      "status": "RUNNING",
+      "purpose": "Measure whether final-policy ensemble gives useful residual tail reduction on top of size4 upstream policy mixture."
+    },
+    "policy_mixture_support_conditioned_256": {
+      "status": "LAUNCHED",
+      "purpose": "Separate exact shared-state disagreement from one-sided/off-support extrapolation after policy-mixture CFR."
+    },
+    "robust_policy_aggregation_same_memory_256": {
+      "status": "LAUNCHED",
+      "purpose": "Test median/trimmed policy aggregation to suppress rare ensemble-member outliers before another E2E mapping change."
+    },
+    "policy_mixture_compounding_reproducibility_replica": {
+      "workflow": 31440366909,
+      "status": "RUNNING",
+      "purpose": "Unplanned duplicate from parser compatibility edit; retained as an independent physical determinism/reproducibility check rather than discarded."
+    }
   },
-  "next_physical_step": "Complete five-iteration policy-mixture compounding. If the size-4 policy mixture retains a large reduction in both mean and p95 with frozen fit gates PASS, launch the 640 acceptance-scale candidate under the same authoritative deck and primary-RNG contract. Direct behavior is retained as a causal smoothing signal, not promoted: its mean crosses the frozen gate but p95 still fails, its surrogate does not fit the sample-level regret-matched behavior within the reference 0.12 TV gate, and theoretical equivalence is not established. If policy-mixture compounding collapses, test an explicit, auditable behavior-smoothing/interpolation mechanism around the first Advantage-fit transition rather than promoting the opaque surrogate. No gate relaxation.",
+  "next_physical_step": "Do not launch the prepared size4 640 candidate: five-iteration compounding disproved durability at size4. Resolve size8, combined final-policy ensemble, support-conditioned residual-tail decomposition, robust aggregation, and the independent compounding reproducibility run. If size8 or a robust aggregation preserves the large two-iteration tail reduction, require a five-iteration compounding screen before any 640 escalation. Otherwise move to an explicit versioned temporal behavior-damping/interpolation diagnostic around the first Advantage-fit feedback transition. Direct Behavior remains causal evidence only, not production semantics. No gate relaxation.",
   "ready_for_tables": false
 }
