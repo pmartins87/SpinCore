@@ -17,7 +17,8 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
     - corrected 640-root fit gates — **PASS**, cross-seed — **FAIL**
     - 1280-root scale — **FAIL**, cross-seed essentially flat and policy fit degraded
     - controlled 640-root variance decomposition — **DONE: CFR-memory variance dominant**
-    - shared-deck + support-conditioned diagnostic — **RUNNING**
+    - shared-deck + support-conditioned diagnostic — **DONE: common deck stream barely changes divergence; off-support extrapolation material**
+    - exact/card-isomorphic support-overlap diagnostic — **RUNNING**
     - brute-force root scaling — **PAUSED until causal diagnosis closes**
   - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
 - R8 Production training — TODO
@@ -42,9 +43,13 @@ Corrected 640 roots/seed:
 - both Advantage fits still PASS
 - both AveragePolicy fits exceeded `0.12`
 
-The 640-root controlled variance decomposition then fit two controlled AveragePolicy replicas to each CFR memory. All four policy-fit gates passed, but changing CFR memory while holding policy optimizer/init seed fixed produced mean TV `0.46989`, versus `0.24265` average disagreement between replicas trained on the same memory. Ratio: `1.93647`. Persisted diagnosis: `CFR_MEMORY_VARIANCE_DOMINANT`.
+The 640-root controlled variance decomposition fit two controlled AveragePolicy replicas to each CFR memory. All four policy-fit gates passed, but changing CFR memory while holding policy optimizer/init seed fixed produced mean TV `0.46989`, versus `0.24265` average disagreement between replicas trained on the same memory. Ratio: `1.93647`. Persisted diagnosis: `CFR_MEMORY_VARIANCE_DOMINANT`.
 
-The same-memory figure is not treated as pure optimizer variance because that comparison used a union of both memories and therefore includes off-support extrapolation. The active follow-up uses a shared deck stream and evaluates each comparison separately on memory-A support, memory-B support, and their union.
+The support-conditioned shared-deck follow-up then held the root deal/future-board stream identical across the two algorithm seeds. Across-memory mean TV on the union was still `0.46007`, versus `0.46989` in the independent-deck reference; ratio `0.97909`. Thus card/chance-stream variation at the root explains only a small fraction of the observed instability. The classifier remained conservative because one controlled policy fit finished slightly above the frozen `0.12` gate.
+
+Support conditioning was more informative: same-memory replica disagreement averaged `0.12031` on the memory's own support but `0.29231` on the other memory's support, a `2.42959x` ratio. Persisted support diagnosis: `OFF_SUPPORT_POLICY_EXTRAPOLATION_MATERIAL`.
+
+The active follow-up therefore measures the **memory support itself**, without relying on neural predictions: exact observation overlap, LCFR-weighted target disagreement on the exact intersection, overlap after global suit relabeling, and overlap after also removing private-card order and flop-card order. This is diagnostic only; it does not change `SPNNIV1` or any acceptance gate. If poker card isomorphism substantially expands the shared support, a versioned canonical-card representation becomes the leading correction. If it does not, traversal/action RNG coupling and CFR path-support variance are next.
 
 ## Frozen R7.3 gates
 
@@ -63,4 +68,4 @@ Historical pre-loss checkpoint: 640 HU roots/seed, cross-seed mean TV 0.3714, p9
 - Production utility is exact explicit-payout ICM continuation delta; chip delta is diagnostics only.
 - Equal-stack simultaneous elimination with unequal unresolved payouts fails closed.
 - Every meaningful step is persisted to GitHub `main`.
-- Root scaling is not resumed while a lower-cost causal diagnostic can distinguish approximation, chance-coverage, and CFR-dynamics failures.
+- Root scaling is not resumed while a lower-cost causal diagnostic can distinguish approximation, chance-coverage, representation, and CFR-dynamics failures.
