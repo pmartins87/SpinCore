@@ -83,7 +83,7 @@ fit gates = PASS
 
 This was a ~30% mean and ~34% p95 reduction versus the paired size-1 control (`0.245656 / 0.628706`).
 
-The mandatory longer-feedback test has now completed: workflow `31432403037`, 5 iterations × 64 roots = 320 roots/seed.
+The mandatory longer-feedback test completed in workflow `31432403037`, 5 iterations × 64 roots = 320 roots/seed:
 
 ```text
 mean TV = 0.266591
@@ -106,44 +106,70 @@ mean TV = 0.142553   PASS
 p95 TV  = 0.426860   FAIL
 ```
 
-The surrogate itself underfits the sample-level regret-matched targets well above the reference `0.12` TV threshold. Because regret matching is nonlinear, this is not theoretically equivalent to recovered Deep CFR. The result is retained only as evidence that **explicit smoothing around the first feedback transition can materially reduce instability**.
+The surrogate itself underfits the sample-level regret-matched targets well above the reference `0.12` TV threshold. Because regret matching is nonlinear, this is not theoretically equivalent to recovered Deep CFR. The result is retained as causal evidence that **explicit smoothing around the first feedback transition can materially reduce instability**.
 
-## Current residual-tail program
+## Parallel residual-tail program
 
-### 1. Policy-mixture size 8
+### A. Static ensemble tail tests
 
-The first size-8 smoke attempt correctly failed before physical evidence because the shared paired runner only allowed sizes 1/2/4. That compatibility limit was explicitly extended to 8; no failed-run fallback JSON is treated as evidence.
+1. **Policy-mixture size 8** — corrected workflow `31440425854`; build/regression and smoke PASS, physical 256-root candidate running. It asks whether doubling the number of regret-policy members pushes the two-iteration tail lower or whether size 4 has saturated. Any success must still survive five iterations before 640.
+2. **Policy-mixture + final AveragePolicy ensemble** — workflow `31440493410`; physical 256-root factorial running after smoke PASS. Final policy sizes 1/2/4 are evaluated on the same size-4 policy-mixture CFR memory.
+3. **Robust probability aggregation** — workflow `31440742014`; same-memory physical screen running after smoke PASS. It compares ordinary mean, coordinatewise median and trimmed mean after per-member hard regret matching. Only a large p95 reduction earns E2E testing.
+4. **Support-conditioned tail forensic** — workflow `31440576227`; physical 256-root run active. It separates exact shared SPNNIV1 observations from one-sided/off-support observations after policy-mixture CFR.
 
-Corrected workflow `31440425854` is active. Its question is narrow: does doubling independent regret-policy members continue to reduce the two-iteration p95, or has the ensemble already saturated?
+### B. Five-iteration temporal damping program
 
-Any size-8 success still requires a five-iteration compounding screen before 640.
+Because size-4 policy mixture improves two iterations but decays over five, temporal damping is tested **directly at the failing 5×64 horizon**, not on another short proxy.
 
-### 2. Policy-mixture + final AveragePolicy ensemble
+#### Decaying uniform tremble — workflow `31441018067`
 
-Workflow `31440493410` is active. It keeps size-4 policy-mixture behavior during CFR, then trains final AveragePolicy ensembles of sizes 1/2/4 on the frozen strategy memory without perturbing the primary RNG stream.
+Three size-4 candidates run in parallel, all after smoke PASS:
 
-This is a factorial residual-tail test. Prior final-policy ensembling alone reduced p95 only ~4.7%, so it will be promoted only if the combination is materially stronger than that.
+```text
+epsilon0 = 0.15, 0.30, 0.45
+decay    = 0.50 per fitted iteration
+```
 
-### 3. Support-conditioned residual-tail forensic
+The behavior used for subsequent collection is:
 
-A new authoritative 256 diagnostic separates final-policy disagreement on:
+```text
+pi_used = (1 - epsilon_k) * pi_policy_mixture + epsilon_k * uniform
+```
 
-- seed-A support;
-- seed-B support;
-- exact byte-identical shared SPNNIV1 observations;
-- exact one-sided observations unique to A or B.
+with a geometrically vanishing intervention. This tests whether explicit early-feedback regularization can prevent divergence without permanently flattening the policy.
 
-This determines how much of the remaining p95 is true shared-state disagreement versus off-support generalization/extrapolation after upstream policy-mixture stabilization.
+#### Size-1 tremble factorial — workflow `31441110526`
 
-### 4. Robust policy aggregation
+Two 5×64 candidates run after smoke PASS:
 
-A same-memory eight-replica diagnostic compares ordinary probability averaging with coordinatewise median and trimmed-mean aggregation **after each member has already been hard-regret-matched**.
+```text
+ensemble size 1, epsilon0 = 0.00
+ensemble size 1, epsilon0 = 0.30
+```
 
-This directly tests whether rare ensemble-member outliers dominate the p95 tail. Only a large same-memory tail reduction earns an E2E mapping test.
+Together with the completed size-4/no-tremble baseline and size-4/epsilon0=0.30 candidate, this yields a causal 2×2 comparison of **ensemble × temporal damping** rather than attributing any improvement to both at once.
 
-### 5. Independent five-iteration reproducibility run
+#### Temporal previous-policy blending — workflow `31441224117`
 
-A parser-compatibility edit unintentionally triggered a second physical copy of the 320 compounding workflow. Rather than discard it, it is retained as a determinism check. Because the edit changes only allowed parser choices and not size-4 semantics, its numerical output should reproduce the completed `0.266591 / 0.567002` result if the physical pipeline is deterministic across fresh runners.
+Two size-4 5×64 candidates run after smoke PASS:
+
+```text
+current policy weight = 0.50
+current policy weight = 0.75
+```
+
+At the first feedback transition, the reference policy is exact zero-regret uniform. At later transitions, current policy mixture is blended with the **previous iteration's fitted policy mixture**. This directly tests whether abrupt iteration-to-iteration behavior replacement is the mechanism behind the compounding failure.
+
+All temporal damping/blending variants are explicitly algorithmic diagnostics. They are **not** declared equivalent to recovered Deep CFR and cannot become production semantics without versioning, strategic audit, and deterministic checkpoint/resume recertification.
+
+### C. Physical reproducibility controls
+
+Parser compatibility changes unintentionally triggered fresh copies of the existing size-4 256 and size-4 320 workflows. They are retained as useful deterministic fresh-run controls:
+
+- size-4 paired 256 reproduction: workflow `31440366942`, expected `0.171940 / 0.413605`;
+- size-4 320 reproduction: workflow `31440366909`, expected `0.266591 / 0.567002`.
+
+A mismatch beyond numerical roundoff is itself a blocker requiring nondeterminism investigation before any checkpoint/RNG semantic work.
 
 ## Closed / deprioritized primary branches
 
@@ -164,11 +190,12 @@ A parser-compatibility edit unintentionally triggered a second physical copy of 
 
 ## Immediate decision tree
 
-1. Resolve size 8, robust aggregation, support-conditioned tail decomposition, combined final-policy ensemble, and the independent 320 reproducibility run.
-2. If size 8 or robust aggregation gives a materially better p95 at two iterations, require a five-iteration compounding screen before 640.
-3. If all static ensemble variants still decay with feedback depth, move to an **explicit versioned temporal behavior damping/interpolation** diagnostic around the first Advantage-fit transition. This is the next algorithmic lever already justified by the Direct Behavior result.
-4. Any new behavior semantics must be explicitly versioned and must pass deterministic continuous-vs-stop/restore/continue recertification before acceptance-scale promotion.
-5. No gate relaxation.
+1. No 640 escalation unless a candidate first beats the five-iteration durability baseline `0.266591 / 0.567002` with every frozen fit gate PASS.
+2. Resolve size 8, robust aggregation, combined final-policy ensemble and support-conditioned tail forensic to determine whether a better *static* mapping exists.
+3. Resolve the five-iteration tremble dose-response, size-1 factorial and temporal previous-policy blend. Prefer the **smallest and most interpretable** mechanism that improves both mean and p95 durably.
+4. If a static size-8/robust mapping wins at two iterations, it still requires its own five-iteration compounding gate before 640.
+5. If temporal damping wins, first freeze/version its exact schedule and add continuous-vs-stop/restore/continue determinism before acceptance-scale testing.
+6. No gate relaxation.
 
 Historical pre-loss `0.3714 / 0.6878` remains historical evidence only and is never substituted for generation-2 gates.
 
