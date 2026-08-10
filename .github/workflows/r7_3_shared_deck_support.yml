@@ -1,0 +1,112 @@
+name: SpinCore R7.3 shared-deck support diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_shared_deck_support.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-shared-deck-support
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Smoke shared-deck support diagnostic
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_shared_deck_support.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_SHARED_DECK_SUPPORT_SMOKE.json \
+            --iterations 1 \
+            --roots-per-iteration 4 \
+            --advantage-chunk-steps 8 \
+            --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 \
+            --policy-chunk-steps 8 \
+            --policy-max-steps 8 \
+            --policy-fit-target 10 \
+            --batch-size 16 \
+            --audit-size 32 \
+            --support-sample-size 32 \
+            --reservoir-capacity 5000
+          rm -f validation/R7_3_SHARED_DECK_SUPPORT_SMOKE.json
+
+      - name: Run physical 640-root shared-deck support diagnostic
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_shared_deck_support.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_SHARED_DECK_SUPPORT_640.json \
+            --iterations 5 \
+            --roots-per-iteration 128 \
+            --advantage-chunk-steps 256 \
+            --advantage-max-steps-per-iteration 2048 \
+            --advantage-fit-target 0.70 \
+            --policy-chunk-steps 256 \
+            --policy-max-steps 8192 \
+            --policy-fit-target 0.105 \
+            --batch-size 256 \
+            --audit-size 1024 \
+            --support-sample-size 1024 \
+            --reservoir-capacity 100000 \
+            --independent-deck-baseline-mean-tv 0.469892218708992
+
+      - name: Persist shared-deck evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f validation/R7_3_SHARED_DECK_SUPPORT_640.json ]; then
+            echo '{"schema":"SPINCORE_R7_3_SHARED_DECK_SUPPORT_V1","runner_failed_before_report":true,"ready_for_tables":false}' > validation/R7_3_SHARED_DECK_SUPPORT_640.json
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_3_SHARED_DECK_SUPPORT_640.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical R7.3 shared-deck support diagnostic [r7-evidence-skip]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
