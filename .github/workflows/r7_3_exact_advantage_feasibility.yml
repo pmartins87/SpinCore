@@ -1,0 +1,99 @@
+name: SpinCore R7.3 exact Advantage feasibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_exact_advantage_feasibility.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-exact-advantage-feasibility
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+
+      - name: Smoke exact Advantage expectation benchmark
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_exact_advantage_feasibility.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_EXACT_ADVANTAGE_FEASIBILITY_SMOKE.json \
+            --unique-roots 1 \
+            --node-cap-per-target-root 200000 \
+            --sample-replicates 1 \
+            --reservoir-capacity 50000
+          rm -f validation/R7_3_EXACT_ADVANTAGE_FEASIBILITY_SMOKE.json
+
+      - name: Run physical exact Advantage expectation benchmark
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_exact_advantage_feasibility.py \
+            --solver build/libspincore_solver_c.so \
+            --out validation/R7_3_EXACT_ADVANTAGE_FEASIBILITY.json \
+            --unique-roots 4 \
+            --node-cap-per-target-root 1000000 \
+            --sample-replicates 1,4,8 \
+            --reservoir-capacity 250000
+
+      - name: Persist exact Advantage evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f validation/R7_3_EXACT_ADVANTAGE_FEASIBILITY.json ]; then
+            echo '{"schema":"SPINCORE_R7_3_EXACT_ADVANTAGE_FEASIBILITY_V1","runner_failed_before_report":true,"ready_for_tables":false}' > validation/R7_3_EXACT_ADVANTAGE_FEASIBILITY.json
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_3_EXACT_ADVANTAGE_FEASIBILITY.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record physical exact R7.3 Advantage feasibility [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
