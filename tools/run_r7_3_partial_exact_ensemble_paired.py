@@ -264,7 +264,7 @@ def main() -> int:
     )
     ap.add_argument("--solver", type=Path, default=Path("build/libspincore_solver_c.so"))
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--ensemble-size", type=int, choices=(1, 2, 4), required=True)
+    ap.add_argument("--ensemble-size", type=int, choices=(1, 2, 4, 8), required=True)
     ap.add_argument("--exact-opponent-levels", type=int, default=2)
     ap.add_argument("--seeds", default=",".join(str(x) for x in DEFAULT_SEEDS))
     ap.add_argument("--iterations", type=int, default=2)
