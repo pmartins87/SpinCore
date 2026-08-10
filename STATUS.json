@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.7",
+  "version": "1.12.1-recovery.8",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "PAIRED_POLICY_MIXTURE_AND_DIRECT_BEHAVIOR_E2E_ACTIVE_AFTER_TARGET_TAIL_FORENSICS",
+  "current_gate_status": "POLICY_MIXTURE_MATERIAL_256_COMPOUNDING_AND_DIRECT_BEHAVIOR_E2E_ACTIVE",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -35,56 +35,47 @@
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA"
   },
   "authoritative_640": {
-    "corrected": {
-      "mean_tv": 0.4776491225,
-      "p95_tv": 0.9024027586,
-      "per_seed_fit_pass": true,
-      "evidence_commit": "7275ada20279c6b18d93d0539c6b44989632a605"
-    },
-    "strong_advantage": {
-      "mean_tv": 0.4644736052,
-      "p95_tv": 0.8862043619,
-      "per_seed_fit_pass": true,
-      "evidence_commit": "75885791b5d8894d4c590a038233f96db5879925"
-    },
-    "partial_exact_level1": {
-      "mean_tv": 0.437426,
-      "p95_tv": 0.890053,
-      "per_seed_fit_pass": true
-    },
-    "partial_exact_level2": {
-      "mean_tv": 0.4361102283,
-      "p95_tv": 0.8882443905,
-      "per_seed_fit_pass": true
-    },
-    "partial_exact_level2_strongfit": {
-      "mean_tv": 0.4128931165,
-      "p95_tv": 0.8717077374,
-      "per_seed_fit_pass": true
-    }
+    "corrected": {"mean_tv": 0.4776491225, "p95_tv": 0.9024027586, "per_seed_fit_pass": true, "evidence_commit": "7275ada20279c6b18d93d0539c6b44989632a605"},
+    "strong_advantage": {"mean_tv": 0.4644736052, "p95_tv": 0.8862043619, "per_seed_fit_pass": true, "evidence_commit": "75885791b5d8894d4c590a038233f96db5879925"},
+    "partial_exact_level1": {"mean_tv": 0.437426, "p95_tv": 0.890053, "per_seed_fit_pass": true},
+    "partial_exact_level2": {"mean_tv": 0.4361102283, "p95_tv": 0.8882443905, "per_seed_fit_pass": true},
+    "partial_exact_level2_strongfit": {"mean_tv": 0.4128931165, "p95_tv": 0.8717077374, "per_seed_fit_pass": true}
   },
   "paired_partial_exact_256": {
     "workflow": 31427702314,
     "status": "DONE",
-    "size1": {
-      "mean_tv": 0.24565602838993073,
-      "p95_tv": 0.6287055611610413,
-      "per_seed_fit_pass": true,
-      "evidence_commit": "44ed648eec64c030cd7dbde40117b85fd19c0f8c"
-    },
-    "size2_raw_advantage_ensemble": {
-      "mean_tv": 0.2153794914484024,
-      "p95_tv": 0.6321426630020142,
-      "per_seed_fit_pass": true,
-      "evidence_commit": "ceb7d7d7196a0284f7fff85561eee16db802e44d"
-    },
-    "size4_raw_advantage_ensemble": {
-      "mean_tv": 0.2108692228794098,
-      "p95_tv": 0.6279871463775635,
-      "per_seed_fit_pass": true,
-      "evidence_commit": "59f83c73da755f40f6590a2a24785fed9e5b48bd"
-    },
+    "size1": {"mean_tv": 0.24565602838993073, "p95_tv": 0.6287055611610413, "per_seed_fit_pass": true, "evidence_commit": "44ed648eec64c030cd7dbde40117b85fd19c0f8c"},
+    "size2_raw_advantage_ensemble": {"mean_tv": 0.2153794914484024, "p95_tv": 0.6321426630020142, "per_seed_fit_pass": true, "evidence_commit": "ceb7d7d7196a0284f7fff85561eee16db802e44d"},
+    "size4_raw_advantage_ensemble": {"mean_tv": 0.2108692228794098, "p95_tv": 0.6279871463775635, "per_seed_fit_pass": true, "evidence_commit": "59f83c73da755f40f6590a2a24785fed9e5b48bd"},
     "diagnosis": "RAW_ADVANTAGE_ENSEMBLE_IMPROVES_MEAN_NOT_P95"
+  },
+  "paired_policy_mixture_size4_256": {
+    "workflow": 31428299914,
+    "evidence_commit": "76ac23287961cc3c650a1b60891648bfe975b145",
+    "mean_tv": 0.17194043099880219,
+    "p50_tv": 0.14512518048286438,
+    "p95_tv": 0.4136051535606384,
+    "max_tv": 0.7699102759361267,
+    "baseline_mean_tv": 0.24565602838993073,
+    "baseline_p95_tv": 0.6287055611610413,
+    "mean_ratio_to_baseline": 0.699922001,
+    "p95_ratio_to_baseline": 0.657868,
+    "per_seed_fit_pass": true,
+    "seed_20260829_ensemble_advantage_nrmse": 0.5014342665672302,
+    "seed_20260829_policy_tv": 0.0968395322561264,
+    "seed_20260807_ensemble_advantage_nrmse": 0.5424296259880066,
+    "seed_20260807_policy_tv": 0.09462741762399673,
+    "cross_seed_pass": false,
+    "production_policy_mapping_changed": false,
+    "diagnosis": "FIRST_PAIRED_CANDIDATE_WITH_LARGE_MEAN_AND_P95_REDUCTION_BUT_FROZEN_GATES_STILL_FAIL"
+  },
+  "policy_mixture_compounding_320": {
+    "workflow": 31432403037,
+    "iterations": 5,
+    "roots_per_iteration": 64,
+    "roots_per_seed": 320,
+    "status": "LAUNCHED",
+    "purpose": "Test whether the 256-root policy-mixture tail reduction survives a longer CFR feedback horizon before any 640 escalation."
   },
   "final_average_policy_ensemble_256": {
     "workflow": 31427741160,
@@ -98,20 +89,17 @@
   "partial_exact_support_forensic_256": {
     "workflow": 31429040423,
     "evidence_commit": "4e1ce678e93b68c598b4762a70cca0a08b05dfc2",
-    "raw": {
-      "jaccard": 0.004682524817381532,
-      "mean_lcfr_weight_coverage": 0.009418669838313173,
-      "shared_target_weighted_mean_tv": 0.3292928938673414,
-      "shared_target_p95_tv": 0.75
-    },
-    "poker_isomorphic": {
-      "jaccard": 0.02088876533894603,
-      "mean_lcfr_weight_coverage": 0.07857154056221606,
-      "shared_target_weighted_mean_tv": 0.34929598478275087,
-      "shared_target_p95_tv": 0.8035348652099921
-    },
+    "raw": {"jaccard": 0.004682524817381532, "mean_lcfr_weight_coverage": 0.009418669838313173, "shared_target_weighted_mean_tv": 0.3292928938673414, "shared_target_p95_tv": 0.75},
+    "poker_isomorphic": {"jaccard": 0.02088876533894603, "mean_lcfr_weight_coverage": 0.07857154056221606, "shared_target_weighted_mean_tv": 0.34929598478275087, "shared_target_p95_tv": 0.8035348652099921},
     "shared_street_at_screen_scale": 0,
     "diagnosis": "STRATEGY_TARGET_AND_SUPPORT_DIVERGENCE_ALREADY_UPSTREAM_OF_FINAL_POLICY"
+  },
+  "controlled_iteration_split_reference": {
+    "file": "validation/R7_3_ADVANTAGE_FIT_SCREEN_256.json",
+    "iteration1_shared_target_tv": 0.0,
+    "iteration2_poker_shared_target_weighted_mean_tv": 0.5277572441806667,
+    "iteration2_poker_shared_target_p95_tv": 1.0,
+    "diagnosis": "FIRST_ADVANTAGE_FIT_AND_REGRET_MAP_FEEDBACK_CREATES_TARGET_DIVERGENCE"
   },
   "advantage_common_mode_centering_256": {
     "workflow": 31428588011,
@@ -144,29 +132,24 @@
     "diagnosis": "BEHAVIOR_AWARE_ADVANTAGE_OBJECTIVE_NOT_MATERIAL_END_TO_END"
   },
   "active_physical_runs": {
-    "partial_exact_policy_mixture_size4_256": {
-      "workflow": 31428299914,
-      "status": "RUNNING_PHYSICAL",
-      "purpose": "Regret-match each Advantage member before averaging behavior probabilities under the authoritative deck/primary-RNG contract."
-    },
-    "direct_behavior_e2e_256": {
-      "workflow": 31431672631,
-      "status": "RUNNING_SETUP_REGRESSION_SMOKE_THEN_PHYSICAL",
-      "purpose": "Causal E2E screen after same-memory p95 fell ~55.5%; surrogate training uses isolated side RNG and is explicitly not yet a production algorithm."
-    }
+    "policy_mixture_compounding_320": {"workflow": 31432403037, "status": "QUEUED_OR_STARTING", "purpose": "Five iterations to test feedback-depth durability."},
+    "direct_behavior_e2e_256": {"workflow": 31431672631, "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS", "purpose": "Causal E2E screen; isolated surrogate RNG; explicitly not yet a production algorithm."},
+    "partial_exact_support_by_iteration_256": {"workflow": 31431939967, "status": "RUNNING_PHYSICAL_AFTER_SMOKE_PASS", "purpose": "Authoritative replication of iteration1 zero-target-divergence versus iteration2 feedback divergence."}
   },
   "causal_state": {
     "cfr_strategy_support_fragmentation_material": true,
     "shared_strategy_targets_diverge_materially": true,
+    "first_advantage_fit_feedback_is_leading_causal_transition": true,
     "final_average_policy_is_primary_p95_source": false,
     "advantage_function_approximation_variance_material": true,
     "raw_advantage_ensembling_primary_solution": false,
+    "policy_mixture_paired_signal_material": true,
     "common_mode_advantage_offset_primary_solution": false,
     "direct_behavior_surrogate_same_memory_signal_large": true,
     "direct_behavior_surrogate_theoretical_review_required": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
-  "next_physical_step": "Complete paired policy-mixture size4 and direct-behavior E2E. Promote neither automatically. If policy mixture materially reduces both mean and p95 with fit gates PASS, extend the smallest useful mixture across more CFR iterations before 640. If direct behavior materially reduces p95 end-to-end, first formalize/version its regret semantics and checkpoint/RNG contract before acceptance-scale testing. If both fail, target CFR strategy-target/trajectory stability directly; final-policy smoothing and raw model averaging are already ruled out as dominant solutions.",
+  "next_physical_step": "Complete five-iteration policy-mixture compounding, direct-behavior E2E, and authoritative support-by-iteration forensic. If policy-mixture retains large mean/p95 reductions with fit gates PASS across five iterations, it earns a 640 acceptance-scale test. If direct behavior is materially stronger, stop before production promotion and formalize/version its algorithmic regret semantics plus checkpoint/RNG deterministic resume contract. No gate relaxation.",
   "ready_for_tables": false
 }
