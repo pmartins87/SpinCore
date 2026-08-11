@@ -10,6 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import r7_3_certification_evidence as evidence_resolver
 import run_r7_4_domain_preflight as preflight_gate
 
 
@@ -64,8 +65,16 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
 
+    repo_root = Path(__file__).resolve().parents[1]
     freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
-    acceptance = json.loads(args.acceptance.read_text(encoding="utf-8"))
+    try:
+        acceptance, acceptance_origin = evidence_resolver.resolve_valid_json(
+            args.acceptance,
+            validator=lambda data: preflight_gate._validate_r7_3_prerequisites(freeze, data),
+            repo_root=repo_root,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     ruleset_freeze = json.loads(args.ruleset_freeze.read_text(encoding="utf-8"))
     ruleset_acceptance = json.loads(args.ruleset_acceptance.read_text(encoding="utf-8"))
     preflight = json.loads(args.preflight.read_text(encoding="utf-8"))
@@ -76,7 +85,6 @@ def main() -> int:
     if int(args.roots_per_iteration) <= 0:
         raise SystemExit("roots-per-iteration must be positive")
 
-    repo_root = Path(__file__).resolve().parents[1]
     worker = repo_root / WORKER_REL
     if not worker.is_file():
         raise SystemExit("R7.4 stability pilot worker missing")
@@ -113,6 +121,7 @@ def main() -> int:
     if report.get("schema") != PILOT_SCHEMA:
         raise SystemExit("wrong R7.4 held-out pilot schema")
     report["r7_3_640_acceptance_passed_first"] = True
+    report["r7_3_acceptance_origin"] = acceptance_origin
     report["r7_4_ruleset_hu_invariance_passed_first"] = True
     report["r7_4_structural_preflight_passed_first"] = True
     report["r7_3_certified_source_head_sha"] = freeze["source_head_sha"]
