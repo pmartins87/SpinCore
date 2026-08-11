@@ -1,0 +1,670 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "baseline_reference": {
+    "cross_seed_mean_tv": 0.24565602838993073,
+    "cross_seed_p95_tv": 0.6287055611610413,
+    "evidence_commit": "44ed648eec64c030cd7dbde40117b85fd19c0f8c",
+    "file": "validation/R7_3_PARTIAL_EXACT_ENSEMBLE_PAIRED_SIZE1_256.json",
+    "per_seed_fit_pass": true,
+    "roots_per_seed": 256
+  },
+  "behavior_semantics": "DIRECT_POLICY_SURROGATE_OF_SAMPLE_LEVEL_REGRET_MATCHED_ADVANTAGE_TARGETS",
+  "cross_seed": {
+    "max_tv": 0.9398977160453796,
+    "mean_tv": 0.15512189269065857,
+    "p50_tv": 0.11192115396261215,
+    "p95_tv": 0.43759503960609436
+  },
+  "cross_seed_observation_count": 2048,
+  "cross_seed_pass": false,
+  "deck_formula": "seed*1000003 + global_root*97 + iteration",
+  "deck_semantics": "GENERATION2_AUTHORITATIVE_GLOBAL_ROOT_FORMULA_EXACT",
+  "duration_seconds": 1301.8532180786133,
+  "exact_opponent_levels": 2,
+  "frozen_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "policy_weighted_mean_tv_max": 0.12
+  },
+  "generated_at_unix": 1786407634.3057878,
+  "interpretation_note": "Experimental causal screen only. Authoritative partial-exact collection, deck schedule, Advantage fit gate and live primary batch RNG are preserved. Surrogate training uses an isolated side RNG and therefore does not consume the primary stream. The candidate changes only next-iteration behavior to a smooth policy network trained on sample-level regret-matched Advantage targets. Because regret matching is nonlinear, this is not claimed equivalent to Deep CFR and cannot be promoted without a separate algorithm/versioning review.",
+  "iterations": 2,
+  "per_seed": [
+    {
+      "advantage_optimizer_steps": 8192,
+      "advantage_samples": 100000,
+      "advantage_seen": 149431,
+      "algorithm_seed": 20260829,
+      "checkpoints": [
+        {
+          "advantage_samples": 81571,
+          "advantage_seen": 81571,
+          "behavior_ready_at_collection_start": false,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.6031075119972229
+          },
+          "iteration": 1,
+          "nodes": 478190,
+          "roots": 128,
+          "strategy_samples": 13741,
+          "strategy_seen": 13741,
+          "surrogate_fit": {
+            "batch_seed": 3735677709,
+            "final_weighted_mean_tv": 0.2681180238723755,
+            "init_seed": 1319934431,
+            "memory_items": 80987,
+            "optimizer_steps": 4096,
+            "progress": [
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 1.0752553201746196,
+                "optimizer_steps": 256,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.3370065689086914
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.9235641637351364,
+                "optimizer_steps": 512,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.321570485830307
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8952012993395329,
+                "optimizer_steps": 768,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.3158821761608124
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8794451120775193,
+                "optimizer_steps": 1024,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.29813727736473083
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8755617020651698,
+                "optimizer_steps": 1280,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.30048152804374695
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8723215176723897,
+                "optimizer_steps": 1536,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.30128777027130127
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.860840909415856,
+                "optimizer_steps": 1792,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.29169297218322754
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8637570142745972,
+                "optimizer_steps": 2048,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2883928120136261
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8584471051581204,
+                "optimizer_steps": 2304,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2861464023590088
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8481837497092783,
+                "optimizer_steps": 2560,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.28510352969169617
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8492825308348984,
+                "optimizer_steps": 2816,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2737835645675659
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8416963741183281,
+                "optimizer_steps": 3072,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.27666425704956055
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8346867207437754,
+                "optimizer_steps": 3328,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2859608232975006
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8383577084168792,
+                "optimizer_steps": 3584,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.27780550718307495
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8365818811580539,
+                "optimizer_steps": 3840,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2736351191997528
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.831593404058367,
+                "optimizer_steps": 4096,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2681180238723755
+              }
+            ],
+            "reference_policy_fit_gate_pass": false
+          }
+        },
+        {
+          "advantage_samples": 100000,
+          "advantage_seen": 149431,
+          "behavior_ready_at_collection_start": true,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.5298722386360168
+          },
+          "iteration": 2,
+          "nodes": 841757,
+          "roots": 256,
+          "strategy_samples": 16604,
+          "strategy_seen": 16604,
+          "surrogate_fit": {
+            "batch_seed": 5646955924,
+            "final_weighted_mean_tv": 0.21794866025447845,
+            "init_seed": 1828000524,
+            "memory_items": 99485,
+            "optimizer_steps": 4096,
+            "progress": [
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 1.195803812239319,
+                "optimizer_steps": 256,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.39707961678504944
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 1.0287841074168682,
+                "optimizer_steps": 512,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.3379400670528412
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.9436166705563664,
+                "optimizer_steps": 768,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.30309081077575684
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.9005199938546866,
+                "optimizer_steps": 1024,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.25976815819740295
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8859152744989842,
+                "optimizer_steps": 1280,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24671107530593872
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8545297544915229,
+                "optimizer_steps": 1536,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.25072455406188965
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8584276768378913,
+                "optimizer_steps": 1792,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.23734484612941742
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8411362064071,
+                "optimizer_steps": 2048,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24213434755802155
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8350514424964786,
+                "optimizer_steps": 2304,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24174366891384125
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8273784618359059,
+                "optimizer_steps": 2560,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.23205865919589996
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8186575740110129,
+                "optimizer_steps": 2816,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24169519543647766
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8123320152517408,
+                "optimizer_steps": 3072,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.22683477401733398
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8110435970593244,
+                "optimizer_steps": 3328,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.22738116979599
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8040098804049194,
+                "optimizer_steps": 3584,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.23720860481262207
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.7997903353534639,
+                "optimizer_steps": 3840,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2221553772687912
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.7911103023216128,
+                "optimizer_steps": 4096,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.21794866025447845
+              }
+            ],
+            "reference_policy_fit_gate_pass": false
+          }
+        }
+      ],
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "advantage_weighted_nrmse": 0.5730884075164795,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.08332955837249756
+      },
+      "nodes": 841757,
+      "policy_optimizer_steps": 256,
+      "policy_progress": [
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.07924141734838486
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 16604,
+      "strategy_seen": 16604
+    },
+    {
+      "advantage_optimizer_steps": 8192,
+      "advantage_samples": 100000,
+      "advantage_seen": 150417,
+      "algorithm_seed": 20260807,
+      "checkpoints": [
+        {
+          "advantage_samples": 81767,
+          "advantage_seen": 81767,
+          "behavior_ready_at_collection_start": false,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.6111214756965637
+          },
+          "iteration": 1,
+          "nodes": 480148,
+          "roots": 128,
+          "strategy_samples": 10430,
+          "strategy_seen": 10430,
+          "surrogate_fit": {
+            "batch_seed": 3735677719,
+            "final_weighted_mean_tv": 0.24881598353385925,
+            "init_seed": 1319934405,
+            "memory_items": 81162,
+            "optimizer_steps": 4096,
+            "progress": [
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 1.0731442931573838,
+                "optimizer_steps": 256,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.30794498324394226
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.9109140075743198,
+                "optimizer_steps": 512,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2795107066631317
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8922251046169549,
+                "optimizer_steps": 768,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2706785798072815
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8825362746138126,
+                "optimizer_steps": 1024,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.27266165614128113
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8768731562886387,
+                "optimizer_steps": 1280,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2836402356624603
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8701552713755518,
+                "optimizer_steps": 1536,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2694365680217743
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8716782808769494,
+                "optimizer_steps": 1792,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.26581937074661255
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8589891435112804,
+                "optimizer_steps": 2048,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.26156002283096313
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8567903959192336,
+                "optimizer_steps": 2304,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.25785529613494873
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8504173250403255,
+                "optimizer_steps": 2560,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.25661423802375793
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8445424817036837,
+                "optimizer_steps": 2816,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2538151144981384
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8423099555075169,
+                "optimizer_steps": 3072,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2570638656616211
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8401017205324024,
+                "optimizer_steps": 3328,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.25630226731300354
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.836168539011851,
+                "optimizer_steps": 3584,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24370574951171875
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.834337817505002,
+                "optimizer_steps": 3840,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24639582633972168
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8326824789401144,
+                "optimizer_steps": 4096,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24881598353385925
+              }
+            ],
+            "reference_policy_fit_gate_pass": false
+          }
+        },
+        {
+          "advantage_samples": 100000,
+          "advantage_seen": 150417,
+          "behavior_ready_at_collection_start": true,
+          "final_advantage_fit": {
+            "fit_target_reached": false,
+            "frozen_gate_pass": true,
+            "optimizer_steps": 4096,
+            "weighted_nrmse": 0.5442375540733337
+          },
+          "iteration": 2,
+          "nodes": 852613,
+          "roots": 256,
+          "strategy_samples": 14463,
+          "strategy_seen": 14463,
+          "surrogate_fit": {
+            "batch_seed": 5646955918,
+            "final_weighted_mean_tv": 0.23244722187519073,
+            "init_seed": 1828000534,
+            "memory_items": 99484,
+            "optimizer_steps": 4096,
+            "progress": [
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 1.1815497532952577,
+                "optimizer_steps": 256,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.41094303131103516
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 1.015378043288365,
+                "optimizer_steps": 512,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.32326510548591614
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.9440167050343007,
+                "optimizer_steps": 768,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2925504744052887
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8931661962997168,
+                "optimizer_steps": 1024,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2937527596950531
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8741758947726339,
+                "optimizer_steps": 1280,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2756445109844208
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8598442969378084,
+                "optimizer_steps": 1536,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.26691555976867676
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8391710098367184,
+                "optimizer_steps": 1792,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.25019100308418274
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8306281799450517,
+                "optimizer_steps": 2048,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2455911934375763
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8299041336867958,
+                "optimizer_steps": 2304,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.23832452297210693
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8256240489427,
+                "optimizer_steps": 2560,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2330276221036911
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8251155118923634,
+                "optimizer_steps": 2816,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24623116850852966
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8061979494523257,
+                "optimizer_steps": 3072,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.24673812091350555
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8049662387929857,
+                "optimizer_steps": 3328,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.2551637589931488
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.8013994442299008,
+                "optimizer_steps": 3584,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.23314958810806274
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.7925804767291993,
+                "optimizer_steps": 3840,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.22570852935314178
+              },
+              {
+                "fit_target_reached": false,
+                "mean_training_loss": 0.7845935793593526,
+                "optimizer_steps": 4096,
+                "reference_policy_fit_gate_pass": false,
+                "weighted_mean_tv": 0.23244722187519073
+              }
+            ],
+            "reference_policy_fit_gate_pass": false
+          }
+        }
+      ],
+      "final_fit": {
+        "advantage_gate_pass": true,
+        "advantage_weighted_nrmse": 0.5235927104949951,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.09260071814060211
+      },
+      "nodes": 852613,
+      "policy_optimizer_steps": 256,
+      "policy_progress": [
+        {
+          "fit_target_reached": true,
+          "frozen_gate_pass": true,
+          "optimizer_steps": 256,
+          "weighted_mean_tv": 0.09174077212810516
+        }
+      ],
+      "roots": 256,
+      "strategy_samples": 14463,
+      "strategy_seen": 14463
+    }
+  ],
+  "per_seed_fit_pass": true,
+  "primary_rng_contract": "RECOVERED_SINGLE_COUPLED_BATCH_RNG",
+  "production_algorithm_changed": false,
+  "promotion_note": "Diagnostic only. Exact observation/legal groups are LCFR-weighted in regret space, then hard regret matching is applied once per group before training the smooth behavior surrogate. This tests a more coherent conditional-regret target order; it is not declared equivalent to recovered Deep CFR and cannot change production semantics without versioning.",
+  "r7_3_pass": false,
+  "ready_for_tables": false,
+  "roots_per_iteration": 128,
+  "roots_per_seed": 256,
+  "schema": "SPINCORE_R7_3_DIRECT_BEHAVIOR_AGGREGATED_REGRET_E2E_V1",
+  "solver": "build/libspincore_solver_c.so",
+  "source_diagnostic": {
+    "file": "validation/R7_3_BEHAVIOR_TARGET_AGGREGATION_256.json",
+    "raw_sample_compression_ratio": 0.9952673923331756,
+    "same_memory_pairwise_mean_tv": 0.10243512317538261,
+    "same_memory_pairwise_p95_tv": 0.3476518243551254
+  },
+  "summary": {
+    "candidate_to_baseline_mean_tv_ratio": 0.6314597435583099,
+    "candidate_to_baseline_p95_tv_ratio": 0.6960253998675948,
+    "diagnosis": "DIRECT_BEHAVIOR_SURROGATE_NOT_MATERIAL_END_TO_END",
+    "surrogate_reference_fit_pass": false
+  },
+  "surrogate_target_order": "LCFR_WEIGHTED_MEAN_REGRET_PER_EXACT_INFOSET_THEN_HARD_REGRET_MATCHING",
+  "surrogate_training_perturbs_primary_rng": false,
+  "theoretical_equivalence_claimed": false
+}
