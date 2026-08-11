@@ -1,0 +1,100 @@
+{
+  "schema": "SPINCORE_R7_3_ACTIVE_CANDIDATE_PROVENANCE_V1",
+  "purpose": "Record immutable workflow-run source metadata and expected evidence paths for active five-iteration candidates so any future winner selection can be traced to the exact code/workflow that generated it.",
+  "frozen_algorithm_seeds": [20260829, 20260807],
+  "mandatory_horizon": {"iterations": 5, "roots_per_iteration": 64, "roots_per_seed": 320},
+  "candidates": [
+    {
+      "label": "size8_no_damping",
+      "behavior_kind": "policy_mixture",
+      "ensemble_size": 8,
+      "params": {},
+      "workflow_run": 31446308103,
+      "source_head_sha": "47377114017197d929f58be0f553a40b9aadea78",
+      "source_workflow_path": ".github/workflows/r7_3_partial_exact_policy_mixture_size8_durability.yml",
+      "evidence_path": "validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_PAIRED_SIZE8_320.json"
+    },
+    {
+      "label": "size8_temporal_w50",
+      "behavior_kind": "temporal_blend",
+      "ensemble_size": 8,
+      "params": {"current_policy_weight": 0.5},
+      "workflow_run": 31448623827,
+      "source_head_sha": "8166871908f0580cd3170ebd038ca0ad83072951",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_size8_temporal_w50.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_SIZE8_TEMPORAL_W50_320.json"
+    },
+    {
+      "label": "size8_uncertainty_s10",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 8,
+      "params": {"epsilon_scale": 1.0, "epsilon_cap": 0.5},
+      "workflow_run": 31449546648,
+      "source_head_sha": "cad2a8425a552eb1def4fef5fbca36bc220555ea",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_size8_uncertainty_s10.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_SIZE8_UNCERTAINTY_S10_320.json"
+    },
+    {
+      "label": "size4_uncertainty_s125",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 4,
+      "params": {"epsilon_scale": 1.25, "epsilon_cap": 0.5},
+      "workflow_run": 31450032347,
+      "source_head_sha": "791ee4ef549ecfd27100ede1a5338fb59be8ae67",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s125_320.json"
+    },
+    {
+      "label": "size4_uncertainty_s150",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 4,
+      "params": {"epsilon_scale": 1.5, "epsilon_cap": 0.5},
+      "workflow_run": 31450032347,
+      "source_head_sha": "791ee4ef549ecfd27100ede1a5338fb59be8ae67",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150_320.json"
+    },
+    {
+      "label": "size4_uncertainty_s175",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 4,
+      "params": {"epsilon_scale": 1.75, "epsilon_cap": 0.5},
+      "workflow_run": 31451592073,
+      "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension2.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s175_320.json"
+    },
+    {
+      "label": "size4_uncertainty_s200",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 4,
+      "params": {"epsilon_scale": 2.0, "epsilon_cap": 0.5},
+      "workflow_run": 31451592073,
+      "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension2.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s200_320.json"
+    },
+    {
+      "label": "size4_uncertainty_s150c65",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 4,
+      "params": {"epsilon_scale": 1.5, "epsilon_cap": 0.65},
+      "workflow_run": 31451592073,
+      "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension2.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150c65_320.json"
+    },
+    {
+      "label": "size4_uncertainty_s150c80",
+      "behavior_kind": "uncertainty_damping",
+      "ensemble_size": 4,
+      "params": {"epsilon_scale": 1.5, "epsilon_cap": 0.8},
+      "workflow_run": 31451592073,
+      "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+      "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension2.yml",
+      "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150c80_320.json"
+    }
+  ],
+  "selection_note": "This file is provenance only. It does not select or promote a winner. A winner still requires actual fit-valid 5x64 gate clearance and explicit SPINCORE_R7_3_WINNER_SELECTION_V1 creation after comparing completed candidates.",
+  "ready_for_tables": false
+}
