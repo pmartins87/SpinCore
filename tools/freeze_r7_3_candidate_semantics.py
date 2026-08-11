@@ -10,6 +10,7 @@ from pathlib import Path
 SELECTION_SCHEMA = "SPINCORE_R7_3_WINNER_SELECTION_V1"
 FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
 DECK_FORMULA = "seed*1000003 + global_root*97 + iteration"
+ALGORITHM_SEEDS = (20260829, 20260807)
 FROZEN_GATES = {
     "advantage_weighted_nrmse_max": 0.75,
     "policy_weighted_mean_tv_max": 0.12,
@@ -30,6 +31,8 @@ EXECUTION_CONTRACT = {
     "cross_seed_per_seed": 1024,
     "reservoir_capacity": 100000,
     "exact_opponent_levels": 2,
+    "lr": 0.001,
+    "device": "cpu",
 }
 
 KIND_CONTRACT = {
@@ -133,6 +136,10 @@ def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params:
     missing = [fragment for fragment in required_fragments if fragment not in text]
     if missing:
         raise SystemExit(f"source workflow does not encode the frozen execution contract: missing {missing}")
+    if "--seeds" in text:
+        raise SystemExit("source workflow overrides the frozen default algorithm seeds")
+    if "--lr" in text or "--device" in text:
+        raise SystemExit("source workflow overrides frozen runner defaults for lr/device")
     if kind == "uncertainty_damping":
         _require_bound_numeric(text, option="--epsilon-scale", variable="scale", value=params["epsilon_scale"])
         _require_bound_numeric(text, option="--epsilon-cap", variable="cap", value=params["epsilon_cap"])
@@ -186,6 +193,9 @@ def main() -> int:
         raise SystemExit("candidate evidence contains runner failure marker")
     if evidence.get("schema") != contract["schema"]:
         raise SystemExit("candidate evidence schema does not match selected behavior kind")
+    algorithm_seeds = [int(x) for x in (evidence.get("algorithm_seeds") or [])]
+    if algorithm_seeds != list(ALGORITHM_SEEDS):
+        raise SystemExit(f"candidate algorithm seeds {algorithm_seeds!r} do not match frozen seeds {list(ALGORITHM_SEEDS)!r}")
 
     if evidence.get("deck_formula") != DECK_FORMULA:
         raise SystemExit("candidate does not use frozen generation-2 deck formula")
@@ -267,6 +277,7 @@ def main() -> int:
         }[kind],
         "ensemble_size": ensemble_size,
         "params": selected_params,
+        "algorithm_seeds": algorithm_seeds,
         "execution_contract": dict(EXECUTION_CONTRACT),
         "roots_per_seed": 320,
         "deck_formula": DECK_FORMULA,
