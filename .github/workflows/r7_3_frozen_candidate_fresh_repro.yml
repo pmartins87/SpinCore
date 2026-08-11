@@ -1,0 +1,95 @@
+name: SpinCore R7.3 frozen candidate fresh reproducibility
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 candidate semantic freeze'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout full current history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check whether a frozen winner exists
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json ]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo 'No frozen winner yet; preparation-only trigger exits.'
+          fi
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Re-run exact frozen source and compare complete evidence
+        if: steps.gate.outputs.run == 'true'
+        id: repro
+        continue-on-error: true
+        shell: bash
+        env:
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          python tools/run_r7_3_frozen_candidate_fresh_repro.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-out validation/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json \
+            --report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+      - name: Persist fresh reproducibility evidence
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          report=validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+          fresh=validation/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json
+          if [ ! -f "$report" ]; then
+            echo '{"schema":"SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1","runner_failed_before_report":true,"fresh_process_reproducible":false,"ready_for_640":false,"ready_for_tables":false}' > "$report"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$report"
+          if [ -f "$fresh" ]; then git add -f "$fresh"; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record frozen R7.3 candidate fresh-process reproducibility [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce fresh-process reproducibility gate
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          assert d.get('fresh_process_reproducible') is True, d
+          assert d.get('ready_for_640') is False
+          assert d.get('ready_for_tables') is False
+          print('frozen candidate fresh-process reproducibility PASS')
+          PY
