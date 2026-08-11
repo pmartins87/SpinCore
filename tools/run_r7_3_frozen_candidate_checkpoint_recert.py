@@ -10,10 +10,14 @@ import sys
 import tempfile
 from pathlib import Path
 
+import run_r7_3_frozen_candidate_fresh_repro as fresh_runner
+
 
 FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
 FRESH_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
 RECERT_SCHEMA = "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1"
+HELPER_REL = Path("python/spincore/r7_candidate_checkpoint.py")
+WORKER_REL = Path("tools/r7_3_frozen_candidate_checkpoint_worker.py")
 
 
 def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> None:
@@ -23,6 +27,10 @@ def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> Non
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _overlay_targets(worktree: Path) -> tuple[Path, Path]:
+    return worktree / HELPER_REL, worktree / WORKER_REL
 
 
 def main() -> int:
@@ -45,8 +53,8 @@ def main() -> int:
         raise SystemExit("fresh reproducibility evidence commit does not match semantic freeze")
 
     repo_root = Path(__file__).resolve().parents[1]
-    helper = repo_root / "python" / "spincore" / "r7_candidate_checkpoint.py"
-    worker = repo_root / "tools" / "r7_3_frozen_candidate_checkpoint_worker.py"
+    helper = repo_root / HELPER_REL
+    worker = repo_root / WORKER_REL
     if not helper.is_file() or not worker.is_file():
         raise SystemExit("checkpoint certification helper/worker missing")
 
@@ -58,25 +66,25 @@ def main() -> int:
         checkpoint_dir = temp / "checkpoints"
         _run(["git", "worktree", "add", "--detach", str(worktree), source_head], cwd=repo_root)
         try:
-            # Overlay only the checkpoint serialization helper. Behavior/training
-            # modules remain byte-identical to the frozen source commit.
-            target_helper = worktree / "python" / "spincore" / "r7_candidate_checkpoint.py"
+            # Overlay only checkpoint-certification plumbing. The worker itself
+            # must execute from worktree/tools so its behavior/training imports
+            # resolve to the frozen source tree, never to current-main tools.
+            target_helper, target_worker = _overlay_targets(worktree)
             target_helper.parent.mkdir(parents=True, exist_ok=True)
+            target_worker.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(helper, target_helper)
+            shutil.copyfile(worker, target_worker)
 
             _run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"], cwd=worktree)
             _run(["cmake", "--build", "build", "-j2"], cwd=worktree)
             _run(["ctest", "--test-dir", "build", "--output-on-failure"], cwd=worktree)
-            env = dict(os.environ)
+            env = fresh_runner._source_execution_env(freeze, os.environ)
             env["PYTHONPATH"] = os.pathsep.join([str(worktree / "python"), str(worktree / "tools")])
-            env.setdefault("SPINCORE_TORCH_THREADS", "2")
-            env.setdefault("OMP_NUM_THREADS", "2")
-            env.setdefault("MKL_NUM_THREADS", "2")
             _run([sys.executable, "-m", "pytest", "-q", "python_tests"], cwd=worktree, env=env)
 
             _run([
                 sys.executable,
-                str(worker),
+                str(target_worker),
                 "--freeze", str(args.freeze.resolve()),
                 "--solver", str(worktree / "build" / "libspincore_solver_c.so"),
                 "--checkpoint-dir", str(checkpoint_dir),
@@ -91,8 +99,11 @@ def main() -> int:
         raise SystemExit("worker produced wrong checkpoint recertification schema")
     report["algorithm_source_head_sha"] = source_head
     report["algorithm_source_exact_worktree"] = True
+    report["thread_environment_contract"] = freeze["thread_environment_contract"]
+    report["thread_environment_overrides_injected_by_certifier"] = False
     report["checkpoint_helper_overlay_sha256"] = _sha256(helper)
-    report["checkpoint_worker_sha256"] = _sha256(worker)
+    report["checkpoint_worker_overlay_sha256"] = _sha256(worker)
+    report["checkpoint_worker_executed_from_frozen_worktree_overlay"] = True
     report["fresh_process_reproducibility_gate_passed_first"] = True
     report["source_cpp_regression_passed_before_recertification"] = True
     report["source_python_regression_passed_before_recertification"] = True
