@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.14",
+  "version": "1.12.1-recovery.15",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "FIVE_ITERATION_DURABILITY_MATRIX_RUNNING_FINAL_POLICY_RESIDUAL_AND_TARGET_ORDER_RESULTS_IN",
+  "current_gate_status": "DURABILITY_MATRIX_ACTIVE_DIRECT_BEHAVIOR_DURABILITY_FAILED_REGRET_FLOOR_BRANCH_RUNNING",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -34,15 +34,7 @@
     "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA"
   },
-  "paired_policy_mixture_size4_256": {
-    "workflow": 31428299914,
-    "mean_tv": 0.17194043099880219,
-    "p95_tv": 0.4136051535606384,
-    "per_seed_fit_pass": true,
-    "fresh_run_31440366942_cross_seed_exact_reproduction": true,
-    "diagnosis": "STRONG_TWO_ITERATION_SIGNAL_FRESH_RUN_REPRODUCED"
-  },
-  "policy_mixture_compounding_320": {
+  "durability_baseline_size4_policy_mixture_320": {
     "workflow": 31432403037,
     "iterations": 5,
     "roots_per_seed": 320,
@@ -50,74 +42,72 @@
     "p50_tv": 0.24680466949939728,
     "p95_tv": 0.5670017600059509,
     "max_tv": 0.9055466651916504,
-    "seed_20260829_ensemble_advantage_nrmse": 0.47699275612831116,
-    "seed_20260829_policy_tv": 0.09866710752248764,
-    "seed_20260807_ensemble_advantage_nrmse": 0.443852961063385,
-    "seed_20260807_policy_tv": 0.09976909309625626,
     "per_seed_fit_pass": true,
-    "cross_seed_pass": false,
-    "diagnosis": "SIZE4_POLICY_MIXTURE_GAIN_DECAYS_MATERIALLY_WITH_FIVE_ITERATION_FEEDBACK",
-    "decision": "DO_NOT_ESCALATE_SIZE4_TO_640"
+    "decision": "NO_640_ESCALATION_UNTIL_DURABLE_UPSTREAM_WINNER"
   },
-  "policy_mixture_plus_final_policy_ensemble_256": {
+  "short_horizon_size4_policy_mixture_256": {
+    "mean_tv": 0.17194043099880219,
+    "p95_tv": 0.4136051535606384,
+    "per_seed_fit_pass": true,
+    "fresh_run_cross_seed_reproduced": true
+  },
+  "direct_behavior": {
+    "short_2x128": {
+      "mean_tv": 0.1425531655550003,
+      "p95_tv": 0.42685970664024353,
+      "per_seed_fit_pass": true
+    },
+    "durability_5x64": {
+      "workflow": 31441650915,
+      "evidence_commit": "db8fe87f6fd07ca651825436173e2a1f01b89d40",
+      "mean_tv": 0.27618464827537537,
+      "p50_tv": 0.20541656017303467,
+      "p95_tv": 0.8286698460578918,
+      "max_tv": 0.9973610639572144,
+      "per_seed_fit_pass": true,
+      "r7_3_pass": false
+    },
+    "diagnosis": "SHORT_HORIZON_SMOOTHING_SIGNAL_IS_NOT_DURABLE_AND_P95_DEGRADES_SEVERELY_OVER_FIVE_ITERATIONS",
+    "decision": "CLOSE_ORDINARY_DIRECT_BEHAVIOR_AS_DURABLE_SOLUTION_KEEP_ONLY_AS_CAUSAL_CONTROL"
+  },
+  "final_policy_ensemble_residual_256": {
     "workflow": 31440493410,
     "evidence_commit": "eb115121b9a4002615f3310767c89aebbfce05c9",
-    "policy_size1": {"mean_tv": 0.17974971234798431, "p95_tv": 0.43464410305023193},
-    "policy_size2": {"mean_tv": 0.1591653972864151, "p95_tv": 0.4047917127609253},
-    "policy_size4": {"mean_tv": 0.13837657868862152, "p95_tv": 0.36872994899749756},
-    "policy_size4_mean_gate_pass": true,
-    "policy_size4_p95_gate_pass": false,
+    "size1": {"mean_tv": 0.17974971234798431, "p95_tv": 0.43464410305023193},
+    "size2": {"mean_tv": 0.1591653972864151, "p95_tv": 0.4047917127609253},
+    "size4": {"mean_tv": 0.13837657868862152, "p95_tv": 0.36872994899749756},
     "all_fit_gates_pass": true,
-    "diagnosis": "FINAL_POLICY_ENSEMBLE_SUPPLIES_MATERIAL_RESIDUAL_REDUCTION_BUT_SHORT_HORIZON_P95_STILL_MISSES_BY_0_01873",
-    "decision": "DO_NOT_RUN_STANDALONE_FIVE_ITERATION_VARIANT_UNTIL_AN_UPSTREAM_DURABLE_WINNER_EXISTS"
+    "decision": "RESERVE_AS_DOWNSTREAM_LAYER_AFTER_UPSTREAM_DURABILITY_WINNER"
   },
-  "policy_mixture_support_conditioned_256": {
+  "support_conditioned_residual_256": {
     "workflow": 31440576227,
     "evidence_commit": "3e05501faf64da91d5ca257b70423271603b6013",
-    "union_A_B": {"mean_tv": 0.1678057461977005, "p95_tv": 0.41149118542671204},
-    "shared_exact": {"count": 139, "mean_tv": 0.18156151473522186, "p95_tv": 0.39876919984817505},
-    "support_A_unique_exact": {"mean_tv": 0.18729060888290405, "p95_tv": 0.4174702763557434},
-    "support_B_unique_exact": {"mean_tv": 0.15775564312934875, "p95_tv": 0.41820281744003296},
-    "diagnosis": "SHARED_STATE_DISAGREEMENT_REMAINS_MATERIAL_OFF_SUPPORT_IS_NOT_THE_SOLE_P95_SOURCE"
+    "union_mean_tv": 0.1678057461977005,
+    "union_p95_tv": 0.41149118542671204,
+    "shared_exact_mean_tv": 0.18156151473522186,
+    "shared_exact_p95_tv": 0.39876919984817505,
+    "diagnosis": "OFF_SUPPORT_NOT_SOLE_TAIL_SOURCE_SHARED_STATE_DISAGREEMENT_MATERIAL"
   },
   "behavior_target_aggregation_order_256": {
     "workflow": 31441852607,
     "evidence_commit": "57df6d80b457b77cb3e6c1f1906b5678bb43df12",
     "raw_samples": 10565,
-    "unique_observation_legal_groups": 10515,
-    "compression_ratio": 0.9952673923331756,
-    "mean_of_sample_rm_pairwise_mean_tv": 0.10457627351085345,
-    "mean_of_sample_rm_pairwise_p95_tv": 0.35709961752096814,
-    "rm_of_weighted_mean_regret_pairwise_mean_tv": 0.10243512317538261,
-    "rm_of_weighted_mean_regret_pairwise_p95_tv": 0.3476518243551254,
-    "same_memory_p95_gate_pass_for_regret_first_order": true,
-    "diagnosis": "REGRET_SPACE_AGGREGATION_ORDER_IS_CLEANER_BUT_EXACT_DUPLICATES_ARE_RARE_SO_E2E_REQUIRED"
+    "unique_groups": 10515,
+    "mean_sample_rm": {"mean_tv": 0.10457627351085345, "p95_tv": 0.35709961752096814},
+    "rm_weighted_mean_regret": {"mean_tv": 0.10243512317538261, "p95_tv": 0.3476518243551254},
+    "diagnosis": "REGRET_FIRST_TARGET_ORDER_MARGINAL_SAME_MEMORY_P95_PASS_E2E_REQUIRED"
   },
-  "direct_behavior_e2e_256": {
-    "workflow": 31431672631,
-    "mean_tv": 0.1425531655550003,
-    "p95_tv": 0.42685970664024353,
-    "mean_gate_pass": true,
-    "p95_gate_pass": false,
-    "surrogate_reference_behavior_fit_pass": false,
-    "theoretical_equivalence_claimed": false,
-    "diagnosis": "SMOOTHING_SIGNAL_STRONG_BUT_SURROGATE_NOT_PROMOTABLE"
-  },
-  "size1_five_iteration_factorial": {
-    "workflow": 31441110526,
+  "size1_damping_factorial_320": {
     "no_damping": {"mean_tv": 0.4388447701931, "p95_tv": 0.8787288665771484},
     "epsilon0_0_30_decay_0_50": {"mean_tv": 0.3953329920768738, "p95_tv": 0.7982872128486633},
-    "mean_ratio_tremble_to_no_damping": 0.90085,
-    "p95_ratio_tremble_to_no_damping": 0.90846,
-    "diagnosis": "DAMPING_ALONE_IS_BENEFICIAL_BUT_ENSEMBLING_REMAINS_THE_LARGER_EFFECT"
+    "diagnosis": "DAMPING_HAS_INDEPENDENT_BENEFIT_BUT_ENSEMBLING_IS_LARGER"
   },
-  "robust_policy_aggregation_same_memory_256": {
-    "workflow": 31440742014,
-    "evidence_commit": "b9a756af32341e7e6d51047ff584c94e606c8dce",
-    "mean_aggregation": {"mean_tv": 0.13742117002288864, "p95_tv": 0.3881133198738098},
-    "median_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
-    "diagnosis": "ROBUST_POLICY_AGGREGATION_NOT_MATERIAL",
-    "decision": "CLOSED"
+  "sign_fragility_same_memory": {
+    "source": "validation/R7_3_ADVANTAGE_FIT_SIGN_SENSITIVITY_256.json",
+    "hard_rm_pairwise_mean_approximately": 0.22,
+    "epsilon_floor_0_05_reduces_pairwise_mean_by_approximately": 0.10,
+    "epsilon_floor_0_10_reduces_pairwise_mean_by_approximately": 0.18,
+    "diagnosis": "NEAR_ZERO_REGRET_SIGN_SUPPORT_BOUNDARY_IS_MATERIAL"
   },
   "causal_state": {
     "first_advantage_fit_feedback_is_confirmed_causal_transition": true,
@@ -127,11 +117,10 @@
     "strategy_support_fragmentation_material": true,
     "shared_state_disagreement_material": true,
     "off_support_extrapolation_is_sole_tail_source": false,
-    "final_average_policy_is_primary_p95_source": false,
     "final_policy_ensemble_residual_reduction_material": true,
-    "policy_mixture_size4_durable_over_five_iterations": false,
+    "ordinary_direct_behavior_durable": false,
     "global_damping_size1_signal_material": true,
-    "regret_first_behavior_target_order_same_memory_p95_pass": true,
+    "near_zero_regret_sign_fragility_material": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
@@ -153,33 +142,34 @@
       "status": "PHYSICAL_320_RUNNING_AFTER_SMOKE_PASS",
       "epsilon_schedule": [0.30, 0.0, 0.0, 0.0]
     },
-    "direct_behavior_compounding_320": {
-      "workflow": 31441650915,
-      "status": "PHYSICAL_320_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Causal durability control only; not a promotable algorithm."
-    },
     "uncertainty_adaptive_damping_size4_320": {
       "workflow": 31442367579,
       "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
       "epsilon_scale_matrix": [0.50, 1.00],
       "epsilon_cap": 0.50
     },
-    "direct_behavior_aggregated_regret_horizon_matrix": {
+    "aggregated_regret_direct_behavior": {
       "workflow": 31444324235,
       "status": "SHORT_256_AND_DURABILITY_320_PHYSICAL_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Test LCFR-weighted mean regret per exact infoset before hard RM as a cleaner Direct Behavior target order. Non-promotable until semantic review."
+      "automatic_promotion_eligible": false
+    },
+    "regret_floor_policy_mixture_320": {
+      "workflow": 31444922236,
+      "status": "BUILD_REGRESSION_RUNNING_FOR_TWO_JOBS",
+      "epsilon_matrix": [0.05, 0.10],
+      "purpose": "Directly regularize the empirically fragile near-zero regret boundary before policy-mixture averaging."
     },
     "policy_mixture_compounding_320_reproducibility": {"workflow": 31440366909, "status": "PHYSICAL_320_RUNNING"}
   },
   "automation": {
     "durability_matrix_summary": {
-      "tool": "tools/summarize_r7_3_durability_matrix.py",
-      "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2",
-      "expected_candidate_rows": 12,
-      "behavior": "Auto-commit consolidated ranking only when all expected five-iteration evidence files exist; Direct Behavior variants excluded from automatic conservative promotion."
+      "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3",
+      "expected_candidate_rows": 14,
+      "trigger_architecture": "WORKFLOW_RUN_ON_SOURCE_WORKFLOW_COMPLETION",
+      "reason": "GitHub GITHUB_TOKEN evidence commits do not recursively trigger push workflows."
     },
     "fresh_run_reproducibility": {
-      "tool": "tools/check_r7_3_fresh_run_reproducibility.py",
+      "trigger_architecture": "WORKFLOW_RUN_ON_SOURCE_WORKFLOW_COMPLETION",
       "tolerance": 1e-9
     }
   },
@@ -189,6 +179,6 @@
       "reason": "Five-iteration size4 compounding failed durability; must not be triggered."
     }
   },
-  "next_physical_step": "Resolve the active five-iteration damping matrix and size8 short-horizon screen. Rank only mechanisms that beat both 0.2665907145 mean and 0.5670017600 p95 with frozen fit gates PASS at 5x64. The completed final-policy size4 ensemble is a useful residual layer (0.138377/0.368730 at 2x128) but should be stacked only on an upstream candidate that first proves five-iteration durability. The regret-first Direct Behavior target now has an E2E 2x128+5x64 horizon matrix running because its same-memory p95 reached 0.347652; it remains non-promotable without semantic/versioning review. No 640 escalation and no gate relaxation.",
+  "next_physical_step": "Resolve the active 5x64 matrix. Rank only fit-valid mechanisms that improve both 0.2665907145 mean and 0.5670017600 p95. Ordinary Direct Behavior is closed as a durable solution after 0.276185/0.828670. The aggregated-regret Direct Behavior remains a diagnostic because its target order is cleaner but theoretical equivalence is unproven. New regret-floor epsilon 0.05/0.10 jobs directly regularize the known near-zero sign boundary and must be compared with global tremble and uncertainty-adaptive damping. If an upstream durable candidate approaches but does not clear the frozen gates, then stack the proven final AveragePolicy size4 residual layer. Before any 640 run: freeze/version semantics, prove fresh-run reproducibility, and recertify continuous-vs-stop/restore/continue. No gate relaxation.",
   "ready_for_tables": false
 }
