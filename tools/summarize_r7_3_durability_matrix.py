@@ -22,7 +22,15 @@ EXPECTED = {
     "size4_temporal_w50": "validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w50_320.json",
     "size4_temporal_w75": "validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w75_320.json",
     "size4_first_transition_e30": "validation/R7_3_POLICY_MIXTURE_FIRST_TRANSITION_TREMBLE_E30_320.json",
+    "size4_uncertainty_s05": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s05_320.json",
+    "size4_uncertainty_s10": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s10_320.json",
     "direct_behavior_control": "validation/R7_3_DIRECT_BEHAVIOR_COMPOUNDING_320.json",
+    "direct_behavior_aggregated_regret": "validation/R7_3_DIRECT_BEHAVIOR_AGGREGATED_REGRET_320.json",
+}
+
+NON_PROMOTABLE_CONTROLS = {
+    "direct_behavior_control",
+    "direct_behavior_aggregated_regret",
 }
 
 
@@ -59,6 +67,7 @@ def _row(label: str, path: str, payload: dict):
         "p95_ratio_to_size4_no_damping": p95 / BASELINE["p95_tv"],
         "theoretical_equivalence_claimed": payload.get("theoretical_equivalence_claimed"),
         "production_policy_mapping_changed": payload.get("production_policy_mapping_changed"),
+        "automatic_promotion_eligible": label not in NON_PROMOTABLE_CONTROLS,
     }
 
 
@@ -79,7 +88,7 @@ def main() -> int:
 
     if pending:
         print(json.dumps({
-            "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V1",
+            "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2",
             "complete": False,
             "pending": pending,
             "completed_labels": [row["label"] for row in rows],
@@ -94,6 +103,7 @@ def main() -> int:
         "mean_ratio_to_size4_no_damping": 1.0,
         "p95_ratio_to_size4_no_damping": 1.0,
         "schema": "SPINCORE_R7_3_PARTIAL_EXACT_POLICY_MIXTURE_PAIRED_V1",
+        "automatic_promotion_eligible": True,
     })
     all_rows = [baseline_row] + rows
     fit_eligible = [r for r in rows if r["per_seed_fit_pass"]]
@@ -107,12 +117,9 @@ def main() -> int:
         key=lambda r: (r["p95_tv"], r["mean_tv"]),
     ) if durable_both_improved else None
 
-    # Direct Behavior is a causal control and cannot be auto-promoted because
-    # its algorithmic equivalence is explicitly unproven. Keep it in the table
-    # but exclude it from the conservative promotion shortlist.
     conservative = [
         r for r in durable_both_improved
-        if r["label"] != "direct_behavior_control"
+        if r["label"] not in NON_PROMOTABLE_CONTROLS
     ]
     conservative_best = min(
         conservative,
@@ -120,7 +127,7 @@ def main() -> int:
     ) if conservative else None
 
     payload = {
-        "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V1",
+        "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2",
         "complete": True,
         "frozen_gates": {
             "advantage_weighted_nrmse_max": 0.75,
@@ -134,11 +141,12 @@ def main() -> int:
         "best_both_improved": best_durable,
         "best_conservative_both_improved": conservative_best,
         "promotion_shortlist": conservative,
+        "non_promotable_controls": sorted(NON_PROMOTABLE_CONTROLS),
         "interpretation_note": (
             "Automatic evidence consolidation only. A row is not promoted merely by ranking first. "
             "Any new behavior semantics still require explicit algorithm versioning, strategic audit, "
             "and deterministic checkpoint/resume recertification before an acceptance-scale run. "
-            "Direct Behavior remains a causal smoothing control and is excluded from automatic "
+            "Direct Behavior variants remain causal/smoothing controls and are excluded from automatic "
             "conservative promotion because theoretical equivalence is not established."
         ),
         "acceptance_gate_changed": False,
