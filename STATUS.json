@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.18",
+  "version": "1.12.1-recovery.19",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "FIVE_ITERATION_DURABILITY_MATRIX_AND_SIZE8_TEMPORAL_COMPOSITION_PHYSICALLY_RUNNING",
+  "current_gate_status": "BEST_DURABLE_SIZE4_UNCERTAINTY_S10_NEAR_GATE_SIZE8_COMPOSITIONS_RUNNING",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -39,62 +39,65 @@
     "iterations": 5,
     "roots_per_seed": 320,
     "mean_tv": 0.2665907144546509,
-    "p50_tv": 0.24680466949939728,
     "p95_tv": 0.5670017600059509,
-    "max_tv": 0.9055466651916504,
-    "per_seed_fit_pass": true,
-    "decision": "NO_640_ESCALATION_UNTIL_DURABLE_UPSTREAM_WINNER"
+    "per_seed_fit_pass": true
   },
   "short_horizon_size8_policy_mixture_256": {
     "workflow": 31440425854,
     "evidence_commit": "bfe6d4845600c3eafed36c85c0113756763f6910",
     "mean_tv": 0.13961473107337952,
-    "p50_tv": 0.11208629608154297,
     "p95_tv": 0.329689085483551,
-    "max_tv": 0.6253685355186462,
     "per_seed_fit_pass": true,
     "cross_seed_pass": true,
-    "interpretation": "FIRST_CURRENT_GENERATION_SHORT_HORIZON_CANDIDATE_TO_CLEAR_BOTH_FROZEN_CROSS_SEED_GATES",
-    "decision": "PROMOTED_TO_MANDATORY_5X64_DURABILITY_NOT_640"
+    "decision": "MANDATORY_FIVE_ITERATION_DURABILITY_ONLY_NOT_640"
   },
   "completed_durability_candidates_320": {
     "size4_no_damping": {"mean_tv": 0.2665907144546509, "p95_tv": 0.5670017600059509, "fit_pass": true},
     "size4_decay_tremble_e15": {"mean_tv": 0.23188617825508118, "p95_tv": 0.47515368461608887, "fit_pass": true, "cross_seed_pass": false},
     "size4_decay_tremble_e30": {"mean_tv": 0.2178531289100647, "p95_tv": 0.457101970911026, "fit_pass": true, "cross_seed_pass": false},
     "size4_decay_tremble_e45": {"mean_tv": 0.21160729229450226, "p95_tv": 0.44856688380241394, "fit_pass": true, "cross_seed_pass": false},
-    "size1_no_damping": {"mean_tv": 0.4388447701931, "p95_tv": 0.8787288665771484, "cross_seed_pass": false},
-    "size1_decay_tremble_e30": {"mean_tv": 0.3953329920768738, "p95_tv": 0.7982872128486633, "cross_seed_pass": false},
-    "size4_temporal_w50": {
-      "mean_tv": 0.17991457879543304,
-      "p95_tv": 0.39547839760780334,
-      "max_tv": 0.7572255730628967,
-      "fit_pass": true,
-      "cross_seed_pass": false,
-      "mean_improvement_vs_baseline_fraction": 0.3251258768761901,
-      "p95_improvement_vs_baseline_fraction": 0.3025093980891528,
-      "interpretation": "BEST_COMPLETED_FIVE_ITERATION_CANDIDATE_SO_FAR_TEMPORAL_INERTIA_MATERIAL"
-    },
+    "size4_temporal_w50": {"mean_tv": 0.17991457879543304, "p95_tv": 0.39547839760780334, "fit_pass": true, "cross_seed_pass": false},
     "size4_temporal_w75": {"mean_tv": 0.22288520634174347, "p95_tv": 0.48167312145233154, "cross_seed_pass": false},
     "size4_first_transition_e30": {"mean_tv": 0.23940932750701904, "p95_tv": 0.5126305222511292, "cross_seed_pass": false},
-    "direct_behavior_control": {"mean_tv": 0.27618464827537537, "p95_tv": 0.8286698460578918, "cross_seed_pass": false, "decision": "CLOSED_AS_DURABLE_SOLUTION_CAUSAL_CONTROL_ONLY"},
-    "direct_behavior_aggregated_regret": {"mean_tv": 0.3073503375053406, "p95_tv": 0.914165735244751, "cross_seed_pass": false, "decision": "CLOSED_WORSE_THAN_ORDINARY_DIRECT_BEHAVIOR"}
+    "size4_uncertainty_s05": {
+      "workflow": 31442367579,
+      "mean_tv": 0.22464001178741455,
+      "p95_tv": 0.47133246064186096,
+      "fit_pass": true,
+      "cross_seed_pass": false
+    },
+    "size4_uncertainty_s10": {
+      "workflow": 31442367579,
+      "mean_tv": 0.16809812188148499,
+      "p50_tv": 0.1488216519355774,
+      "p95_tv": 0.35678043961524963,
+      "max_tv": 0.7808994650840759,
+      "fit_pass": true,
+      "cross_seed_pass": false,
+      "mean_improvement_vs_baseline_fraction": 0.3694527957834238,
+      "p95_improvement_vs_baseline_fraction": 0.3707595581641875,
+      "mean_gap_to_gate": 0.018098121881484997,
+      "p95_gap_to_gate": 0.006780439615249655,
+      "interpretation": "BEST_COMPLETED_FIVE_ITERATION_CANDIDATE_AND_P95_NEAR_GATE"
+    },
+    "size1_no_damping": {"mean_tv": 0.4388447701931, "p95_tv": 0.8787288665771484, "cross_seed_pass": false},
+    "size1_decay_tremble_e30": {"mean_tv": 0.3953329920768738, "p95_tv": 0.7982872128486633, "cross_seed_pass": false},
+    "direct_behavior_control": {"mean_tv": 0.27618464827537537, "p95_tv": 0.8286698460578918, "decision": "CLOSED_AS_DURABLE_SOLUTION"},
+    "direct_behavior_aggregated_regret": {"mean_tv": 0.3073503375053406, "p95_tv": 0.914165735244751, "decision": "CLOSED_WORSE_THAN_ORDINARY_DIRECT_BEHAVIOR"}
   },
   "best_completed_durable_candidate": {
-    "label": "size4_temporal_w50",
-    "mean_tv": 0.17991457879543304,
-    "p95_tv": 0.39547839760780334,
-    "mean_gap_to_gate": 0.029914578795433045,
-    "p95_gap_to_gate": 0.04547839760780335,
+    "label": "size4_uncertainty_s10",
+    "mean_tv": 0.16809812188148499,
+    "p95_tv": 0.35678043961524963,
+    "mean_gap_to_gate": 0.018098121881484997,
+    "p95_gap_to_gate": 0.006780439615249655,
+    "per_seed_fit_pass": true,
     "cross_seed_pass": false,
-    "decision": "KEEP_AS_PRIMARY_DURABILITY_REFERENCE_WHILE_SIZE8_COMPOSITIONS_RUN"
+    "decision": "PROMOTE_MECHANISM_TO_SIZE8_COMPOSITION_DURABILITY_NOT_640"
   },
   "final_policy_ensemble_residual_256": {
     "workflow": 31440493410,
-    "evidence_commit": "eb115121b9a4002615f3310767c89aebbfce05c9",
-    "size1": {"mean_tv": 0.17974971234798431, "p95_tv": 0.43464410305023193},
-    "size2": {"mean_tv": 0.1591653972864151, "p95_tv": 0.4047917127609253},
     "size4": {"mean_tv": 0.13837657868862152, "p95_tv": 0.36872994899749756},
-    "all_fit_gates_pass": true,
     "decision": "RESERVE_AS_DOWNSTREAM_LAYER_AFTER_UPSTREAM_DURABILITY_WINNER"
   },
   "causal_state": {
@@ -106,6 +109,7 @@
     "temporal_inertia_is_material": true,
     "ensemble_size_is_material_short_horizon": true,
     "global_damping_has_independent_benefit": true,
+    "uncertainty_adaptive_damping_is_strongest_completed_durable_mechanism": true,
     "near_zero_regret_sign_fragility_material": true,
     "ordinary_direct_behavior_durable": false,
     "raw_unique_root_scaling_paused": true,
@@ -116,9 +120,7 @@
       "workflow": 31446308103,
       "job": 93641202513,
       "status": "PHYSICAL_FIVE_ITERATION_DURABILITY_IN_PROGRESS_AFTER_BUILD_AND_SMOKE_PASS",
-      "ensemble_size": 8,
-      "iterations": 5,
-      "roots_per_seed": 320
+      "ensemble_size": 8
     },
     "regret_floor_policy_mixture_320": {
       "workflow": 31444922236,
@@ -126,50 +128,42 @@
       "status": "BOTH_PHYSICAL_FIVE_ITERATION_CANDIDATES_IN_PROGRESS_AFTER_BUILD_AND_SMOKE_PASS",
       "epsilon_matrix": [0.05, 0.10]
     },
-    "uncertainty_adaptive_damping_size4_320": {
-      "workflow": 31442367579,
-      "jobs": [93629545628, 93629545555],
-      "status": "BOTH_PHYSICAL_FIVE_ITERATION_CANDIDATES_IN_PROGRESS_AFTER_BUILD_AND_SMOKE_PASS",
-      "epsilon_scale_matrix": [0.50, 1.00],
-      "epsilon_cap": 0.50
-    },
     "policy_mixture_size8_temporal_w50_320": {
       "workflow": 31448623827,
       "job": 93648112606,
-      "head_commit": "8166871908f0580cd3170ebd038ca0ad83072951",
       "status": "PHYSICAL_FIVE_ITERATION_DURABILITY_IN_PROGRESS_AFTER_BUILD_REGRESSION_AND_SMOKE_PASS",
       "ensemble_size": 8,
-      "current_policy_weight": 0.50,
-      "exact_opponent_levels": 2,
-      "iterations": 5,
-      "roots_per_seed": 320,
-      "purpose": "Compose the strongest short-horizon mechanism (size8) with the strongest completed durability mechanism (temporal w50)."
+      "current_policy_weight": 0.50
+    },
+    "policy_mixture_size8_uncertainty_s10_320": {
+      "workflow": 31449546648,
+      "job": 93650858760,
+      "head_commit": "cad2a8425a552eb1def4fef5fbca36bc220555ea",
+      "status": "BUILD_AND_REGRESSION_IN_PROGRESS",
+      "ensemble_size": 8,
+      "epsilon_scale": 1.0,
+      "epsilon_cap": 0.50,
+      "purpose": "Compose the first short-horizon gate-passing ensemble size with the strongest completed five-iteration adaptive damping mechanism."
     }
   },
   "automation": {
-    "durability_matrix_summary": {
+    "base_durability_summary": {
       "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4",
-      "base_expected_candidate_rows": 15,
-      "base_expected_total_rows_including_baseline": 16,
-      "completed_base_candidate_rows_at_last_audit": 10,
-      "remaining_base_candidate_rows": 5,
-      "trigger_architecture": "WORKFLOW_RUN_ON_SOURCE_WORKFLOW_COMPLETION"
+      "expected_candidate_rows": 15,
+      "expected_total_rows_including_baseline": 16
     },
     "extended_durability_summary": {
-      "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V1",
-      "workflow_definition_commit": "f6c9f06496b39a083f802a748142d76df5b3c7e9",
-      "initial_validation_run": 31448885563,
-      "initial_validation_conclusion": "SUCCESS_WAITING_FOR_SIX_PHYSICAL_EVIDENCE_FILES",
-      "expected_candidate_rows": 16,
-      "expected_total_rows_including_baseline": 17,
-      "supplemental_labels": ["size8_temporal_w50"],
+      "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2",
+      "expected_candidate_rows": 17,
+      "expected_total_rows_including_baseline": 18,
+      "supplemental_labels": ["size8_temporal_w50", "size8_uncertainty_s10"],
       "trigger_architecture": "WORKFLOW_RUN_ON_ALL_SOURCE_WORKFLOW_COMPLETIONS"
     }
   },
   "prepared_but_blocked": {
-    "policy_mixture_size4_640": {"status": "DORMANT", "reason": "Five-iteration size4 compounding failed durability."},
-    "policy_mixture_size8_640": {"status": "NOT_CREATED_FOR_EXECUTION", "reason": "Short-horizon size8 passed, but mandatory five-iteration durability, reproducibility, semantic freezing and checkpoint/resume recertification must precede 640."}
+    "policy_mixture_size4_640": {"status": "DORMANT", "reason": "Five-iteration size4 no-damping failed durability."},
+    "policy_mixture_size8_640": {"status": "NOT_CREATED_FOR_EXECUTION", "reason": "Five-iteration winner selection, semantic freeze, reproducibility and checkpoint/resume recertification must precede 640."}
   },
-  "next_physical_step": "Resolve size8 5x64, regret-floor 5x64, uncertainty-damping 5x64, and size8+temporal-w50 5x64. The strongest completed durable reference is temporal-w50 at 0.179915/0.395478, about 32.5%/30.3% better than the size4 durability baseline but still outside frozen 0.15/0.35 gates. The extended consolidator is validated and will automatically rank all 16 candidates plus baseline when the six outstanding evidence files arrive. Do not escalate to 640 until a five-iteration fit-valid upstream winner is selected. If size8+temporal-w50 clears or nearly clears both gates, freeze/version those behavior semantics, prove fresh-process reproducibility and recertify continuous-vs-stop/restore/continue before acceptance scaling. No gate relaxation.",
+  "next_physical_step": "Resolve the remaining size8 no-damping, regret-floor, size8+temporal-w50 and size8+uncertainty-s10 five-iteration runs. Uncertainty scale1.0 is now the strongest completed durable size4 mechanism at 0.168098/0.356780 with all fit gates passing; it misses p95 by only 0.006780 and mean by 0.018098. Therefore size8+uncertainty-s10 was promoted directly to a 5x64 composition screen. If any fit-valid composition clears 0.15/0.35 at five iterations, freeze/version that exact behavior semantics, prove fresh-process reproducibility and recertify continuous-vs-stop/restore/continue before any 640 acceptance scaling. No gate relaxation.",
   "ready_for_tables": false
 }
