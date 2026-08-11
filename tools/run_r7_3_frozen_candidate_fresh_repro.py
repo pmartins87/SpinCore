@@ -126,6 +126,7 @@ def main() -> int:
             env.setdefault("SPINCORE_TORCH_THREADS", "2")
             env.setdefault("OMP_NUM_THREADS", "2")
             env.setdefault("MKL_NUM_THREADS", "2")
+            _run([sys.executable, "-m", "pytest", "-q", "python_tests"], cwd=worktree, env=env)
             temp_fresh = Path(td) / "fresh.json"
             _run(_runner_command(freeze, temp_fresh), cwd=worktree, env=env)
             fresh = json.loads(temp_fresh.read_text(encoding="utf-8"))
@@ -141,6 +142,8 @@ def main() -> int:
         "source_head_sha": source_head,
         "original_evidence_path": str(original_path),
         "fresh_evidence_path": str(args.fresh_out),
+        "source_cpp_regression_required": True,
+        "source_python_regression_required": True,
         "ignored_nondeterministic_keys": sorted(IGNORE_KEYS),
         "numeric_tolerance": 1e-9,
         "difference_count": len(diffs),
