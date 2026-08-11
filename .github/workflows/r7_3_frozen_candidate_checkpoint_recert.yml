@@ -1,0 +1,105 @@
+name: SpinCore R7.3 frozen candidate checkpoint recertification
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 frozen candidate fresh reproducibility'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recertify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout full current history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check prerequisite evidence
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json ] && \
+             [ -f validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json ]; then
+            python - <<'PY'
+          import json
+          f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          r=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert r['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1'
+          assert r['fresh_process_reproducible'] is True
+          assert r['source_head_sha']==f['source_head_sha']
+          assert r['original_evidence_commit_sha']==f['evidence_commit_sha']
+          PY
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo 'Frozen/fresh prerequisite evidence is not present yet.'
+          fi
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Run exact-source physical checkpoint recertification
+        if: steps.gate.outputs.run == 'true'
+        id: recert
+        continue-on-error: true
+        shell: bash
+        env:
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          python tools/run_r7_3_frozen_candidate_checkpoint_recert.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json \
+            --out validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json \
+            --split-iteration 3
+      - name: Persist checkpoint recertification evidence
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1","runner_failed_before_report":true,"checkpoint_resume_recertification_pass":false,"ready_for_640":false,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record frozen R7.3 candidate checkpoint recertification [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce checkpoint recertification gate
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json'))
+          assert d.get('checkpoint_resume_recertification_pass') is True, d
+          assert d.get('ready_for_640') is False
+          assert d.get('ready_for_tables') is False
+          print('frozen candidate checkpoint recertification PASS')
+          PY
