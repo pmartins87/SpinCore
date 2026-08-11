@@ -8,13 +8,15 @@ import summarize_r7_3_durability_matrix as base
 
 
 SUPPLEMENTAL = {
+    "size4_uncertainty_s125": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s125_320.json",
+    "size4_uncertainty_s150": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150_320.json",
     "size8_temporal_w50": "validation/R7_3_POLICY_MIXTURE_SIZE8_TEMPORAL_W50_320.json",
     "size8_uncertainty_s10": "validation/R7_3_POLICY_MIXTURE_SIZE8_UNCERTAINTY_S10_320.json",
 }
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Summarize the base R7.3 durability matrix plus promoted compositions")
+    ap = argparse.ArgumentParser(description="Summarize the base R7.3 durability matrix plus promoted compositions/calibrations")
     ap.add_argument("--repo-root", type=Path, default=Path("."))
     ap.add_argument("--out", type=Path, default=Path("validation/R7_3_DURABILITY_EXTENDED_SUMMARY.json"))
     args = ap.parse_args()
@@ -33,7 +35,7 @@ def main() -> int:
 
     if pending:
         print(json.dumps({
-            "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2",
+            "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V3",
             "complete": False,
             "pending": pending,
             "completed_labels": [row["label"] for row in rows],
@@ -70,7 +72,7 @@ def main() -> int:
         return min(seq, key=lambda r: (r["p95_tv"], r["mean_tv"])) if seq else None
 
     payload = {
-        "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2",
+        "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V3",
         "complete": True,
         "expected_candidate_rows": len(expected),
         "rows_including_baseline": len(rows) + 1,
@@ -90,9 +92,10 @@ def main() -> int:
         "promotion_shortlist": sorted(conservative, key=lambda r: (r["p95_tv"], r["mean_tv"])),
         "interpretation_note": (
             "Extended evidence consolidation keeps the original 15-candidate base matrix intact and adds "
-            "explicitly promoted compositions. Ranking is not promotion. Any changed behavior semantics "
-            "still require freeze/versioning, fresh-process reproducibility and deterministic checkpoint/"
-            "resume recertification before acceptance-scale execution."
+            "explicitly promoted compositions plus local calibration around the best durable mechanism. "
+            "Ranking is not promotion. Any changed behavior semantics still require freeze/versioning, "
+            "fresh-process reproducibility and deterministic checkpoint/resume recertification before "
+            "acceptance-scale execution."
         ),
         "acceptance_gate_changed": False,
         "ready_for_tables": False,
