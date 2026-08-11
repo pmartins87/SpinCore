@@ -54,51 +54,102 @@ Advantage approximation -> nonlinear regret map -> behavior
 -> next trajectories -> next strategy targets
 ```
 
-Support fragmentation and Advantage fit variance are material. Exact shared observations also retain substantial policy disagreement, so off-support extrapolation is not the sole tail source.
+Two upstream mechanisms are now independently demonstrated:
 
-## Current durability baseline
+1. **Advantage policy ensembling** reduces same-memory approximation/sign variance. Size 8 is the first current-generation short-horizon candidate to clear both frozen cross-seed gates.
+2. **Temporal inertia** reduces feedback-depth instability. A 50/50 current-vs-previous policy blend is the strongest completed five-iteration mechanism so far.
 
-The paired size-4 policy mixture is reproducibly strong at two iterations:
+Support fragmentation and exact shared-state disagreement remain material; off-support extrapolation is not the sole tail source.
+
+## Mandatory durability baseline
+
+Authoritative paired size-4 policy mixture:
 
 ```text
 2×128: mean 0.171940 / p95 0.413605, fits PASS
+5×64:  mean 0.266591 / p95 0.567002, fits PASS
 ```
 
-A fresh physical rerun reproduced those cross-seed values exactly.
+The five-iteration result is the relevant promotion baseline. Direct 640 escalation remains blocked.
 
-But at five iterations:
+## Completed five-iteration matrix results
+
+All values below are 5 CFR iterations × 64 roots = 320 roots/seed.
+
+| candidate | mean TV | p95 TV | status |
+|---|---:|---:|---|
+| size4 no damping | `0.266591` | `0.567002` | baseline |
+| size4 decay tremble e15 | `0.231886` | `0.475154` | FAIL |
+| size4 decay tremble e30 | `0.217853` | `0.457102` | FAIL |
+| size4 decay tremble e45 | `0.211607` | `0.448567` | FAIL |
+| size4 temporal blend w75 | `0.222885` | `0.481673` | FAIL |
+| **size4 temporal blend w50** | **`0.179915`** | **`0.395478`** | **best completed / FAIL** |
+| size4 first-transition-only e30 | `0.239409` | `0.512631` | FAIL |
+| size1 no damping | `0.438845` | `0.878729` | FAIL |
+| size1 decay tremble e30 | `0.395333` | `0.798287` | FAIL |
+| Direct Behavior control | `0.276185` | `0.828670` | closed |
+| Direct Behavior aggregated regret | `0.307350` | `0.914166` | closed |
+
+The temporal w50 candidate improves the authoritative size4 durability baseline by about **32.5% in mean TV** and **30.3% in p95 TV**, but still misses the frozen gates by approximately:
 
 ```text
-5×64: mean 0.266591 / p95 0.567002, fits PASS
+mean gap = 0.029915
+p95 gap  = 0.045478
 ```
 
-Therefore the size-4 640 workflow remains **DORMANT**. No candidate advances to 640 until it materially improves both five-iteration metrics.
+This makes temporal inertia the strongest durable causal result, but not yet an R7.3 pass.
 
-## Completed branches in the current durability phase
+## Size8 short-horizon milestone
 
-### Ordinary Direct Behavior — CLOSED as durable solution
-
-Short horizon:
+Workflow `31440425854`, evidence commit `bfe6d4845600c3eafed36c85c0113756763f6910`:
 
 ```text
-2×128: mean 0.142553 / p95 0.426860
+2×128
+mean TV = 0.139615  PASS <= 0.15
+p95 TV  = 0.329689  PASS <= 0.35
+fits    = PASS
 ```
 
-Five-iteration physical result, workflow `31441650915`, evidence `db8fe87f6fd07ca651825436173e2a1f01b89d40`:
+This is the first current-generation short-horizon candidate to clear both frozen cross-seed gates. It is **not** promoted to 640 because size4 already proved that two-iteration success can decay badly under five feedback iterations.
+
+Its mandatory 5×64 durability workflow is `31446308103` and is physically running after build/regression and smoke PASS.
+
+## Strongest composition now under test
+
+The two best demonstrated mechanisms target different parts of the failure:
+
+- size8: approximation/sign variance;
+- temporal w50: iteration-to-iteration feedback instability.
+
+Therefore commit `8166871908f0580cd3170ebd038ca0ad83072951` added a direct composition:
 
 ```text
-5×64: mean 0.276185
-      p50 0.205417
-      p95 0.828670
-      max 0.997361
-      frozen per-seed fits PASS
+partial-exact level 2
+Advantage policy-mixture size 8
+50% current policy + 50% previous-iteration policy
+5 iterations × 64 roots
+320 roots/seed
 ```
 
-The smooth surrogate's apparent short-horizon benefit is not durable; its p95 becomes far worse than the size-4 durability baseline. Ordinary Direct Behavior remains useful only as causal evidence and is closed as a production/durability path.
+Workflow `31448623827` is active. At the latest physical check, build/regression had passed and the size8 temporal-w50 smoke was running. This composition is supplemental to the original 15-candidate durability matrix and is the highest-priority follow-up because it combines the strongest short-horizon and strongest durable mechanisms without relaxing any gate.
 
-### Final AveragePolicy ensemble — useful residual layer
+## Remaining active base-matrix candidates
 
-After size-4 policy-mixture CFR at 2×128:
+- regret-floor policy mixture size4, epsilon `.05 / .10` — workflow `31444922236`; both physical 5×64 jobs running after build/smoke PASS;
+- uncertainty-adaptive damping size4, scale `.50 / 1.00`, cap `.50` — workflow `31442367579`; both physical 5×64 jobs running after build/smoke PASS;
+- size8 no-damping durability — workflow `31446308103`; physical 5×64 running.
+
+The base durability consolidator is `SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4`: 15 candidate rows plus the authoritative baseline. At the latest audit, 10 candidate rows were complete and 5 were still pending. The size8+temporal-w50 composition is intentionally outside that frozen base matrix and will be compared separately against its winner.
+
+## Completed/closed branches
+
+### Ordinary Direct Behavior — CLOSED
+
+It improved the short horizon but deteriorated badly at five iterations. The aggregated-regret variant was worse again. Both remain causal controls only; their algorithmic semantics are not production-equivalent Deep CFR behavior.
+
+### Final AveragePolicy ensemble — residual layer only
+
+After size4 policy-mixture CFR at 2×128:
 
 | final policy members | mean TV | p95 TV |
 |---:|---:|---:|
@@ -106,109 +157,12 @@ After size-4 policy-mixture CFR at 2×128:
 | 2 | `0.159165` | `0.404792` |
 | 4 | **`0.138377`** | **`0.368730`** |
 
-All fits PASS. The size-4 final ensemble crosses the mean gate and misses p95 by only `0.01873`, proving a meaningful downstream residual layer. It will be stacked only after an upstream mechanism first proves five-iteration durability; we do not spend a separate 5×64 run on it in isolation.
+The size4 final ensemble is useful downstream, but it will only be stacked after an upstream mechanism proves five-iteration durability.
 
-### Support-conditioned tail — off-support-only explanation rejected
-
-At paired 2×128:
-
-```text
-union A+B:                 mean 0.167806 / p95 0.411491
-exact shared observations: mean 0.181562 / p95 0.398769
-A-only exact support:       mean 0.187291 / p95 0.417470
-B-only exact support:       mean 0.157756 / p95 0.418203
-```
-
-Shared-state disagreement is itself material.
-
-### Robust member aggregation — CLOSED
-
-Median/trimmed policy aggregation worsened p95 relative to ordinary probability averaging. Rare single-member outliers are not the main mechanism.
-
-### Size-1 temporal damping factorial
-
-At 5×64:
-
-```text
-size1 no damping:       mean 0.438845 / p95 0.878729
-size1 epsilon0=.30:     mean 0.395333 / p95 0.798287
-```
-
-Damping independently improves both metrics by roughly 9–10%, while ensembling remains the larger effect. The active size-4 epsilon matrix determines their interaction.
-
-## Regret-target order and sign-boundary evidence
-
-### Aggregated-regret target order
-
-Same-memory diagnostic, workflow `31441852607`:
-
-```text
-10,565 raw Advantage samples
-10,515 unique exact observation/legal groups
-```
-
-Independent surrogate disagreement:
-
-| target order | mean TV | p95 TV |
-|---|---:|---:|
-| mean of sample-level RM | `0.104576` | `0.357100` |
-| **RM(LCFR-weighted mean regret)** | **`0.102435`** | **`0.347652`** |
-
-The regret-first order marginally clears the same-memory p95 gate. Because duplicate exact observations are rare, this is interpreted as a target-order clue rather than a compression result. Workflow `31444324235` is physically testing this construction at both 2×128 and 5×64. It remains non-equivalent/non-promotable without semantic review.
-
-### Near-zero regret sign fragility
-
-The prior same-memory sign-sensitivity experiment showed material hard-regret-map instability: independent fits disagree in legal regret sign/support, and a scale-relative positive-regret floor reduces pairwise policy TV post hoc.
-
-That evidence now has a direct 5×64 E2E test: workflow `31444922236` runs size-4 policy mixtures with:
-
-```text
-floor = epsilon * RMS(legal predicted advantages)
-epsilon = 0.05 / 0.10
-weight_a = max(advantage_a, 0) + floor
-```
-
-Each member is regularized before probability averaging. This acts exactly at the demonstrated nonlinear sign boundary rather than globally flattening all states. It is still an explicit algorithm change and cannot become production semantics without versioning/recertification.
-
-## Active five-iteration matrix
-
-Current physical experiments:
-
-- global decaying tremble size4: `epsilon0 0.15 / 0.30 / 0.45`, decay `.50` — `31441018067`;
-- previous-policy temporal blend size4: current weight `.50 / .75` — `31441224117`;
-- first-transition-only tremble size4: `[.30,0,0,0]` — `31441567261`;
-- uncertainty-adaptive damping size4: disagreement scale `.50 / 1.00`, cap `.50` — `31442367579`;
-- aggregated-regret Direct Behavior: 2×128 + 5×64 — `31444324235`;
-- regret-floor policy mixture size4: epsilon `.05 / .10` — `31444922236`;
-- fresh 320 size4 reproducibility copy — `31440366909`;
-- size8 policy mixture 2×128 — `31440425854`; any short-horizon win still needs its own 5×64 durability gate.
-
-## Automatic evidence control
-
-Durability consolidation is `SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3`. It waits for 14 candidate rows plus the authoritative baseline and ranks only fit-valid candidates that improve both baseline metrics.
-
-The workflows use `workflow_run` completion triggers rather than relying on evidence-file pushes made by `GITHUB_TOKEN`, because GitHub suppresses recursive workflow triggering from such pushes. The same fix was applied to fresh-run reproducibility consolidation.
-
-Direct Behavior variants are reported but excluded from conservative automatic promotion because theoretical equivalence is not established.
-
-## Promotion rule
-
-Before any mechanism advances to 640 it must:
-
-1. PASS every frozen per-seed fit gate;
-2. materially improve **both** mean and p95 versus `0.266591 / 0.567002` at 5×64;
-3. survive fresh-run reproducibility checks;
-4. be the smallest/interpretable mechanism among statistically comparable candidates;
-5. have changed behavior semantics explicitly frozen/versioned;
-6. pass deterministic continuous-vs-stop/restore/continue checkpoint recertification;
-7. keep frozen gates unchanged.
-
-If an upstream durable winner approaches but does not clear the frozen cross-seed gates, the already-proven final AveragePolicy size-4 residual ensemble is the next layer to stack.
-
-## Closed / deprioritized primary branches
+### Other closed/deprioritized primary branches
 
 - raw root scaling beyond 1280;
-- independent x8/x16 path multiplication as a standalone fix;
+- independent x8/x16 path multiplication as standalone fix;
 - common-path RNG;
 - antithetic x4;
 - exhaustive opponent expectation;
@@ -217,11 +171,24 @@ If an upstream durable winner approaches but does not clear the frozen cross-see
 - exact duplicate aggregation as standalone fix;
 - behavior-aware multistart selection;
 - raw Advantage ensemble 2/4 standalone;
-- final AveragePolicy ensemble standalone;
 - legal common-mode centering;
-- robust median/trimmed aggregation;
+- robust median/trimmed policy aggregation;
 - card/suit rewrite as dominant explanation;
-- ordinary Direct Behavior as a durable solution;
 - direct size4 policy-mixture 640 escalation.
+
+## Promotion rule
+
+Before any mechanism advances to 640 it must:
+
+1. PASS every frozen per-seed fit gate;
+2. materially improve **both** mean and p95 versus `0.266591 / 0.567002` at 5×64;
+3. preferably clear the frozen cross-seed gates at the same five-iteration horizon; if only narrowly outside, any downstream residual layer must be tested explicitly rather than assumed;
+4. survive fresh-process reproducibility checks;
+5. be the smallest/interpretable mechanism among statistically comparable candidates;
+6. have changed behavior semantics explicitly frozen/versioned;
+7. pass deterministic continuous-vs-stop/restore/continue checkpoint recertification;
+8. keep frozen gates unchanged.
+
+If size8+temporal-w50 clears or nearly clears both gates, the next phase is **semantic freeze + fresh-process reproducibility + checkpoint/resume recertification**, not immediate 640 scaling.
 
 `READY FOR TABLES = NO`.
