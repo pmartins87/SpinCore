@@ -33,6 +33,27 @@ def _overlay_targets(worktree: Path) -> tuple[Path, Path]:
     return worktree / HELPER_REL, worktree / WORKER_REL
 
 
+def _validate_fresh_prerequisite(freeze: dict, fresh: dict) -> None:
+    if freeze.get("schema") != FREEZE_SCHEMA:
+        raise ValueError("wrong semantic-freeze schema")
+    if fresh.get("schema") != FRESH_SCHEMA or fresh.get("fresh_process_reproducible") is not True:
+        raise ValueError("fresh-process reproducibility must pass before checkpoint recertification")
+    if int(fresh.get("difference_count", -1)) != 0:
+        raise ValueError("fresh-process report is not an exact zero-difference reproduction")
+    if str(fresh.get("source_head_sha")) != str(freeze.get("source_head_sha")):
+        raise ValueError("fresh reproducibility source head does not match semantic freeze")
+    if str(fresh.get("original_evidence_commit_sha")) != str(freeze.get("evidence_commit_sha")):
+        raise ValueError("fresh reproducibility evidence commit does not match semantic freeze")
+    if str(fresh.get("original_evidence_sha256")) != str(freeze.get("evidence_sha256")):
+        raise ValueError("fresh reproducibility evidence bytes do not match semantic freeze")
+    if fresh.get("behavior_semantic_id") != freeze.get("behavior_semantic_id"):
+        raise ValueError("fresh reproducibility behavior semantic id does not match semantic freeze")
+    if fresh.get("thread_environment_contract") != freeze.get("thread_environment_contract"):
+        raise ValueError("fresh reproducibility thread environment contract does not match semantic freeze")
+    if fresh.get("thread_environment_overrides_injected_by_certifier") is not False:
+        raise ValueError("fresh reproducibility used or does not disprove hidden certifier thread overrides")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Run checkpoint/resume recertification against the exact frozen R7.3 algorithm source")
     ap.add_argument("--freeze", type=Path, required=True)
@@ -43,14 +64,10 @@ def main() -> int:
 
     freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
     fresh = json.loads(args.fresh_report.read_text(encoding="utf-8"))
-    if freeze.get("schema") != FREEZE_SCHEMA:
-        raise SystemExit("wrong semantic-freeze schema")
-    if fresh.get("schema") != FRESH_SCHEMA or fresh.get("fresh_process_reproducible") is not True:
-        raise SystemExit("fresh-process reproducibility must pass before checkpoint recertification")
-    if str(fresh.get("source_head_sha")) != str(freeze.get("source_head_sha")):
-        raise SystemExit("fresh reproducibility source head does not match semantic freeze")
-    if str(fresh.get("original_evidence_commit_sha")) != str(freeze.get("evidence_commit_sha")):
-        raise SystemExit("fresh reproducibility evidence commit does not match semantic freeze")
+    try:
+        _validate_fresh_prerequisite(freeze, fresh)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     repo_root = Path(__file__).resolve().parents[1]
     helper = repo_root / HELPER_REL
@@ -105,6 +122,7 @@ def main() -> int:
     report["checkpoint_worker_overlay_sha256"] = _sha256(worker)
     report["checkpoint_worker_executed_from_frozen_worktree_overlay"] = True
     report["fresh_process_reproducibility_gate_passed_first"] = True
+    report["fresh_process_zero_difference_gate_passed_first"] = True
     report["source_cpp_regression_passed_before_recertification"] = True
     report["source_python_regression_passed_before_recertification"] = True
     report["ready_for_640"] = False
