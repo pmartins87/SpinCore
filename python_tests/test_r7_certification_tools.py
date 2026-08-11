@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 from pathlib import Path
 
@@ -42,6 +43,13 @@ def test_freeze_rejects_unbound_selected_parameter():
         freeze._require_bound_numeric(workflow, option="--epsilon-scale", variable="scale", value=1.25)
 
 
+def test_freeze_evidence_hash_is_byte_exact():
+    payload = b'{"r7_3_pass":true}\n'
+    assert freeze._sha256_bytes(payload) == hashlib.sha256(payload).hexdigest()
+    mutated = b'{"r7_3_pass":true} \n'
+    assert freeze._sha256_bytes(mutated) != freeze._sha256_bytes(payload)
+
+
 def test_fresh_repro_compare_ignores_only_clock_fields_and_uses_1e9_tolerance():
     a = {
         "generated_at_unix": 1.0,
@@ -75,3 +83,5 @@ def test_certification_contract_keeps_frozen_r7_3_thresholds():
     assert freeze.EXECUTION_CONTRACT["roots_per_iteration"] == 64
     assert freeze.EXECUTION_CONTRACT["exact_opponent_levels"] == 2
     assert freeze.EXECUTION_CONTRACT["reservoir_capacity"] == 100000
+    assert freeze.FREEZE_SCHEMA == "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
+    assert fresh.REPORT_SCHEMA == "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
