@@ -10,6 +10,7 @@ on:
       - 'SpinCore R7.3 first-transition-only policy-mixture damping'
       - 'SpinCore R7.3 Direct Behavior compounding control'
       - 'SpinCore R7.3 uncertainty-adaptive policy-mixture damping'
+      - 'SpinCore R7.3 uncertainty damping extension'
       - 'SpinCore R7.3 aggregated-regret Direct Behavior'
       - 'SpinCore R7.3 regret-floor policy-mixture durability'
       - 'SpinCore R7.3 size8 temporal-w50 durability'
@@ -59,11 +60,11 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('validation/R7_3_DURABILITY_EXTENDED_SUMMARY.json'))
-          assert d['schema']=='SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2'
+          assert d['schema']=='SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V3'
           assert d['complete'] is True
-          assert d['expected_candidate_rows']==17
-          assert d['rows_including_baseline']==18
-          assert len(d['rows'])==18
+          assert d['expected_candidate_rows']==19
+          assert d['rows_including_baseline']==20
+          assert len(d['rows'])==20
           assert d['acceptance_gate_changed'] is False
           assert d['ready_for_tables'] is False
           print('extended durability summary validation OK')
