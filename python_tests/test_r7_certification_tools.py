@@ -72,16 +72,19 @@ def test_fresh_repro_compare_ignores_only_clock_fields_and_uses_1e9_tolerance():
     assert diffs[0]["kind"] == "NUMBER"
 
 
-def test_certification_contract_keeps_frozen_r7_3_thresholds():
+def test_certification_contract_keeps_frozen_r7_3_thresholds_and_run_identity():
     assert freeze.FROZEN_GATES == {
         "advantage_weighted_nrmse_max": 0.75,
         "policy_weighted_mean_tv_max": 0.12,
         "cross_seed_mean_tv_max": 0.15,
         "cross_seed_p95_tv_max": 0.35,
     }
+    assert freeze.ALGORITHM_SEEDS == (20260829, 20260807)
     assert freeze.EXECUTION_CONTRACT["iterations"] == 5
     assert freeze.EXECUTION_CONTRACT["roots_per_iteration"] == 64
     assert freeze.EXECUTION_CONTRACT["exact_opponent_levels"] == 2
     assert freeze.EXECUTION_CONTRACT["reservoir_capacity"] == 100000
+    assert freeze.EXECUTION_CONTRACT["lr"] == 0.001
+    assert freeze.EXECUTION_CONTRACT["device"] == "cpu"
     assert freeze.FREEZE_SCHEMA == "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
     assert fresh.REPORT_SCHEMA == "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
