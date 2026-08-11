@@ -3,7 +3,7 @@ name: SpinCore R7.4 exact-source HU and 3H structural preflight
 on:
   workflow_run:
     workflows:
-      - 'SpinCore R7.3 certify selected winner through 640'
+      - 'SpinCore R7.4 SPINRULESET-4 HU invariance'
     types: [completed]
   workflow_dispatch:
 
@@ -20,49 +20,51 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Check corrected R7.3 acceptance prerequisite
+      - name: Resolve corrected R7.3 acceptance and accepted SPINRULESET-4 source
         id: gate
         shell: bash
         run: |
           set -euo pipefail
-          freeze=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
-          acceptance=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
-          if [ -f "$freeze" ] && [ -f "$acceptance" ]; then
-            python - <<'PY'
-          import json
+          python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'tools')
+          import r7_3_certification_evidence as resolver
+          import run_r7_4_domain_preflight as preflight
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
-          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
-          assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
-          assert f['thread_environment_contract']=='SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE'
-          assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
-          assert a['r7_3_640_acceptance_pass'] is True
-          assert a['r7_3_ready_to_advance_to_r7_4'] is True
-          assert a['per_seed_fit_pass'] is True
-          assert a['iterations']==5 and a['roots_per_iteration']==128 and a['roots_per_seed']==640
-          assert a['source_head_sha']==f['source_head_sha']
-          assert a['durability_evidence_commit_sha']==f['evidence_commit_sha']
-          assert a['thread_environment_contract']==f['thread_environment_contract']
-          assert a['thread_environment_overrides_injected_by_certifier'] is False
-          assert a['acceptance_gate_changed'] is False
+          rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          ra=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
+          try:
+              a,origin=resolver.resolve_valid_json(
+                  'validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json',
+                  validator=lambda d: preflight._validate_r7_3_prerequisites(f,d),
+                  repo_root='.',
+              )
+              source=preflight._validate_ruleset_prerequisites(f,a,rf,ra)
+          except Exception as exc:
+              print(f'R7.4 preflight remains gated: {exc}')
+              open('/tmp/r7_4_preflight_gate.txt','w').write('false')
+          else:
+              open('/tmp/R7_3_ACCEPTANCE_CORRECTED.json','w').write(json.dumps(a,indent=2,sort_keys=True)+'\n')
+              open('/tmp/r7_4_preflight_gate.txt','w').write('true')
+              print('accepted rules source',source)
+              print('R7.3 acceptance origin',origin)
           PY
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'run=false' >> "$GITHUB_OUTPUT"
-            echo 'Corrected R7.3 certified 640 acceptance is not present; R7.4 preflight remains gated.'
-          fi
+          echo "run=$(cat /tmp/r7_4_preflight_gate.txt)" >> "$GITHUB_OUTPUT"
       - name: Set up Python
         if: steps.gate.outputs.run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Run exact accepted-source HU/3H preflight
+      - name: Run frozen SPINRULESET-4 HU/3H preflight
         if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
           python tools/run_r7_4_domain_preflight.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
-            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --acceptance /tmp/R7_3_ACCEPTANCE_CORRECTED.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
             --out validation/R7_4_DOMAIN_PREFLIGHT.json
       - name: Persist structural R7.4 preflight
         if: steps.gate.outputs.run == 'true' && always()
@@ -77,7 +79,7 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -f "$out"
           if ! git diff --cached --quiet; then
-            git commit -m 'Record exact-source R7.4 HU and 3H structural preflight [r7-evidence-skip]'
+            git commit -m 'Record frozen-SPINRULESET-4 HU and 3H structural preflight [r7-evidence-skip]'
             for attempt in 1 2 3 4 5; do
               git pull --rebase origin main
               if git push origin HEAD:main; then break; fi
@@ -93,10 +95,11 @@ jobs:
           import json
           d=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
           assert d.get('r7_4_structural_preflight_pass') is True, d
-          assert d.get('r7_3_acceptance_hidden_thread_overrides_rejected') is True
-          assert d.get('preflight_worker_executed_from_accepted_worktree_overlay') is True
+          assert d.get('r7_4_hu_invariance_passed_first') is True
+          assert d.get('exact_frozen_r7_4_rules_source_used') is True
+          assert d.get('preflight_worker_executed_from_rules_worktree_overlay') is True
           assert d.get('r7_4_strategic_pilot_pass') is False
-          assert d.get('r7_4_strategic_gate_defined') is False
+          assert d.get('r7_4_strategic_gate_defined') is True
           assert d.get('ready_for_tables') is False
-          print('R7.4 exact-source structural preflight PASS; strategic/statistical pilot gate still requires explicit design.')
+          print('R7.4 frozen-SPINRULESET-4 structural preflight PASS; precommitted held-out gate may begin.')
           PY
