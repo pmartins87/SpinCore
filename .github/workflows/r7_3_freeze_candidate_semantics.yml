@@ -1,0 +1,68 @@
+name: SpinCore R7.3 candidate semantic freeze
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'validation/R7_3_WINNER_SELECTION.json'
+      - '.github/workflows/r7_3_freeze_candidate_semantics.yml'
+      - 'tools/freeze_r7_3_candidate_semantics.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Freeze selected gate-clearing semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          selection=validation/R7_3_WINNER_SELECTION.json
+          if [ ! -f "$selection" ]; then
+            echo 'No winner-selection file exists; preparation-only workflow exits without freezing.'
+            exit 0
+          fi
+          python tools/freeze_r7_3_candidate_semantics.py \
+            --selection "$selection" \
+            --out validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+      - name: Validate freeze output when selection exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f validation/R7_3_WINNER_SELECTION.json ]; then exit 0; fi
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          assert d['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert d['evidence_per_seed_fit_pass'] is True
+          assert d['evidence_r7_3_pass'] is True
+          assert d['acceptance_gate_changed'] is False
+          assert d['ready_for_640'] is False
+          assert d['ready_for_tables'] is False
+          print('candidate semantic freeze validation OK')
+          PY
+      - name: Persist freeze manifest
+        if: hashFiles('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Freeze selected R7.3 candidate semantics [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
