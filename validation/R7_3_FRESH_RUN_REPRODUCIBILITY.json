@@ -1,0 +1,131 @@
+{
+  "all_core_reproducible": true,
+  "complete": true,
+  "interpretation_note": "This is a fresh-process/fresh-run determinism check, not checkpoint/resume recertification. Generated timestamps and wall-clock durations are intentionally excluded. Core comparison requires exact structural/sample/node counters and cross-seed metrics within 1e-9. A new production behavior semantic still requires continuous-vs-stop/restore/continue testing.",
+  "ready_for_tables": false,
+  "schema": "SPINCORE_R7_3_FRESH_RUN_REPRODUCIBILITY_V1",
+  "targets": {
+    "policy_mixture_size4_256": {
+      "comparison": {
+        "counter_equality": [
+          {
+            "advantage_seen_equal": true,
+            "algorithm_seed": 20260829,
+            "nodes_equal": true,
+            "roots_equal": true,
+            "same_seed": true,
+            "strategy_seen_equal": true
+          },
+          {
+            "advantage_seen_equal": true,
+            "algorithm_seed": 20260807,
+            "nodes_equal": true,
+            "roots_equal": true,
+            "same_seed": true,
+            "strategy_seen_equal": true
+          }
+        ],
+        "cross_seed_abs_delta": {
+          "max_tv": 0.0,
+          "mean_tv": 0.0,
+          "p50_tv": 0.0,
+          "p95_tv": 0.0
+        },
+        "cross_seed_equal_within_1e_9": true,
+        "exact_sample_and_node_counters_equal": true,
+        "exact_structure_equal": true,
+        "fit_deltas": [
+          {
+            "algorithm_seed": 20260829,
+            "boolean_equal": {
+              "advantage_gate_pass": true,
+              "policy_gate_pass": true
+            },
+            "numeric_abs_delta": {
+              "ensemble_advantage_weighted_nrmse": 0.0,
+              "policy_weighted_mean_tv": 0.0
+            }
+          },
+          {
+            "algorithm_seed": 20260807,
+            "boolean_equal": {
+              "advantage_gate_pass": true,
+              "policy_gate_pass": true
+            },
+            "numeric_abs_delta": {
+              "ensemble_advantage_weighted_nrmse": 0.0,
+              "policy_weighted_mean_tv": 0.0
+            }
+          }
+        ],
+        "fresh_run_reproducible_core": true,
+        "max_cross_seed_abs_delta": 0.0
+      },
+      "newer_commit": "4e645d3d2e9012c678fb6eec7bd4169a98e9a9de",
+      "older_commit": "76ac23287961cc3c650a1b60891648bfe975b145",
+      "path": "validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_PAIRED_SIZE4_256.json",
+      "status": "COMPARED"
+    },
+    "policy_mixture_size4_320": {
+      "comparison": {
+        "counter_equality": [
+          {
+            "advantage_seen_equal": true,
+            "algorithm_seed": 20260829,
+            "nodes_equal": true,
+            "roots_equal": true,
+            "same_seed": true,
+            "strategy_seen_equal": true
+          },
+          {
+            "advantage_seen_equal": true,
+            "algorithm_seed": 20260807,
+            "nodes_equal": true,
+            "roots_equal": true,
+            "same_seed": true,
+            "strategy_seen_equal": true
+          }
+        ],
+        "cross_seed_abs_delta": {
+          "max_tv": 0.0,
+          "mean_tv": 0.0,
+          "p50_tv": 0.0,
+          "p95_tv": 0.0
+        },
+        "cross_seed_equal_within_1e_9": true,
+        "exact_sample_and_node_counters_equal": true,
+        "exact_structure_equal": true,
+        "fit_deltas": [
+          {
+            "algorithm_seed": 20260829,
+            "boolean_equal": {
+              "advantage_gate_pass": true,
+              "policy_gate_pass": true
+            },
+            "numeric_abs_delta": {
+              "ensemble_advantage_weighted_nrmse": 0.0,
+              "policy_weighted_mean_tv": 0.0
+            }
+          },
+          {
+            "algorithm_seed": 20260807,
+            "boolean_equal": {
+              "advantage_gate_pass": true,
+              "policy_gate_pass": true
+            },
+            "numeric_abs_delta": {
+              "ensemble_advantage_weighted_nrmse": 0.0,
+              "policy_weighted_mean_tv": 0.0
+            }
+          }
+        ],
+        "fresh_run_reproducible_core": true,
+        "max_cross_seed_abs_delta": 0.0
+      },
+      "newer_commit": "bf9d4c52788e36e4b6c9fbfa9491a1abcd786394",
+      "older_commit": "74cbd2f2816e6c7e452ab448f63acead47813d04",
+      "path": "validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_COMPOUNDING_320.json",
+      "status": "COMPARED"
+    }
+  }
+}
