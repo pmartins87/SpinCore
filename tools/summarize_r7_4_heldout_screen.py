@@ -8,7 +8,8 @@ from pathlib import Path
 SCHEMA = "SPINCORE_R7_4_HELDOUT_SCREEN_SUMMARY_V1"
 DOMAIN_SCHEMA = "SPINCORE_R7_4_HELDOUT_DOMAIN_STABILITY_V1"
 FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
-ACCEPT_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1"
+RULESET_FREEZE_SCHEMA = "SPINCORE_R7_4_RULESET_EXTENSION_V1"
+RULESET_ACCEPT_SCHEMA = "SPINCORE_R7_4_RULESET_ACCEPTANCE_V1"
 PREFLIGHT_SCHEMA = "SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1"
 
 
@@ -19,25 +20,33 @@ def _load(path: Path) -> dict:
     return data
 
 
-def _validate_domain(row: dict, *, domain: str, roots_per_iteration: int, freeze: dict) -> None:
+def _validate_domain(row: dict, *, domain: str, roots_per_iteration: int, freeze: dict, ruleset_freeze: dict) -> None:
     if row.get("schema") != DOMAIN_SCHEMA:
         raise ValueError(f"{domain}: wrong domain evidence schema")
     if row.get("domain") != domain:
         raise ValueError(f"{domain}: wrong domain label")
-    if row.get("accepted_r7_3_source_head_sha") != freeze.get("source_head_sha"):
-        raise ValueError(f"{domain}: source head differs from frozen winner")
-    if row.get("accepted_r7_3_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
+    if row.get("r7_3_certified_source_head_sha") != freeze.get("source_head_sha"):
+        raise ValueError(f"{domain}: certified R7.3 base source differs from frozen winner")
+    if row.get("r7_4_ruleset_source_head_sha") != ruleset_freeze.get("ruleset_extension_source_head_sha"):
+        raise ValueError(f"{domain}: R7.4 rules source differs from frozen SPINRULESET-4 source")
+    if row.get("r7_3_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
         raise ValueError(f"{domain}: evidence commit differs from frozen winner")
     if row.get("accepted_r7_3_behavior_semantic_id") != freeze.get("behavior_semantic_id"):
         raise ValueError(f"{domain}: behavior semantic differs from frozen winner")
-    if row.get("exact_accepted_algorithm_source_used") is not True:
-        raise ValueError(f"{domain}: exact accepted algorithm source not proven")
-    if row.get("pilot_worker_executed_from_accepted_worktree_overlay") is not True:
+    if row.get("r7_4_ruleset_schema") != "SPINRULESET-4":
+        raise ValueError(f"{domain}: wrong R7.4 ruleset schema")
+    if row.get("exact_frozen_r7_4_rules_source_used") is not True:
+        raise ValueError(f"{domain}: exact frozen R7.4 rules source not proven")
+    if row.get("pilot_worker_executed_from_rules_worktree_overlay") is not True:
         raise ValueError(f"{domain}: worker provenance incomplete")
     if row.get("thread_environment_overrides_injected_by_r7_4_orchestrator") is not False:
         raise ValueError(f"{domain}: hidden thread override detected or unproven")
-    if row.get("r7_3_640_acceptance_passed_first") is not True or row.get("r7_4_structural_preflight_passed_first") is not True:
-        raise ValueError(f"{domain}: prerequisite gates not proven")
+    if row.get("r7_3_640_acceptance_passed_first") is not True:
+        raise ValueError(f"{domain}: R7.3 640 prerequisite not proven")
+    if row.get("r7_4_ruleset_hu_invariance_passed_first") is not True:
+        raise ValueError(f"{domain}: SPINRULESET-4 HU invariance prerequisite not proven")
+    if row.get("r7_4_structural_preflight_passed_first") is not True:
+        raise ValueError(f"{domain}: structural preflight prerequisite not proven")
     if int(row.get("iterations", -1)) != 5:
         raise ValueError(f"{domain}: expected five CFR iterations")
     if int(row.get("roots_per_iteration", -1)) != int(roots_per_iteration):
@@ -63,7 +72,8 @@ def _validate_domain(row: dict, *, domain: str, roots_per_iteration: int, freeze
 def main() -> int:
     ap = argparse.ArgumentParser(description="Summarize the precommitted R7.4 held-out HU/3H stability screen")
     ap.add_argument("--freeze", type=Path, required=True)
-    ap.add_argument("--acceptance", type=Path, required=True)
+    ap.add_argument("--ruleset-freeze", type=Path, required=True)
+    ap.add_argument("--ruleset-acceptance", type=Path, required=True)
     ap.add_argument("--preflight", type=Path, required=True)
     ap.add_argument("--hu", type=Path, required=True)
     ap.add_argument("--three-handed", type=Path, required=True)
@@ -71,19 +81,24 @@ def main() -> int:
     args = ap.parse_args()
 
     freeze = _load(args.freeze)
-    acceptance = _load(args.acceptance)
+    ruleset_freeze = _load(args.ruleset_freeze)
+    ruleset_acceptance = _load(args.ruleset_acceptance)
     preflight = _load(args.preflight)
     hu = _load(args.hu)
     three = _load(args.three_handed)
     if freeze.get("schema") != FREEZE_SCHEMA or freeze.get("evidence_r7_3_pass") is not True:
         raise SystemExit("invalid semantic freeze")
-    if acceptance.get("schema") != ACCEPT_SCHEMA or acceptance.get("r7_3_640_acceptance_pass") is not True:
-        raise SystemExit("R7.3 640 acceptance missing")
+    if ruleset_freeze.get("schema") != RULESET_FREEZE_SCHEMA or ruleset_freeze.get("ruleset_schema") != "SPINRULESET-4":
+        raise SystemExit("invalid R7.4 ruleset freeze")
+    if ruleset_acceptance.get("schema") != RULESET_ACCEPT_SCHEMA or ruleset_acceptance.get("r7_4_rules_source_accepted") is not True:
+        raise SystemExit("SPINRULESET-4 source is not accepted")
+    if ruleset_acceptance.get("ruleset_extension_source_head_sha") != ruleset_freeze.get("ruleset_extension_source_head_sha"):
+        raise SystemExit("ruleset acceptance source differs from ruleset freeze")
     if preflight.get("schema") != PREFLIGHT_SCHEMA or preflight.get("r7_4_structural_preflight_pass") is not True:
         raise SystemExit("R7.4 structural preflight missing")
     try:
-        _validate_domain(hu, domain="TRUE_HEADS_UP", roots_per_iteration=128, freeze=freeze)
-        _validate_domain(three, domain="THREE_HANDED", roots_per_iteration=64, freeze=freeze)
+        _validate_domain(hu, domain="TRUE_HEADS_UP", roots_per_iteration=128, freeze=freeze, ruleset_freeze=ruleset_freeze)
+        _validate_domain(three, domain="THREE_HANDED", roots_per_iteration=64, freeze=freeze, ruleset_freeze=ruleset_freeze)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
     if list(hu.get("algorithm_seeds") or []) != list(three.get("algorithm_seeds") or []):
@@ -95,7 +110,9 @@ def main() -> int:
     payload = {
         "schema": SCHEMA,
         "behavior_semantic_id": freeze["behavior_semantic_id"],
-        "source_head_sha": freeze["source_head_sha"],
+        "r7_3_certified_source_head_sha": freeze["source_head_sha"],
+        "r7_4_ruleset_schema": "SPINRULESET-4",
+        "r7_4_ruleset_source_head_sha": ruleset_freeze["ruleset_extension_source_head_sha"],
         "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
         "heldout_algorithm_seeds": list(hu["algorithm_seeds"]),
         "r7_3_selection_seeds_reused": False,
