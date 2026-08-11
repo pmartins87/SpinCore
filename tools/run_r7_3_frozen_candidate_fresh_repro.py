@@ -14,6 +14,8 @@ from pathlib import Path
 
 FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
 REPORT_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
+THREAD_ENV_CONTRACT = "SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE"
+THREAD_ENV_KEYS = ("SPINCORE_TORCH_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS")
 
 RUNNERS = {
     "uncertainty_damping": "tools/run_r7_3_policy_mixture_uncertainty_damping.py",
@@ -31,6 +33,21 @@ def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> Non
 
 def _git_bytes(*args: str) -> bytes:
     return subprocess.check_output(["git", *args])
+
+
+def _source_execution_env(freeze: dict, base_env) -> dict[str, str]:
+    """Return the caller environment without inventing thread-count overrides.
+
+    The selected evidence workflows did not explicitly set PyTorch/OpenMP/MKL
+    thread variables. Exact-source certification must therefore inherit the
+    runner environment exactly as that source workflow did, rather than forcing
+    a new thread count such as 2. The semantic freeze records and validates this
+    contract before any fresh/checkpoint/640 execution is allowed.
+    """
+    contract = str(freeze.get("thread_environment_contract", ""))
+    if contract != THREAD_ENV_CONTRACT:
+        raise ValueError(f"unsupported frozen thread environment contract: {contract!r}")
+    return dict(base_env)
 
 
 def _compare(a, b, path="$") -> list[dict]:
@@ -134,11 +151,8 @@ def main() -> int:
             _run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"], cwd=worktree)
             _run(["cmake", "--build", "build", "-j2"], cwd=worktree)
             _run(["ctest", "--test-dir", "build", "--output-on-failure"], cwd=worktree)
-            env = dict(os.environ)
+            env = _source_execution_env(freeze, os.environ)
             env["PYTHONPATH"] = str(worktree / "python")
-            env.setdefault("SPINCORE_TORCH_THREADS", "2")
-            env.setdefault("OMP_NUM_THREADS", "2")
-            env.setdefault("MKL_NUM_THREADS", "2")
             _run([sys.executable, "-m", "pytest", "-q", "python_tests"], cwd=worktree, env=env)
             temp_fresh = Path(td) / "fresh.json"
             _run(_runner_command(freeze, temp_fresh), cwd=worktree, env=env)
@@ -159,6 +173,8 @@ def main() -> int:
         "fresh_evidence_path": str(args.fresh_out),
         "source_cpp_regression_required": True,
         "source_python_regression_required": True,
+        "thread_environment_contract": freeze["thread_environment_contract"],
+        "thread_environment_overrides_injected_by_certifier": False,
         "ignored_nondeterministic_keys": sorted(IGNORE_KEYS),
         "numeric_tolerance": 1e-9,
         "difference_count": len(diffs),
