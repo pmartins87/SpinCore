@@ -62,6 +62,10 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
 def _float_equal(a, b, tol=1e-12) -> bool:
     try:
         return abs(float(a) - float(b)) <= tol
@@ -81,6 +85,13 @@ def _show(ref: str, path: str) -> str:
         return _git("show", f"{ref}:{path}")
     except subprocess.CalledProcessError as exc:
         raise SystemExit(f"cannot read {path!r} at source ref {ref!r}") from exc
+
+
+def _show_bytes(ref: str, path: str) -> bytes:
+    try:
+        return subprocess.check_output(["git", "show", f"{ref}:{path}"])
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"cannot read {path!r} at evidence ref {ref!r}") from exc
 
 
 def _numeric_forms(value: object) -> set[str]:
@@ -126,11 +137,20 @@ def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params:
         _require_bound_numeric(text, option="--epsilon-scale", variable="scale", value=params["epsilon_scale"])
         _require_bound_numeric(text, option="--epsilon-cap", variable="cap", value=params["epsilon_cap"])
     elif kind == "temporal_blend":
-        # Current temporal workflows use either a direct number or $weight/current_weight.
         try:
             _require_bound_numeric(text, option="--current-weight", variable="weight", value=params["current_policy_weight"])
         except SystemExit:
             _require_bound_numeric(text, option="--current-weight", variable="current_weight", value=params["current_policy_weight"])
+
+
+def _resolve_commit(value: object, label: str) -> str:
+    text = str(value or "")
+    if len(text) < 12:
+        raise SystemExit(f"{label} is required")
+    try:
+        return _git("rev-parse", f"{text}^{{commit}}")
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"{label} is not present in repository history") from exc
 
 
 def main() -> int:
@@ -154,7 +174,14 @@ def main() -> int:
     evidence_path = Path(evidence_rel)
     if not evidence_path.is_file():
         raise SystemExit(f"evidence file not found: {evidence_rel}")
-    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+
+    resolved_evidence_commit = _resolve_commit(selection.get("evidence_commit_sha"), "evidence_commit_sha")
+    evidence_bytes_at_commit = _show_bytes(resolved_evidence_commit, evidence_rel)
+    current_evidence_bytes = evidence_path.read_bytes()
+    if evidence_bytes_at_commit != current_evidence_bytes:
+        raise SystemExit("current evidence file is not byte-identical to evidence_commit_sha")
+
+    evidence = json.loads(current_evidence_bytes.decode("utf-8"))
     if evidence.get("runner_failed_before_report"):
         raise SystemExit("candidate evidence contains runner failure marker")
     if evidence.get("schema") != contract["schema"]:
@@ -202,19 +229,16 @@ def main() -> int:
         if key not in block or not _float_equal(selected_params[key], block[key]):
             raise SystemExit(f"selection parameter {key} does not match evidence")
 
-    source_head = str(selection.get("source_head_sha", ""))
-    if len(source_head) < 12:
-        raise SystemExit("source_head_sha is required")
-    try:
-        resolved_head = _git("rev-parse", f"{source_head}^{{commit}}")
-    except subprocess.CalledProcessError as exc:
-        raise SystemExit("source_head_sha is not present in repository history") from exc
+    resolved_head = _resolve_commit(selection.get("source_head_sha"), "source_head_sha")
     source_workflow_run = int(selection.get("source_workflow_run", 0))
     if source_workflow_run <= 0:
         raise SystemExit("source_workflow_run is required")
     source_workflow_path = str(selection.get("source_workflow_path", ""))
     if not source_workflow_path.startswith(".github/workflows/"):
         raise SystemExit("source_workflow_path is required")
+
+    if subprocess.run(["git", "merge-base", "--is-ancestor", resolved_head, resolved_evidence_commit]).returncode != 0:
+        raise SystemExit("source_head_sha is not an ancestor of evidence_commit_sha")
 
     workflow_text = _show(resolved_head, source_workflow_path)
     _require_workflow_contract(workflow_text, ensemble_size, kind, selected_params)
@@ -249,7 +273,9 @@ def main() -> int:
         "primary_rng_contract": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
         "frozen_gates": dict(FROZEN_GATES),
         "evidence_path": evidence_rel,
-        "evidence_sha256": _sha256(evidence_path),
+        "evidence_commit_sha": resolved_evidence_commit,
+        "evidence_blob_sha": _object_sha(resolved_evidence_commit, evidence_rel),
+        "evidence_sha256": _sha256_bytes(current_evidence_bytes),
         "evidence_cross_seed": {
             "mean_tv": mean_tv,
             "p50_tv": float(cross.get("p50_tv", float("nan"))),
