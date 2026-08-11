@@ -1,0 +1,76 @@
+{
+  "acceptance_gate_changed": false,
+  "algorithm_seeds": [
+    20260829,
+    20260807
+  ],
+  "behavior_kind": "uncertainty_damping",
+  "behavior_semantic_id": "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
+  "candidate_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
+  "deck_formula": "seed*1000003 + global_root*97 + iteration",
+  "ensemble_size": 4,
+  "evidence_blob_sha": "60b35628ca41bfedf6fc6da3948c6b25560bcee5",
+  "evidence_commit_sha": "05c0976e8311874ea9a55f5c899a088abe3b4f00",
+  "evidence_cross_seed": {
+    "max_tv": 0.5646659135818481,
+    "mean_tv": 0.1329178512096405,
+    "p50_tv": 0.1155516654253006,
+    "p95_tv": 0.2854667007923126
+  },
+  "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s175_320.json",
+  "evidence_per_seed_fit_pass": true,
+  "evidence_r7_3_pass": true,
+  "evidence_sha256": "39bc31e0198df1ba8b6b5033271ae8da839ec32a80cd42a22b09647b9b1e130e",
+  "execution_contract": {
+    "advantage_chunk_steps": 256,
+    "advantage_fit_target": 0.5,
+    "advantage_max_steps_per_iteration": 4096,
+    "audit_size": 512,
+    "batch_size": 256,
+    "cross_seed_per_seed": 1024,
+    "device": "cpu",
+    "exact_opponent_levels": 2,
+    "iterations": 5,
+    "lr": 0.001,
+    "policy_chunk_steps": 256,
+    "policy_fit_target": 0.105,
+    "policy_max_steps": 16384,
+    "reservoir_capacity": 100000,
+    "roots_per_iteration": 64
+  },
+  "frozen_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "policy_weighted_mean_tv_max": 0.12
+  },
+  "label": "size4_uncertainty_s175",
+  "next_required_gates": [
+    "FRESH_PROCESS_REPRODUCIBILITY",
+    "CONTINUOUS_VS_STOP_RESTORE_CONTINUE_RECERTIFICATION"
+  ],
+  "params": {
+    "epsilon_cap": 0.5,
+    "epsilon_scale": 1.75
+  },
+  "primary_rng_contract": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
+  "ready_for_640": false,
+  "ready_for_tables": false,
+  "roots_per_seed": 320,
+  "schema": "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1",
+  "selection_schema": "SPINCORE_R7_3_WINNER_SELECTION_V1",
+  "source_git_objects": {
+    "base_ensemble_runner": "1bce11efcaa28084e9dc8c9d929e3e24d18f3fc3",
+    "cmake": "fc4d70e6fe5b847a5f13fc0d1b6dfdb14078a779",
+    "include_tree": "088819d2f9551e2510732aca15fe90572a6efd7a",
+    "partial_exact_collector": "8065a50d495b4514282ea03abaac9ee98bbdc090",
+    "python_tree": "6d4a48e5421f589cfff2d459514068a4c6087190",
+    "selected_runner": "bc7b6e09e2444aaa239878f305ce52446eb89c2d",
+    "source_workflow": "339bcddf7220b6ba086ac847ab09812c6a290194",
+    "src_tree": "ee24a2f831a5229e47d0718955bb2cda9b245aa9",
+    "tools_tree": "dcea79dd0b09f464e443129303d2605b907fcdac"
+  },
+  "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+  "source_workflow_path": ".github/workflows/r7_3_policy_mixture_uncertainty_extension2.yml",
+  "source_workflow_run": 31451592073
+}
