@@ -43,9 +43,9 @@ def pack_candidate_behavior(
 ) -> dict:
     """Serialize non-authoritative behavior-wrapper state into checkpoint ``extra``.
 
-    The authoritative R7 checkpoint already stores ``bundle.advantage``.  Candidate
+    The authoritative R7 checkpoint already stores ``bundle.advantage``. Candidate
     ensemble semantics add side members and, for temporal blending, a previous
-    ensemble.  This helper records those states without modifying the recovered
+    ensemble. This helper records those states without modifying the recovered
     ``SPINCORE_R7_CHECKPOINT_V2`` schema.
 
     ``current_models[0]`` must be the exact authoritative primary model object so
@@ -80,9 +80,17 @@ def _restore_advantage_models(
     config: NetworkConfig,
     device: str,
 ) -> list[AdvantageNet]:
+    """Restore side models without advancing the authoritative global torch RNG.
+
+    Constructing a torch module initializes parameters even though the stored
+    state_dict overwrites them immediately. Without the fork this hidden
+    initialization would consume the global CPU RNG after ``load_checkpoint``
+    restored it, making stop/restore/continue diverge from a continuous run.
+    """
     out: list[AdvantageNet] = []
     for state in states:
-        model = AdvantageNet(config).to(device)
+        with torch.random.fork_rng(devices=[]):
+            model = AdvantageNet(config).to(device)
         model.load_state_dict(dict(state))
         model.eval()
         out.append(model)
@@ -98,10 +106,13 @@ def restore_candidate_behavior_models(
 ) -> tuple[list[torch.nn.Module], list[torch.nn.Module], dict]:
     """Restore ensemble members around an already-restored authoritative primary model.
 
-    Returns ``(current_models, previous_models, metadata)``.  The first current
-    member is the exact ``primary_model`` object supplied by the caller.  A hard
+    Returns ``(current_models, previous_models, metadata)``. The first current
+    member is the exact ``primary_model`` object supplied by the caller. A hard
     equality check against the stored primary state fails closed if the base
     checkpoint and candidate-wrapper payload do not belong to the same state.
+
+    Restoring side members is RNG-neutral: module construction is isolated from
+    the global torch RNG restored by the authoritative checkpoint.
     """
     if payload.get("schema") != SCHEMA:
         raise ValueError("wrong candidate behavior checkpoint schema")
