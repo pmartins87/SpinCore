@@ -61,7 +61,7 @@ def test_pack_requires_authoritative_primary_as_member_zero():
     cfg = _cfg()
     primary = _adv(cfg, 1)
     other = _adv(cfg, 2)
-    with pytest.raises(ValueError, match="current_models\[0\]"):
+    with pytest.raises(ValueError, match=r"current_models\[0\]"):
         pack_candidate_behavior(
             kind="uncertainty_s10",
             primary_model=primary,
