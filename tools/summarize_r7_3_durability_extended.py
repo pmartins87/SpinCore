@@ -10,6 +10,10 @@ import summarize_r7_3_durability_matrix as base
 SUPPLEMENTAL = {
     "size4_uncertainty_s125": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s125_320.json",
     "size4_uncertainty_s150": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150_320.json",
+    "size4_uncertainty_s175": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s175_320.json",
+    "size4_uncertainty_s200": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s200_320.json",
+    "size4_uncertainty_s150c65": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150c65_320.json",
+    "size4_uncertainty_s150c80": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s150c80_320.json",
     "size8_temporal_w50": "validation/R7_3_POLICY_MIXTURE_SIZE8_TEMPORAL_W50_320.json",
     "size8_uncertainty_s10": "validation/R7_3_POLICY_MIXTURE_SIZE8_UNCERTAINTY_S10_320.json",
 }
@@ -35,7 +39,7 @@ def main() -> int:
 
     if pending:
         print(json.dumps({
-            "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V3",
+            "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V4",
             "complete": False,
             "pending": pending,
             "completed_labels": [row["label"] for row in rows],
@@ -72,7 +76,7 @@ def main() -> int:
         return min(seq, key=lambda r: (r["p95_tv"], r["mean_tv"])) if seq else None
 
     payload = {
-        "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V3",
+        "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V4",
         "complete": True,
         "expected_candidate_rows": len(expected),
         "rows_including_baseline": len(rows) + 1,
@@ -92,7 +96,7 @@ def main() -> int:
         "promotion_shortlist": sorted(conservative, key=lambda r: (r["p95_tv"], r["mean_tv"])),
         "interpretation_note": (
             "Extended evidence consolidation keeps the original 15-candidate base matrix intact and adds "
-            "explicitly promoted compositions plus local calibration around the best durable mechanism. "
+            "explicitly promoted compositions plus local scale/cap calibration around the best durable uncertainty mechanism. "
             "Ranking is not promotion. Any changed behavior semantics still require freeze/versioning, "
             "fresh-process reproducibility and deterministic checkpoint/resume recertification before "
             "acceptance-scale execution."
