@@ -1,0 +1,118 @@
+name: SpinCore R7.3 uncertainty damping extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_policy_mixture_uncertainty_extension.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: s125
+            scale: '1.25'
+          - label: s150
+            scale: '1.50'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+      - name: Smoke uncertainty extension
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'; scale='${{ matrix.scale }}'
+          python tools/run_r7_3_policy_mixture_uncertainty_damping.py \
+            --solver build/libspincore_solver_c.so \
+            --out "/tmp/R7_3_UNCERTAINTY_${label}_SMOKE.json" \
+            --epsilon-scale "$scale" --epsilon-cap 0.50 \
+            --ensemble-size 4 --exact-opponent-levels 2 \
+            --iterations 5 --roots-per-iteration 1 \
+            --advantage-chunk-steps 8 --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 --policy-chunk-steps 8 --policy-max-steps 8 \
+            --policy-fit-target 10 --batch-size 16 --audit-size 32 \
+            --cross-seed-per-seed 16 --reservoir-capacity 5000
+          python - "$label" "$scale" <<'PY'
+          import json,sys
+          label,scale=sys.argv[1],float(sys.argv[2])
+          d=json.load(open(f'/tmp/R7_3_UNCERTAINTY_{label}_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_V1'
+          assert d['ensemble_size']==4 and d['iterations']==5
+          assert abs(d['uncertainty_damping']['epsilon_scale']-scale)<1e-12
+          assert abs(d['uncertainty_damping']['epsilon_cap']-0.50)<1e-12
+          assert d['extra_members_perturb_primary_rng'] is False
+          assert d['ready_for_tables'] is False
+          print('uncertainty extension smoke OK',label)
+          PY
+      - name: Run physical five-iteration uncertainty extension
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'; scale='${{ matrix.scale }}'
+          python tools/run_r7_3_policy_mixture_uncertainty_damping.py \
+            --solver build/libspincore_solver_c.so \
+            --out "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_${label}_320.json" \
+            --epsilon-scale "$scale" --epsilon-cap 0.50 \
+            --ensemble-size 4 --exact-opponent-levels 2 \
+            --iterations 5 --roots-per-iteration 64 \
+            --advantage-chunk-steps 256 --advantage-max-steps-per-iteration 4096 \
+            --advantage-fit-target 0.50 --policy-chunk-steps 256 --policy-max-steps 16384 \
+            --policy-fit-target 0.105 --batch-size 256 --audit-size 512 \
+            --cross-seed-per-seed 1024 --reservoir-capacity 100000
+      - name: Persist uncertainty-extension evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'; scale='${{ matrix.scale }}'
+          out="validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_${label}_320.json"
+          if [ ! -f "$out" ]; then
+            printf '{"schema":"SPINCORE_R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_V1","ensemble_size":4,"epsilon_scale":%s,"runner_failed_before_report":true,"ready_for_tables":false}\n' "$scale" > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m "Record R7.3 uncertainty ${label} durability 320 [r7-evidence-skip]"
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
