@@ -1,0 +1,156 @@
+name: SpinCore R7.4 three-handed 640 confirmation
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.4 held-out HU and 3H stability screen'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-4-three-handed-640-confirmation
+  cancel-in-progress: false
+
+jobs:
+  confirmation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check held-out screen authorization
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          freeze=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+          acceptance=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+          preflight=validation/R7_4_DOMAIN_PREFLIGHT.json
+          screen=validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
+          if [ -f "$freeze" ] && [ -f "$acceptance" ] && [ -f "$preflight" ] && [ -f "$screen" ]; then
+            python - <<'PY'
+          import json
+          f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          p=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
+          s=json.load(open('validation/R7_4_HELDOUT_SCREEN_SUMMARY.json'))
+          assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
+          assert a['r7_3_640_acceptance_pass'] is True
+          assert p['schema']=='SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1'
+          assert p['r7_4_structural_preflight_pass'] is True
+          assert s['schema']=='SPINCORE_R7_4_HELDOUT_SCREEN_SUMMARY_V1'
+          assert s['r7_4_heldout_screen_pass'] is True
+          assert s['three_handed_640_confirmation_required'] is True
+          assert s['source_head_sha']==f['source_head_sha']==a['source_head_sha']==p['r7_3_source_head_sha']
+          assert s['durability_evidence_commit_sha']==f['evidence_commit_sha']==a['durability_evidence_commit_sha']==p['r7_3_durability_evidence_commit_sha']
+          assert s['r7_3_selection_seeds_reused'] is False
+          assert s['ready_for_tables'] is False
+          PY
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo 'R7.4 3H 640 confirmation remains gated.'
+          fi
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Run exact-accepted-source 3H 640 confirmation
+        if: steps.gate.outputs.run == 'true'
+        id: physical
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/run_r7_4_stability_pilot.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
+            --domain THREE_HANDED \
+            --roots-per-iteration 128 \
+            --out validation/R7_4_HELDOUT_3H_640_CONFIRMATION.json
+      - name: Persist 3H confirmation evidence
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_4_HELDOUT_3H_640_CONFIRMATION.json
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_4_HELDOUT_DOMAIN_STABILITY_V1","domain":"THREE_HANDED","roots_per_iteration":128,"runner_failed_before_report":true,"r7_4_domain_stability_pass":false,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record R7.4 three-handed 640 confirmation [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Materialize finite R7.4 final gate
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/finalize_r7_4_gate.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --screen validation/R7_4_HELDOUT_SCREEN_SUMMARY.json \
+            --three-handed-confirmation validation/R7_4_HELDOUT_3H_640_CONFIRMATION.json \
+            --out validation/R7_4_FINAL_GATE.json
+      - name: Persist final R7.4 gate
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_4_FINAL_GATE.json
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_4_FINAL_GATE_V1","runner_failed_before_report":true,"r7_4_pass":false,"r7_4_ready_to_advance_to_r8":false,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record finite R7.4 final gate [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce finite R7.4 gate
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_4_FINAL_GATE.json'))
+          assert d['schema']=='SPINCORE_R7_4_FINAL_GATE_V1'
+          assert d['hu_heldout_640_pass'] is True, d
+          assert d['three_handed_heldout_320_screen_pass'] is True, d
+          assert d['three_handed_heldout_640_confirmation']['pass'] is True, d
+          assert d['r7_4_pass'] is True, d
+          assert d['r7_4_ready_to_advance_to_r8'] is True
+          assert d['acceptance_gate_changed'] is False
+          assert d['ready_for_tables'] is False
+          print('R7.4 PASS; R8 may begin. READY FOR TABLES remains NO.')
+          PY
