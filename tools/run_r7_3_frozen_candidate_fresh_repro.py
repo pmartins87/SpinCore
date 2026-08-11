@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -26,6 +27,10 @@ IGNORE_KEYS = {"generated_at_unix", "duration_seconds"}
 def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> None:
     print("+", " ".join(cmd), flush=True)
     subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def _git_bytes(*args: str) -> bytes:
+    return subprocess.check_output(["git", *args])
 
 
 def _compare(a, b, path="$") -> list[dict]:
@@ -108,8 +113,16 @@ def main() -> int:
     if kind not in RUNNERS:
         raise SystemExit(f"unsupported frozen behavior kind: {kind!r}")
 
-    original_path = Path(str(freeze["evidence_path"]))
-    original = json.loads(original_path.read_text(encoding="utf-8"))
+    evidence_path = str(freeze["evidence_path"])
+    evidence_commit = str(freeze.get("evidence_commit_sha", ""))
+    if len(evidence_commit) < 12:
+        raise SystemExit("semantic freeze does not pin evidence_commit_sha")
+    original_bytes = _git_bytes("show", f"{evidence_commit}:{evidence_path}")
+    expected_sha256 = str(freeze.get("evidence_sha256", ""))
+    actual_sha256 = hashlib.sha256(original_bytes).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise SystemExit("immutable evidence bytes do not match semantic-freeze SHA-256")
+    original = json.loads(original_bytes.decode("utf-8"))
     source_head = str(freeze["source_head_sha"])
 
     args.fresh_out.parent.mkdir(parents=True, exist_ok=True)
@@ -140,7 +153,9 @@ def main() -> int:
         "label": freeze["label"],
         "behavior_semantic_id": freeze["behavior_semantic_id"],
         "source_head_sha": source_head,
-        "original_evidence_path": str(original_path),
+        "original_evidence_path": evidence_path,
+        "original_evidence_commit_sha": evidence_commit,
+        "original_evidence_sha256": actual_sha256,
         "fresh_evidence_path": str(args.fresh_out),
         "source_cpp_regression_required": True,
         "source_python_regression_required": True,
