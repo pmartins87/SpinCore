@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+TOOLS = ROOT / "tools"
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
 
 
 def _load(name: str, rel: str):
@@ -20,6 +24,14 @@ def _load(name: str, rel: str):
 
 freeze = _load("freeze_r7_3_candidate_semantics_test", "tools/freeze_r7_3_candidate_semantics.py")
 fresh = _load("run_r7_3_frozen_candidate_fresh_repro_test", "tools/run_r7_3_frozen_candidate_fresh_repro.py")
+checkpoint_orchestrator = _load(
+    "run_r7_3_frozen_candidate_checkpoint_recert_test",
+    "tools/run_r7_3_frozen_candidate_checkpoint_recert.py",
+)
+acceptance640 = _load(
+    "run_r7_3_frozen_candidate_640_acceptance_test",
+    "tools/run_r7_3_frozen_candidate_640_acceptance.py",
+)
 
 
 def test_freeze_accepts_direct_and_matrix_bound_uncertainty_parameters():
@@ -88,3 +100,5 @@ def test_certification_contract_keeps_frozen_r7_3_thresholds_and_run_identity():
     assert freeze.EXECUTION_CONTRACT["device"] == "cpu"
     assert freeze.FREEZE_SCHEMA == "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
     assert fresh.REPORT_SCHEMA == "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
+    assert checkpoint_orchestrator.RECERT_SCHEMA == "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1"
+    assert acceptance640.REPORT_SCHEMA == "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1"
