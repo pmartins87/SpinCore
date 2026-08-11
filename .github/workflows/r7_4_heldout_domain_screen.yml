@@ -25,37 +25,33 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Check certified R7.3 and structural R7.4 prerequisites
+      - name: Check accepted SPINRULESET-4 and structural R7.4 prerequisites
         id: check
         shell: bash
         run: |
           set -euo pipefail
-          freeze=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
-          acceptance=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
-          preflight=validation/R7_4_DOMAIN_PREFLIGHT.json
-          if [ -f "$freeze" ] && [ -f "$acceptance" ] && [ -f "$preflight" ]; then
-            python - <<'PY'
+          python - <<'PY'
           import json
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
-          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          ra=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
           p=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
           assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
-          assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
-          assert a['r7_3_640_acceptance_pass'] is True
-          assert a['r7_3_ready_to_advance_to_r7_4'] is True
-          assert a['thread_environment_overrides_injected_by_certifier'] is False
+          assert rf['schema']=='SPINCORE_R7_4_RULESET_EXTENSION_V1'
+          assert rf['ruleset_schema']=='SPINRULESET-4'
+          assert ra['schema']=='SPINCORE_R7_4_RULESET_ACCEPTANCE_V1'
+          assert ra['hu_invariance_pass'] is True
+          assert ra['r7_4_rules_source_accepted'] is True
           assert p['schema']=='SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1'
           assert p['r7_4_structural_preflight_pass'] is True
-          assert p['exact_accepted_solver_source_used'] is True
-          assert p['preflight_worker_executed_from_accepted_worktree_overlay'] is True
-          assert p['r7_3_source_head_sha']==f['source_head_sha']==a['source_head_sha']
-          assert p['r7_3_durability_evidence_commit_sha']==f['evidence_commit_sha']==a['durability_evidence_commit_sha']
+          assert p['r7_4_hu_invariance_passed_first'] is True
+          assert p['exact_frozen_r7_4_rules_source_used'] is True
+          assert p['preflight_worker_executed_from_rules_worktree_overlay'] is True
+          assert p['r7_4_rules_source_head_sha']==rf['ruleset_extension_source_head_sha']==ra['ruleset_extension_source_head_sha']
+          assert p['r7_3_certified_source_head_sha']==f['source_head_sha']==rf['base_r7_3_source_head_sha']
+          assert p['r7_3_durability_evidence_commit_sha']==f['evidence_commit_sha']==rf['base_r7_3_evidence_commit_sha']
           PY
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'run=false' >> "$GITHUB_OUTPUT"
-            echo 'R7.4 held-out screen remains gated.'
-          fi
+          echo 'run=true' >> "$GITHUB_OUTPUT"
 
   domain:
     needs: gate
@@ -91,7 +87,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
           python -m pip install pytest
-      - name: Run exact-accepted-source held-out domain pilot
+      - name: Run frozen-SPINRULESET-4 held-out domain pilot
         id: physical
         continue-on-error: true
         shell: bash
@@ -104,6 +100,8 @@ jobs:
           python tools/run_r7_4_stability_pilot.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
             --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
             --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
             --domain "$DOMAIN" \
             --roots-per-iteration "$ROOTS" \
@@ -149,7 +147,8 @@ jobs:
           set -euo pipefail
           python tools/summarize_r7_4_heldout_screen.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
-            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
             --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
             --hu validation/R7_4_HELDOUT_HU_640.json \
             --three-handed validation/R7_4_HELDOUT_3H_320.json \
