@@ -50,6 +50,7 @@ jobs:
           d=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
           assert d['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
           assert d['evidence_r7_3_pass'] is True
+          assert d['thread_environment_contract']=='SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE'
           assert d['ready_for_640'] is False
           assert d['ready_for_tables'] is False
           PY
@@ -97,10 +98,6 @@ jobs:
         id: physical
         continue-on-error: true
         shell: bash
-        env:
-          SPINCORE_TORCH_THREADS: '2'
-          OMP_NUM_THREADS: '2'
-          MKL_NUM_THREADS: '2'
         run: |
           python tools/run_r7_3_frozen_candidate_fresh_repro.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
@@ -136,6 +133,7 @@ jobs:
           import json
           d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
           assert d.get('fresh_process_reproducible') is True, d
+          assert d.get('thread_environment_overrides_injected_by_certifier') is False
           assert d.get('ready_for_640') is False
           PY
 
@@ -164,10 +162,6 @@ jobs:
         id: physical
         continue-on-error: true
         shell: bash
-        env:
-          SPINCORE_TORCH_THREADS: '2'
-          OMP_NUM_THREADS: '2'
-          MKL_NUM_THREADS: '2'
         run: |
           python tools/run_r7_3_frozen_candidate_checkpoint_recert.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
@@ -202,6 +196,8 @@ jobs:
           import json
           d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json'))
           assert d.get('checkpoint_resume_recertification_pass') is True, d
+          assert d.get('thread_environment_overrides_injected_by_certifier') is False
+          assert d.get('checkpoint_worker_executed_from_frozen_worktree_overlay') is True
           assert d.get('ready_for_640') is False
           PY
 
@@ -230,10 +226,6 @@ jobs:
         id: physical
         continue-on-error: true
         shell: bash
-        env:
-          SPINCORE_TORCH_THREADS: '2'
-          OMP_NUM_THREADS: '2'
-          MKL_NUM_THREADS: '2'
         run: |
           python tools/run_r7_3_frozen_candidate_640_acceptance.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
@@ -272,6 +264,7 @@ jobs:
           d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
           assert d.get('r7_3_640_acceptance_pass') is True, d
           assert d.get('r7_3_ready_to_advance_to_r7_4') is True
+          assert d.get('thread_environment_overrides_injected_by_certifier') is False
           assert d.get('ready_for_tables') is False
           print('R7.3 certified winner 640 PASS; R7.4 may begin')
           PY
