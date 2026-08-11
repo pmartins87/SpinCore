@@ -63,11 +63,8 @@ def main() -> int:
             _run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"], cwd=worktree)
             _run(["cmake", "--build", "build", "-j2"], cwd=worktree)
             _run(["ctest", "--test-dir", "build", "--output-on-failure"], cwd=worktree)
-            env = dict(os.environ)
+            env = fresh_runner._source_execution_env(freeze, os.environ)
             env["PYTHONPATH"] = os.pathsep.join([str(worktree / "python"), str(worktree / "tools")])
-            env.setdefault("SPINCORE_TORCH_THREADS", "2")
-            env.setdefault("OMP_NUM_THREADS", "2")
-            env.setdefault("MKL_NUM_THREADS", "2")
             _run([sys.executable, "-m", "pytest", "-q", "python_tests"], cwd=worktree, env=env)
             temp_evidence = Path(td) / "acceptance.json"
             _run(fresh_runner._runner_command(acceptance_freeze, temp_evidence), cwd=worktree, env=env)
@@ -101,6 +98,8 @@ def main() -> int:
         "source_head_sha": source_head,
         "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
         "acceptance_evidence_path": str(args.evidence_out),
+        "thread_environment_contract": freeze["thread_environment_contract"],
+        "thread_environment_overrides_injected_by_certifier": False,
         "iterations": 5,
         "roots_per_iteration": 128,
         "roots_per_seed": 640,
