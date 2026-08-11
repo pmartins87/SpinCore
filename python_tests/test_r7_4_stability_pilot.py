@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import importlib.util
+import random
 import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+
+from spincore.deep_cfr import icm_delta_utility, uniform_policy
+from spincore.solver import Episode, SolverLibrary
+from spincore_nn import UniformReservoir
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +75,45 @@ def test_r7_4_scenario_cycles_cover_domain_positions_and_preserve_chips():
     assert all(not ep.game_is_hu for ep in three)
     assert all(ep.dead_players == (0,) for ep in hu)
     assert all(ep.dead_players == () for ep in three)
+
+
+def test_r7_4_three_handed_partial_exact_collection_physically_executes():
+    solver = SolverLibrary(ROOT / "build" / "libspincore_solver_c.so")
+    episode = Episode(1500, False, 0, 10, 20, (500, 500, 500), 0, ())
+    advantage_memory = UniformReservoir(10000, 7101)
+    strategy_memory = UniformReservoir(10000, 7102)
+    collector = worker.PartialExactAdvantageCollector(
+        policy=uniform_policy,
+        terminal_utility=icm_delta_utility((0.5, 0.3, 0.2)),
+        rng=random.Random(7103),
+        advantage_memory=advantage_memory,
+        strategy_memory=strategy_memory,
+    )
+    root = solver.create(episode, 7104)
+    try:
+        result = collector.collect_advantage_partial_exact(
+            root,
+            traverser=0,
+            iteration=1,
+            exact_opponent_levels=2,
+        )
+    finally:
+        root.close()
+    assert result.nodes > 0
+    assert result.samples_added > 0
+    assert len(advantage_memory.items) > 0
+
+    root = solver.create(episode, 7104)
+    try:
+        strategy_added = collector.collect_strategy_own_reach(
+            root,
+            target_player=0,
+            iteration=1,
+        )
+    finally:
+        root.close()
+    assert strategy_added > 0
+    assert len(strategy_memory.items) > 0
 
 
 def test_r7_4_scenario_cycle_rejects_unknown_domain():
