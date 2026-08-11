@@ -1,3 +1,5 @@
 size4_uncertainty_s175
 
 Selection rationale: smallest passing ensemble size (4) with the strongest combined robustness among size4 candidates. Measured 5x64 mean TV 0.1329178512 (margin 0.0170821488 to 0.15 gate) and p95 TV 0.2854667008 (margin 0.0645332992 to 0.35 gate). Compared with size8_uncertainty_s10, it halves ensemble size while improving p95 and giving up only ~0.00494 mean TV, so size8 does not justify doubled model cost.
+
+Certification rerun reason: exact-source hardening now forbids hidden thread-count overrides and executes the checkpoint worker from a frozen-source worktree overlay so behavior/training imports cannot resolve to current-main tools. Main regression 31468985190 passed before this reassertion.
