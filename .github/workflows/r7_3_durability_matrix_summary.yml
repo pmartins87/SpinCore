@@ -12,7 +12,11 @@ on:
       - 'validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w50_320.json'
       - 'validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w75_320.json'
       - 'validation/R7_3_POLICY_MIXTURE_FIRST_TRANSITION_TREMBLE_E30_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s05_320.json'
+      - 'validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s10_320.json'
       - 'validation/R7_3_DIRECT_BEHAVIOR_COMPOUNDING_320.json'
+      - 'validation/R7_3_DIRECT_BEHAVIOR_AGGREGATED_REGRET_320.json'
+      - 'tools/summarize_r7_3_durability_matrix.py'
   workflow_dispatch:
 
 permissions:
@@ -52,9 +56,9 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('validation/R7_3_DURABILITY_MATRIX_SUMMARY.json'))
-          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V1'
+          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2'
           assert d['complete'] is True
-          assert len(d['rows'])==10
+          assert len(d['rows'])==13
           assert d['acceptance_gate_changed'] is False
           assert d['ready_for_tables'] is False
           print('durability matrix summary validation OK')
