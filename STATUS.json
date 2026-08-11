@@ -1,21 +1,29 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.23",
+  "version": "1.12.1-recovery.25",
   "recovery_generation": 2,
-  "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
+  "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_SELECTED_WINNER_CERTIFICATION_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "UNCERTAINTY_SWEEP_RUNNING_FULL_WINNER_CERTIFICATION_TO_640_PREPARED",
+  "current_gate_status": "S175_SELECTED_AND_FROZEN_CORRECTED_EXACT_SOURCE_FRESH_REPRO_IN_PROGRESS",
   "ready_for_tables": false,
-  "regression": {
-    "latest_workflow": 31452600161,
-    "commit": "2423e1c2f22dee0557d0c7f280ac1f5e542f9e20",
+  "roadmap": {
+    "R0_R6": "PASS_REBUILT",
+    "R7_0": "PASS_REBUILT",
+    "R7_1": "PASS_REBUILT",
+    "R7_2": "PASS_REBUILT",
+    "R7_3": "FAIL_GATE_ACTIVE_CERTIFICATION",
+    "R7_4": "BLOCKED_BY_R7_3_PIPELINE_PRECOMMITTED",
+    "R8_R12": "TODO"
+  },
+  "latest_regression": {
+    "workflow": 31470937877,
+    "commit": "b0aadb263be39c8ed83d6c8673c99ae2fcb80705",
     "cpp": "PASS",
-    "python_tests_passed": 40,
-    "candidate_checkpoint_tests_included": true,
-    "candidate_side_restore_torch_rng_neutral": true,
-    "physical_checkpoint_worker_tiny_uncertainty_exact": true,
-    "physical_checkpoint_worker_tiny_temporal_exact": true
+    "python_tests_passed": 65,
+    "python_warnings": 1,
+    "r7_3_certification_provenance_tests": true,
+    "r7_4_heldout_seed_scenario_runtime_and_final_gate_tests": true
   },
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -29,230 +37,129 @@
     "cross_seed_mean_tv_max": 0.15,
     "cross_seed_p95_tv_max": 0.35
   },
-  "roadmap": {
-    "R0_R6": "PASS_REBUILT",
-    "R7_0": "PASS_REBUILT",
-    "R7_1": "PASS_REBUILT",
-    "R7_2": "PASS_REBUILT",
-    "R7_3": "FAIL_GATE_ACTIVE",
-    "R7_4": "BLOCKED_BY_R7_3",
-    "R8_R12": "TODO"
-  },
   "authoritative_contract": {
     "deck_formula": "seed*1000003 + global_root*97 + iteration",
     "global_root_continuous_across_iterations": true,
-    "algorithm_seeds": [20260829, 20260807],
+    "r7_3_selection_seeds": [20260829, 20260807],
     "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
+    "partial_exact_opponent_levels": 2,
     "base_checkpoint_schema": "SPINCORE_R7_CHECKPOINT_V2",
-    "candidate_behavior_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
-    "training_defaults": {"lr": 0.001, "device": "cpu"}
+    "candidate_behavior_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1"
   },
-  "durability_baseline_size4_policy_mixture_320": {
+  "r7_3_durability_baseline": {
+    "label": "size4_policy_mixture_no_damping",
     "workflow": 31432403037,
     "iterations": 5,
     "roots_per_seed": 320,
     "mean_tv": 0.2665907144546509,
-    "p50_tv": 0.24680466949939728,
     "p95_tv": 0.5670017600059509,
-    "max_tv": 0.9055466651916504,
     "per_seed_fit_pass": true
   },
-  "short_horizon_size8_policy_mixture_256": {
-    "workflow": 31440425854,
-    "evidence_commit": "bfe6d4845600c3eafed36c85c0113756763f6910",
-    "mean_tv": 0.13961473107337952,
-    "p95_tv": 0.329689085483551,
+  "r7_3_selected_winner": {
+    "label": "size4_uncertainty_s175",
+    "behavior_kind": "uncertainty_damping",
+    "behavior_semantic_id": "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
+    "ensemble_size": 4,
+    "epsilon_scale": 1.75,
+    "epsilon_cap": 0.5,
+    "iterations": 5,
+    "roots_per_seed": 320,
+    "mean_tv": 0.1329178512096405,
+    "p50_tv": 0.1155516654253006,
+    "p95_tv": 0.2854667007923126,
+    "max_tv": 0.5646659135818481,
     "per_seed_fit_pass": true,
     "cross_seed_pass": true,
-    "decision": "MANDATORY_FIVE_ITERATION_DURABILITY_ONLY_NOT_640"
+    "r7_3_durability_pass": true,
+    "mean_margin_to_gate": 0.01708214879035949,
+    "p95_margin_to_gate": 0.06453329920768736,
+    "source_workflow": 31451592073,
+    "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+    "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s175_320.json",
+    "evidence_commit_sha": "05c0976e8311874ea9a55f5c899a088abe3b4f00",
+    "selection_file": "validation/R7_3_WINNER_SELECTION.json",
+    "selection_rationale": "SMALLEST_PASSING_ENSEMBLE_WITH_STRONGER_P95_AND_MAX_THAN_SIZE8_UNCERTAINTY_S10"
   },
-  "best_completed_durable_candidate": {
-    "label": "size4_uncertainty_s10",
-    "workflow": 31442367579,
-    "ensemble_size": 4,
-    "epsilon_scale": 1.0,
-    "epsilon_cap": 0.5,
-    "mean_tv": 0.16809812188148499,
-    "p50_tv": 0.1488216519355774,
-    "p95_tv": 0.35678043961524963,
-    "max_tv": 0.7808994650840759,
-    "mean_gap_to_gate": 0.018098121881484997,
-    "p95_gap_to_gate": 0.006780439615249655,
-    "per_seed_fit_pass": true,
-    "cross_seed_pass": false,
-    "decision": "CALIBRATE_SIZE4_AND_COMPARE_SIZE8_COMPOSITIONS_BEFORE_ANY_640"
+  "r7_3_semantic_freeze": {
+    "schema": "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1",
+    "file": "validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json",
+    "status": "PASS",
+    "pins_evidence_bytes_sha256": true,
+    "pins_source_commit_and_git_objects": true,
+    "thread_environment_contract": "SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE",
+    "hidden_thread_overrides_forbidden": true
   },
-  "completed_durability_candidates_320": {
-    "size4_no_damping": {"mean_tv": 0.2665907144546509, "p95_tv": 0.5670017600059509, "fit_pass": true},
-    "size4_decay_tremble_e15": {"mean_tv": 0.23188617825508118, "p95_tv": 0.47515368461608887, "fit_pass": true},
-    "size4_decay_tremble_e30": {"mean_tv": 0.2178531289100647, "p95_tv": 0.457101970911026, "fit_pass": true},
-    "size4_decay_tremble_e45": {"mean_tv": 0.21160729229450226, "p95_tv": 0.44856688380241394, "fit_pass": true},
-    "size4_temporal_w50": {"mean_tv": 0.17991457879543304, "p95_tv": 0.39547839760780334, "fit_pass": true},
-    "size4_temporal_w75": {"mean_tv": 0.22288520634174347, "p95_tv": 0.48167312145233154, "fit_pass": true},
-    "size4_first_transition_e30": {"mean_tv": 0.23940932750701904, "p95_tv": 0.5126305222511292, "fit_pass": true},
-    "size4_uncertainty_s05": {"mean_tv": 0.22464001178741455, "p95_tv": 0.47133246064186096, "fit_pass": true},
-    "size4_uncertainty_s10": {"mean_tv": 0.16809812188148499, "p95_tv": 0.35678043961524963, "fit_pass": true},
-    "size4_regret_floor_e05": {
-      "workflow": 31444922236,
-      "mean_tv": 0.20189577341079712,
-      "p50_tv": 0.18131545186042786,
-      "p95_tv": 0.42766210436820984,
-      "max_tv": 0.7869335412979126,
-      "fit_pass": true,
-      "decision": "DEPRIORITIZED_WORSE_THAN_UNCERTAINTY_S10"
+  "r7_3_corrected_certification": {
+    "workflow": 31469278146,
+    "freeze_job": {
+      "job": 93708818978,
+      "status": "PASS"
     },
-    "size4_regret_floor_e10": {
-      "workflow": 31444922236,
-      "mean_tv": 0.1833374798297882,
-      "p50_tv": 0.16277188062667847,
-      "p95_tv": 0.3849414885044098,
-      "max_tv": 0.6981920003890991,
-      "fit_pass": true,
-      "decision": "DEPRIORITIZED_WORSE_THAN_UNCERTAINTY_S10"
+    "fresh_repro_job": {
+      "job": 93708858056,
+      "status": "EXACT_SOURCE_FRESH_PROCESS_REPRODUCIBILITY_IN_PROGRESS"
     },
-    "size1_no_damping": {"mean_tv": 0.4388447701931, "p95_tv": 0.8787288665771484},
-    "size1_decay_tremble_e30": {"mean_tv": 0.3953329920768738, "p95_tv": 0.7982872128486633},
-    "direct_behavior_control": {"mean_tv": 0.27618464827537537, "p95_tv": 0.8286698460578918, "decision": "CLOSED"},
-    "direct_behavior_aggregated_regret": {"mean_tv": 0.3073503375053406, "p95_tv": 0.914165735244751, "decision": "CLOSED"}
+    "checkpoint_recert": "PENDING_FRESH_PASS",
+    "acceptance_640": "PENDING_CHECKPOINT_PASS",
+    "r7_3_pass": false
   },
-  "uncertainty_mechanism": {
-    "formula": "epsilon=min(cap,scale*mean_member_tv_to_ensemble_mean); behavior=(1-epsilon)*ensemble_mean+epsilon*legal_uniform",
-    "instrumentation_commit": "b0887eabb201fb28214b47fb3959733896992ada",
-    "instrumentation_rng_neutral": true,
-    "runtime_statistics_added": [
-      "fitted_behavior_calls",
-      "mean_epsilon",
-      "max_epsilon",
-      "mean_disagreement",
-      "max_raw_epsilon_before_cap",
-      "cap_hit_fraction",
-      "epsilon_ge_0_10_fraction",
-      "epsilon_ge_0_25_fraction"
-    ]
+  "legacy_certification_run": {
+    "workflow": 31468467215,
+    "authoritative": false,
+    "reason": "LEGACY_SNAPSHOT_FORCED_THREAD_OVERRIDES_AND_PREDATED_EXACT_FROZEN_WORKTREE_WORKER_HARDENING",
+    "canonical_evidence_overwrite_risk": "MITIGATED_BY_PROVENANCE_VALID_GIT_HISTORY_RESOLVER"
   },
-  "active_physical_runs": {
-    "size4_uncertainty_s125_s150": {
-      "workflow": 31450032347,
-      "head_sha": "791ee4ef549ecfd27100ede1a5338fb59be8ae67",
-      "jobs": [93652314342, 93652314379],
-      "ensemble_size": 4,
-      "scales": [1.25, 1.5],
-      "epsilon_cap": 0.5,
-      "status": "BOTH_PHYSICAL_FIVE_ITERATION_RUNS_IN_PROGRESS_AFTER_BUILD_REGRESSION_AND_SMOKE_PASS"
-    },
-    "size4_uncertainty_extension2": {
-      "workflow": 31451592073,
-      "head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
-      "jobs": [93656909598, 93656909575, 93656909577, 93656909632],
-      "candidates": [
-        {"label": "s175", "scale": 1.75, "cap": 0.5},
-        {"label": "s200", "scale": 2.0, "cap": 0.5},
-        {"label": "s150c65", "scale": 1.5, "cap": 0.65},
-        {"label": "s150c80", "scale": 1.5, "cap": 0.8}
-      ],
-      "status": "ALL_FOUR_PHYSICAL_FIVE_ITERATION_RUNS_IN_PROGRESS_AFTER_BUILD_REGRESSION_AND_SMOKE_PASS"
-    },
-    "policy_mixture_size8_durability_320": {
-      "workflow": 31446308103,
-      "job": 93641202513,
-      "status": "PHYSICAL_FIVE_ITERATION_RUN_IN_PROGRESS"
-    },
-    "policy_mixture_size8_temporal_w50_320": {
-      "workflow": 31448623827,
-      "job": 93648112606,
-      "status": "PHYSICAL_FIVE_ITERATION_RUN_IN_PROGRESS"
-    },
-    "policy_mixture_size8_uncertainty_s10_320": {
-      "workflow": 31449546648,
-      "job": 93650858760,
-      "status": "PHYSICAL_FIVE_ITERATION_RUN_IN_PROGRESS"
-    },
-    "independent_size4_baseline_320_reproduction": {
-      "workflow": 31451518046,
-      "job": 93656689251,
-      "status": "PHYSICAL_FIVE_ITERATION_320_ROOT_COMPOUNDING_RUN_IN_PROGRESS_AFTER_BUILD_REGRESSION_AND_SMOKE_PASS",
-      "purpose": "Create the second independent 320 evidence commit required by the existing fresh-run reproducibility comparator."
-    }
+  "certification_hardening": {
+    "candidate_side_restore_torch_rng_neutral": true,
+    "checkpoint_worker_executed_from_frozen_worktree_overlay": true,
+    "fresh_repro_requires_zero_differences": true,
+    "fresh_repro_numeric_tolerance": 1e-9,
+    "fresh_repro_ignored_fields": ["generated_at_unix", "duration_seconds"],
+    "certifier_injected_thread_overrides": false,
+    "stale_or_legacy_head_evidence_resolution": "NEWEST_PROVENANCE_VALID_GIT_HISTORY_VERSION_OR_FAIL_CLOSED",
+    "evidence_resolver": "tools/r7_3_certification_evidence.py"
   },
-  "final_policy_ensemble_residual_256": {
-    "workflow": 31440493410,
-    "size4": {"mean_tv": 0.13837657868862152, "p95_tv": 0.36872994899749756},
-    "decision": "RESERVE_AS_DOWNSTREAM_LAYER_AFTER_UPSTREAM_DURABILITY_WINNER"
-  },
-  "candidate_checkpoint_readiness": {
-    "helper": "python/spincore/r7_candidate_checkpoint.py",
-    "schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
-    "side_model_restore_torch_rng_neutral": true,
-    "rng_fix_commit": "6dcd2cff21d9a9d366389b2d1e5d15ad53179eab",
-    "physical_worker": "tools/r7_3_frozen_candidate_checkpoint_worker.py",
-    "physical_worker_regression_commit": "2423e1c2f22dee0557d0c7f280ac1f5e542f9e20",
-    "physical_worker_regression_workflow": 31452600161,
-    "physical_worker_regression": "PASS_CPP_AND_40_PYTHON_TESTS",
-    "tiny_uncertainty_continuous_vs_restore_exact": true,
-    "tiny_temporal_continuous_vs_restore_exact": true,
-    "full_frozen_candidate_recertification": "BLOCKED_UNTIL_WINNER_AND_FRESH_REPRO_PASS"
-  },
-  "winner_certification_pipeline": {
-    "selection_schema": "SPINCORE_R7_3_WINNER_SELECTION_V1",
-    "semantic_freeze_tool": "tools/freeze_r7_3_candidate_semantics.py",
-    "semantic_freeze_workflow": ".github/workflows/r7_3_freeze_candidate_semantics.yml",
-    "semantic_freeze_schema": "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1",
-    "freeze_requires_actual_5x64_gate_pass": true,
-    "freeze_pins_algorithm_seeds": [20260829, 20260807],
-    "freeze_pins_exact_evidence_commit_bytes": true,
-    "freeze_records_exact_source_commit_and_git_objects": true,
-    "fresh_exact_source_tool": "tools/run_r7_3_frozen_candidate_fresh_repro.py",
-    "fresh_exact_source_workflow": ".github/workflows/r7_3_frozen_candidate_fresh_repro.yml",
-    "fresh_repro_schema": "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1",
-    "fresh_repro_builds_and_tests_exact_source_commit": true,
-    "fresh_repro_complete_evidence_numeric_tolerance": 1e-9,
-    "fresh_repro_ignores_only": ["generated_at_unix", "duration_seconds"],
-    "checkpoint_recert_tool": "tools/run_r7_3_frozen_candidate_checkpoint_recert.py",
-    "checkpoint_recert_worker": "tools/r7_3_frozen_candidate_checkpoint_worker.py",
-    "checkpoint_recert_workflow": ".github/workflows/r7_3_frozen_candidate_checkpoint_recert.yml",
-    "checkpoint_recert_schema": "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1",
-    "checkpoint_recert_exact_source_behavior": true,
-    "checkpoint_recert_split_iteration": 3,
-    "checkpoint_recert_requires_exact_final_state": true,
-    "acceptance_640_tool": "tools/run_r7_3_frozen_candidate_640_acceptance.py",
-    "acceptance_640_workflow": ".github/workflows/r7_3_frozen_candidate_640_acceptance.yml",
-    "acceptance_640_schema": "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1",
-    "acceptance_640_roots_per_seed": 640,
-    "acceptance_640_requires_freeze_fresh_and_checkpoint_pass": true,
-    "acceptance_640_ready_for_tables_even_if_pass": false,
-    "current_state": "FULL_PIPELINE_PREPARED_NO_WINNER_SELECTION_FILE_EXISTS"
-  },
-  "automation": {
-    "base_durability_summary": {
-      "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4",
-      "expected_candidate_rows": 15,
-      "expected_total_rows_including_baseline": 16
+  "r7_4_precommitted_gate": {
+    "design": "validation/R7_4_GATE_DESIGN_20260811.md",
+    "status": "PREPARED_BLOCKED_BY_R7_3",
+    "structural_preflight": {
+      "workflow": ".github/workflows/r7_4_domain_preflight.yml",
+      "schema": "SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1",
+      "requires_corrected_r7_3_640": true
     },
-    "extended_durability_summary": {
-      "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V4",
-      "expected_candidate_rows": 23,
-      "expected_total_rows_including_baseline": 24,
-      "supplemental_labels": [
-        "size4_uncertainty_s125",
-        "size4_uncertainty_s150",
-        "size4_uncertainty_s175",
-        "size4_uncertainty_s200",
-        "size4_uncertainty_s150c65",
-        "size4_uncertainty_s150c80",
-        "size8_temporal_w50",
-        "size8_uncertainty_s10"
-      ]
+    "heldout_seed_rule": "SHA256_FROZEN_EVIDENCE_DERIVED_POSITIVE_31_BIT_REJECT_R7_3_COLLISIONS",
+    "r7_3_selection_seeds_reused": false,
+    "heldout_domains": {
+      "TRUE_HEADS_UP": {
+        "scenario_count": 6,
+        "screen_roots_per_seed": 640
+      },
+      "THREE_HANDED": {
+        "scenario_count": 15,
+        "screen_roots_per_seed": 320,
+        "confirmation_roots_per_seed": 640
+      }
     },
-    "legacy_fresh_run_comparator": {
-      "tool": "tools/check_r7_3_fresh_run_reproducibility.py",
-      "status": "WAITING_FOR_SECOND_320_EVIDENCE_COMMIT_FROM_WORKFLOW_31451518046"
-    }
+    "heldout_screen_workflow": ".github/workflows/r7_4_heldout_domain_screen.yml",
+    "three_handed_640_confirmation_workflow": ".github/workflows/r7_4_three_handed_640_confirmation.yml",
+    "final_gate_schema": "SPINCORE_R7_4_FINAL_GATE_V1",
+    "r7_4_pass_rule": "HU_640_PASS_AND_3H_320_SCREEN_PASS_AND_3H_640_CONFIRMATION_PASS",
+    "same_frozen_fit_and_cross_seed_gates": true,
+    "r7_4_ready_to_advance_to_r8_only_after_final_gate": true
+  },
+  "r7_4_reporting_hardening": {
+    "uncertainty_runtime_statistics_seed_local": true,
+    "global_instance_registry_not_used_for_seed_labeling": true,
+    "runtime_fix_commit": "915cfb500da6cc5e495abeeb1b2c8d799267bd48"
   },
   "prepared_but_blocked": {
-    "legacy_size4_policy_mixture_640": {"status": "DORMANT", "reason": "Plain size4 failed five-iteration durability."},
-    "certified_winner_640": {"status": "PREPARED_BUT_GATED", "reason": "Requires a gate-clearing 5x64 winner, immutable semantic freeze, exact-source fresh reproducibility and physical checkpoint/resume recertification."}
+    "r7_3_checkpoint_recertification": "BLOCKED_UNTIL_CORRECTED_FRESH_REPRO_PASS",
+    "r7_3_640_acceptance": "BLOCKED_UNTIL_CORRECTED_CHECKPOINT_RECERT_PASS",
+    "r7_4_structural_preflight": "BLOCKED_UNTIL_CORRECTED_R7_3_640_PASS",
+    "r7_4_heldout_hu_3h": "BLOCKED_UNTIL_STRUCTURAL_PREFLIGHT_PASS",
+    "r8": "BLOCKED_UNTIL_FINITE_R7_4_FINAL_GATE_PASS"
   },
-  "next_physical_step": "Resolve the active size4 uncertainty calibration, size8 durability/compositions and independent baseline reproduction. Prefer the smallest fit-valid 5x64 mechanism that clears both 0.15/0.35 gates while retaining robust margin. A selected winner is now automatically gated through immutable semantic freeze, exact-source fresh-process reproducibility, exact continuous-vs-stop/restore/continue recertification and only then exact-source 640 acceptance. A 640 pass advances to R7.4, never directly to tables. No gate relaxation.",
+  "next_physical_step": "Let corrected workflow 31469278146 finish exact-source fresh reproduction. On PASS, its current-main checkpoint job will use provenance-valid evidence resolution and the frozen-worktree worker overlay; then exact-source 5x128=640 R7.3 acceptance runs. Only after that can the already-precommitted R7.4 structural and held-out HU/3H pipeline execute. No gate relaxation and no R7.4 result may alter its precommitted seeds, scenarios, thresholds, or scales.",
   "ready_for_tables": false
 }
