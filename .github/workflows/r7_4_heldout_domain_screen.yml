@@ -1,0 +1,185 @@
+name: SpinCore R7.4 held-out HU and 3H stability screen
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.4 exact-source HU and 3H structural preflight'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-4-heldout-screen
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check certified R7.3 and structural R7.4 prerequisites
+        id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+          freeze=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+          acceptance=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+          preflight=validation/R7_4_DOMAIN_PREFLIGHT.json
+          if [ -f "$freeze" ] && [ -f "$acceptance" ] && [ -f "$preflight" ]; then
+            python - <<'PY'
+          import json
+          f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          p=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
+          assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
+          assert a['r7_3_640_acceptance_pass'] is True
+          assert a['r7_3_ready_to_advance_to_r7_4'] is True
+          assert a['thread_environment_overrides_injected_by_certifier'] is False
+          assert p['schema']=='SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1'
+          assert p['r7_4_structural_preflight_pass'] is True
+          assert p['exact_accepted_solver_source_used'] is True
+          assert p['preflight_worker_executed_from_accepted_worktree_overlay'] is True
+          assert p['r7_3_source_head_sha']==f['source_head_sha']==a['source_head_sha']
+          assert p['r7_3_durability_evidence_commit_sha']==f['evidence_commit_sha']==a['durability_evidence_commit_sha']
+          PY
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo 'R7.4 held-out screen remains gated.'
+          fi
+
+  domain:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: hu640
+            domain: TRUE_HEADS_UP
+            roots_per_iteration: 128
+            out: validation/R7_4_HELDOUT_HU_640.json
+          - label: three320
+            domain: THREE_HANDED
+            roots_per_iteration: 64
+            out: validation/R7_4_HELDOUT_3H_320.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Run exact-accepted-source held-out domain pilot
+        id: physical
+        continue-on-error: true
+        shell: bash
+        env:
+          DOMAIN: ${{ matrix.domain }}
+          ROOTS: ${{ matrix.roots_per_iteration }}
+          OUT: ${{ matrix.out }}
+        run: |
+          set -euo pipefail
+          python tools/run_r7_4_stability_pilot.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
+            --domain "$DOMAIN" \
+            --roots-per-iteration "$ROOTS" \
+            --out "$OUT"
+      - name: Persist held-out domain evidence
+        if: always()
+        shell: bash
+        env:
+          DOMAIN: ${{ matrix.domain }}
+          ROOTS: ${{ matrix.roots_per_iteration }}
+          OUT: ${{ matrix.out }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$OUT" ]; then
+            printf '{"schema":"SPINCORE_R7_4_HELDOUT_DOMAIN_STABILITY_V1","domain":"%s","roots_per_iteration":%s,"runner_failed_before_report":true,"r7_4_domain_stability_pass":false,"ready_for_tables":false}\n' "$DOMAIN" "$ROOTS" > "$OUT"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$OUT"
+          if ! git diff --cached --quiet; then
+            git commit -m "Record R7.4 held-out ${{ matrix.label }} evidence [r7-evidence-skip]"
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+
+  summarize:
+    needs: [gate, domain]
+    if: always() && needs.gate.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Summarize precommitted held-out screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/summarize_r7_4_heldout_screen.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
+            --hu validation/R7_4_HELDOUT_HU_640.json \
+            --three-handed validation/R7_4_HELDOUT_3H_320.json \
+            --out validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
+      - name: Persist held-out screen summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record R7.4 held-out HU and 3H screen summary [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Report screen decision
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_4_HELDOUT_SCREEN_SUMMARY.json'))
+          print(json.dumps(d, indent=2, sort_keys=True))
+          assert d['ready_for_tables'] is False
+          if d['r7_4_heldout_screen_pass']:
+              print('R7.4 held-out screen PASS; 3H 640 confirmation is authorized.')
+          else:
+              print('R7.4 held-out screen did not pass; 3H 640 confirmation remains blocked.')
+          PY
