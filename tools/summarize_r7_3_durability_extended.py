@@ -9,6 +9,7 @@ import summarize_r7_3_durability_matrix as base
 
 SUPPLEMENTAL = {
     "size8_temporal_w50": "validation/R7_3_POLICY_MIXTURE_SIZE8_TEMPORAL_W50_320.json",
+    "size8_uncertainty_s10": "validation/R7_3_POLICY_MIXTURE_SIZE8_UNCERTAINTY_S10_320.json",
 }
 
 
@@ -32,7 +33,7 @@ def main() -> int:
 
     if pending:
         print(json.dumps({
-            "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V1",
+            "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2",
             "complete": False,
             "pending": pending,
             "completed_labels": [row["label"] for row in rows],
@@ -69,7 +70,7 @@ def main() -> int:
         return min(seq, key=lambda r: (r["p95_tv"], r["mean_tv"])) if seq else None
 
     payload = {
-        "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V1",
+        "schema": "SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2",
         "complete": True,
         "expected_candidate_rows": len(expected),
         "rows_including_baseline": len(rows) + 1,
