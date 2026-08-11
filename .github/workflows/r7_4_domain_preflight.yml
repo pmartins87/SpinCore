@@ -20,7 +20,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Check R7.3 acceptance prerequisite
+      - name: Check corrected R7.3 acceptance prerequisite
         id: gate
         shell: bash
         run: |
@@ -33,15 +33,22 @@ jobs:
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
           a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
           assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert f['thread_environment_contract']=='SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE'
           assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
           assert a['r7_3_640_acceptance_pass'] is True
           assert a['r7_3_ready_to_advance_to_r7_4'] is True
+          assert a['per_seed_fit_pass'] is True
+          assert a['iterations']==5 and a['roots_per_iteration']==128 and a['roots_per_seed']==640
           assert a['source_head_sha']==f['source_head_sha']
+          assert a['durability_evidence_commit_sha']==f['evidence_commit_sha']
+          assert a['thread_environment_contract']==f['thread_environment_contract']
+          assert a['thread_environment_overrides_injected_by_certifier'] is False
+          assert a['acceptance_gate_changed'] is False
           PY
             echo 'run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'run=false' >> "$GITHUB_OUTPUT"
-            echo 'R7.3 certified 640 acceptance is not present; R7.4 preflight remains gated.'
+            echo 'Corrected R7.3 certified 640 acceptance is not present; R7.4 preflight remains gated.'
           fi
       - name: Set up Python
         if: steps.gate.outputs.run == 'true'
@@ -86,6 +93,8 @@ jobs:
           import json
           d=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
           assert d.get('r7_4_structural_preflight_pass') is True, d
+          assert d.get('r7_3_acceptance_hidden_thread_overrides_rejected') is True
+          assert d.get('preflight_worker_executed_from_accepted_worktree_overlay') is True
           assert d.get('r7_4_strategic_pilot_pass') is False
           assert d.get('r7_4_strategic_gate_defined') is False
           assert d.get('ready_for_tables') is False
