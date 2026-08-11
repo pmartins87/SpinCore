@@ -1,0 +1,82 @@
+name: SpinCore R7.3 materialize winner selection
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'validation/R7_3_WINNER_CHOICE.txt'
+      - '.github/workflows/r7_3_materialize_winner_selection.yml'
+      - 'tools/materialize_r7_3_winner_selection.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check deliberate choice marker
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker=validation/R7_3_WINNER_CHOICE.txt
+          proposal=validation/R7_3_WINNER_PROPOSAL.json
+          if [ -f "$marker" ] && [ -f "$proposal" ]; then
+            label="$(head -n1 "$marker" | tr -d '\r\n')"
+            test -n "$label"
+            echo "label=$label" >> "$GITHUB_OUTPUT"
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo 'No deliberate winner choice and complete proposal are both present yet.'
+          fi
+      - name: Materialize selected winner fail-closed
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/materialize_r7_3_winner_selection.py \
+            --proposal validation/R7_3_WINNER_PROPOSAL.json \
+            --label '${{ steps.gate.outputs.label }}' \
+            --out validation/R7_3_WINNER_SELECTION.json
+      - name: Validate selection
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_WINNER_SELECTION.json'))
+          assert d['schema']=='SPINCORE_R7_3_WINNER_SELECTION_V1'
+          assert d['selection_automatic'] is False
+          assert d['acceptance_gate_changed'] is False
+          assert d['measured_5x64']['mean_tv'] <= .15
+          assert d['measured_5x64']['p95_tv'] <= .35
+          assert d['ready_for_640'] is False
+          assert d['ready_for_tables'] is False
+          print('R7.3 deliberate winner selection validation OK')
+          PY
+      - name: Persist selected winner
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_WINNER_SELECTION.json
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Materialize deliberate R7.3 winner selection [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
