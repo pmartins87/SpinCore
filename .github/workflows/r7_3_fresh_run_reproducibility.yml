@@ -1,11 +1,16 @@
 name: SpinCore R7.3 fresh-run reproducibility
 
 on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 paired partial-exact Advantage policy mixture'
+      - 'SpinCore R7.3 paired policy-mixture compounding'
+    types: [completed]
   push:
     branches: [main]
     paths:
-      - 'validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_PAIRED_SIZE4_256.json'
-      - 'validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_COMPOUNDING_320.json'
+      - '.github/workflows/r7_3_fresh_run_reproducibility.yml'
+      - 'tools/check_r7_3_fresh_run_reproducibility.py'
   workflow_dispatch:
 
 permissions:
