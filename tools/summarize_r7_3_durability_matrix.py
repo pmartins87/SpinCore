@@ -14,6 +14,7 @@ BASELINE = {
 }
 
 EXPECTED = {
+    "size8_no_damping": "validation/R7_3_PARTIAL_EXACT_POLICY_MIXTURE_PAIRED_SIZE8_320.json",
     "size4_tremble_e15_decay50": "validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e15_320.json",
     "size4_tremble_e30_decay50": "validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e30_320.json",
     "size4_tremble_e45_decay50": "validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e45_320.json",
@@ -90,7 +91,7 @@ def main() -> int:
 
     if pending:
         print(json.dumps({
-            "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3",
+            "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4",
             "complete": False,
             "pending": pending,
             "completed_labels": [row["label"] for row in rows],
@@ -128,7 +129,7 @@ def main() -> int:
     ) if conservative else None
 
     payload = {
-        "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3",
+        "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4",
         "complete": True,
         "frozen_gates": {
             "advantage_weighted_nrmse_max": 0.75,
