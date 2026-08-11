@@ -1,0 +1,93 @@
+name: SpinCore R7.4 exact-source HU and 3H structural preflight
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 certify selected winner through 640'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check R7.3 acceptance prerequisite
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          freeze=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+          acceptance=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+          if [ -f "$freeze" ] && [ -f "$acceptance" ]; then
+            python - <<'PY'
+          import json
+          f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
+          assert a['r7_3_640_acceptance_pass'] is True
+          assert a['r7_3_ready_to_advance_to_r7_4'] is True
+          assert a['source_head_sha']==f['source_head_sha']
+          PY
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo 'R7.3 certified 640 acceptance is not present; R7.4 preflight remains gated.'
+          fi
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run exact accepted-source HU/3H preflight
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/run_r7_4_domain_preflight.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --out validation/R7_4_DOMAIN_PREFLIGHT.json
+      - name: Persist structural R7.4 preflight
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_4_DOMAIN_PREFLIGHT.json
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1","runner_failed_before_report":true,"r7_4_structural_preflight_pass":false,"r7_4_strategic_pilot_pass":false,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record exact-source R7.4 HU and 3H structural preflight [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce structural-only R7.4 preflight
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
+          assert d.get('r7_4_structural_preflight_pass') is True, d
+          assert d.get('r7_4_strategic_pilot_pass') is False
+          assert d.get('r7_4_strategic_gate_defined') is False
+          assert d.get('ready_for_tables') is False
+          print('R7.4 exact-source structural preflight PASS; strategic/statistical pilot gate still requires explicit design.')
+          PY
