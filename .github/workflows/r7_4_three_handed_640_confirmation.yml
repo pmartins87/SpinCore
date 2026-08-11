@@ -24,40 +24,34 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Check held-out screen authorization
+      - name: Check held-out screen and SPINRULESET-4 authorization
         id: gate
         shell: bash
         run: |
           set -euo pipefail
-          freeze=validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
-          acceptance=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
-          preflight=validation/R7_4_DOMAIN_PREFLIGHT.json
-          screen=validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
-          if [ -f "$freeze" ] && [ -f "$acceptance" ] && [ -f "$preflight" ] && [ -f "$screen" ]; then
-            python - <<'PY'
+          python - <<'PY'
           import json
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
-          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          ra=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
           p=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
           s=json.load(open('validation/R7_4_HELDOUT_SCREEN_SUMMARY.json'))
           assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
-          assert a['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
-          assert a['r7_3_640_acceptance_pass'] is True
+          assert rf['schema']=='SPINCORE_R7_4_RULESET_EXTENSION_V1'
+          assert ra['schema']=='SPINCORE_R7_4_RULESET_ACCEPTANCE_V1'
+          assert ra['r7_4_rules_source_accepted'] is True
           assert p['schema']=='SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1'
           assert p['r7_4_structural_preflight_pass'] is True
           assert s['schema']=='SPINCORE_R7_4_HELDOUT_SCREEN_SUMMARY_V1'
           assert s['r7_4_heldout_screen_pass'] is True
           assert s['three_handed_640_confirmation_required'] is True
-          assert s['source_head_sha']==f['source_head_sha']==a['source_head_sha']==p['r7_3_source_head_sha']
-          assert s['durability_evidence_commit_sha']==f['evidence_commit_sha']==a['durability_evidence_commit_sha']==p['r7_3_durability_evidence_commit_sha']
+          assert s['r7_3_certified_source_head_sha']==f['source_head_sha']==rf['base_r7_3_source_head_sha']
+          assert s['r7_4_ruleset_source_head_sha']==rf['ruleset_extension_source_head_sha']==ra['ruleset_extension_source_head_sha']==p['r7_4_rules_source_head_sha']
+          assert s['durability_evidence_commit_sha']==f['evidence_commit_sha']==rf['base_r7_3_evidence_commit_sha']
           assert s['r7_3_selection_seeds_reused'] is False
           assert s['ready_for_tables'] is False
           PY
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'run=false' >> "$GITHUB_OUTPUT"
-            echo 'R7.4 3H 640 confirmation remains gated.'
-          fi
+          echo 'run=true' >> "$GITHUB_OUTPUT"
       - name: Set up Python
         if: steps.gate.outputs.run == 'true'
         uses: actions/setup-python@v5
@@ -71,7 +65,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
           python -m pip install pytest
-      - name: Run exact-accepted-source 3H 640 confirmation
+      - name: Run frozen-SPINRULESET-4 3H 640 confirmation
         if: steps.gate.outputs.run == 'true'
         id: physical
         continue-on-error: true
@@ -81,6 +75,8 @@ jobs:
           python tools/run_r7_4_stability_pilot.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
             --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
             --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
             --domain THREE_HANDED \
             --roots-per-iteration 128 \
@@ -113,6 +109,7 @@ jobs:
           set -euo pipefail
           python tools/finalize_r7_4_gate.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
             --screen validation/R7_4_HELDOUT_SCREEN_SUMMARY.json \
             --three-handed-confirmation validation/R7_4_HELDOUT_3H_640_CONFIRMATION.json \
             --out validation/R7_4_FINAL_GATE.json
@@ -145,6 +142,7 @@ jobs:
           import json
           d=json.load(open('validation/R7_4_FINAL_GATE.json'))
           assert d['schema']=='SPINCORE_R7_4_FINAL_GATE_V1'
+          assert d['r7_4_ruleset_schema']=='SPINRULESET-4'
           assert d['hu_heldout_640_pass'] is True, d
           assert d['three_handed_heldout_320_screen_pass'] is True, d
           assert d['three_handed_heldout_640_confirmation']['pass'] is True, d
