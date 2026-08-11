@@ -114,3 +114,37 @@ def test_winner_proposal_and_selection_schemas_preserve_deliberate_selection():
     assert proposal.P95_GATE == 0.35
     assert materialize.PROPOSAL_SCHEMA == proposal.SCHEMA
     assert materialize.SELECTION_SCHEMA == "SPINCORE_R7_3_WINNER_SELECTION_V1"
+
+
+def test_frozen_source_thread_contract_rejects_explicit_overrides():
+    freeze._require_thread_environment_contract("env:\n  PYTHONPATH: x\n")
+    for key in freeze.THREAD_ENV_KEYS:
+        with pytest.raises(SystemExit):
+            freeze._require_thread_environment_contract(f"env:\n  {key}: '2'\n")
+
+
+def test_source_execution_environment_never_injects_thread_counts():
+    frozen = {"thread_environment_contract": freeze.THREAD_ENV_CONTRACT}
+    base = {"PATH": "/bin", "PYTHONHASHSEED": "0"}
+    got = fresh._source_execution_env(frozen, base)
+    assert got == base
+    assert got is not base
+    for key in freeze.THREAD_ENV_KEYS:
+        assert key not in got
+
+    inherited = {"PATH": "/bin", "OMP_NUM_THREADS": "7"}
+    got = fresh._source_execution_env(frozen, inherited)
+    assert got["OMP_NUM_THREADS"] == "7"
+
+
+def test_source_execution_environment_fails_closed_on_unknown_contract():
+    with pytest.raises(ValueError):
+        fresh._source_execution_env({"thread_environment_contract": "OTHER"}, {"PATH": "/bin"})
+
+
+def test_checkpoint_worker_overlay_executes_inside_frozen_worktree(tmp_path):
+    helper, worker = checkpoint_orchestrator._overlay_targets(tmp_path)
+    assert helper == tmp_path / checkpoint_orchestrator.HELPER_REL
+    assert worker == tmp_path / checkpoint_orchestrator.WORKER_REL
+    assert worker.parent == tmp_path / "tools"
+    assert helper.parent == tmp_path / "python" / "spincore"
