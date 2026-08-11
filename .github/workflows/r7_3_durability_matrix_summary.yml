@@ -1,21 +1,20 @@
 name: SpinCore R7.3 durability matrix summary
 
 on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 decaying-tremble policy-mixture compounding'
+      - 'SpinCore R7.3 size1 tremble factorial'
+      - 'SpinCore R7.3 temporal policy-mixture feedback blend'
+      - 'SpinCore R7.3 first-transition-only policy-mixture damping'
+      - 'SpinCore R7.3 Direct Behavior compounding control'
+      - 'SpinCore R7.3 uncertainty-adaptive policy-mixture damping'
+      - 'SpinCore R7.3 aggregated-regret Direct Behavior'
+    types: [completed]
   push:
     branches: [main]
     paths:
-      - 'validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e15_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e30_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_DECAY_TREMBLE_e45_320.json'
-      - 'validation/R7_3_SIZE1_TREMBLE_baseline_e0_320.json'
-      - 'validation/R7_3_SIZE1_TREMBLE_tremble_e30_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w50_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_TEMPORAL_BLEND_w75_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_FIRST_TRANSITION_TREMBLE_E30_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s05_320.json'
-      - 'validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s10_320.json'
-      - 'validation/R7_3_DIRECT_BEHAVIOR_COMPOUNDING_320.json'
-      - 'validation/R7_3_DIRECT_BEHAVIOR_AGGREGATED_REGRET_320.json'
+      - '.github/workflows/r7_3_durability_matrix_summary.yml'
       - 'tools/summarize_r7_3_durability_matrix.py'
   workflow_dispatch:
 
