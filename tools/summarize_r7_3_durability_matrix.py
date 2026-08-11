@@ -24,6 +24,8 @@ EXPECTED = {
     "size4_first_transition_e30": "validation/R7_3_POLICY_MIXTURE_FIRST_TRANSITION_TREMBLE_E30_320.json",
     "size4_uncertainty_s05": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s05_320.json",
     "size4_uncertainty_s10": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s10_320.json",
+    "size4_regret_floor_e05": "validation/R7_3_POLICY_MIXTURE_REGRET_FLOOR_e05_320.json",
+    "size4_regret_floor_e10": "validation/R7_3_POLICY_MIXTURE_REGRET_FLOOR_e10_320.json",
     "direct_behavior_control": "validation/R7_3_DIRECT_BEHAVIOR_COMPOUNDING_320.json",
     "direct_behavior_aggregated_regret": "validation/R7_3_DIRECT_BEHAVIOR_AGGREGATED_REGRET_320.json",
 }
@@ -88,7 +90,7 @@ def main() -> int:
 
     if pending:
         print(json.dumps({
-            "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2",
+            "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3",
             "complete": False,
             "pending": pending,
             "completed_labels": [row["label"] for row in rows],
@@ -116,7 +118,6 @@ def main() -> int:
         durable_both_improved,
         key=lambda r: (r["p95_tv"], r["mean_tv"]),
     ) if durable_both_improved else None
-
     conservative = [
         r for r in durable_both_improved
         if r["label"] not in NON_PROMOTABLE_CONTROLS
@@ -127,7 +128,7 @@ def main() -> int:
     ) if conservative else None
 
     payload = {
-        "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2",
+        "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3",
         "complete": True,
         "frozen_gates": {
             "advantage_weighted_nrmse_max": 0.75,
