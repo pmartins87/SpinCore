@@ -1,19 +1,21 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.22",
+  "version": "1.12.1-recovery.23",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "UNCERTAINTY_CALIBRATION_EXPANDED_WINNER_CERTIFICATION_PIPELINE_PREPARED",
+  "current_gate_status": "UNCERTAINTY_SWEEP_RUNNING_FULL_WINNER_CERTIFICATION_TO_640_PREPARED",
   "ready_for_tables": false,
   "regression": {
-    "latest_authoritative_checkpoint_workflow": 31450903801,
-    "commit": "f2dd847f44baac45da5bf8255768a2fc75a65121",
+    "latest_workflow": 31452600161,
+    "commit": "2423e1c2f22dee0557d0c7f280ac1f5e542f9e20",
     "cpp": "PASS",
-    "python_tests_passed": 33,
+    "python_tests_passed": 40,
     "candidate_checkpoint_tests_included": true,
-    "candidate_side_restore_torch_rng_neutral": true
+    "candidate_side_restore_torch_rng_neutral": true,
+    "physical_checkpoint_worker_tiny_uncertainty_exact": true,
+    "physical_checkpoint_worker_tiny_temporal_exact": true
   },
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -39,10 +41,12 @@
   "authoritative_contract": {
     "deck_formula": "seed*1000003 + global_root*97 + iteration",
     "global_root_continuous_across_iterations": true,
+    "algorithm_seeds": [20260829, 20260807],
     "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
     "base_checkpoint_schema": "SPINCORE_R7_CHECKPOINT_V2",
-    "candidate_behavior_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1"
+    "candidate_behavior_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
+    "training_defaults": {"lr": 0.001, "device": "cpu"}
   },
   "durability_baseline_size4_policy_mixture_320": {
     "workflow": 31432403037,
@@ -130,6 +134,7 @@
   "active_physical_runs": {
     "size4_uncertainty_s125_s150": {
       "workflow": 31450032347,
+      "head_sha": "791ee4ef549ecfd27100ede1a5338fb59be8ae67",
       "jobs": [93652314342, 93652314379],
       "ensemble_size": 4,
       "scales": [1.25, 1.5],
@@ -138,6 +143,7 @@
     },
     "size4_uncertainty_extension2": {
       "workflow": 31451592073,
+      "head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
       "jobs": [93656909598, 93656909575, 93656909577, 93656909632],
       "candidates": [
         {"label": "s175", "scale": 1.75, "cap": 0.5},
@@ -177,14 +183,15 @@
   "candidate_checkpoint_readiness": {
     "helper": "python/spincore/r7_candidate_checkpoint.py",
     "schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
-    "documentation": "validation/R7_3_CANDIDATE_CHECKPOINT_READINESS_20260810.md",
-    "serialization_unit_regression": "PASS_33_PYTHON_TESTS",
     "side_model_restore_torch_rng_neutral": true,
-    "rng_bug_found_and_fixed": "SIDE_MODEL_CONSTRUCTION_WOULD_HAVE_ADVANCED_GLOBAL_TORCH_RNG_AFTER_BASE_CHECKPOINT_RESTORE",
-    "fix_commit": "6dcd2cff21d9a9d366389b2d1e5d15ad53179eab",
-    "verification_commit": "f2dd847f44baac45da5bf8255768a2fc75a65121",
-    "verification_workflow": 31450903801,
-    "physical_continuous_vs_restore_recertification": "BLOCKED_UNTIL_WINNER_SELECTED"
+    "rng_fix_commit": "6dcd2cff21d9a9d366389b2d1e5d15ad53179eab",
+    "physical_worker": "tools/r7_3_frozen_candidate_checkpoint_worker.py",
+    "physical_worker_regression_commit": "2423e1c2f22dee0557d0c7f280ac1f5e542f9e20",
+    "physical_worker_regression_workflow": 31452600161,
+    "physical_worker_regression": "PASS_CPP_AND_40_PYTHON_TESTS",
+    "tiny_uncertainty_continuous_vs_restore_exact": true,
+    "tiny_temporal_continuous_vs_restore_exact": true,
+    "full_frozen_candidate_recertification": "BLOCKED_UNTIL_WINNER_AND_FRESH_REPRO_PASS"
   },
   "winner_certification_pipeline": {
     "selection_schema": "SPINCORE_R7_3_WINNER_SELECTION_V1",
@@ -192,16 +199,29 @@
     "semantic_freeze_workflow": ".github/workflows/r7_3_freeze_candidate_semantics.yml",
     "semantic_freeze_schema": "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1",
     "freeze_requires_actual_5x64_gate_pass": true,
+    "freeze_pins_algorithm_seeds": [20260829, 20260807],
+    "freeze_pins_exact_evidence_commit_bytes": true,
     "freeze_records_exact_source_commit_and_git_objects": true,
     "fresh_exact_source_tool": "tools/run_r7_3_frozen_candidate_fresh_repro.py",
     "fresh_exact_source_workflow": ".github/workflows/r7_3_frozen_candidate_fresh_repro.yml",
     "fresh_repro_schema": "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1",
     "fresh_repro_builds_and_tests_exact_source_commit": true,
-    "fresh_repro_cpp_regression": true,
-    "fresh_repro_python_regression": true,
     "fresh_repro_complete_evidence_numeric_tolerance": 1e-9,
     "fresh_repro_ignores_only": ["generated_at_unix", "duration_seconds"],
-    "current_state": "PREPARED_NO_WINNER_SELECTION_FILE_EXISTS"
+    "checkpoint_recert_tool": "tools/run_r7_3_frozen_candidate_checkpoint_recert.py",
+    "checkpoint_recert_worker": "tools/r7_3_frozen_candidate_checkpoint_worker.py",
+    "checkpoint_recert_workflow": ".github/workflows/r7_3_frozen_candidate_checkpoint_recert.yml",
+    "checkpoint_recert_schema": "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1",
+    "checkpoint_recert_exact_source_behavior": true,
+    "checkpoint_recert_split_iteration": 3,
+    "checkpoint_recert_requires_exact_final_state": true,
+    "acceptance_640_tool": "tools/run_r7_3_frozen_candidate_640_acceptance.py",
+    "acceptance_640_workflow": ".github/workflows/r7_3_frozen_candidate_640_acceptance.yml",
+    "acceptance_640_schema": "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1",
+    "acceptance_640_roots_per_seed": 640,
+    "acceptance_640_requires_freeze_fresh_and_checkpoint_pass": true,
+    "acceptance_640_ready_for_tables_even_if_pass": false,
+    "current_state": "FULL_PIPELINE_PREPARED_NO_WINNER_SELECTION_FILE_EXISTS"
   },
   "automation": {
     "base_durability_summary": {
@@ -230,9 +250,9 @@
     }
   },
   "prepared_but_blocked": {
-    "policy_mixture_size4_640": {"status": "DORMANT", "reason": "No five-iteration candidate has completed winner certification."},
-    "policy_mixture_size8_640": {"status": "NOT_CREATED_FOR_EXECUTION", "reason": "Winner selection, semantic freeze, exact-source fresh reproducibility and candidate checkpoint/resume recertification must precede 640."}
+    "legacy_size4_policy_mixture_640": {"status": "DORMANT", "reason": "Plain size4 failed five-iteration durability."},
+    "certified_winner_640": {"status": "PREPARED_BUT_GATED", "reason": "Requires a gate-clearing 5x64 winner, immutable semantic freeze, exact-source fresh reproducibility and physical checkpoint/resume recertification."}
   },
-  "next_physical_step": "Resolve the active size4 uncertainty calibration, size8 durability/compositions and independent baseline reproduction. Prefer the smallest fit-valid 5x64 mechanism that clears both 0.15/0.35 gates. A gate-clearing winner must be selected with exact source workflow metadata, frozen fail-closed, reproduced from the exact source commit, then physically recertified continuous-vs-stop/restore/continue before any 640 acceptance scaling. No gate relaxation.",
+  "next_physical_step": "Resolve the active size4 uncertainty calibration, size8 durability/compositions and independent baseline reproduction. Prefer the smallest fit-valid 5x64 mechanism that clears both 0.15/0.35 gates while retaining robust margin. A selected winner is now automatically gated through immutable semantic freeze, exact-source fresh-process reproducibility, exact continuous-vs-stop/restore/continue recertification and only then exact-source 640 acceptance. A 640 pass advances to R7.4, never directly to tables. No gate relaxation.",
   "ready_for_tables": false
 }
