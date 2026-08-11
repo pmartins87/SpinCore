@@ -160,6 +160,35 @@ def test_restore_fails_closed_on_mismatched_base_primary():
         restore_candidate_behavior_models(payload, config=cfg, primary_model=wrong)
 
 
+def test_restore_side_models_does_not_advance_global_torch_rng():
+    cfg = _cfg()
+    primary = _adv(cfg, 201)
+    current = [primary] + [_adv(cfg, 210 + i) for i in range(7)]
+    previous = [_adv(cfg, 230 + i) for i in range(8)]
+    payload = pack_candidate_behavior(
+        kind="temporal_w50",
+        primary_model=primary,
+        current_models=current,
+        previous_models=previous,
+        params={"current_weight": 0.5},
+        fit_generation=4,
+    )
+    restored_primary = _adv(cfg, 999)
+    restored_primary.load_state_dict(primary.state_dict())
+
+    torch.manual_seed(0x715EED)
+    before = torch.get_rng_state().clone()
+    got_current, got_previous, _ = restore_candidate_behavior_models(
+        payload,
+        config=cfg,
+        primary_model=restored_primary,
+    )
+    after = torch.get_rng_state().clone()
+
+    assert torch.equal(before, after)
+    assert len(got_current) == 8 and len(got_previous) == 8
+
+
 def test_candidate_payload_survives_authoritative_checkpoint_extra(tmp_path):
     bundle = _bundle(101)
     side = [_adv(bundle.config, 110 + i) for i in range(3)]
@@ -181,12 +210,14 @@ def test_candidate_payload_survives_authoritative_checkpoint_extra(tmp_path):
         {"candidate_behavior": behavior_payload},
     )
     restored_bundle, progress, extra = load_checkpoint(path)
+    torch_rng_after_base_load = torch.get_rng_state().clone()
     got_current, got_previous, meta = restore_candidate_behavior_models(
         extra["candidate_behavior"],
         config=restored_bundle.config,
         primary_model=restored_bundle.advantage,
     )
 
+    assert torch.equal(torch_rng_after_base_load, torch.get_rng_state())
     assert progress.iteration == 3 and progress.root_index == 17
     assert len(got_current) == 4 and len(got_previous) == 4
     assert got_current[0] is restored_bundle.advantage
