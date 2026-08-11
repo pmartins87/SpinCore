@@ -1,0 +1,87 @@
+name: SpinCore R7.3 winner proposal
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 paired policy-mixture size 8 durability'
+      - 'SpinCore R7.3 size8 temporal-w50 durability'
+      - 'SpinCore R7.3 size8 uncertainty-s10 durability'
+      - 'SpinCore R7.3 uncertainty damping extension'
+      - 'SpinCore R7.3 uncertainty damping extension 2'
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - 'validation/R7_3_ACTIVE_CANDIDATE_PROVENANCE.json'
+      - 'tools/propose_r7_3_winner.py'
+      - '.github/workflows/r7_3_winner_proposal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build provenance-bound proposal when complete
+        id: proposal
+        shell: bash
+        run: |
+          set +e
+          python tools/propose_r7_3_winner.py \
+            --repo-root . \
+            --provenance validation/R7_3_ACTIVE_CANDIDATE_PROVENANCE.json \
+            --out validation/R7_3_WINNER_PROPOSAL.json
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo 'complete=true' >> "$GITHUB_OUTPUT"
+          elif [ "$rc" -eq 3 ]; then
+            echo 'complete=false' >> "$GITHUB_OUTPUT"
+            echo 'Active candidate frontier is not complete yet; no proposal committed.'
+          else
+            exit "$rc"
+          fi
+      - name: Validate complete proposal
+        if: steps.proposal.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_WINNER_PROPOSAL.json'))
+          assert d['schema']=='SPINCORE_R7_3_WINNER_PROPOSAL_V1'
+          assert d['complete'] is True
+          assert d['candidate_count']==9
+          assert d['selection_automatic'] is False
+          assert d['ready_for_tables'] is False
+          for row in d['rows']:
+              if row['full_5x64_gate_pass']:
+                  assert row['per_seed_fit_pass'] is True
+                  assert row['mean_tv'] <= .15
+                  assert row['p95_tv'] <= .35
+          print('R7.3 winner proposal validation OK')
+          PY
+      - name: Persist complete proposal
+        if: steps.proposal.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_WINNER_PROPOSAL.json
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record provenance-bound R7.3 winner proposal [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
