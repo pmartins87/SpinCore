@@ -69,10 +69,6 @@ jobs:
         id: physical
         continue-on-error: true
         shell: bash
-        env:
-          SPINCORE_TORCH_THREADS: '2'
-          OMP_NUM_THREADS: '2'
-          MKL_NUM_THREADS: '2'
         run: |
           set -euo pipefail
           python tools/run_r7_3_frozen_candidate_640_acceptance.py \
@@ -117,6 +113,7 @@ jobs:
           assert d.get('schema')=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
           assert d.get('r7_3_640_acceptance_pass') is True, d
           assert d.get('r7_3_ready_to_advance_to_r7_4') is True
+          assert d.get('thread_environment_overrides_injected_by_certifier') is False
           assert d.get('ready_for_tables') is False
           print('certified R7.3 winner 640 acceptance PASS; R7.4 may begin')
           PY
