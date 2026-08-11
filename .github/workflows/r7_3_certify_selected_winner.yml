@@ -1,0 +1,277 @@
+name: SpinCore R7.3 certify selected winner through 640
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 materialize winner selection'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-selected-winner-certification
+  cancel-in-progress: false
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      selected: ${{ steps.gate.outputs.selected }}
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Check selected winner exists
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f validation/R7_3_WINNER_SELECTION.json ]; then
+            echo 'selected=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'selected=false' >> "$GITHUB_OUTPUT"
+            echo 'No selected winner exists; certification cascade exits without work.'
+          fi
+      - name: Freeze immutable winner semantics
+        if: steps.gate.outputs.selected == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/freeze_r7_3_candidate_semantics.py \
+            --selection validation/R7_3_WINNER_SELECTION.json \
+            --out validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          assert d['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert d['evidence_r7_3_pass'] is True
+          assert d['ready_for_640'] is False
+          assert d['ready_for_tables'] is False
+          PY
+      - name: Persist semantic freeze
+        if: steps.gate.outputs.selected == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Freeze selected R7.3 winner semantics [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+
+  fresh_repro:
+    needs: freeze
+    if: needs.freeze.outputs.selected == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Exact-source fresh-process reproducibility
+        id: physical
+        continue-on-error: true
+        shell: bash
+        env:
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          python tools/run_r7_3_frozen_candidate_fresh_repro.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-out validation/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json \
+            --report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+      - name: Persist fresh-process evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          report=validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+          raw=validation/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json
+          if [ ! -f "$report" ]; then
+            echo '{"schema":"SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1","runner_failed_before_report":true,"fresh_process_reproducible":false,"ready_for_640":false,"ready_for_tables":false}' > "$report"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$report"
+          if [ -f "$raw" ]; then git add -f "$raw"; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record selected R7.3 winner fresh reproducibility [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce fresh-process gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          assert d.get('fresh_process_reproducible') is True, d
+          assert d.get('ready_for_640') is False
+          PY
+
+  checkpoint_recert:
+    needs: fresh_repro
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Physical exact-source checkpoint recertification
+        id: physical
+        continue-on-error: true
+        shell: bash
+        env:
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          python tools/run_r7_3_frozen_candidate_checkpoint_recert.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json \
+            --out validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json \
+            --split-iteration 3
+      - name: Persist checkpoint recertification evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json
+          if [ ! -f "$out" ]; then
+            echo '{"schema":"SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1","runner_failed_before_report":true,"checkpoint_resume_recertification_pass":false,"ready_for_640":false,"ready_for_tables":false}' > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record selected R7.3 winner checkpoint recertification [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce checkpoint gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json'))
+          assert d.get('checkpoint_resume_recertification_pass') is True, d
+          assert d.get('ready_for_640') is False
+          PY
+
+  acceptance_640:
+    needs: checkpoint_recert
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Exact-source 640 acceptance
+        id: physical
+        continue-on-error: true
+        shell: bash
+        env:
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          python tools/run_r7_3_frozen_candidate_640_acceptance.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json \
+            --checkpoint-report validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json \
+            --evidence-out validation/R7_3_FROZEN_CANDIDATE_640_EVIDENCE.json \
+            --report-out validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+      - name: Persist 640 evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          raw=validation/R7_3_FROZEN_CANDIDATE_640_EVIDENCE.json
+          report=validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+          if [ ! -f "$report" ]; then
+            echo '{"schema":"SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1","runner_failed_before_report":true,"r7_3_640_acceptance_pass":false,"r7_3_ready_to_advance_to_r7_4":false,"ready_for_tables":false}' > "$report"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$report"
+          if [ -f "$raw" ]; then git add -f "$raw"; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record selected R7.3 winner 640 acceptance [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce 640 acceptance gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          assert d.get('r7_3_640_acceptance_pass') is True, d
+          assert d.get('r7_3_ready_to_advance_to_r7_4') is True
+          assert d.get('ready_for_tables') is False
+          print('R7.3 certified winner 640 PASS; R7.4 may begin')
+          PY
