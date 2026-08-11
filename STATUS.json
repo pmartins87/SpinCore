@@ -1,6 +1,6 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.20",
+  "version": "1.12.1-recovery.21",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
@@ -8,11 +8,12 @@
   "current_gate_status": "UNCERTAINTY_S10_BEST_DURABLE_LOCAL_CALIBRATION_AND_SIZE8_COMPOSITIONS_RUNNING",
   "ready_for_tables": false,
   "regression": {
-    "latest_workflow": 31449980549,
-    "commit": "2a1871bf76ea4bf5c6e4d4707b7e4ff9c331ba93",
+    "latest_workflow": 31450903801,
+    "commit": "f2dd847f44baac45da5bf8255768a2fc75a65121",
     "cpp": "PASS",
-    "python_tests_passed": 32,
-    "candidate_checkpoint_tests_included": true
+    "python_tests_passed": 33,
+    "candidate_checkpoint_tests_included": true,
+    "candidate_side_restore_torch_rng_neutral": true
   },
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -106,7 +107,12 @@
     "helper": "python/spincore/r7_candidate_checkpoint.py",
     "schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
     "documentation": "validation/R7_3_CANDIDATE_CHECKPOINT_READINESS_20260810.md",
-    "serialization_unit_regression": "PASS_32_PYTHON_TESTS",
+    "serialization_unit_regression": "PASS_33_PYTHON_TESTS",
+    "side_model_restore_torch_rng_neutral": true,
+    "rng_bug_found_and_fixed": "SIDE_MODEL_CONSTRUCTION_WOULD_HAVE_ADVANCED_GLOBAL_TORCH_RNG_AFTER_BASE_CHECKPOINT_RESTORE",
+    "fix_commit": "6dcd2cff21d9a9d366389b2d1e5d15ad53179eab",
+    "verification_commit": "f2dd847f44baac45da5bf8255768a2fc75a65121",
+    "verification_workflow": 31450903801,
     "physical_continuous_vs_restore_recertification": "BLOCKED_UNTIL_WINNER_SELECTED"
   },
   "active_physical_runs": {
@@ -165,6 +171,6 @@
     "policy_mixture_size4_640": {"status": "DORMANT", "reason": "No five-iteration size4 candidate has cleared both cross-seed gates yet."},
     "policy_mixture_size8_640": {"status": "NOT_CREATED_FOR_EXECUTION", "reason": "Winner selection, semantic freeze, fresh-process reproducibility and candidate checkpoint/resume recertification must precede 640."}
   },
-  "next_physical_step": "Resolve s125/s150 local uncertainty calibration plus size8 no-damping, regret-floor, size8+temporal-w50 and size8+uncertainty-s10. Prefer the smallest fit-valid five-iteration gate-clearing mechanism. If a winner clears 0.15/0.35, freeze exact behavior semantics, run fresh-process reproducibility, then physical continuous-vs-stop/restore/continue recertification using the candidate behavior checkpoint extra schema before any 640 acceptance scaling. No gate relaxation.",
+  "next_physical_step": "Resolve s125/s150 local uncertainty calibration plus size8 no-damping, regret-floor, size8+temporal-w50 and size8+uncertainty-s10. Prefer the smallest fit-valid five-iteration gate-clearing mechanism. Candidate checkpoint preparation is now hardened against hidden torch-RNG advancement during side-model restore and verified by main regression. If a winner clears 0.15/0.35, freeze exact behavior semantics, run fresh-process reproducibility, then physical continuous-vs-stop/restore/continue recertification using the candidate behavior checkpoint extra schema before any 640 acceptance scaling. No gate relaxation.",
   "ready_for_tables": false
 }
