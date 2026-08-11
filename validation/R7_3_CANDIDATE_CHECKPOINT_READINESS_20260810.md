@@ -38,7 +38,10 @@ The contract is:
 4. temporal previous-generation members are serialized independently;
 5. wrapper parameters and fit generation are stored explicitly;
 6. restore fails closed if the primary model loaded by the base checkpoint does not exactly match the candidate payload;
-7. restored `current_models[0]` reuses the already-restored authoritative primary object, preventing an accidental duplicate member-zero network.
+7. restored `current_models[0]` reuses the already-restored authoritative primary object, preventing an accidental duplicate member-zero network;
+8. restoring side models is **global-torch-RNG neutral**.
+
+The last point was an important determinism hardening found while preparing recertification. Constructing a PyTorch module initializes its parameters before `load_state_dict()` overwrites them. A naive side-model restore would therefore consume the global torch RNG immediately after the authoritative checkpoint had restored it and would silently make `stop -> restore -> continue` diverge from continuous execution. Side-model construction is now isolated with `torch.random.fork_rng(devices=[])`, so restoring candidate ensemble members leaves the restored global torch RNG unchanged.
 
 The candidate payload is stored through the existing checkpoint `extra` field. This keeps R7.2 state compatibility separate from R7.3 experimental behavior semantics.
 
@@ -51,7 +54,15 @@ The candidate payload is stored through the existing checkpoint `extra` field. T
 - temporal current + previous ensemble roundtrip;
 - snapshot isolation from later model mutation;
 - fail-closed primary-state mismatch;
-- survival of the candidate payload through the real `save_checkpoint` / `load_checkpoint` `extra` path.
+- candidate side-model restore does not advance the global torch RNG;
+- survival of the candidate payload through the real `save_checkpoint` / `load_checkpoint` `extra` path, including preservation of the torch RNG state after side-model reconstruction.
+
+Main regression workflow `31450903801`, commit `f2dd847f44baac45da5bf8255768a2fc75a65121`:
+
+```text
+C++ regression: PASS
+Python regression: 33 passed
+```
 
 These are serialization/readiness tests only. They are **not** a substitute for the required physical recertification.
 
@@ -70,6 +81,7 @@ The comparison must include, at minimum:
 - counters;
 - Advantage and Strategy reservoir contents/order;
 - `bundle.batch_rng` continuation;
+- global torch RNG continuation;
 - primary Advantage model;
 - every side Advantage model;
 - previous ensemble when the winner is temporal;
@@ -81,4 +93,4 @@ Any mismatch blocks 640 acceptance scaling.
 
 ## Current state
 
-The serialization helper and tests are committed on `main`. The normal main regression is the gate for this preparation. Physical candidate recertification remains intentionally blocked until the five-iteration winner is known, so we do not freeze or certify semantics that may be discarded.
+The serialization helper, RNG-neutral side-model restoration, and regression coverage are committed on `main`. Physical candidate recertification remains intentionally blocked until the five-iteration winner is known, so we do not freeze or certify semantics that may be discarded.
