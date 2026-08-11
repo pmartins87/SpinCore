@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.13",
+  "version": "1.12.1-recovery.14",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "FIVE_ITERATION_DURABILITY_OPTIMIZATION_ACTIVE_NO_640_ESCALATION",
+  "current_gate_status": "FIVE_ITERATION_DURABILITY_MATRIX_RUNNING_FINAL_POLICY_RESIDUAL_AND_TARGET_ORDER_RESULTS_IN",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -36,17 +36,16 @@
   },
   "paired_policy_mixture_size4_256": {
     "workflow": 31428299914,
-    "evidence_commit": "76ac23287961cc3c650a1b60891648bfe975b145",
     "mean_tv": 0.17194043099880219,
     "p95_tv": 0.4136051535606384,
     "per_seed_fit_pass": true,
-    "diagnosis": "STRONG_TWO_ITERATION_SIGNAL"
+    "fresh_run_31440366942_cross_seed_exact_reproduction": true,
+    "diagnosis": "STRONG_TWO_ITERATION_SIGNAL_FRESH_RUN_REPRODUCED"
   },
   "policy_mixture_compounding_320": {
     "workflow": 31432403037,
     "iterations": 5,
     "roots_per_seed": 320,
-    "duration_seconds": 6544.459480047226,
     "mean_tv": 0.2665907144546509,
     "p50_tv": 0.24680466949939728,
     "p95_tv": 0.5670017600059509,
@@ -60,9 +59,42 @@
     "diagnosis": "SIZE4_POLICY_MIXTURE_GAIN_DECAYS_MATERIALLY_WITH_FIVE_ITERATION_FEEDBACK",
     "decision": "DO_NOT_ESCALATE_SIZE4_TO_640"
   },
+  "policy_mixture_plus_final_policy_ensemble_256": {
+    "workflow": 31440493410,
+    "evidence_commit": "eb115121b9a4002615f3310767c89aebbfce05c9",
+    "policy_size1": {"mean_tv": 0.17974971234798431, "p95_tv": 0.43464410305023193},
+    "policy_size2": {"mean_tv": 0.1591653972864151, "p95_tv": 0.4047917127609253},
+    "policy_size4": {"mean_tv": 0.13837657868862152, "p95_tv": 0.36872994899749756},
+    "policy_size4_mean_gate_pass": true,
+    "policy_size4_p95_gate_pass": false,
+    "all_fit_gates_pass": true,
+    "diagnosis": "FINAL_POLICY_ENSEMBLE_SUPPLIES_MATERIAL_RESIDUAL_REDUCTION_BUT_SHORT_HORIZON_P95_STILL_MISSES_BY_0_01873",
+    "decision": "DO_NOT_RUN_STANDALONE_FIVE_ITERATION_VARIANT_UNTIL_AN_UPSTREAM_DURABLE_WINNER_EXISTS"
+  },
+  "policy_mixture_support_conditioned_256": {
+    "workflow": 31440576227,
+    "evidence_commit": "3e05501faf64da91d5ca257b70423271603b6013",
+    "union_A_B": {"mean_tv": 0.1678057461977005, "p95_tv": 0.41149118542671204},
+    "shared_exact": {"count": 139, "mean_tv": 0.18156151473522186, "p95_tv": 0.39876919984817505},
+    "support_A_unique_exact": {"mean_tv": 0.18729060888290405, "p95_tv": 0.4174702763557434},
+    "support_B_unique_exact": {"mean_tv": 0.15775564312934875, "p95_tv": 0.41820281744003296},
+    "diagnosis": "SHARED_STATE_DISAGREEMENT_REMAINS_MATERIAL_OFF_SUPPORT_IS_NOT_THE_SOLE_P95_SOURCE"
+  },
+  "behavior_target_aggregation_order_256": {
+    "workflow": 31441852607,
+    "evidence_commit": "57df6d80b457b77cb3e6c1f1906b5678bb43df12",
+    "raw_samples": 10565,
+    "unique_observation_legal_groups": 10515,
+    "compression_ratio": 0.9952673923331756,
+    "mean_of_sample_rm_pairwise_mean_tv": 0.10457627351085345,
+    "mean_of_sample_rm_pairwise_p95_tv": 0.35709961752096814,
+    "rm_of_weighted_mean_regret_pairwise_mean_tv": 0.10243512317538261,
+    "rm_of_weighted_mean_regret_pairwise_p95_tv": 0.3476518243551254,
+    "same_memory_p95_gate_pass_for_regret_first_order": true,
+    "diagnosis": "REGRET_SPACE_AGGREGATION_ORDER_IS_CLEANER_BUT_EXACT_DUPLICATES_ARE_RARE_SO_E2E_REQUIRED"
+  },
   "direct_behavior_e2e_256": {
     "workflow": 31431672631,
-    "evidence_commit": "1d1ac9b23abd2afedec8390e3f8bb482c11b0625",
     "mean_tv": 0.1425531655550003,
     "p95_tv": 0.42685970664024353,
     "mean_gate_pass": true,
@@ -71,21 +103,19 @@
     "theoretical_equivalence_claimed": false,
     "diagnosis": "SMOOTHING_SIGNAL_STRONG_BUT_SURROGATE_NOT_PROMOTABLE"
   },
-  "partial_exact_support_by_iteration_256": {
-    "workflow": 31431939967,
-    "evidence_commit": "086df6ed397ecc4a2e61728aa3b40f0f58593675",
-    "iteration1_poker_shared_target_weighted_mean_tv": 0.0,
-    "iteration1_poker_shared_target_p95_tv": 0.0,
-    "iteration2_poker_shared_target_weighted_mean_tv": 0.47394579759275396,
-    "iteration2_poker_shared_target_p95_tv": 1.0,
-    "diagnosis": "TARGET_DIVERGENCE_APPEARS_AFTER_FIRST_ADVANTAGE_FIT"
+  "size1_five_iteration_factorial": {
+    "workflow": 31441110526,
+    "no_damping": {"mean_tv": 0.4388447701931, "p95_tv": 0.8787288665771484},
+    "epsilon0_0_30_decay_0_50": {"mean_tv": 0.3953329920768738, "p95_tv": 0.7982872128486633},
+    "mean_ratio_tremble_to_no_damping": 0.90085,
+    "p95_ratio_tremble_to_no_damping": 0.90846,
+    "diagnosis": "DAMPING_ALONE_IS_BENEFICIAL_BUT_ENSEMBLING_REMAINS_THE_LARGER_EFFECT"
   },
   "robust_policy_aggregation_same_memory_256": {
     "workflow": 31440742014,
     "evidence_commit": "b9a756af32341e7e6d51047ff584c94e606c8dce",
     "mean_aggregation": {"mean_tv": 0.13742117002288864, "p95_tv": 0.3881133198738098},
     "median_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
-    "trimmed_mean_aggregation": {"mean_tv": 0.14363938197143356, "p95_tv": 0.4888266324996948},
     "diagnosis": "ROBUST_POLICY_AGGREGATION_NOT_MATERIAL",
     "decision": "CLOSED"
   },
@@ -95,33 +125,22 @@
     "iteration2_shared_strategy_target_tail_saturates_at_tv_one": true,
     "advantage_function_approximation_variance_material": true,
     "strategy_support_fragmentation_material": true,
+    "shared_state_disagreement_material": true,
+    "off_support_extrapolation_is_sole_tail_source": false,
     "final_average_policy_is_primary_p95_source": false,
-    "policy_mixture_size4_two_iteration_signal_material": true,
+    "final_policy_ensemble_residual_reduction_material": true,
     "policy_mixture_size4_durable_over_five_iterations": false,
-    "robust_member_outlier_aggregation_primary_solution": false,
-    "direct_behavior_smoothing_signal_material": true,
+    "global_damping_size1_signal_material": true,
+    "regret_first_behavior_target_order_same_memory_p95_pass": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
   "active_physical_runs": {
     "policy_mixture_size8_256": {"workflow": 31440425854, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
-    "policy_mixture_plus_final_policy_ensemble_256": {"workflow": 31440493410, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
-    "policy_mixture_support_conditioned_256": {"workflow": 31440576227, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
-    "behavior_target_aggregation_order_256": {
-      "workflow": 31441852607,
-      "status": "PHYSICAL_SCREEN_RUNNING_AFTER_SMOKE_PASS",
-      "purpose": "Compare sample-level RM, mean sample-RM, and RM of weighted mean regret on exact duplicate observations."
-    },
     "decaying_uniform_tremble_size4_320": {
       "workflow": 31441018067,
       "status": "THREE_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
       "epsilon0_matrix": [0.15, 0.30, 0.45],
-      "epsilon_decay": 0.50
-    },
-    "tremble_factorial_size1_320": {
-      "workflow": 31441110526,
-      "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
-      "epsilon0_matrix": [0.0, 0.30],
       "epsilon_decay": 0.50
     },
     "temporal_policy_blend_size4_320": {
@@ -141,25 +160,27 @@
     },
     "uncertainty_adaptive_damping_size4_320": {
       "workflow": 31442367579,
-      "status": "STARTING_TWO_JOB_MATRIX",
+      "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
       "epsilon_scale_matrix": [0.50, 1.00],
-      "epsilon_cap": 0.50,
-      "purpose": "Damp only states where fitted regret-policy ensemble members disagree, avoiding global flattening of stable states."
+      "epsilon_cap": 0.50
     },
-    "policy_mixture_size4_256_reproducibility": {"workflow": 31440366942, "status": "PHYSICAL_256_RUNNING"},
+    "direct_behavior_aggregated_regret_horizon_matrix": {
+      "workflow": 31444324235,
+      "status": "SHORT_256_AND_DURABILITY_320_PHYSICAL_RUNNING_AFTER_SMOKE_PASS",
+      "purpose": "Test LCFR-weighted mean regret per exact infoset before hard RM as a cleaner Direct Behavior target order. Non-promotable until semantic review."
+    },
     "policy_mixture_compounding_320_reproducibility": {"workflow": 31440366909, "status": "PHYSICAL_320_RUNNING"}
   },
   "automation": {
     "durability_matrix_summary": {
       "tool": "tools/summarize_r7_3_durability_matrix.py",
-      "workflow": "r7_3_durability_matrix_summary.yml",
-      "behavior": "Auto-commit consolidated ranking only when all expected five-iteration evidence files exist."
+      "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2",
+      "expected_candidate_rows": 12,
+      "behavior": "Auto-commit consolidated ranking only when all expected five-iteration evidence files exist; Direct Behavior variants excluded from automatic conservative promotion."
     },
     "fresh_run_reproducibility": {
       "tool": "tools/check_r7_3_fresh_run_reproducibility.py",
-      "workflow": "r7_3_fresh_run_reproducibility.yml",
-      "tolerance": 1e-9,
-      "behavior": "Compare latest two 256/320 evidence commits for exact structural/sample/node counters and cross-seed numerical reproducibility."
+      "tolerance": 1e-9
     }
   },
   "prepared_but_blocked": {
@@ -168,6 +189,6 @@
       "reason": "Five-iteration size4 compounding failed durability; must not be triggered."
     }
   },
-  "next_physical_step": "Resolve the static residual-tail screens and five-iteration damping matrix. No 640 escalation. A candidate must materially beat both mean and p95 of 0.2665907145/0.5670017600 with frozen fit gates PASS at 5x64. Compare global decaying tremble, first-transition-only tremble, previous-policy temporal blending, and ensemble-disagreement adaptive damping. Use size1/no-tremble and size1/e30 to separate ensemble versus damping effects. Behavior-target aggregation order may suggest a cleaner direct-policy target but cannot be promoted without an E2E and semantic review. Then require fresh-run reproducibility, explicit versioning and checkpoint/resume recertification before acceptance scale. No gate relaxation.",
+  "next_physical_step": "Resolve the active five-iteration damping matrix and size8 short-horizon screen. Rank only mechanisms that beat both 0.2665907145 mean and 0.5670017600 p95 with frozen fit gates PASS at 5x64. The completed final-policy size4 ensemble is a useful residual layer (0.138377/0.368730 at 2x128) but should be stacked only on an upstream candidate that first proves five-iteration durability. The regret-first Direct Behavior target now has an E2E 2x128+5x64 horizon matrix running because its same-memory p95 reached 0.347652; it remains non-promotable without semantic/versioning review. No 640 escalation and no gate relaxation.",
   "ready_for_tables": false
 }
