@@ -1,0 +1,279 @@
+name: SpinCore R7.3 source-exact recertification repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_source_exact_recertification_repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-3-source-exact-recertification-repair
+  cancel-in-progress: false
+
+jobs:
+  fresh_source_exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies exactly as source workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Audit source thread-environment contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, torch
+          d=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          assert d['thread_environment_contract']=='SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE'
+          print('SPINCORE_TORCH_THREADS=',repr(os.environ.get('SPINCORE_TORCH_THREADS')))
+          print('OMP_NUM_THREADS=',repr(os.environ.get('OMP_NUM_THREADS')))
+          print('MKL_NUM_THREADS=',repr(os.environ.get('MKL_NUM_THREADS')))
+          print('torch.get_num_threads()=',torch.get_num_threads())
+          PY
+      - name: Exact frozen-source fresh-process reproduction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_frozen_candidate_fresh_repro.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-out /tmp/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json \
+            --report /tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+      - name: Enforce exact zero-difference fresh gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          assert d['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1'
+          assert d['difference_count']==0, d.get('differences',[])[:5]
+          assert d['fresh_process_reproducible'] is True
+          assert d['thread_environment_overrides_injected_by_certifier'] is False
+          assert d['ready_for_640'] is False
+          assert d['ready_for_tables'] is False
+          print('R7.3 source-exact fresh-process reproducibility PASS')
+          PY
+      - name: Persist validated fresh evidence conflict-safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json validation/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json
+            cp /tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+            git add -f validation/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Record source-exact R7.3 fresh reproducibility repair [r7-evidence-skip]'
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 2))
+          done
+          exit 1
+
+  checkpoint_recert:
+    needs: fresh_source_exact
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+    steps:
+      - name: Checkout latest main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies exactly as source workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Verify fresh prerequisite from latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          assert d['fresh_process_reproducible'] is True
+          assert d['difference_count']==0
+          assert d['thread_environment_overrides_injected_by_certifier'] is False
+          PY
+      - name: Physical continuous-vs-stop-restore-continue recertification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_frozen_candidate_checkpoint_recert.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json \
+            --out /tmp/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json \
+            --split-iteration 3
+      - name: Enforce checkpoint-resume gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json'))
+          assert d['schema']=='SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1'
+          assert d['checkpoint_resume_recertification_pass'] is True, d
+          assert d['fresh_process_zero_difference_gate_passed_first'] is True
+          assert d['algorithm_source_exact_worktree'] is True
+          assert d['checkpoint_worker_executed_from_frozen_worktree_overlay'] is True
+          assert d['thread_environment_overrides_injected_by_certifier'] is False
+          assert d['ready_for_640'] is False
+          assert d['ready_for_tables'] is False
+          print('R7.3 checkpoint/resume recertification PASS')
+          PY
+      - name: Persist validated checkpoint evidence conflict-safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json
+            git add -f validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Record source-exact R7.3 checkpoint recertification repair [r7-evidence-skip]'
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 2))
+          done
+          exit 1
+
+  acceptance_640:
+    needs: checkpoint_recert
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    steps:
+      - name: Checkout latest main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies exactly as source workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Verify full certification prerequisites from latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python - <<'PY'
+          import json
+          f=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          c=json.load(open('validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json'))
+          assert f['fresh_process_reproducible'] is True and f['difference_count']==0
+          assert c['checkpoint_resume_recertification_pass'] is True
+          PY
+      - name: Exact frozen-source 640-root acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/run_r7_3_frozen_candidate_640_acceptance.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --fresh-report validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json \
+            --checkpoint-report validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json \
+            --evidence-out /tmp/R7_3_FROZEN_CANDIDATE_640_EVIDENCE.json \
+            --report-out /tmp/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+      - name: Enforce frozen 640 acceptance gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          assert d['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1'
+          assert d['roots_per_seed']==640
+          assert d['structural_contract_pass'] is True
+          assert d['frozen_cross_seed_gates_pass'] is True, d['cross_seed']
+          assert d['r7_3_640_acceptance_pass'] is True
+          assert d['r7_3_ready_to_advance_to_r7_4'] is True
+          assert d['ready_for_tables'] is False
+          print('R7.3 source-exact 640 acceptance PASS; R7.4 unlocked')
+          PY
+      - name: Persist validated 640 evidence conflict-safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/R7_3_FROZEN_CANDIDATE_640_EVIDENCE.json validation/R7_3_FROZEN_CANDIDATE_640_EVIDENCE.json
+            cp /tmp/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+            git add -f validation/R7_3_FROZEN_CANDIDATE_640_EVIDENCE.json validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Record source-exact R7.3 640 acceptance repair [r7-evidence-skip]'
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 2))
+          done
+          exit 1
+
+  final_chain_audit:
+    needs: acceptance_640
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Audit complete immutable R7.3 chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          python - <<'PY'
+          import json
+          fr=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          f=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          c=json.load(open('validation/R7_3_FROZEN_CANDIDATE_CHECKPOINT_RECERT.json'))
+          a=json.load(open('validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'))
+          assert fr['label']=='size4_uncertainty_s175'
+          assert fr['acceptance_gate_changed'] is False
+          assert f['fresh_process_reproducible'] is True and f['difference_count']==0
+          assert c['checkpoint_resume_recertification_pass'] is True
+          assert a['r7_3_640_acceptance_pass'] is True
+          assert a['r7_3_ready_to_advance_to_r7_4'] is True
+          assert a['ready_for_tables'] is False
+          assert f['source_head_sha']==fr['source_head_sha']==a['source_head_sha']
+          print('R7.3 COMPLETE CERTIFICATION CHAIN PASS')
+          print('R7.4 may begin; READY FOR TABLES remains false')
+          PY
