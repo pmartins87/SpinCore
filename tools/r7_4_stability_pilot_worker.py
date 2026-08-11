@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import random
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -13,7 +12,6 @@ import run_r7_3_partial_exact_ensemble_paired as base
 import run_r7_3_policy_mixture_uncertainty_damping as uncertainty
 from run_r7_3_partial_exact_advantage_screen import PartialExactAdvantageCollector
 from run_r7_3_replicated_640_candidate import _fit_policy
-from run_r7_3_variance_decomposition import _advantage_fit_nrmse
 from spincore.deep_cfr import DeepCFRDomainSession, icm_delta_utility
 from spincore.r7 import FROZEN_GATES, audit_model_fit, cross_seed_policy_tv
 from spincore.solver import Episode, SolverLibrary
@@ -111,6 +109,29 @@ def _scenario_descriptor(ep: Episode) -> dict:
         "stacks": list(ep.stacks),
         "dealer_id": int(ep.dealer_id),
         "dead_players": list(ep.dead_players),
+    }
+
+
+def _runtime_statistics_for_behavior(behavior: uncertainty.UncertaintyDampedPolicyMixture, seed: int) -> dict:
+    """Snapshot diagnostics from this seed's own behavior instance only.
+
+    The R7.3 implementation keeps a process-global instance registry for its
+    report helper. A multi-domain R7.4 worker runs multiple seeds in one process,
+    so relying on that registry can mislabel the later seed. Reading the local
+    behavior object is semantically inert and makes provenance unambiguous.
+    """
+    calls = int(behavior.calls)
+    return {
+        "algorithm_seed": int(seed),
+        "fitted_behavior_calls": calls,
+        "mean_epsilon": float(behavior.epsilon_sum / calls) if calls else 0.0,
+        "max_epsilon": float(behavior.epsilon_max),
+        "mean_disagreement": float(behavior.disagreement_sum / calls) if calls else 0.0,
+        "max_raw_epsilon_before_cap": float(behavior.raw_epsilon_max),
+        "cap_hit_calls": int(behavior.cap_hit_calls),
+        "cap_hit_fraction": float(behavior.cap_hit_calls / calls) if calls else 0.0,
+        "epsilon_ge_0_10_fraction": float(behavior.epsilon_ge_010_calls / calls) if calls else 0.0,
+        "epsilon_ge_0_25_fraction": float(behavior.epsilon_ge_025_calls / calls) if calls else 0.0,
     }
 
 
@@ -247,7 +268,7 @@ def run_seed(*, seed: int, domain: str, solver: SolverLibrary, args, epsilon_sca
         seed=int(seed) ^ 0x13572468,
         device=args.device,
     )
-    runtime = uncertainty._runtime_statistics({"algorithm_seeds": [seed]})[-1]
+    runtime = _runtime_statistics_for_behavior(behavior, seed)
     fit = {
         "ensemble_advantage_weighted_nrmse": float(final_ensemble_nrmse),
         "policy_weighted_mean_tv": float(policy_audit["policy_weighted_mean_tv"]),
@@ -344,7 +365,7 @@ def main() -> int:
         "epsilon_scale": epsilon_scale,
         "epsilon_cap": epsilon_cap,
         "algorithm_seeds": heldout,
-        "seed_derivation": "SHA256('SpinCore|R7.4|heldout|index|' + frozen_evidence_sha256), first 63 positive bits; reject R7.3 seed collisions",
+        "seed_derivation": "SHA256('SpinCore|R7.4|heldout|index|' + frozen_evidence_sha256), first positive 31 bits; reject R7.3 seed collisions",
         "r7_3_selection_seeds_reused": False,
         "iterations": int(args.iterations),
         "roots_per_iteration": int(args.roots_per_iteration),
