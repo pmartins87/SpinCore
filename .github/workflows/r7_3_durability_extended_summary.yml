@@ -1,0 +1,87 @@
+name: SpinCore R7.3 extended durability summary
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 paired policy-mixture size 8 durability'
+      - 'SpinCore R7.3 decaying-tremble policy-mixture compounding'
+      - 'SpinCore R7.3 size1 tremble factorial'
+      - 'SpinCore R7.3 temporal policy-mixture feedback blend'
+      - 'SpinCore R7.3 first-transition-only policy-mixture damping'
+      - 'SpinCore R7.3 Direct Behavior compounding control'
+      - 'SpinCore R7.3 uncertainty-adaptive policy-mixture damping'
+      - 'SpinCore R7.3 aggregated-regret Direct Behavior'
+      - 'SpinCore R7.3 regret-floor policy-mixture durability'
+      - 'SpinCore R7.3 size8 temporal-w50 durability'
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_durability_extended_summary.yml'
+      - 'tools/summarize_r7_3_durability_extended.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check extended matrix completeness and summarize
+        id: summarize
+        shell: bash
+        run: |
+          set +e
+          PYTHONPATH=tools python tools/summarize_r7_3_durability_extended.py \
+            --repo-root . \
+            --out validation/R7_3_DURABILITY_EXTENDED_SUMMARY.json
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo 'complete=true' >> "$GITHUB_OUTPUT"
+          elif [ "$rc" -eq 3 ]; then
+            echo 'complete=false' >> "$GITHUB_OUTPUT"
+            echo 'Extended durability matrix is not complete yet; no summary evidence committed.'
+          else
+            exit "$rc"
+          fi
+      - name: Validate completed extended summary
+        if: steps.summarize.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_3_DURABILITY_EXTENDED_SUMMARY.json'))
+          assert d['schema']=='SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V1'
+          assert d['complete'] is True
+          assert d['expected_candidate_rows']==16
+          assert d['rows_including_baseline']==17
+          assert len(d['rows'])==17
+          assert d['acceptance_gate_changed'] is False
+          assert d['ready_for_tables'] is False
+          print('extended durability summary validation OK')
+          PY
+      - name: Persist completed extended durability summary
+        if: steps.summarize.outputs.complete == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=validation/R7_3_DURABILITY_EXTENDED_SUMMARY.json
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m 'Consolidate extended physical R7.3 durability matrix [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
