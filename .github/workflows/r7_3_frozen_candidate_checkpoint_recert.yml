@@ -19,27 +19,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check prerequisite evidence
+      - name: Check semantic freeze exists
         id: gate
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json ] && \
-             [ -f validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json ]; then
+          if [ -f validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json ]; then
             python - <<'PY'
           import json
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
-          r=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
           assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
-          assert r['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1'
-          assert r['fresh_process_reproducible'] is True
-          assert r['source_head_sha']==f['source_head_sha']
-          assert r['original_evidence_commit_sha']==f['evidence_commit_sha']
+          assert f['evidence_r7_3_pass'] is True
+          assert f['thread_environment_contract']=='SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE'
           PY
             echo 'run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'run=false' >> "$GITHUB_OUTPUT"
-            echo 'Frozen/fresh prerequisite evidence is not present yet.'
+            echo 'Semantic freeze is not present yet.'
           fi
       - name: Set up Python
         if: steps.gate.outputs.run == 'true'
@@ -97,6 +93,7 @@ jobs:
           assert d.get('checkpoint_resume_recertification_pass') is True, d
           assert d.get('thread_environment_overrides_injected_by_certifier') is False
           assert d.get('checkpoint_worker_executed_from_frozen_worktree_overlay') is True
+          assert d.get('fresh_process_zero_difference_gate_passed_first') is True
           assert d.get('ready_for_640') is False
           assert d.get('ready_for_tables') is False
           print('frozen candidate checkpoint recertification PASS')
