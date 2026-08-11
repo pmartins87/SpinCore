@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.15",
+  "version": "1.12.1-recovery.16",
   "recovery_generation": 2,
   "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_ACTIVE",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.3",
-  "current_gate_status": "DURABILITY_MATRIX_ACTIVE_DIRECT_BEHAVIOR_DURABILITY_FAILED_REGRET_FLOOR_BRANCH_RUNNING",
+  "current_gate_status": "SIZE8_SHORT_HORIZON_GATE_PASS_FIVE_ITERATION_DURABILITY_MATRIX_ACTIVE",
   "ready_for_tables": false,
   "network_recovery": {
     "generation2_trainable_params_per_network": 152438,
@@ -51,6 +51,22 @@
     "per_seed_fit_pass": true,
     "fresh_run_cross_seed_reproduced": true
   },
+  "short_horizon_size8_policy_mixture_256": {
+    "workflow": 31440425854,
+    "evidence_commit": "bfe6d4845600c3eafed36c85c0113756763f6910",
+    "duration_seconds": 5465.09929561615,
+    "mean_tv": 0.13961473107337952,
+    "p50_tv": 0.11208629608154297,
+    "p95_tv": 0.329689085483551,
+    "max_tv": 0.6253685355186462,
+    "per_seed_fit_pass": true,
+    "cross_seed_pass": true,
+    "r7_3_pass": true,
+    "mean_improvement_vs_size4_short_fraction": 0.18800522795972208,
+    "p95_improvement_vs_size4_short_fraction": 0.2028893193294907,
+    "interpretation": "FIRST_CURRENT_GENERATION_SHORT_HORIZON_CANDIDATE_TO_CLEAR_BOTH_FROZEN_CROSS_SEED_GATES",
+    "decision": "PROMOTED_TO_MANDATORY_5X64_DURABILITY_ONLY_NOT_TO_640"
+  },
   "direct_behavior": {
     "short_2x128": {
       "mean_tv": 0.1425531655550003,
@@ -69,6 +85,25 @@
     },
     "diagnosis": "SHORT_HORIZON_SMOOTHING_SIGNAL_IS_NOT_DURABLE_AND_P95_DEGRADES_SEVERELY_OVER_FIVE_ITERATIONS",
     "decision": "CLOSE_ORDINARY_DIRECT_BEHAVIOR_AS_DURABLE_SOLUTION_KEEP_ONLY_AS_CAUSAL_CONTROL"
+  },
+  "aggregated_regret_direct_behavior": {
+    "short_2x128": {
+      "workflow": 31444324235,
+      "evidence_commit": "c88f0d76cae42ef0e1851937771c060395ed1ac6",
+      "mean_tv": 0.15512189269065857,
+      "p50_tv": 0.11192115396261215,
+      "p95_tv": 0.43759503960609436,
+      "max_tv": 0.9398977160453796,
+      "per_seed_fit_pass": true,
+      "r7_3_pass": false
+    },
+    "comparison_to_ordinary_direct_behavior_short": {
+      "mean_worse_fraction": 0.08816869893225177,
+      "p95_worse_fraction": 0.025149558037105963
+    },
+    "diagnosis": "CLEANER_REGRET_AGGREGATION_ORDER_DID_NOT_IMPROVE_SHORT_HORIZON_E2E",
+    "automatic_promotion_eligible": false,
+    "durability_control_still_running": true
   },
   "final_policy_ensemble_residual_256": {
     "workflow": 31440493410,
@@ -95,11 +130,13 @@
     "unique_groups": 10515,
     "mean_sample_rm": {"mean_tv": 0.10457627351085345, "p95_tv": 0.35709961752096814},
     "rm_weighted_mean_regret": {"mean_tv": 0.10243512317538261, "p95_tv": 0.3476518243551254},
-    "diagnosis": "REGRET_FIRST_TARGET_ORDER_MARGINAL_SAME_MEMORY_P95_PASS_E2E_REQUIRED"
+    "diagnosis": "SAME_MEMORY_GAIN_DID_NOT_SURVIVE_SHORT_HORIZON_E2E"
   },
   "size1_damping_factorial_320": {
     "no_damping": {"mean_tv": 0.4388447701931, "p95_tv": 0.8787288665771484},
     "epsilon0_0_30_decay_0_50": {"mean_tv": 0.3953329920768738, "p95_tv": 0.7982872128486633},
+    "mean_improvement_fraction": 0.09915072725392214,
+    "p95_improvement_fraction": 0.09154320153590026,
     "diagnosis": "DAMPING_HAS_INDEPENDENT_BENEFIT_BUT_ENSEMBLING_IS_LARGER"
   },
   "sign_fragility_same_memory": {
@@ -119,13 +156,22 @@
     "off_support_extrapolation_is_sole_tail_source": false,
     "final_policy_ensemble_residual_reduction_material": true,
     "ordinary_direct_behavior_durable": false,
+    "aggregated_regret_direct_behavior_short_improvement": false,
     "global_damping_size1_signal_material": true,
     "near_zero_regret_sign_fragility_material": true,
+    "size8_policy_mixture_short_horizon_gate_pass": true,
     "raw_unique_root_scaling_paused": true,
     "frozen_gates_unchanged": true
   },
   "active_physical_runs": {
-    "policy_mixture_size8_256": {"workflow": 31440425854, "status": "PHYSICAL_256_RUNNING_AFTER_SMOKE_PASS"},
+    "policy_mixture_size8_durability_320": {
+      "workflow": 31446308103,
+      "status": "SMOKE_RUNNING_AFTER_BUILD_REGRESSION_PASS",
+      "ensemble_size": 8,
+      "iterations": 5,
+      "roots_per_seed": 320,
+      "purpose": "Mandatory durability gate after the size8 2x128 candidate cleared both frozen cross-seed gates."
+    },
     "decaying_uniform_tremble_size4_320": {
       "workflow": 31441018067,
       "status": "THREE_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
@@ -148,23 +194,27 @@
       "epsilon_scale_matrix": [0.50, 1.00],
       "epsilon_cap": 0.50
     },
-    "aggregated_regret_direct_behavior": {
+    "aggregated_regret_direct_behavior_durability": {
       "workflow": 31444324235,
-      "status": "SHORT_256_AND_DURABILITY_320_PHYSICAL_RUNNING_AFTER_SMOKE_PASS",
+      "status": "DURABILITY_320_PHYSICAL_RUNNING_SHORT_256_COMPLETE",
       "automatic_promotion_eligible": false
     },
     "regret_floor_policy_mixture_320": {
       "workflow": 31444922236,
-      "status": "BUILD_REGRESSION_RUNNING_FOR_TWO_JOBS",
+      "status": "TWO_PHYSICAL_320_JOBS_RUNNING_AFTER_SMOKE_PASS",
       "epsilon_matrix": [0.05, 0.10],
-      "purpose": "Directly regularize the empirically fragile near-zero regret boundary before policy-mixture averaging."
+      "purpose": "Regularize the empirically fragile near-zero regret boundary before policy-mixture averaging."
     },
-    "policy_mixture_compounding_320_reproducibility": {"workflow": 31440366909, "status": "PHYSICAL_320_RUNNING"}
+    "policy_mixture_compounding_320_reproducibility": {
+      "workflow": 31440366909,
+      "status": "PHYSICAL_320_RUNNING"
+    }
   },
   "automation": {
     "durability_matrix_summary": {
-      "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3",
-      "expected_candidate_rows": 14,
+      "schema": "SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4",
+      "expected_candidate_rows": 15,
+      "expected_total_rows_including_baseline": 16,
       "trigger_architecture": "WORKFLOW_RUN_ON_SOURCE_WORKFLOW_COMPLETION",
       "reason": "GitHub GITHUB_TOKEN evidence commits do not recursively trigger push workflows."
     },
@@ -177,8 +227,12 @@
     "policy_mixture_size4_640": {
       "status": "DORMANT",
       "reason": "Five-iteration size4 compounding failed durability; must not be triggered."
+    },
+    "policy_mixture_size8_640": {
+      "status": "NOT_CREATED_FOR_EXECUTION",
+      "reason": "Short-horizon size8 passed, but mandatory 5x64 durability, reproducibility, versioning and checkpoint/resume recertification must precede any 640 acceptance run."
     }
   },
-  "next_physical_step": "Resolve the active 5x64 matrix. Rank only fit-valid mechanisms that improve both 0.2665907145 mean and 0.5670017600 p95. Ordinary Direct Behavior is closed as a durable solution after 0.276185/0.828670. The aggregated-regret Direct Behavior remains a diagnostic because its target order is cleaner but theoretical equivalence is unproven. New regret-floor epsilon 0.05/0.10 jobs directly regularize the known near-zero sign boundary and must be compared with global tremble and uncertainty-adaptive damping. If an upstream durable candidate approaches but does not clear the frozen gates, then stack the proven final AveragePolicy size4 residual layer. Before any 640 run: freeze/version semantics, prove fresh-run reproducibility, and recertify continuous-vs-stop/restore/continue. No gate relaxation.",
+  "next_physical_step": "Resolve the active 5x64 matrix with special priority to the newly promoted size8 no-damping durability run. Size8 is the first current-generation short-horizon candidate to clear both frozen cross-seed gates (0.139615/0.329689), but this does not close R7.3 because size4 previously proved that two-iteration success can decay under five feedback iterations. Rank only fit-valid mechanisms that improve both the 0.2665907145 mean and 0.5670017600 p95 durability baseline. Aggregated-regret Direct Behavior is already worse than ordinary Direct Behavior at 2x128 and remains diagnostic only. If a durable upstream winner approaches but does not clear gates, stack the proven final AveragePolicy size4 residual layer. Before any 640 run: freeze/version semantics, prove fresh-run reproducibility, and recertify continuous-vs-stop/restore/continue. No gate relaxation.",
   "ready_for_tables": false
 }
