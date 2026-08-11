@@ -1,0 +1,144 @@
+name: SpinCore R7.4 SPINRULESET-4 HU invariance
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.3 certify selected winner through 640'
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-4-ruleset4-hu-invariance
+  cancel-in-progress: false
+
+jobs:
+  invariance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout current main with full history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Resolve corrected R7.3 640 prerequisite
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          sys.path.insert(0, 'tools')
+          import r7_3_certification_evidence as resolver
+          import run_r7_4_domain_preflight as preflight
+          freeze=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          try:
+              acceptance, origin=resolver.resolve_valid_json(
+                  'validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json',
+                  validator=lambda d: preflight._validate_r7_3_prerequisites(freeze,d),
+                  repo_root='.',
+              )
+          except Exception as exc:
+              print(f'R7.4 ruleset invariance remains gated: {exc}')
+              with open('/tmp/r7_4_gate.txt','w') as f: f.write('false')
+          else:
+              assert acceptance['r7_3_640_acceptance_pass'] is True
+              assert acceptance['r7_3_ready_to_advance_to_r7_4'] is True
+              json.dump(origin,open('/tmp/r7_3_acceptance_origin.json','w'),indent=2,sort_keys=True)
+              with open('/tmp/r7_4_gate.txt','w') as f: f.write('true')
+          PY
+          echo "run=$(cat /tmp/r7_4_gate.txt)" >> "$GITHUB_OUTPUT"
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Physical selected-HU invariance on frozen SPINRULESET-4 source
+        if: steps.gate.outputs.run == 'true'
+        id: physical
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/run_r7_4_hu_ruleset_invariance.py \
+            --r7-freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+            --fresh-out validation/R7_4_RULESET4_HU_EVIDENCE.json \
+            --report validation/R7_4_HU_INVARIANCE.json
+      - name: Materialize ruleset acceptance
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f validation/R7_4_HU_INVARIANCE.json ]; then
+            python - <<'PY'
+          import json
+          r=json.load(open('validation/R7_4_HU_INVARIANCE.json'))
+          f=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          passed=r.get('selected_r7_3_hu_evidence_invariant') is True and r.get('difference_count')==0
+          out={
+            'schema':'SPINCORE_R7_4_RULESET_ACCEPTANCE_V1',
+            'ruleset_schema':'SPINRULESET-4',
+            'base_r7_3_source_head_sha':f['base_r7_3_source_head_sha'],
+            'base_r7_3_evidence_commit_sha':f['base_r7_3_evidence_commit_sha'],
+            'base_r7_3_evidence_sha256':f['base_r7_3_evidence_sha256'],
+            'ruleset_extension_source_head_sha':f['ruleset_extension_source_head_sha'],
+            'semantic_extension':f['semantic_extension'],
+            'selected_training_components_byte_identical':bool(r.get('selected_training_components_byte_identical')),
+            'hu_invariance_difference_count':int(r.get('difference_count',-1)),
+            'hu_invariance_pass':passed,
+            'r7_4_rules_source_accepted':passed,
+            'r7_4_gate_changed':False,
+            'ready_for_tables':False,
+          }
+          open('validation/R7_4_RULESET_ACCEPTANCE.json','w').write(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          PY
+          else
+            echo '{"schema":"SPINCORE_R7_4_RULESET_ACCEPTANCE_V1","runner_failed_before_report":true,"hu_invariance_pass":false,"r7_4_rules_source_accepted":false,"ready_for_tables":false}' > validation/R7_4_RULESET_ACCEPTANCE.json
+          fi
+      - name: Persist R7.4 ruleset evidence
+        if: steps.gate.outputs.run == 'true' && always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          for f in validation/R7_4_HU_INVARIANCE.json validation/R7_4_RULESET4_HU_EVIDENCE.json validation/R7_4_RULESET_ACCEPTANCE.json; do
+            if [ -f "$f" ]; then git add -f "$f"; fi
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record SPINRULESET-4 HU invariance and acceptance [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce R7.4 ruleset gate
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('validation/R7_4_HU_INVARIANCE.json'))
+          a=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
+          assert r['selected_r7_3_hu_evidence_invariant'] is True, r
+          assert r['difference_count']==0
+          assert a['hu_invariance_pass'] is True, a
+          assert a['r7_4_rules_source_accepted'] is True
+          assert a['ready_for_tables'] is False
+          print('SPINRULESET-4 HU invariance PASS; frozen rules source may enter R7.4 preflight.')
+          PY
