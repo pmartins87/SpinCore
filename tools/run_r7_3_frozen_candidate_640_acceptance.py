@@ -1,0 +1,122 @@
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import run_r7_3_frozen_candidate_fresh_repro as fresh_runner
+
+
+FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
+FRESH_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
+RECERT_SCHEMA = "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1"
+REPORT_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1"
+
+
+def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> None:
+    print("+", " ".join(cmd), flush=True)
+    subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Run 640-root acceptance from the exact source of a fully certified R7.3 durability winner")
+    ap.add_argument("--freeze", type=Path, required=True)
+    ap.add_argument("--fresh-report", type=Path, required=True)
+    ap.add_argument("--checkpoint-report", type=Path, required=True)
+    ap.add_argument("--evidence-out", type=Path, required=True)
+    ap.add_argument("--report-out", type=Path, required=True)
+    args = ap.parse_args()
+
+    freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
+    fresh = json.loads(args.fresh_report.read_text(encoding="utf-8"))
+    checkpoint = json.loads(args.checkpoint_report.read_text(encoding="utf-8"))
+    if freeze.get("schema") != FREEZE_SCHEMA or freeze.get("evidence_r7_3_pass") is not True:
+        raise SystemExit("invalid semantic freeze")
+    if fresh.get("schema") != FRESH_SCHEMA or fresh.get("fresh_process_reproducible") is not True:
+        raise SystemExit("fresh-process reproducibility must pass first")
+    if checkpoint.get("schema") != RECERT_SCHEMA or checkpoint.get("checkpoint_resume_recertification_pass") is not True:
+        raise SystemExit("checkpoint/resume recertification must pass first")
+    source_head = str(freeze["source_head_sha"])
+    if fresh.get("source_head_sha") != source_head or checkpoint.get("source_head_sha") != source_head:
+        raise SystemExit("certification reports do not match frozen source head")
+    if fresh.get("original_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
+        raise SystemExit("fresh report does not match frozen evidence commit")
+    if checkpoint.get("evidence_commit_sha") != freeze.get("evidence_commit_sha"):
+        raise SystemExit("checkpoint report does not match frozen evidence commit")
+
+    acceptance_freeze = copy.deepcopy(freeze)
+    acceptance_freeze["execution_contract"] = dict(freeze["execution_contract"])
+    acceptance_freeze["execution_contract"]["roots_per_iteration"] = 128
+
+    args.evidence_out.parent.mkdir(parents=True, exist_ok=True)
+    args.report_out.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="spincore_r7_acceptance_") as td:
+        worktree = Path(td) / "source"
+        _run(["git", "worktree", "add", "--detach", str(worktree), source_head], cwd=Path("."))
+        try:
+            _run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"], cwd=worktree)
+            _run(["cmake", "--build", "build", "-j2"], cwd=worktree)
+            _run(["ctest", "--test-dir", "build", "--output-on-failure"], cwd=worktree)
+            env = dict(os.environ)
+            env["PYTHONPATH"] = os.pathsep.join([str(worktree / "python"), str(worktree / "tools")])
+            env.setdefault("SPINCORE_TORCH_THREADS", "2")
+            env.setdefault("OMP_NUM_THREADS", "2")
+            env.setdefault("MKL_NUM_THREADS", "2")
+            _run([sys.executable, "-m", "pytest", "-q", "python_tests"], cwd=worktree, env=env)
+            temp_evidence = Path(td) / "acceptance.json"
+            _run(fresh_runner._runner_command(acceptance_freeze, temp_evidence), cwd=worktree, env=env)
+            shutil.copyfile(temp_evidence, args.evidence_out)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(worktree)], check=False)
+
+    evidence = json.loads(args.evidence_out.read_text(encoding="utf-8"))
+    cross = dict(evidence.get("cross_seed") or {})
+    structural_pass = bool(
+        int(evidence.get("iterations", -1)) == 5
+        and int(evidence.get("roots_per_iteration", -1)) == 128
+        and int(evidence.get("roots_per_seed", -1)) == 640
+        and int(evidence.get("exact_opponent_levels", -1)) == 2
+        and evidence.get("deck_formula") == "seed*1000003 + global_root*97 + iteration"
+        and evidence.get("extra_members_perturb_primary_rng") is False
+        and evidence.get("acceptance_gate_changed") is False
+        and evidence.get("per_seed_fit_pass") is True
+    )
+    cross_pass = bool(
+        float(cross.get("mean_tv", float("inf"))) <= 0.15
+        and float(cross.get("p95_tv", float("inf"))) <= 0.35
+        and evidence.get("cross_seed_pass") is True
+        and evidence.get("r7_3_pass") is True
+    )
+    passed = bool(structural_pass and cross_pass)
+    report = {
+        "schema": REPORT_SCHEMA,
+        "label": freeze["label"],
+        "behavior_semantic_id": freeze["behavior_semantic_id"],
+        "source_head_sha": source_head,
+        "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
+        "acceptance_evidence_path": str(args.evidence_out),
+        "iterations": 5,
+        "roots_per_iteration": 128,
+        "roots_per_seed": 640,
+        "per_seed_fit_pass": bool(evidence.get("per_seed_fit_pass")),
+        "cross_seed": {k: float(v) for k, v in cross.items()},
+        "structural_contract_pass": structural_pass,
+        "frozen_cross_seed_gates_pass": cross_pass,
+        "r7_3_640_acceptance_pass": passed,
+        "acceptance_gate_changed": False,
+        "r7_3_ready_to_advance_to_r7_4": passed,
+        "ready_for_tables": False,
+    }
+    args.report_out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(report, indent=2, sort_keys=True), flush=True)
+    return 0 if passed else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
