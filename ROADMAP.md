@@ -14,46 +14,45 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.1 native own-reach frontier — **PASS REBUILT**
   - R7.2 LCFR weighting / exact checkpoint+resume / fresh-process worker — **PASS REBUILT**
   - R7.3 multi-seed stability — **FAIL / ACTIVE**
-  - R7.4 larger HU + 3H pilot — TODO after R7.3 convergence
+  - R7.4 larger HU + 3H pilot — TODO after R7.3 acceptance
 - R8 Production training — TODO
 - R9 Strategic audit — TODO
 - R10 OpenHoldem runtime — TODO
 - R11 Safe exploitation — TODO
 - R12 Operational homologation — TODO
 
-## Frozen R7.3 gates
-
-- Advantage weighted normalized RMSE `<= 0.75`
-- AveragePolicy weighted mean TV `<= 0.12`
-- cross-seed mean TV `<= 0.15`
-- cross-seed p95 TV `<= 0.35`
-
-No gate is relaxed.
-
-## Authoritative acceptance contract
+## Frozen R7.3 acceptance contract
 
 ```text
+Advantage weighted NRMSE <= 0.75
+AveragePolicy weighted mean TV <= 0.12
+cross-seed mean TV <= 0.15
+cross-seed p95 TV <= 0.35
+algorithm seeds = 20260829, 20260807
 deck_seed = seed * 1_000_003 + global_root * 97 + iteration
+global_root continuous across iterations
+partial-exact opponent level = 2
+primary RNG = one persistent live bundle.batch_rng
+training device = cpu
+learning rate = 0.001
 ```
 
-`global_root` is continuous across CFR iterations. The recovered primary path preserves one persistent live `bundle.batch_rng` in execution order. Side ensemble fits do not advance this authoritative RNG stream.
+No gate is relaxed. Side ensemble fits do not advance the authoritative primary RNG stream.
 
-## R7.3 causal state
-
-The confirmed instability chain remains:
+## Confirmed R7.3 failure mechanism
 
 ```text
 Advantage approximation -> nonlinear regret map -> behavior
 -> next trajectories -> next strategy targets
 ```
 
-Iteration-1 shared strategy targets are identical under the initial uniform behavior. Large shared-target divergence appears after the first fitted Advantage behavior feeds back into iteration 2. Later fitted-policy replacement keeps regenerating instability. Support fragmentation and exact shared-state disagreement are both material, so off-support extrapolation is not the sole cause.
+Iteration-1 shared strategy targets are identical under initial uniform behavior. Large shared-target divergence appears only after the first fitted Advantage behavior feeds back into iteration 2. Later fitted-policy replacement keeps regenerating instability. Support fragmentation and exact shared-state disagreement are both material; off-support extrapolation is not the sole cause.
 
-The strongest supported upstream mechanisms are now:
+Three mechanisms have independent empirical support:
 
-1. **Advantage policy ensembling** — size8 is the first current-generation 2×128 candidate to clear both frozen cross-seed gates.
-2. **Temporal inertia** — repeated temporal blending materially reduces five-iteration amplification.
-3. **Uncertainty-adaptive damping** — currently the strongest completed five-iteration mechanism; it damps only states where independently fitted regret policies disagree.
+1. **Advantage policy ensembling** reduces approximation/sign variance. Size8 is the first current-generation 2×128 candidate to clear both cross-seed gates.
+2. **Temporal inertia** reduces repeated feedback amplification.
+3. **Uncertainty-adaptive damping** is the strongest completed five-iteration mechanism; it damps only states where independently fitted regret policies disagree.
 
 ## Mandatory durability baseline
 
@@ -64,11 +63,9 @@ Authoritative paired size4 policy mixture:
 5×64:  mean 0.266591 / p95 0.567002, fits PASS
 ```
 
-The five-iteration result is the promotion baseline. A short-horizon pass never justifies direct 640 escalation.
+A short-horizon win never authorizes 640. Five-iteration durability is mandatory.
 
-## Completed five-iteration results
-
-All values are 5 CFR iterations × 64 roots = 320 roots/seed.
+## Completed 5×64 results
 
 | candidate | mean TV | p95 TV | fit | decision |
 |---|---:|---:|---|---|
@@ -88,193 +85,180 @@ All values are 5 CFR iterations × 64 roots = 320 roots/seed.
 | Direct Behavior control | `0.276185` | `0.828670` | PASS | closed |
 | Direct Behavior aggregated regret | `0.307350` | `0.914166` | PASS | closed |
 
-Uncertainty-s10 improves the baseline by about **36.9% in mean TV** and **37.1% in p95 TV**, but still misses the frozen gates by:
+Uncertainty-s10 improves the baseline by about 36.9% in mean and 37.1% in p95 but still misses the hard gates by:
 
 ```text
 mean gap = 0.018098
 p95 gap  = 0.006780
 ```
 
-Regret-floor e10 is a real improvement over baseline, but it is worse than uncertainty-s10 in both mean and p95, so regret-floor is no longer a primary path.
+Regret-floor e10 improves over baseline but is worse than uncertainty-s10 in both metrics, so regret-floor is no longer a primary route.
+
+## Active physical durability program
+
+All current candidates below have already passed build/regression/smoke and are in the physical 5×64 stage.
+
+```text
+size4 uncertainty s1.25 cap .50      workflow 31450032347
+size4 uncertainty s1.50 cap .50      workflow 31450032347
+size4 uncertainty s1.75 cap .50      workflow 31451592073
+size4 uncertainty s2.00 cap .50      workflow 31451592073
+size4 uncertainty s1.50 cap .65      workflow 31451592073
+size4 uncertainty s1.50 cap .80      workflow 31451592073
+size8 no damping                      workflow 31446308103
+size8 + temporal w50                  workflow 31448623827
+size8 + uncertainty s1.0 cap .50     workflow 31449546648
+```
+
+The scale/cap sweep distinguishes stronger state-local damping from simple clipping at the `.50` cap. The uncertainty runner now records RNG-neutral diagnostics: mean/max epsilon, mean disagreement, max raw epsilon, cap-hit fraction and fractions with epsilon >= `.10` and `.25`.
+
+Selection policy: prefer the **smallest/interpretable** fit-valid five-iteration candidate that clears both cross gates, unless a more complex candidate has materially stronger margin that changes the robustness decision.
 
 ## Size8 short-horizon milestone
 
-Workflow `31440425854`:
-
 ```text
-2×128
-mean TV = 0.139615  PASS <= 0.15
-p95 TV  = 0.329689  PASS <= 0.35
-fits    = PASS
+2×128 size8
+mean 0.139615 PASS
+p95  0.329689 PASS
+fits PASS
 ```
 
-This remains a short-horizon milestone only. Size8 no-damping 5×64 is still running in workflow `31446308103`.
-
-## Current physical durability program
-
-The active long-horizon comparison now runs three complementary groups under the same frozen 5×64 contract.
-
-### Local size4 uncertainty calibration
-
-Workflow `31450032347`:
-
-```text
-s1.25 cap .50
-s1.50 cap .50
-```
-
-Both jobs passed build/regression and smoke and are executing the physical five-iteration candidate. If a size4 candidate clears both gates, it is preferred over a statistically comparable size8 candidate because it is simpler and cheaper.
-
-### Expanded size4 scale/cap calibration
-
-Workflow `31451592073`:
-
-```text
-s1.75 cap .50
-s2.00 cap .50
-s1.50 cap .65
-s1.50 cap .80
-```
-
-All four jobs passed build/regression and smoke and are executing the physical five-iteration candidate. This separates two questions: whether more state-local damping helps and whether the `.50` cap is clipping the unstable tail.
-
-`tools/run_r7_3_policy_mixture_uncertainty_damping.py` now records RNG-neutral runtime diagnostics without changing behavior:
-
-```text
-mean/max epsilon
-mean disagreement
-max raw epsilon before cap
-cap-hit fraction
-fraction epsilon >= .10
-fraction epsilon >= .25
-```
-
-### Size8 candidates
-
-Still executing physically after build/regression/smoke PASS:
-
-```text
-size8 no damping             workflow 31446308103
-size8 + temporal w50         workflow 31448623827
-size8 + uncertainty s1.0     workflow 31449546648
-```
-
-No additivity is assumed; each composition must earn its own 5×64 result.
+This remains only a short-horizon milestone until its five-iteration variants finish.
 
 ## Independent baseline reproducibility
 
-The existing fresh-run comparator requires two physical evidence commits for both the paired 256 result and the five-iteration 320 baseline. The 256 target already has two independent commits; the 320 target previously had only one.
+The existing comparator needs two independent evidence commits at both 256 and 320. The 256 target already has two. Workflow `31451518046` is now physically executing the second authoritative size4 5×64 baseline after build/regression/smoke PASS. When persisted, the existing comparator can require exact structure/sample/node agreement and cross-seed metric delta <= `1e-9`.
 
-Workflow `31451518046` is now running a second independent authoritative size4 5×64 baseline after build/regression/smoke PASS. When its evidence is persisted, `tools/check_r7_3_fresh_run_reproducibility.py` can compare exact structure/sample/node counters and cross-seed metrics at tolerance `1e-9`.
+This baseline determinism check is separate from winner-specific certification.
 
-This baseline reproducibility check is separate from winner-specific checkpoint/resume certification.
+## Candidate checkpoint state
 
-## Candidate checkpoint/resume readiness
-
-R7.2 certifies base checkpoint `SPINCORE_R7_CHECKPOINT_V2`. R7.3 ensembles contain extra behavior state, so `python/spincore/r7_candidate_checkpoint.py` adds:
+R7.2 base checkpoint remains `SPINCORE_R7_CHECKPOINT_V2`. R7.3 ensemble state is serialized through its unchanged `extra` field using:
 
 ```text
 SPINCORE_R7_CANDIDATE_BEHAVIOR_V1
 ```
 
-through the unchanged base checkpoint `extra` field. It preserves side Advantage members, previous temporal ensemble, wrapper parameters and fit generation, reuses the authoritative restored primary as member zero and fails closed on primary mismatch.
+It preserves side Advantage models, prior temporal ensemble, parameters and fit generation; restores the authoritative primary as member zero; and fails closed on primary mismatch.
 
-A hidden determinism defect was found and fixed: constructing side PyTorch modules during restore would initialize temporary weights and consume global torch RNG before `load_state_dict()`. Side reconstruction is now isolated with `torch.random.fork_rng(devices=[])`.
+A hidden determinism bug was fixed: naive construction of restored side networks consumed global torch RNG before loading their state. Side-model construction is now isolated with `torch.random.fork_rng(devices=[])`.
 
-Main regression `31450903801`:
+The physical checkpoint worker is no longer merely theoretical. Main regression workflow `31452600161`, commit `2423e1c2f22dee0557d0c7f280ac1f5e542f9e20`:
 
 ```text
 C++ regression PASS
-Python 33 passed
-side-model restore torch-RNG neutral PASS
+Python 40 passed
+uncertainty tiny continuous-vs-restore exact PASS
+temporal tiny continuous-vs-restore exact PASS
 ```
 
-This is serialization/readiness evidence. The exact winning candidate still requires physical continuous-vs-stop/restore/continue recertification.
+Those tests exercise actual collection/training/checkpoint/restore/continue paths, including preservation of the previous temporal ensemble.
 
-## Winner certification pipeline — prepared before the winner exists
+## Winner certification pipeline — fully prepared through 640
 
-To avoid a new implementation gap after a five-iteration PASS, the winner path is now fail-closed and staged.
+A numerical 5×64 PASS now has a complete fail-closed path before any larger acceptance run.
 
-`tools/freeze_r7_3_candidate_semantics.py` consumes only a deliberate `SPINCORE_R7_3_WINNER_SELECTION_V1` record and refuses to freeze a candidate unless its 5×64 evidence actually has all fit gates PASS, `cross_seed_pass=true`, `r7_3_pass=true`, the authoritative deck/RNG contract and unchanged frozen gates. It records exact source commit plus Git object identities for the relevant source trees, workflow and runners. Output schema:
+### 1. Deliberate winner selection
+
+A selected candidate is represented by `SPINCORE_R7_3_WINNER_SELECTION_V1`. There is intentionally no winner-selection file yet.
+
+### 2. Immutable semantic/execution freeze
+
+`tools/freeze_r7_3_candidate_semantics.py` and `.github/workflows/r7_3_freeze_candidate_semantics.yml` output:
 
 ```text
 SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1
 ```
 
-Workflow: `.github/workflows/r7_3_freeze_candidate_semantics.yml`.
+The freezer rejects anything that is not an actual fit-valid 5×64 gate pass. It pins:
 
-After a freeze, `.github/workflows/r7_3_frozen_candidate_fresh_repro.yml` runs `tools/run_r7_3_frozen_candidate_fresh_repro.py`. It creates a detached worktree at the exact source commit that generated the winner, rebuilds that source, runs C++ and Python regressions, reruns the exact candidate with the frozen hyperparameters and recursively compares the complete evidence, ignoring only wall-clock timestamp/duration and allowing numeric delta at most `1e-9`.
+- exact algorithm seeds `20260829, 20260807`;
+- exact evidence commit and byte-identical evidence SHA-256;
+- source workflow run/path and exact source head;
+- authoritative deck/RNG contract;
+- ensemble size and behavior parameters;
+- full 5×64 execution hyperparameters;
+- Git object identities for source trees, workflow and runner dependencies.
 
-Output schema:
+The source head must be an ancestor of the evidence commit. Workflow overrides of frozen seeds/lr/device are rejected.
+
+### 3. Exact-source fresh-process reproducibility
+
+`tools/run_r7_3_frozen_candidate_fresh_repro.py` and `.github/workflows/r7_3_frozen_candidate_fresh_repro.yml` output:
 
 ```text
 SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1
 ```
 
-Neither semantic freeze nor fresh-process reproducibility sets `ready_for_640=true`; physical checkpoint/resume recertification remains mandatory first.
+They create a detached worktree at the exact source commit, rebuild it, run C++ and Python regressions, rerun the exact frozen candidate and recursively compare the immutable original evidence with the fresh evidence. Only `generated_at_unix` and `duration_seconds` are ignored; numeric tolerance is `1e-9`.
 
-## Automatic evidence consolidation
+### 4. Physical continuous-vs-stop/restore/continue recertification
 
-Base matrix remains:
-
-```text
-SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4
-15 candidate rows + 1 baseline
-```
-
-Expanded matrix is now:
+`tools/r7_3_frozen_candidate_checkpoint_worker.py`, `tools/run_r7_3_frozen_candidate_checkpoint_recert.py` and `.github/workflows/r7_3_frozen_candidate_checkpoint_recert.yml` output:
 
 ```text
-SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V4
-23 candidate rows + 1 baseline = 24 rows
+SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1
 ```
 
-The supplemental rows include six size4 uncertainty scale/cap calibrations plus size8 temporal-w50 and size8 uncertainty-s10. Ranking is evidence only and never promotes production semantics automatically.
+Fresh reproducibility must pass first. The orchestrator uses the exact frozen algorithm source and overlays only the checkpoint serialization helper. The physical run shares a common prefix, checkpoints after iteration 3, then compares continuous execution against restore+continue through iteration 5 and final AveragePolicy fit.
+
+The final equality gate includes counters, both reservoirs and reservoir RNGs, `bundle.batch_rng`, global torch RNG, primary Advantage, AveragePolicy, both optimizers, every current side model, prior temporal models, fit generation, shared cross-seed observation corpus and final cross-seed metrics. Any mismatch blocks 640.
+
+### 5. Exact-source certified-winner 640 acceptance
+
+`tools/run_r7_3_frozen_candidate_640_acceptance.py` and `.github/workflows/r7_3_frozen_candidate_640_acceptance.yml` output:
+
+```text
+SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1
+```
+
+This stage cannot run unless freeze, exact-source fresh reproducibility and checkpoint recertification all pass for the same source/evidence provenance. It reuses the exact frozen source and semantics, changing only roots per iteration from `64` to `128`:
+
+```text
+5 × 128 = 640 roots/seed
+```
+
+The same frozen cross-seed and fit gates apply. A 640 pass only marks R7.3 ready to advance to R7.4. It never sets table readiness.
+
+## Evidence consolidation
+
+```text
+base:     SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4
+          15 candidates + baseline
+
+extended: SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V4
+          23 candidates + baseline = 24 rows
+```
+
+The expanded matrix includes the six size4 uncertainty scale/cap calibrations plus size8 temporal-w50 and size8 uncertainty-s1.0. Ranking is evidence only; it never changes semantics automatically.
 
 ## Residual downstream layer
 
-Final AveragePolicy size4 ensemble remains reserved as a downstream residual layer:
+Final AveragePolicy size4 ensemble remains reserved as a residual layer:
 
 ```text
-mean TV = 0.138377
-p95 TV  = 0.368730
+mean 0.138377
+p95  0.368730
 ```
 
-It is considered only after an upstream durable winner is known; no multiplicative/additive benefit is assumed.
+It is considered only if the best durable upstream mechanism still leaves a small residual. No additive or multiplicative benefit is assumed without a physical combined test.
 
 ## Closed / deprioritized primary branches
 
-- raw root scaling beyond 1280;
-- independent x8/x16 path multiplication as standalone fix;
-- common-path RNG;
-- antithetic x4;
-- exhaustive opponent expectation;
-- merely raising Advantage optimizer ceiling;
-- behavior-aware MSE auxiliary objective;
-- exact duplicate aggregation as standalone fix;
-- behavior-aware multistart selection;
-- raw Advantage ensemble 2/4 standalone;
-- legal common-mode centering;
-- robust median/trimmed policy aggregation;
-- card/suit rewrite as dominant explanation;
-- ordinary Direct Behavior as durable solution;
-- aggregated-regret Direct Behavior as durable solution;
-- regret-floor as primary durable mechanism;
-- direct size4 policy-mixture 640 escalation.
+Raw root scaling, x8/x16 path multiplication as standalone fix, common-path RNG, antithetic x4, exhaustive opponent expectation, simply raising Advantage optimizer capacity, behavior-aware MSE auxiliary objective, duplicate-target aggregation, multistart selection, raw Advantage ensemble 2/4 standalone, legal common-mode centering, robust median/trimmed aggregation, card/suit rewrite as dominant explanation, ordinary Direct Behavior, aggregated-regret Direct Behavior, regret-floor as primary mechanism and direct plain-size4 640 escalation are closed or deprioritized.
 
-## Promotion rule
+## R7.3 promotion rule
 
-Before any mechanism advances to 640 it must:
+Before R7.3 can advance to R7.4, the selected mechanism must:
 
-1. PASS every frozen per-seed fit gate;
-2. materially improve both mean and p95 versus `0.266591 / 0.567002` at 5×64;
-3. clear both frozen cross-seed gates `0.15 / 0.35` at the same five-iteration horizon;
-4. have the exact winning behavior/execution semantics frozen against its source commit;
-5. survive exact-source fresh-process reproducibility;
-6. pass deterministic continuous-vs-stop/restore/continue candidate checkpoint recertification;
-7. remain the smallest/interpretable mechanism among statistically comparable winners;
-8. keep all frozen gates unchanged.
+1. PASS all frozen per-seed fit gates at 5×64;
+2. clear both cross-seed gates `mean <= 0.15`, `p95 <= 0.35` at 5×64;
+3. be frozen against its immutable evidence and exact source commit;
+4. reproduce from that exact source in a fresh process;
+5. pass exact continuous-vs-stop/restore/continue recertification;
+6. pass the same gates at exact-source 5×128 = 640 acceptance scale;
+7. keep all frozen gates unchanged.
 
-Only then may a 640 acceptance-scale run be authorized. A 640 pass still does not imply table readiness: R7.4 HU+3H, then R8–R12, remain ahead.
+Then and only then does **R7.3 become PASS and R7.4 begin**. R7.4 HU+3H, followed by R8–R12, still stand between us and table use.
 
 `READY FOR TABLES = NO`.
