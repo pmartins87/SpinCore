@@ -32,6 +32,8 @@ acceptance640 = _load(
     "run_r7_3_frozen_candidate_640_acceptance_test",
     "tools/run_r7_3_frozen_candidate_640_acceptance.py",
 )
+proposal = _load("propose_r7_3_winner_test", "tools/propose_r7_3_winner.py")
+materialize = _load("materialize_r7_3_winner_selection_test", "tools/materialize_r7_3_winner_selection.py")
 
 
 def test_freeze_accepts_direct_and_matrix_bound_uncertainty_parameters():
@@ -102,3 +104,13 @@ def test_certification_contract_keeps_frozen_r7_3_thresholds_and_run_identity():
     assert fresh.REPORT_SCHEMA == "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
     assert checkpoint_orchestrator.RECERT_SCHEMA == "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1"
     assert acceptance640.REPORT_SCHEMA == "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1"
+
+
+def test_winner_proposal_and_selection_schemas_preserve_deliberate_selection():
+    assert proposal.SCHEMA == "SPINCORE_R7_3_WINNER_PROPOSAL_V1"
+    assert proposal.PROVENANCE_SCHEMA == "SPINCORE_R7_3_ACTIVE_CANDIDATE_PROVENANCE_V1"
+    assert proposal.SEEDS == [20260829, 20260807]
+    assert proposal.MEAN_GATE == 0.15
+    assert proposal.P95_GATE == 0.35
+    assert materialize.PROPOSAL_SCHEMA == proposal.SCHEMA
+    assert materialize.SELECTION_SCHEMA == "SPINCORE_R7_3_WINNER_SELECTION_V1"
