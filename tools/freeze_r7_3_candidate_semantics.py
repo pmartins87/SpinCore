@@ -16,6 +16,21 @@ FROZEN_GATES = {
     "cross_seed_mean_tv_max": 0.15,
     "cross_seed_p95_tv_max": 0.35,
 }
+EXECUTION_CONTRACT = {
+    "iterations": 5,
+    "roots_per_iteration": 64,
+    "advantage_chunk_steps": 256,
+    "advantage_max_steps_per_iteration": 4096,
+    "advantage_fit_target": 0.50,
+    "policy_chunk_steps": 256,
+    "policy_max_steps": 16384,
+    "policy_fit_target": 0.105,
+    "batch_size": 256,
+    "audit_size": 512,
+    "cross_seed_per_seed": 1024,
+    "reservoir_capacity": 100000,
+    "exact_opponent_levels": 2,
+}
 
 KIND_CONTRACT = {
     "uncertainty_damping": {
@@ -59,6 +74,37 @@ def _object_sha(ref: str, path: str) -> str:
         return _git("rev-parse", f"{ref}:{path}")
     except subprocess.CalledProcessError as exc:
         raise SystemExit(f"source ref {ref!r} does not contain required path {path!r}") from exc
+
+
+def _show(ref: str, path: str) -> str:
+    try:
+        return _git("show", f"{ref}:{path}")
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"cannot read {path!r} at source ref {ref!r}") from exc
+
+
+def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params: dict) -> None:
+    required_fragments = [
+        f"--ensemble-size {ensemble_size}",
+        "--exact-opponent-levels 2",
+        "--iterations 5 --roots-per-iteration 64",
+        "--advantage-chunk-steps 256 --advantage-max-steps-per-iteration 4096",
+        "--advantage-fit-target 0.50",
+        "--policy-chunk-steps 256 --policy-max-steps 16384",
+        "--policy-fit-target 0.105",
+        "--batch-size 256 --audit-size 512",
+        "--cross-seed-per-seed 1024 --reservoir-capacity 100000",
+    ]
+    if kind == "uncertainty_damping":
+        required_fragments.extend([
+            f"--epsilon-scale {float(params['epsilon_scale'])}",
+            f"--epsilon-cap {float(params['epsilon_cap']):.2f}",
+        ])
+    elif kind == "temporal_blend":
+        required_fragments.append(f"--current-weight {float(params['current_policy_weight']):.2f}")
+    missing = [fragment for fragment in required_fragments if fragment not in text]
+    if missing:
+        raise SystemExit(f"source workflow does not encode the frozen execution contract: missing {missing}")
 
 
 def main() -> int:
@@ -144,6 +190,9 @@ def main() -> int:
     if not source_workflow_path.startswith(".github/workflows/"):
         raise SystemExit("source_workflow_path is required")
 
+    workflow_text = _show(resolved_head, source_workflow_path)
+    _require_workflow_contract(workflow_text, ensemble_size, kind, selected_params)
+
     tracked_objects = {
         "python_tree": _object_sha(resolved_head, "python"),
         "src_tree": _object_sha(resolved_head, "src"),
@@ -168,9 +217,7 @@ def main() -> int:
         }[kind],
         "ensemble_size": ensemble_size,
         "params": selected_params,
-        "exact_opponent_levels": 2,
-        "iterations": 5,
-        "roots_per_iteration": 64,
+        "execution_contract": dict(EXECUTION_CONTRACT),
         "roots_per_seed": 320,
         "deck_formula": DECK_FORMULA,
         "primary_rng_contract": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
