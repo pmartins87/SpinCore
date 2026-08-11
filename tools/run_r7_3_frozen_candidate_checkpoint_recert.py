@@ -10,6 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import r7_3_certification_evidence as evidence_resolver
 import run_r7_3_frozen_candidate_fresh_repro as fresh_runner
 
 
@@ -63,9 +64,12 @@ def main() -> int:
     args = ap.parse_args()
 
     freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
-    fresh = json.loads(args.fresh_report.read_text(encoding="utf-8"))
     try:
-        _validate_fresh_prerequisite(freeze, fresh)
+        fresh, fresh_origin = evidence_resolver.resolve_valid_json(
+            args.fresh_report,
+            validator=lambda data: _validate_fresh_prerequisite(freeze, data),
+            repo_root=Path(__file__).resolve().parents[1],
+        )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
 
@@ -123,6 +127,10 @@ def main() -> int:
     report["checkpoint_worker_executed_from_frozen_worktree_overlay"] = True
     report["fresh_process_reproducibility_gate_passed_first"] = True
     report["fresh_process_zero_difference_gate_passed_first"] = True
+    report["validated_fresh_report_origin"] = fresh_origin
+    report["validated_fresh_report_sha256"] = fresh_origin["sha256"]
+    report["validated_fresh_original_evidence_sha256"] = fresh["original_evidence_sha256"]
+    report["validated_fresh_behavior_semantic_id"] = fresh["behavior_semantic_id"]
     report["source_cpp_regression_passed_before_recertification"] = True
     report["source_python_regression_passed_before_recertification"] = True
     report["ready_for_640"] = False
