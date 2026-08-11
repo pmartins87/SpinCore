@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import importlib.util
 import sys
@@ -148,3 +149,77 @@ def test_checkpoint_worker_overlay_executes_inside_frozen_worktree(tmp_path):
     assert worker == tmp_path / checkpoint_orchestrator.WORKER_REL
     assert worker.parent == tmp_path / "tools"
     assert helper.parent == tmp_path / "python" / "spincore"
+
+
+def _cert_chain():
+    source = "a" * 40
+    evidence = "b" * 40
+    evidence_sha = "c" * 64
+    semantic = "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1"
+    contract = freeze.THREAD_ENV_CONTRACT
+    frozen = {
+        "schema": freeze.FREEZE_SCHEMA,
+        "evidence_r7_3_pass": True,
+        "source_head_sha": source,
+        "evidence_commit_sha": evidence,
+        "evidence_sha256": evidence_sha,
+        "behavior_semantic_id": semantic,
+        "thread_environment_contract": contract,
+    }
+    fresh_report = {
+        "schema": fresh.REPORT_SCHEMA,
+        "fresh_process_reproducible": True,
+        "difference_count": 0,
+        "source_head_sha": source,
+        "original_evidence_commit_sha": evidence,
+        "original_evidence_sha256": evidence_sha,
+        "behavior_semantic_id": semantic,
+        "thread_environment_contract": contract,
+        "thread_environment_overrides_injected_by_certifier": False,
+    }
+    checkpoint = {
+        "schema": checkpoint_orchestrator.RECERT_SCHEMA,
+        "checkpoint_resume_recertification_pass": True,
+        "source_head_sha": source,
+        "evidence_commit_sha": evidence,
+        "thread_environment_contract": contract,
+        "thread_environment_overrides_injected_by_certifier": False,
+        "algorithm_source_exact_worktree": True,
+        "checkpoint_worker_executed_from_frozen_worktree_overlay": True,
+        "fresh_process_zero_difference_gate_passed_first": True,
+        "acceptance_gate_changed": False,
+    }
+    return frozen, fresh_report, checkpoint
+
+
+def test_checkpoint_recert_requires_corrected_zero_difference_fresh_evidence():
+    frozen, fresh_report, _checkpoint = _cert_chain()
+    checkpoint_orchestrator._validate_fresh_prerequisite(frozen, fresh_report)
+    for mutation in (
+        lambda x: x.__setitem__("difference_count", 1),
+        lambda x: x.__setitem__("thread_environment_overrides_injected_by_certifier", True),
+        lambda x: x.pop("thread_environment_contract"),
+        lambda x: x.__setitem__("original_evidence_sha256", "d" * 64),
+    ):
+        bad = copy.deepcopy(fresh_report)
+        mutation(bad)
+        with pytest.raises(ValueError):
+            checkpoint_orchestrator._validate_fresh_prerequisite(frozen, bad)
+
+
+def test_640_acceptance_requires_full_corrected_certification_provenance():
+    frozen, fresh_report, checkpoint = _cert_chain()
+    assert acceptance640._validate_certification_chain(frozen, fresh_report, checkpoint) == frozen["source_head_sha"]
+    mutations = (
+        ("fresh", lambda x: x.__setitem__("difference_count", 2)),
+        ("fresh", lambda x: x.__setitem__("thread_environment_overrides_injected_by_certifier", True)),
+        ("checkpoint", lambda x: x.__setitem__("checkpoint_worker_executed_from_frozen_worktree_overlay", False)),
+        ("checkpoint", lambda x: x.__setitem__("fresh_process_zero_difference_gate_passed_first", False)),
+        ("checkpoint", lambda x: x.__setitem__("thread_environment_overrides_injected_by_certifier", True)),
+    )
+    for target, mutation in mutations:
+        f = copy.deepcopy(fresh_report)
+        c = copy.deepcopy(checkpoint)
+        mutation(f if target == "fresh" else c)
+        with pytest.raises(ValueError):
+            acceptance640._validate_certification_chain(frozen, f, c)
