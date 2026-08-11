@@ -55,6 +55,12 @@ jobs:
           set -euo pipefail
           ctest --test-dir build --output-on-failure
 
+      - name: Python tooling syntax check
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q python tools python_tests
+
       - name: Python regression
         shell: bash
         env:
