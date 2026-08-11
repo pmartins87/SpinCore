@@ -10,6 +10,7 @@ on:
       - 'SpinCore R7.3 Direct Behavior compounding control'
       - 'SpinCore R7.3 uncertainty-adaptive policy-mixture damping'
       - 'SpinCore R7.3 aggregated-regret Direct Behavior'
+      - 'SpinCore R7.3 regret-floor policy-mixture durability'
     types: [completed]
   push:
     branches: [main]
@@ -55,9 +56,9 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('validation/R7_3_DURABILITY_MATRIX_SUMMARY.json'))
-          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V2'
+          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3'
           assert d['complete'] is True
-          assert len(d['rows'])==13
+          assert len(d['rows'])==15
           assert d['acceptance_gate_changed'] is False
           assert d['ready_for_tables'] is False
           print('durability matrix summary validation OK')
