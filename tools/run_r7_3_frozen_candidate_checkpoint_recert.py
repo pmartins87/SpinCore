@@ -1,0 +1,107 @@
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
+FRESH_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1"
+RECERT_SCHEMA = "SPINCORE_R7_3_CANDIDATE_CHECKPOINT_RECERT_V1"
+
+
+def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> None:
+    print("+", " ".join(cmd), flush=True)
+    subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Run checkpoint/resume recertification against the exact frozen R7.3 algorithm source")
+    ap.add_argument("--freeze", type=Path, required=True)
+    ap.add_argument("--fresh-report", type=Path, required=True)
+    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--split-iteration", type=int, default=3)
+    args = ap.parse_args()
+
+    freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
+    fresh = json.loads(args.fresh_report.read_text(encoding="utf-8"))
+    if freeze.get("schema") != FREEZE_SCHEMA:
+        raise SystemExit("wrong semantic-freeze schema")
+    if fresh.get("schema") != FRESH_SCHEMA or fresh.get("fresh_process_reproducible") is not True:
+        raise SystemExit("fresh-process reproducibility must pass before checkpoint recertification")
+    if str(fresh.get("source_head_sha")) != str(freeze.get("source_head_sha")):
+        raise SystemExit("fresh reproducibility source head does not match semantic freeze")
+    if str(fresh.get("original_evidence_commit_sha")) != str(freeze.get("evidence_commit_sha")):
+        raise SystemExit("fresh reproducibility evidence commit does not match semantic freeze")
+
+    repo_root = Path(__file__).resolve().parents[1]
+    helper = repo_root / "python" / "spincore" / "r7_candidate_checkpoint.py"
+    worker = repo_root / "tools" / "r7_3_frozen_candidate_checkpoint_worker.py"
+    if not helper.is_file() or not worker.is_file():
+        raise SystemExit("checkpoint certification helper/worker missing")
+
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    source_head = str(freeze["source_head_sha"])
+    with tempfile.TemporaryDirectory(prefix="spincore_r7_checkpoint_recert_") as td:
+        temp = Path(td)
+        worktree = temp / "source"
+        checkpoint_dir = temp / "checkpoints"
+        _run(["git", "worktree", "add", "--detach", str(worktree), source_head], cwd=repo_root)
+        try:
+            # Overlay only the checkpoint serialization helper. Behavior/training
+            # modules remain byte-identical to the frozen source commit.
+            target_helper = worktree / "python" / "spincore" / "r7_candidate_checkpoint.py"
+            target_helper.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(helper, target_helper)
+
+            _run(["cmake", "-S", ".", "-B", "build", "-DCMAKE_BUILD_TYPE=Release"], cwd=worktree)
+            _run(["cmake", "--build", "build", "-j2"], cwd=worktree)
+            _run(["ctest", "--test-dir", "build", "--output-on-failure"], cwd=worktree)
+            env = dict(os.environ)
+            env["PYTHONPATH"] = os.pathsep.join([str(worktree / "python"), str(worktree / "tools")])
+            env.setdefault("SPINCORE_TORCH_THREADS", "2")
+            env.setdefault("OMP_NUM_THREADS", "2")
+            env.setdefault("MKL_NUM_THREADS", "2")
+            _run([sys.executable, "-m", "pytest", "-q", "python_tests"], cwd=worktree, env=env)
+
+            _run([
+                sys.executable,
+                str(worker),
+                "--freeze", str(args.freeze.resolve()),
+                "--solver", str(worktree / "build" / "libspincore_solver_c.so"),
+                "--checkpoint-dir", str(checkpoint_dir),
+                "--out", str(args.out.resolve()),
+                "--split-iteration", str(int(args.split_iteration)),
+            ], cwd=worktree, env=env)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(worktree)], cwd=repo_root, check=False)
+
+    report = json.loads(args.out.read_text(encoding="utf-8"))
+    if report.get("schema") != RECERT_SCHEMA:
+        raise SystemExit("worker produced wrong checkpoint recertification schema")
+    report["algorithm_source_head_sha"] = source_head
+    report["algorithm_source_exact_worktree"] = True
+    report["checkpoint_helper_overlay_sha256"] = _sha256(helper)
+    report["checkpoint_worker_sha256"] = _sha256(worker)
+    report["fresh_process_reproducibility_gate_passed_first"] = True
+    report["source_cpp_regression_passed_before_recertification"] = True
+    report["source_python_regression_passed_before_recertification"] = True
+    report["ready_for_640"] = False
+    report["ready_for_tables"] = False
+    args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(report, indent=2, sort_keys=True), flush=True)
+    return 0 if report.get("checkpoint_resume_recertification_pass") is True else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
