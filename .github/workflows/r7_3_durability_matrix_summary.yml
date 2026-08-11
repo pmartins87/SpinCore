@@ -3,6 +3,7 @@ name: SpinCore R7.3 durability matrix summary
 on:
   workflow_run:
     workflows:
+      - 'SpinCore R7.3 paired policy-mixture size 8 durability'
       - 'SpinCore R7.3 decaying-tremble policy-mixture compounding'
       - 'SpinCore R7.3 size1 tremble factorial'
       - 'SpinCore R7.3 temporal policy-mixture feedback blend'
@@ -56,9 +57,9 @@ jobs:
           python - <<'PY'
           import json
           d=json.load(open('validation/R7_3_DURABILITY_MATRIX_SUMMARY.json'))
-          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V3'
+          assert d['schema']=='SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4'
           assert d['complete'] is True
-          assert len(d['rows'])==15
+          assert len(d['rows'])==16
           assert d['acceptance_gate_changed'] is False
           assert d['ready_for_tables'] is False
           print('durability matrix summary validation OK')
