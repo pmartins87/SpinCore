@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 import hashlib
 import importlib.util
+import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -25,6 +27,7 @@ def _load(name: str, rel: str):
 
 freeze = _load("freeze_r7_3_candidate_semantics_test", "tools/freeze_r7_3_candidate_semantics.py")
 fresh = _load("run_r7_3_frozen_candidate_fresh_repro_test", "tools/run_r7_3_frozen_candidate_fresh_repro.py")
+evidence_loader = _load("r7_3_certification_evidence_test", "tools/r7_3_certification_evidence.py")
 checkpoint_orchestrator = _load(
     "run_r7_3_frozen_candidate_checkpoint_recert_test",
     "tools/run_r7_3_frozen_candidate_checkpoint_recert.py",
@@ -182,11 +185,14 @@ def _cert_chain():
         "checkpoint_resume_recertification_pass": True,
         "source_head_sha": source,
         "evidence_commit_sha": evidence,
+        "behavior_semantic_id": semantic,
         "thread_environment_contract": contract,
         "thread_environment_overrides_injected_by_certifier": False,
         "algorithm_source_exact_worktree": True,
         "checkpoint_worker_executed_from_frozen_worktree_overlay": True,
         "fresh_process_zero_difference_gate_passed_first": True,
+        "validated_fresh_original_evidence_sha256": evidence_sha,
+        "validated_fresh_behavior_semantic_id": semantic,
         "acceptance_gate_changed": False,
     }
     return frozen, fresh_report, checkpoint
@@ -216,6 +222,7 @@ def test_640_acceptance_requires_full_corrected_certification_provenance():
         ("checkpoint", lambda x: x.__setitem__("checkpoint_worker_executed_from_frozen_worktree_overlay", False)),
         ("checkpoint", lambda x: x.__setitem__("fresh_process_zero_difference_gate_passed_first", False)),
         ("checkpoint", lambda x: x.__setitem__("thread_environment_overrides_injected_by_certifier", True)),
+        ("checkpoint", lambda x: x.__setitem__("validated_fresh_original_evidence_sha256", "d" * 64)),
     )
     for target, mutation in mutations:
         f = copy.deepcopy(fresh_report)
@@ -223,3 +230,62 @@ def test_640_acceptance_requires_full_corrected_certification_provenance():
         mutation(f if target == "fresh" else c)
         with pytest.raises(ValueError):
             acceptance640._validate_certification_chain(frozen, f, c)
+
+
+def _git(cwd: Path, *args: str) -> None:
+    subprocess.check_call(["git", *args], cwd=cwd)
+
+
+def test_certification_evidence_resolver_recovers_valid_history_after_stale_overwrite(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "SpinCore Test")
+    evidence_path = repo / "validation" / "cert.json"
+    evidence_path.parent.mkdir()
+
+    valid = {"schema": "CORRECTED", "pass": True}
+    evidence_path.write_text(json.dumps(valid) + "\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "valid")
+    valid_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+
+    stale = {"schema": "LEGACY", "pass": True}
+    evidence_path.write_text(json.dumps(stale) + "\n", encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "legacy overwrite")
+
+    def validator(obj):
+        if obj.get("schema") != "CORRECTED" or obj.get("pass") is not True:
+            raise ValueError("not corrected evidence")
+
+    resolved, origin = evidence_loader.resolve_valid_json(
+        "validation/cert.json",
+        validator=validator,
+        repo_root=repo,
+    )
+    assert resolved == valid
+    assert origin["history_fallback_used"] is True
+    assert origin["origin"] == "GIT_HISTORY"
+    assert origin["commit_sha"] == valid_commit
+    assert origin["rejected_newer_versions"]
+
+
+def test_certification_evidence_resolver_fails_closed_when_no_valid_version(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "SpinCore Test")
+    path = repo / "cert.json"
+    path.write_text('{"schema":"LEGACY"}\n', encoding="utf-8")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-m", "legacy only")
+
+    with pytest.raises(ValueError):
+        evidence_loader.resolve_valid_json(
+            "cert.json",
+            validator=lambda obj: (_ for _ in ()).throw(ValueError("reject")),
+            repo_root=repo,
+        )
