@@ -83,6 +83,30 @@ def _show(ref: str, path: str) -> str:
         raise SystemExit(f"cannot read {path!r} at source ref {ref!r}") from exc
 
 
+def _numeric_forms(value: object) -> set[str]:
+    x = float(value)
+    return {str(x), f"{x:.1f}", f"{x:.2f}", f"{x:.3f}"}
+
+
+def _require_bound_numeric(text: str, *, option: str, variable: str, value: object) -> None:
+    forms = _numeric_forms(value)
+    direct = any(f"{option} {form}" in text for form in forms)
+    variable_bound = f'{option} "${variable}"' in text or f"{option} '${variable}'" in text
+    value_declared = any(
+        token in text
+        for form in forms
+        for token in (f"'{form}'", f'"{form}"', f": {form}\n", f": '{form}'", f': "{form}"')
+    )
+    if direct:
+        return
+    if variable_bound and value_declared:
+        return
+    raise SystemExit(
+        f"source workflow does not bind {option} to selected value {float(value)} "
+        f"either directly or through ${variable} matrix/shell binding"
+    )
+
+
 def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params: dict) -> None:
     required_fragments = [
         f"--ensemble-size {ensemble_size}",
@@ -95,16 +119,18 @@ def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params:
         "--batch-size 256 --audit-size 512",
         "--cross-seed-per-seed 1024 --reservoir-capacity 100000",
     ]
-    if kind == "uncertainty_damping":
-        required_fragments.extend([
-            f"--epsilon-scale {float(params['epsilon_scale'])}",
-            f"--epsilon-cap {float(params['epsilon_cap']):.2f}",
-        ])
-    elif kind == "temporal_blend":
-        required_fragments.append(f"--current-weight {float(params['current_policy_weight']):.2f}")
     missing = [fragment for fragment in required_fragments if fragment not in text]
     if missing:
         raise SystemExit(f"source workflow does not encode the frozen execution contract: missing {missing}")
+    if kind == "uncertainty_damping":
+        _require_bound_numeric(text, option="--epsilon-scale", variable="scale", value=params["epsilon_scale"])
+        _require_bound_numeric(text, option="--epsilon-cap", variable="cap", value=params["epsilon_cap"])
+    elif kind == "temporal_blend":
+        # Current temporal workflows use either a direct number or $weight/current_weight.
+        try:
+            _require_bound_numeric(text, option="--current-weight", variable="weight", value=params["current_policy_weight"])
+        except SystemExit:
+            _require_bound_numeric(text, option="--current-weight", variable="current_weight", value=params["current_policy_weight"])
 
 
 def main() -> int:
