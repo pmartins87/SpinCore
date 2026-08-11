@@ -11,6 +11,8 @@ SELECTION_SCHEMA = "SPINCORE_R7_3_WINNER_SELECTION_V1"
 FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
 DECK_FORMULA = "seed*1000003 + global_root*97 + iteration"
 ALGORITHM_SEEDS = (20260829, 20260807)
+THREAD_ENV_CONTRACT = "SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE"
+THREAD_ENV_KEYS = ("SPINCORE_TORCH_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS")
 FROZEN_GATES = {
     "advantage_weighted_nrmse_max": 0.75,
     "policy_weighted_mean_tv_max": 0.12,
@@ -121,6 +123,15 @@ def _require_bound_numeric(text: str, *, option: str, variable: str, value: obje
     )
 
 
+def _require_thread_environment_contract(text: str) -> None:
+    overrides = [name for name in THREAD_ENV_KEYS if name in text]
+    if overrides:
+        raise SystemExit(
+            "source workflow explicitly overrides unsupported thread environment variables: "
+            + ", ".join(overrides)
+        )
+
+
 def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params: dict) -> None:
     required_fragments = [
         f"--ensemble-size {ensemble_size}",
@@ -140,6 +151,7 @@ def _require_workflow_contract(text: str, ensemble_size: int, kind: str, params:
         raise SystemExit("source workflow overrides the frozen default algorithm seeds")
     if "--lr" in text or "--device" in text:
         raise SystemExit("source workflow overrides frozen runner defaults for lr/device")
+    _require_thread_environment_contract(text)
     if kind == "uncertainty_damping":
         _require_bound_numeric(text, option="--epsilon-scale", variable="scale", value=params["epsilon_scale"])
         _require_bound_numeric(text, option="--epsilon-cap", variable="cap", value=params["epsilon_cap"])
@@ -279,6 +291,8 @@ def main() -> int:
         "params": selected_params,
         "algorithm_seeds": algorithm_seeds,
         "execution_contract": dict(EXECUTION_CONTRACT),
+        "thread_environment_contract": THREAD_ENV_CONTRACT,
+        "thread_environment_keys_not_overridden_by_source_workflow": list(THREAD_ENV_KEYS),
         "roots_per_seed": 320,
         "deck_formula": DECK_FORMULA,
         "primary_rng_contract": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
