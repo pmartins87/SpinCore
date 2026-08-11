@@ -29,29 +29,35 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _validate_prerequisites(freeze: dict, acceptance: dict, preflight: dict) -> str:
-    source_head = preflight_gate._validate_r7_3_prerequisites(freeze, acceptance)
+def _validate_prerequisites(freeze: dict, acceptance: dict, ruleset_freeze: dict, ruleset_acceptance: dict, preflight: dict) -> str:
+    source_head = preflight_gate._validate_ruleset_prerequisites(freeze, acceptance, ruleset_freeze, ruleset_acceptance)
     if preflight.get("schema") != PREFLIGHT_SCHEMA:
         raise ValueError("wrong R7.4 structural-preflight schema")
     if preflight.get("r7_4_structural_preflight_pass") is not True:
         raise ValueError("R7.4 structural preflight must pass before held-out stability pilot")
-    if preflight.get("exact_accepted_solver_source_used") is not True:
-        raise ValueError("R7.4 structural preflight did not use exact accepted solver source")
-    if preflight.get("preflight_worker_executed_from_accepted_worktree_overlay") is not True:
+    if preflight.get("exact_frozen_r7_4_rules_source_used") is not True:
+        raise ValueError("R7.4 structural preflight did not use frozen SPINRULESET-4 source")
+    if preflight.get("preflight_worker_executed_from_rules_worktree_overlay") is not True:
         raise ValueError("R7.4 structural worker provenance is incomplete")
-    if preflight.get("r7_3_source_head_sha") != source_head:
-        raise ValueError("R7.4 preflight source head differs from accepted R7.3 winner")
+    if preflight.get("r7_4_rules_source_head_sha") != source_head:
+        raise ValueError("R7.4 preflight rules source differs from accepted SPINRULESET-4 source")
+    if preflight.get("r7_3_certified_source_head_sha") != freeze.get("source_head_sha"):
+        raise ValueError("R7.4 preflight lost certified R7.3 base provenance")
     if preflight.get("r7_3_durability_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
         raise ValueError("R7.4 preflight durability provenance differs from semantic freeze")
+    if preflight.get("r7_4_hu_invariance_passed_first") is not True:
+        raise ValueError("R7.4 preflight did not prove HU invariance first")
     if preflight.get("ready_for_tables") is not False:
         raise ValueError("R7.4 preflight unexpectedly marked table readiness")
     return source_head
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Run R7.4 held-out HU/3H stability pilot on exact accepted R7.3 source")
+    ap = argparse.ArgumentParser(description="Run R7.4 held-out HU/3H stability pilot on accepted SPINRULESET-4 source")
     ap.add_argument("--freeze", type=Path, required=True)
     ap.add_argument("--acceptance", type=Path, required=True)
+    ap.add_argument("--ruleset-freeze", type=Path, required=True)
+    ap.add_argument("--ruleset-acceptance", type=Path, required=True)
     ap.add_argument("--preflight", type=Path, required=True)
     ap.add_argument("--domain", choices=("TRUE_HEADS_UP", "THREE_HANDED"), required=True)
     ap.add_argument("--roots-per-iteration", type=int, required=True)
@@ -60,9 +66,11 @@ def main() -> int:
 
     freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
     acceptance = json.loads(args.acceptance.read_text(encoding="utf-8"))
+    ruleset_freeze = json.loads(args.ruleset_freeze.read_text(encoding="utf-8"))
+    ruleset_acceptance = json.loads(args.ruleset_acceptance.read_text(encoding="utf-8"))
     preflight = json.loads(args.preflight.read_text(encoding="utf-8"))
     try:
-        source_head = _validate_prerequisites(freeze, acceptance, preflight)
+        source_head = _validate_prerequisites(freeze, acceptance, ruleset_freeze, ruleset_acceptance, preflight)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
     if int(args.roots_per_iteration) <= 0:
@@ -75,7 +83,7 @@ def main() -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory(prefix="spincore_r7_4_stability_") as td:
-        worktree = Path(td) / "source"
+        worktree = Path(td) / "ruleset4"
         temp_out = Path(td) / "pilot.json"
         _run(["git", "worktree", "add", "--detach", str(worktree), source_head], cwd=repo_root)
         try:
@@ -105,15 +113,18 @@ def main() -> int:
     if report.get("schema") != PILOT_SCHEMA:
         raise SystemExit("wrong R7.4 held-out pilot schema")
     report["r7_3_640_acceptance_passed_first"] = True
+    report["r7_4_ruleset_hu_invariance_passed_first"] = True
     report["r7_4_structural_preflight_passed_first"] = True
-    report["accepted_r7_3_source_head_sha"] = source_head
-    report["accepted_r7_3_evidence_commit_sha"] = freeze["evidence_commit_sha"]
+    report["r7_3_certified_source_head_sha"] = freeze["source_head_sha"]
+    report["r7_4_ruleset_source_head_sha"] = source_head
+    report["r7_3_evidence_commit_sha"] = freeze["evidence_commit_sha"]
     report["accepted_r7_3_behavior_semantic_id"] = freeze["behavior_semantic_id"]
+    report["r7_4_ruleset_schema"] = ruleset_freeze["ruleset_schema"]
     report["thread_environment_contract"] = freeze["thread_environment_contract"]
     report["thread_environment_overrides_injected_by_r7_4_orchestrator"] = False
-    report["exact_accepted_algorithm_source_used"] = True
+    report["exact_frozen_r7_4_rules_source_used"] = True
     report["pilot_worker_overlay_sha256"] = _sha256(worker)
-    report["pilot_worker_executed_from_accepted_worktree_overlay"] = True
+    report["pilot_worker_executed_from_rules_worktree_overlay"] = True
     report["ready_for_tables"] = False
     args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, sort_keys=True), flush=True)
