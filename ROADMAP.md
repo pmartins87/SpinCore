@@ -47,13 +47,13 @@ Advantage approximation -> nonlinear regret map -> behavior
 -> next trajectories -> next strategy targets
 ```
 
-The first fitted Advantage feedback transition is the first confirmed break: iteration-1 shared strategy targets are identical across seeds, while iteration 2 develops a saturated tail. Support fragmentation and exact shared-state disagreement are both material, so off-support extrapolation is not the sole cause.
+The first fitted Advantage feedback transition is the first confirmed break. Support fragmentation and exact shared-state disagreement remain material, so off-support extrapolation is not the sole cause.
 
-Three upstream mechanisms now have independent empirical support:
+Three upstream mechanisms have independent empirical support:
 
-1. **Advantage policy ensembling** reduces fit/sign variance. Size 8 is the first current-generation 2×128 candidate to clear both frozen cross-seed gates.
-2. **Temporal inertia** reduces iteration-to-iteration feedback instability. Size4 temporal w50 materially improved the five-iteration baseline.
-3. **Uncertainty-adaptive damping** is now the strongest completed five-iteration mechanism. It damps behavior only where independently fitted regret policies disagree.
+1. **Advantage policy ensembling** reduces fit/sign variance. Size8 is the first current-generation 2×128 candidate to clear both frozen cross-seed gates.
+2. **Temporal inertia** reduces iteration-to-iteration feedback instability.
+3. **Uncertainty-adaptive damping** is the strongest completed five-iteration mechanism and damps only states where independently fitted regret policies disagree.
 
 ## Mandatory durability baseline
 
@@ -86,14 +86,14 @@ All values are 5 CFR iterations × 64 roots = 320 roots/seed.
 | Direct Behavior control | `0.276185` | `0.828670` | PASS | closed |
 | Direct Behavior aggregated regret | `0.307350` | `0.914166` | PASS | closed |
 
-The uncertainty-s10 result improves the authoritative five-iteration baseline by about **36.9% in mean TV** and **37.1% in p95 TV**. It misses the frozen gates by only:
+Uncertainty-s10 improves the baseline by about **36.9% mean** and **37.1% p95**, but still misses the frozen gates by:
 
 ```text
 mean gap = 0.018098
 p95 gap  = 0.006780
 ```
 
-This supersedes temporal-w50 as the strongest completed durability reference. It is still not an R7.3 pass.
+It is therefore the current durable reference, not an R7.3 pass.
 
 ## Size8 short-horizon milestone
 
@@ -106,58 +106,106 @@ p95 TV  = 0.329689  PASS <= 0.35
 fits    = PASS
 ```
 
-This is the first current-generation short-horizon candidate to clear both frozen cross-seed gates. Because two-iteration wins can decay under feedback depth, size8 still requires 5×64 durability before any acceptance scaling.
+This is the first current-generation short-horizon candidate to clear both frozen cross-seed gates. It still requires full 5×64 durability.
 
-Its no-damping durability workflow `31446308103` remains physically in the five-iteration candidate step after build/regression/smoke PASS.
+## Current physical candidate program
 
-## Promoted compositions under physical test
+Every listed job has already passed build/regression and smoke unless otherwise noted.
+
+### Size8 no damping
+
+Workflow `31446308103`, job `93641202513`:
+
+```text
+Run physical size8 five-iteration durability — IN PROGRESS
+```
+
+### Regret-floor size4 e05/e10
+
+Workflow `31444922236`, jobs `93636932879` / `93636932877`:
+
+```text
+Run physical five-iteration regret-floor candidate — IN PROGRESS
+```
 
 ### Size8 + temporal w50
 
-Workflow `31448623827`:
+Workflow `31448623827`, job `93648112606`:
 
 ```text
-partial-exact level 2
-Advantage policy-mixture size 8
-50% current + 50% previous-iteration policy
-5×64
+Run physical size8 temporal-w50 five-iteration durability — IN PROGRESS
 ```
-
-Build/regression and smoke are PASS; the physical 320-root/seed durability step is running.
 
 ### Size8 + uncertainty s10
 
-The newly completed size4 uncertainty-s10 result is sufficiently close to both frozen gates to justify immediate composition with the only short-horizon ensemble size that already cleared them. Commit `cad2a8425a552eb1def4fef5fbca36bc220555ea` added workflow `31449546648`:
+Workflow `31449546648`, job `93650858760`:
 
 ```text
 partial-exact level 2
-Advantage policy-mixture size 8
-state-adaptive epsilon = min(0.50, 1.0 * mean-member-TV-to-ensemble-mean)
+Advantage policy-mixture size8
+state-adaptive epsilon = min(0.50, 1.0 * mean-member-TV-to-mean)
+5×64
+Run physical size8 uncertainty-s10 five-iteration durability — IN PROGRESS
+```
+
+### Local uncertainty calibration — size4 s1.25 / s1.50
+
+Because size4 s1.0 is already extremely close to the frozen p95 gate, workflow `31450032347` tests the smallest plausible further intervention before preferring a more expensive size8 composition:
+
+```text
+size4, cap 0.50
+scale 1.25
+scale 1.50
 5×64
 ```
 
-At the latest physical check this workflow is in build/regression. This is now co-equal highest priority with size8+temporal-w50.
+Jobs `93652314342` and `93652314379` passed build/regression and smoke and are both physically executing `Run physical five-iteration uncertainty extension`.
 
-## Remaining active base-matrix candidates
+If a smaller size4 scale clears both gates, it is preferred over a statistically comparable size8 composition because it is simpler and cheaper.
 
-- regret-floor policy mixture size4, epsilon `.05 / .10` — workflow `31444922236`; both physical 5×64 jobs still running;
-- size8 no-damping durability — workflow `31446308103`; physical 5×64 running.
+## Candidate checkpoint/resume readiness
 
-The uncertainty-adaptive size4 matrix has completed and no longer belongs in the active set.
+R7.2 already certifies `SPINCORE_R7_CHECKPOINT_V2` for the single-primary-network path, but R7.3 ensembles contain extra state that the plain `DomainBundle` does not carry.
+
+`python/spincore/r7_candidate_checkpoint.py` now defines:
+
+```text
+SPINCORE_R7_CANDIDATE_BEHAVIOR_V1
+```
+
+as an extra payload layered on the unchanged base checkpoint. It serializes side Advantage members, previous temporal members, wrapper parameters and fit generation while reusing the authoritative restored primary model as ensemble member zero and failing closed on a primary-state mismatch.
+
+Main regression `31449980549` passed after this preparation:
+
+```text
+C++ regression PASS
+Python 32 passed
+```
+
+This is serialization readiness only. The winning exact behavior still requires a physical continuous-vs-stop/restore/continue recertification after winner selection and before 640.
 
 ## Automatic evidence consolidation
 
-The frozen base matrix remains `SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4`: 15 candidate rows plus baseline.
-
-Supplemental promoted compositions are consolidated separately by `SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V2`, which now expects:
+The frozen base matrix remains `SPINCORE_R7_3_DURABILITY_MATRIX_SUMMARY_V4`:
 
 ```text
-17 candidate rows
-+ 1 authoritative baseline
-= 18 total rows
+15 candidate rows + 1 baseline
 ```
 
-Supplemental rows are `size8_temporal_w50` and `size8_uncertainty_s10`. Ranking is evidence only; no row is automatically promoted to production semantics.
+The supplemental consolidator is now `SPINCORE_R7_3_DURABILITY_EXTENDED_SUMMARY_V3`:
+
+```text
+19 candidate rows + 1 baseline = 20 total rows
+```
+
+Supplemental rows:
+
+- `size4_uncertainty_s125`
+- `size4_uncertainty_s150`
+- `size8_temporal_w50`
+- `size8_uncertainty_s10`
+
+Ranking is evidence only; it never relaxes a gate or promotes production semantics automatically.
 
 ## Residual downstream layer
 
@@ -168,7 +216,7 @@ mean TV = 0.138377
 p95 TV  = 0.368730
 ```
 
-It should be stacked only after a durable upstream winner is selected, not assumed to combine multiplicatively.
+It is tested only after an upstream durable winner is identified; its gain is not assumed additive.
 
 ## Closed / deprioritized primary branches
 
@@ -195,13 +243,13 @@ Before any mechanism advances to 640 it must:
 
 1. PASS every frozen per-seed fit gate;
 2. materially improve both mean and p95 versus `0.266591 / 0.567002` at 5×64;
-3. preferably clear `0.15 / 0.35` at the same five-iteration horizon;
+3. clear or explicitly solve any remaining miss to `0.15 / 0.35` at the same five-iteration horizon;
 4. survive fresh-process reproducibility;
-5. have its exact changed behavior semantics frozen/versioned;
-6. pass deterministic continuous-vs-stop/restore/continue checkpoint recertification;
+5. have exact changed behavior semantics frozen/versioned;
+6. pass deterministic continuous-vs-stop/restore/continue candidate checkpoint recertification;
 7. remain the smallest/interpretable mechanism among statistically comparable winners;
 8. keep all frozen gates unchanged.
 
-If a fit-valid size8 composition clears the five-iteration cross-seed gates, the next phase is **semantic freeze + reproducibility + checkpoint/resume recertification**, not immediate 640 scaling.
+A five-iteration gate-clearing winner moves next to **semantic freeze + fresh-process reproducibility + checkpoint/resume recertification**, not directly to 640.
 
 `READY FOR TABLES = NO`.
