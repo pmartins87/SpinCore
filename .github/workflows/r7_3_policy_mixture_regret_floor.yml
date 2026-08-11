@@ -1,0 +1,119 @@
+name: SpinCore R7.3 regret-floor policy-mixture durability
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_3_policy_mixture_regret_floor.yml'
+      - 'tools/run_r7_3_policy_mixture_regret_floor.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: e05
+            epsilon: '0.05'
+          - label: e10
+            epsilon: '0.10'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Build and regress authoritative solver
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q python_tests
+      - name: Smoke regret-floor policy mixture
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'; eps='${{ matrix.epsilon }}'
+          python tools/run_r7_3_policy_mixture_regret_floor.py \
+            --solver build/libspincore_solver_c.so \
+            --out "/tmp/R7_3_REGRET_FLOOR_${label}_SMOKE.json" \
+            --regret-floor-epsilon "$eps" \
+            --ensemble-size 4 --exact-opponent-levels 2 \
+            --iterations 2 --roots-per-iteration 1 \
+            --advantage-chunk-steps 8 --advantage-max-steps-per-iteration 8 \
+            --advantage-fit-target 10 --policy-chunk-steps 8 --policy-max-steps 8 \
+            --policy-fit-target 10 --batch-size 16 --audit-size 32 \
+            --cross-seed-per-seed 16 --reservoir-capacity 5000
+          python - "$label" "$eps" <<'PY'
+          import json,sys
+          label,eps=sys.argv[1],float(sys.argv[2])
+          d=json.load(open(f'/tmp/R7_3_REGRET_FLOOR_{label}_SMOKE.json'))
+          assert d['schema']=='SPINCORE_R7_3_POLICY_MIXTURE_REGRET_FLOOR_V1'
+          assert d['ensemble_size']==4
+          assert abs(d['regret_floor']['epsilon']-eps)<1e-12
+          assert d['extra_members_perturb_primary_rng'] is False
+          assert d['theoretical_equivalence_claimed'] is False
+          assert d['ready_for_tables'] is False
+          print('regret-floor policy-mixture smoke OK',label)
+          PY
+      - name: Run physical five-iteration regret-floor candidate
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'; eps='${{ matrix.epsilon }}'
+          python tools/run_r7_3_policy_mixture_regret_floor.py \
+            --solver build/libspincore_solver_c.so \
+            --out "validation/R7_3_POLICY_MIXTURE_REGRET_FLOOR_${label}_320.json" \
+            --regret-floor-epsilon "$eps" \
+            --ensemble-size 4 --exact-opponent-levels 2 \
+            --iterations 5 --roots-per-iteration 64 \
+            --advantage-chunk-steps 256 --advantage-max-steps-per-iteration 4096 \
+            --advantage-fit-target 0.50 --policy-chunk-steps 256 --policy-max-steps 16384 \
+            --policy-fit-target 0.105 --batch-size 256 --audit-size 512 \
+            --cross-seed-per-seed 1024 --reservoir-capacity 100000
+      - name: Persist regret-floor evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          label='${{ matrix.label }}'; eps='${{ matrix.epsilon }}'
+          out="validation/R7_3_POLICY_MIXTURE_REGRET_FLOOR_${label}_320.json"
+          if [ ! -f "$out" ]; then
+            printf '{"schema":"SPINCORE_R7_3_POLICY_MIXTURE_REGRET_FLOOR_V1","regret_floor_epsilon":%s,"runner_failed_before_report":true,"ready_for_tables":false}\n' "$eps" > "$out"
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "$out"
+          if ! git diff --cached --quiet; then
+            git commit -m "Record R7.3 regret-floor policy mixture ${label} 320 [r7-evidence-skip]"
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 5 ]; then exit 1; fi
+              sleep $((attempt * 2))
+            done
+          fi
