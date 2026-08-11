@@ -24,6 +24,49 @@ def _run(cmd: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> Non
     subprocess.run(cmd, cwd=cwd, env=env, check=True)
 
 
+def _validate_certification_chain(freeze: dict, fresh: dict, checkpoint: dict) -> str:
+    if freeze.get("schema") != FREEZE_SCHEMA or freeze.get("evidence_r7_3_pass") is not True:
+        raise ValueError("invalid semantic freeze")
+    if fresh.get("schema") != FRESH_SCHEMA or fresh.get("fresh_process_reproducible") is not True:
+        raise ValueError("fresh-process reproducibility must pass first")
+    if int(fresh.get("difference_count", -1)) != 0:
+        raise ValueError("fresh-process reproducibility did not produce zero differences")
+    if checkpoint.get("schema") != RECERT_SCHEMA or checkpoint.get("checkpoint_resume_recertification_pass") is not True:
+        raise ValueError("checkpoint/resume recertification must pass first")
+    source_head = str(freeze.get("source_head_sha", ""))
+    if not source_head or fresh.get("source_head_sha") != source_head or checkpoint.get("source_head_sha") != source_head:
+        raise ValueError("certification reports do not match frozen source head")
+    evidence_commit = freeze.get("evidence_commit_sha")
+    if fresh.get("original_evidence_commit_sha") != evidence_commit:
+        raise ValueError("fresh report does not match frozen evidence commit")
+    if checkpoint.get("evidence_commit_sha") != evidence_commit:
+        raise ValueError("checkpoint report does not match frozen evidence commit")
+    if fresh.get("original_evidence_sha256") != freeze.get("evidence_sha256"):
+        raise ValueError("fresh report does not match frozen evidence bytes")
+    if fresh.get("behavior_semantic_id") != freeze.get("behavior_semantic_id"):
+        raise ValueError("fresh report behavior semantic differs from freeze")
+    thread_contract = freeze.get("thread_environment_contract")
+    if not thread_contract:
+        raise ValueError("freeze lacks corrected thread-environment contract")
+    if fresh.get("thread_environment_contract") != thread_contract:
+        raise ValueError("fresh report thread environment differs from freeze")
+    if checkpoint.get("thread_environment_contract") != thread_contract:
+        raise ValueError("checkpoint report thread environment differs from freeze")
+    if fresh.get("thread_environment_overrides_injected_by_certifier") is not False:
+        raise ValueError("fresh report used or does not disprove hidden thread overrides")
+    if checkpoint.get("thread_environment_overrides_injected_by_certifier") is not False:
+        raise ValueError("checkpoint report used or does not disprove hidden thread overrides")
+    if checkpoint.get("algorithm_source_exact_worktree") is not True:
+        raise ValueError("checkpoint recertification did not use exact frozen source worktree")
+    if checkpoint.get("checkpoint_worker_executed_from_frozen_worktree_overlay") is not True:
+        raise ValueError("checkpoint worker was not executed from frozen worktree overlay")
+    if checkpoint.get("fresh_process_zero_difference_gate_passed_first") is not True:
+        raise ValueError("checkpoint recertification did not require zero-difference fresh gate")
+    if checkpoint.get("acceptance_gate_changed") is not False:
+        raise ValueError("checkpoint recertification changed acceptance gate")
+    return source_head
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Run 640-root acceptance from the exact source of a fully certified R7.3 durability winner")
     ap.add_argument("--freeze", type=Path, required=True)
@@ -36,19 +79,10 @@ def main() -> int:
     freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
     fresh = json.loads(args.fresh_report.read_text(encoding="utf-8"))
     checkpoint = json.loads(args.checkpoint_report.read_text(encoding="utf-8"))
-    if freeze.get("schema") != FREEZE_SCHEMA or freeze.get("evidence_r7_3_pass") is not True:
-        raise SystemExit("invalid semantic freeze")
-    if fresh.get("schema") != FRESH_SCHEMA or fresh.get("fresh_process_reproducible") is not True:
-        raise SystemExit("fresh-process reproducibility must pass first")
-    if checkpoint.get("schema") != RECERT_SCHEMA or checkpoint.get("checkpoint_resume_recertification_pass") is not True:
-        raise SystemExit("checkpoint/resume recertification must pass first")
-    source_head = str(freeze["source_head_sha"])
-    if fresh.get("source_head_sha") != source_head or checkpoint.get("source_head_sha") != source_head:
-        raise SystemExit("certification reports do not match frozen source head")
-    if fresh.get("original_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
-        raise SystemExit("fresh report does not match frozen evidence commit")
-    if checkpoint.get("evidence_commit_sha") != freeze.get("evidence_commit_sha"):
-        raise SystemExit("checkpoint report does not match frozen evidence commit")
+    try:
+        source_head = _validate_certification_chain(freeze, fresh, checkpoint)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     acceptance_freeze = copy.deepcopy(freeze)
     acceptance_freeze["execution_contract"] = dict(freeze["execution_contract"])
@@ -97,9 +131,13 @@ def main() -> int:
         "behavior_semantic_id": freeze["behavior_semantic_id"],
         "source_head_sha": source_head,
         "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
+        "durability_evidence_sha256": freeze["evidence_sha256"],
         "acceptance_evidence_path": str(args.evidence_out),
         "thread_environment_contract": freeze["thread_environment_contract"],
         "thread_environment_overrides_injected_by_certifier": False,
+        "fresh_process_zero_difference_gate_passed_first": True,
+        "checkpoint_exact_state_gate_passed_first": True,
+        "checkpoint_worker_executed_from_frozen_worktree_overlay": True,
         "iterations": 5,
         "roots_per_iteration": 128,
         "roots_per_seed": 640,
