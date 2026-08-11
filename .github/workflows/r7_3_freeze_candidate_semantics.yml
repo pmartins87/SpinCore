@@ -1,10 +1,6 @@
 name: SpinCore R7.3 candidate semantic freeze
 
 on:
-  workflow_run:
-    workflows:
-      - 'SpinCore R7.3 materialize winner selection'
-    types: [completed]
   push:
     branches: [main]
     paths:
