@@ -48,10 +48,6 @@ jobs:
         id: repro
         continue-on-error: true
         shell: bash
-        env:
-          SPINCORE_TORCH_THREADS: '2'
-          OMP_NUM_THREADS: '2'
-          MKL_NUM_THREADS: '2'
         run: |
           python tools/run_r7_3_frozen_candidate_fresh_repro.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
@@ -89,6 +85,7 @@ jobs:
           import json
           d=json.load(open('validation/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
           assert d.get('fresh_process_reproducible') is True, d
+          assert d.get('thread_environment_overrides_injected_by_certifier') is False
           assert d.get('ready_for_640') is False
           assert d.get('ready_for_tables') is False
           print('frozen candidate fresh-process reproducibility PASS')
