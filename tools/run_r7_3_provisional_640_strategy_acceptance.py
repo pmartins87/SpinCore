@@ -198,7 +198,7 @@ def main() -> int:
         "action_level_sentinels_required_before_ready_for_tables": True,
         "r7_3_strategy_quality_640_pass": strategy_pass,
         "r7_4_provisional_advance_allowed": strategy_pass,
-        "r7_3_fully_certified": False if not exact_pass else strategy_pass,
+        "r7_3_fully_certified": False,
         "ready_for_tables": False,
     }
     args.report_out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
