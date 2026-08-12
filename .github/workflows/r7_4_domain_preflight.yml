@@ -20,34 +20,61 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Resolve corrected R7.3 acceptance and accepted SPINRULESET-4 source
+      - name: Resolve strict or provisional R7.3 strategy prerequisite and accepted SPINRULESET-4 source
         id: gate
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           import json,sys
+          from pathlib import Path
           sys.path.insert(0,'tools')
           import r7_3_certification_evidence as resolver
           import run_r7_4_domain_preflight as preflight
+
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
           rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
           ra=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
+          chosen=None
+          origin=None
+          errors=[]
+
           try:
-              a,origin=resolver.resolve_valid_json(
+              a,strict_origin=resolver.resolve_valid_json(
                   'validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json',
                   validator=lambda d: preflight._validate_r7_3_prerequisites(f,d),
                   repo_root='.',
               )
               source=preflight._validate_ruleset_prerequisites(f,a,rf,ra)
           except Exception as exc:
-              print(f'R7.4 preflight remains gated: {exc}')
-              open('/tmp/r7_4_preflight_gate.txt','w').write('false')
+              errors.append('strict='+repr(exc))
           else:
-              open('/tmp/R7_3_ACCEPTANCE_CORRECTED.json','w').write(json.dumps(a,indent=2,sort_keys=True)+'\n')
-              open('/tmp/r7_4_preflight_gate.txt','w').write('true')
+              chosen=a
+              origin=strict_origin
+
+          if chosen is None:
+              p=Path('validation/R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE.json')
+              try:
+                  a=json.loads(p.read_text(encoding='utf-8'))
+                  preflight._validate_r7_3_prerequisites(f,a)
+                  source=preflight._validate_ruleset_prerequisites(f,a,rf,ra)
+              except Exception as exc:
+                  errors.append('provisional='+repr(exc))
+              else:
+                  chosen=a
+                  origin={'path':str(p),'mode':'PROVISIONAL_640_STRATEGY_QUALITY'}
+
+          if chosen is None:
+              print('R7.4 preflight remains gated:', '; '.join(errors))
+              Path('/tmp/r7_4_preflight_gate.txt').write_text('false',encoding='utf-8')
+          else:
+              Path('/tmp/R7_3_ACCEPTANCE_FOR_R7_4.json').write_text(
+                  json.dumps(chosen,indent=2,sort_keys=True)+'\n',encoding='utf-8'
+              )
+              Path('/tmp/r7_4_preflight_gate.txt').write_text('true',encoding='utf-8')
               print('accepted rules source',source)
-              print('R7.3 acceptance origin',origin)
+              print('R7.3 prerequisite origin',origin)
+              print('R7.3 prerequisite mode',preflight._acceptance_mode(chosen))
           PY
           echo "run=$(cat /tmp/r7_4_preflight_gate.txt)" >> "$GITHUB_OUTPUT"
       - name: Set up Python
@@ -62,7 +89,7 @@ jobs:
           set -euo pipefail
           python tools/run_r7_4_domain_preflight.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
-            --acceptance /tmp/R7_3_ACCEPTANCE_CORRECTED.json \
+            --acceptance /tmp/R7_3_ACCEPTANCE_FOR_R7_4.json \
             --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
             --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
             --out validation/R7_4_DOMAIN_PREFLIGHT.json
@@ -95,6 +122,11 @@ jobs:
           import json
           d=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
           assert d.get('r7_4_structural_preflight_pass') is True, d
+          assert d.get('r7_3_640_strategy_prerequisite_passed_first') is True
+          assert d.get('r7_3_prerequisite_mode') in ('STRICT_EXACT_CERTIFICATION','PROVISIONAL_640_STRATEGY_QUALITY')
+          if d.get('r7_3_prerequisite_mode') == 'PROVISIONAL_640_STRATEGY_QUALITY':
+              assert d.get('r7_3_exact_reproducibility_debt_preserved') is True
+              assert d.get('r7_3_640_acceptance_passed_first') is False
           assert d.get('r7_4_hu_invariance_passed_first') is True
           assert d.get('exact_frozen_r7_4_rules_source_used') is True
           assert d.get('preflight_worker_executed_from_rules_worktree_overlay') is True
