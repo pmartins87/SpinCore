@@ -35,9 +35,27 @@ The current first-party strategy article additionally states at a descriptive le
 - ordinary starting stacks are 500 chips but increase for larger multipliers;
 - the blind structure is hyper-turbo and increases every three minutes;
 - a 500-chip ordinary start corresponds to roughly 25 BB in the described standard early game;
-- lower/standard multipliers are winner-take-all while higher multipliers can pay second and third place.
+- lower/standard multipliers are winner-take-all while higher multipliers can pay second and third place;
+- the multiplier distribution presented in the strategy article is descriptive/approximate rather than a sufficient exact production table.
 
 These descriptive statements are useful architectural evidence but **are not sufficient to materialize an exact production profile for every multiplier**.
+
+## Dynamic-table binding cross-check — important fail-closed result
+
+A second first-party cross-check exposed a concrete reason not to trust a dynamically rendered prize table unless the selected buy-in is explicitly bound to the extracted data.
+
+The current main Spin & Gold page states that the USD $5 selector can reach a maximum multiplier/prize corresponding to **x200,000**. In contrast, the crawler-visible 3-Max table recovered from the first-party legal/localized page tops out at **x40,000** and contains rows including x40,000, x100, x50, x10, x5, x4, x3 and x2.
+
+Those two first-party observations are not treated as contradictory game rules. They demonstrate that the retrieved legal-page table is a **dynamic selected-state artifact whose buy-in binding is missing from the extracted representation**. Therefore:
+
+```text
+A table that is internally complete is still NOT production evidence
+unless its selected buy-in / jurisdiction / format state is proven.
+```
+
+In particular, the x40,000 table must **not** be silently assigned to the $5 profile merely because both came from official GGPoker pages. Doing so would create a valid-looking but semantically wrong production identity.
+
+This cross-check strengthens the R8.0 fail-closed requirement: exact prize/frequency rows must be captured together with the state that selected them, preferably from the client, an exact first-party API/data payload, or an official static rule document that names the buy-in explicitly.
 
 ## Explicitly unresolved — must be proven before R8.0 PASS
 
@@ -48,9 +66,10 @@ The current public page exposes dynamic controls/tables whose complete selected-
 - exact time-bank rule for each multiplier;
 - exact multiplier set available for each buy-in;
 - exact payout vector and frequency for every buy-in × multiplier combination;
+- an explicit binding between every recovered dynamic table and its selected buy-in / 3-Max state;
 - whether any jurisdiction/client configuration relevant to the intended production account differs from the global/current public presentation.
 
-A search-rendered first-party localized page exposed one complete prize table, but because the dynamic page has multiple buy-in selectors and the retrieved representation does not cryptographically bind that table to a selected buy-in state, **that table is not promoted here into a production profile**.
+A search-rendered first-party localized page exposed one complete prize table, but because the dynamic page has multiple buy-in selectors and the retrieved representation does not cryptographically or semantically bind that table to a selected buy-in state, **that table is not promoted here into a production profile**.
 
 ## Consequence for architecture
 
@@ -71,6 +90,8 @@ buy-in
 
 The code-level `SPINCORE_R8_PRODUCTION_PROFILE_V2` therefore binds `currency`, `buy_in_minor_units`, multiplier, stack, blind levels, normalized payout shares and the remaining strategy identities. A change in any semantic field produces a new profile hash; HU and 3H then derive separate policy IDs from that profile.
 
+The live-page binding problem also means that `ProductionEvidence` provenance is necessary but not sufficient on its own: the evidence note/record for a production profile must make clear which selected buy-in/multiplier state the observation proves. R8.0 certification must reject an evidence record that merely points to a dynamic page without binding the extracted constants to its selected state.
+
 ## R7.4 pilot constants are not production evidence
 
 The R7.4 validation configuration using values such as total 1500 chips, 10/20 and payout `(0.5, 0.3, 0.2)` remains a **pilot/test configuration only**. It must not become an R8 production profile unless the exact target buy-in/multiplier structure is independently proven to match it.
@@ -79,9 +100,9 @@ The R7.4 validation configuration using values such as total 1500 chips, 10/20 a
 
 R8.0 can close only after the missing multiplier-specific structure is recovered from a first-party source. Preferred evidence order:
 
-1. exact GGPoker client rules/structure captured for the production jurisdiction/account;
-2. exact first-party web/API data behind the dynamic table, if recoverable and bindable to the selected buy-in;
-3. an official GGPoker rule document/help record that enumerates the same fields.
+1. exact GGPoker client rules/structure captured for the production jurisdiction/account, including the selected buy-in/multiplier state;
+2. exact first-party web/API data behind the dynamic table, with selected-state binding preserved in the same capture;
+3. an official GGPoker rule document/help record that enumerates the same fields and explicitly names the profile to which they apply.
 
 Until then:
 
