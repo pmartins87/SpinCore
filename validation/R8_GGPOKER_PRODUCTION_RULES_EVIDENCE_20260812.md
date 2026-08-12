@@ -88,9 +88,32 @@ buy-in
 × strategy domain (HU or 3H)
 ```
 
-The code-level `SPINCORE_R8_PRODUCTION_PROFILE_V2` therefore binds `currency`, `buy_in_minor_units`, multiplier, stack, blind levels, normalized payout shares and the remaining strategy identities. A change in any semantic field produces a new profile hash; HU and 3H then derive separate policy IDs from that profile.
+The code-level `SPINCORE_R8_PRODUCTION_PROFILE_V3` binds `currency`, `buy_in_minor_units`, multiplier, stack, blind levels, normalized payout shares and the remaining strategy identities. A change in any semantic field produces a new `spinprofile-v3:` identity; HU and 3H then derive separate policy IDs from that profile.
 
-The live-page binding problem also means that `ProductionEvidence` provenance is necessary but not sufficient on its own: the evidence note/record for a production profile must make clear which selected buy-in/multiplier state the observation proves. R8.0 certification must reject an evidence record that merely points to a dynamic page without binding the extracted constants to its selected state.
+`ProductionEvidence` is now fail-closed at the schema level rather than relying on a free-text note. Every evidence record must declare a scope and the fields it proves. Facts that can vary with the selected game state use `SELECTED_PROFILE_STATE` and must carry exact bindings for:
+
+```text
+table_size
+buy_in_minor_units
+multiplier
+```
+
+A `GLOBAL_GAME` record is forbidden from claiming state-dependent fields such as starting stack, blind levels or payout shares. `ProductionProfile` rejects a selected-state evidence record whose binding differs from its own table/buy-in/multiplier and rejects profiles whose evidence set does not cover all required economic/structural fields.
+
+This closes the specific architecture hole exposed by the dynamic-table audit: **an official GGPoker URL alone can no longer validate a profile-dependent table.**
+
+Implementation/regression evidence:
+
+```text
+python/spincore/production_profile.py
+schema = SPINCORE_R8_PRODUCTION_PROFILE_V3
+commit = e13ab862909577c1c22b9be5f59c3e4e3916a253
+binding tests commit = 42aec7a4c39c1da376c39a9863465da5b39a4573
+main regression run = 31638697150
+main regression = PASS
+```
+
+This validation is deliberately semantic/provenance validation; it cannot make an incorrect human transcription true. The eventual R8.0 evidence package must therefore preserve the actual first-party capture or exact first-party data payload from which the bound constants were transcribed.
 
 ## R7.4 pilot constants are not production evidence
 
