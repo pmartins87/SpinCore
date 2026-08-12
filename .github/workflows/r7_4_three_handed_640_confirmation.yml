@@ -87,15 +87,19 @@ jobs:
           R7_ACCEPTANCE: ${{ steps.gate.outputs.acceptance }}
         run: |
           set -euo pipefail
-          python tools/run_r7_4_stability_pilot.py \
-            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
-            --acceptance "$R7_ACCEPTANCE" \
-            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
-            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
-            --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
-            --domain THREE_HANDED \
-            --roots-per-iteration 128 \
-            --out validation/R7_4_HELDOUT_3H_640_CONFIRMATION.json
+          python tools/run_with_heartbeat.py \
+            --label r7.4-three-handed-640 \
+            --interval-seconds 300 \
+            -- \
+            python tools/run_r7_4_stability_pilot.py \
+              --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+              --acceptance "$R7_ACCEPTANCE" \
+              --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+              --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
+              --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
+              --domain THREE_HANDED \
+              --roots-per-iteration 128 \
+              --out validation/R7_4_HELDOUT_3H_640_CONFIRMATION.json
       - name: Persist 3H confirmation evidence
         if: steps.gate.outputs.run == 'true' && always()
         shell: bash
