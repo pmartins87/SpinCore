@@ -1,6 +1,11 @@
 name: SpinCore R7.4 SPINRULESET-4 HU invariance
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_4_ruleset_hu_invariance.yml'
+      - 'tools/run_r7_4_hu_ruleset_invariance.py'
   workflow_run:
     workflows:
       - 'SpinCore R7.3 certify selected winner through 640'
@@ -14,7 +19,7 @@ permissions:
 
 concurrency:
   group: spincore-r7-4-ruleset4-hu-invariance
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   invariance:
@@ -71,6 +76,7 @@ jobs:
                   assert d['roots_per_iteration']==128
                   assert d['roots_per_seed']==640
                   assert d['exact_opponent_levels']==2
+                  assert d['seed_contract_pass'] is True
                   assert d['per_seed_fit_pass'] is True
                   assert d['frozen_cross_seed_gates_pass'] is True
                   assert d['structural_contract_pass'] is True
@@ -116,7 +122,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
           python -m pip install pytest
-      - name: Physical selected-HU invariance on frozen SPINRULESET-4 source
+      - name: Verify frozen R7.3 HU implementation invariance in SPINRULESET-4
         if: steps.gate.outputs.run == 'true'
         id: physical
         continue-on-error: true
@@ -140,7 +146,14 @@ jobs:
           r=json.load(open('validation/R7_4_HU_INVARIANCE.json'))
           f=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
           mode=Path('/tmp/r7_3_prerequisite_mode.txt').read_text(encoding='utf-8').strip()
-          passed=r.get('selected_r7_3_hu_evidence_invariant') is True and r.get('difference_count')==0
+          passed=(
+              r.get('selected_r7_3_hu_evidence_invariant') is True
+              and r.get('difference_count')==0
+              and r.get('selected_training_components_byte_identical') is True
+              and r.get('historical_numeric_evidence_reproduction_evaluated') is False
+              and r.get('historical_exact_reproducibility_debt_preserved') is True
+              and r.get('heldout_hu640_strategy_test_still_required') is True
+          )
           out={
             'schema':'SPINCORE_R7_4_RULESET_ACCEPTANCE_V1',
             'ruleset_schema':'SPINRULESET-4',
@@ -151,6 +164,11 @@ jobs:
             'semantic_extension':f['semantic_extension'],
             'r7_3_prerequisite_mode':mode,
             'r7_3_exact_reproducibility_debt_preserved': mode=='PROVISIONAL_640_STRATEGY_QUALITY',
+            'hu_invariance_basis':r.get('invariance_basis'),
+            'hu_invariance_difference_scope':r.get('difference_scope'),
+            'historical_numeric_evidence_reproduction_evaluated':False,
+            'historical_exact_reproducibility_debt_preserved':True,
+            'heldout_hu640_strategy_test_still_required':True,
             'selected_training_components_byte_identical':bool(r.get('selected_training_components_byte_identical')),
             'hu_invariance_difference_count':int(r.get('difference_count',-1)),
             'hu_invariance_pass':passed,
@@ -192,9 +210,16 @@ jobs:
           a=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
           assert r['selected_r7_3_hu_evidence_invariant'] is True, r
           assert r['difference_count']==0
+          assert r['difference_scope']=='SELECTED_R7_3_TRAINING_COMPONENT_BLOBS'
+          assert r['selected_training_components_byte_identical'] is True
+          assert r['historical_numeric_evidence_reproduction_evaluated'] is False
+          assert r['historical_exact_reproducibility_debt_preserved'] is True
+          assert r['heldout_hu640_strategy_test_still_required'] is True
           assert a['hu_invariance_pass'] is True, a
           assert a['r7_4_rules_source_accepted'] is True
+          assert a['historical_exact_reproducibility_debt_preserved'] is True
+          assert a['heldout_hu640_strategy_test_still_required'] is True
           assert a['r7_4_gate_changed'] is False
           assert a['ready_for_tables'] is False
-          print('SPINRULESET-4 HU invariance PASS; frozen rules source may enter R7.4 preflight.')
+          print('SPINRULESET-4 HU implementation invariance PASS; held-out HU640 remains the physical strategy gate.')
           PY
