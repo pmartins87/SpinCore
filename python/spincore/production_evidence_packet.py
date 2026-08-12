@@ -18,7 +18,7 @@ _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 class CapturedPayouts:
     """Raw client-displayed payout amounts for one selected Spin state.
 
-    Values are intentionally stored as integer minor units.  Production shares
+    Values are intentionally stored as integer minor units. Production shares
     are derived from the captured amounts themselves; no assumption such as
     `buy_in * multiplier == prize_pool` is made here.
     """
@@ -46,10 +46,10 @@ class CapturedPayouts:
             int(self.third_minor_units),
         )
         total = float(sum(values))
-        shares = tuple(float(x) / total for x in values)
-        # Force exact floating closure on the final place without changing the
-        # captured place ordering. This is only a representation normalization.
-        return (shares[0], shares[1], 1.0 - shares[0] - shares[1])
+        # Keep every share as the direct ratio of an exact captured integer.
+        # Do not derive the final place as 1-a-b: for legitimate zero payouts,
+        # binary floating subtraction can create a tiny negative value.
+        return tuple(float(x) / total for x in values)
 
 
 @dataclass(frozen=True)
