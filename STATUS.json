@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.26",
+  "version": "1.12.1-recovery.27",
   "recovery_generation": 2,
-  "physical_state": "R7_4_HELDOUT_3H_STAGED_REPAIR_ACTIVE_R7_3_EXACT_REPRO_DEBT_DEFERRED",
+  "physical_state": "R7_4_HELDOUT_3H_STAGED_REPAIR_ACTIVE_R8_INFRA_PREHARDENED_R7_3_EXACT_REPRO_DEBT_DEFERRED",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.4",
-  "current_gate_status": "HU640_PASS_STAGED_RESUME_EQUIVALENCE_PASS_3H320_ITERATION1_IN_PROGRESS",
+  "current_gate_status": "HU640_PASS_STAGED_RESUME_EQUIVALENCE_PASS_3H320_ITERATION2_IN_PROGRESS",
   "ready_for_tables": false,
   "roadmap": {
     "R0_R6": "PASS_REBUILT",
@@ -15,7 +15,9 @@
     "R7_3_strategy_quality_640": "PASS_PROVISIONAL_ADVANCEMENT",
     "R7_3_exact_reproducibility": "OPEN_RELEASE_CERTIFICATION_DEBT_NOT_PASS",
     "R7_4": "IN_PROGRESS_HU640_PASS_3H320_STAGED",
-    "R8": "BLOCKED_UNTIL_R7_4_FINAL_PASS",
+    "R8_0": "FAIL_CLOSED_INCOMPLETE_EXACT_GGPOKER_PROFILE",
+    "R8_1": "COMPONENT_HARDENING_ADVANCED_NOT_GATE_PASS",
+    "R8_2_R8_5": "BLOCKED",
     "R9_R12": "TODO"
   },
   "frozen_gates": {
@@ -122,10 +124,17 @@
       "original_job_conclusion": "CANCELLED_AT_GITHUB_HOSTED_RUNNER_6H_CEILING_WHILE_PROGRESSING",
       "strategic_failure_observed": false,
       "repair_workflow": 31637418697,
-      "repair_status": "IN_PROGRESS",
+      "repair_status": "ITERATION_2_IN_PROGRESS_BOTH_SEEDS",
       "roots_per_seed": 320,
       "staged_resume_equivalence_required": true,
-      "staged_resume_equivalence_pass": true
+      "staged_resume_equivalence_pass": true,
+      "iteration_1": {
+        "both_seed_jobs_passed": true,
+        "seed_1954132610_ensemble_weighted_nrmse": 0.4887768626213074,
+        "seed_372483540_ensemble_weighted_nrmse": 0.48066118359565735,
+        "frozen_advantage_gate_max": 0.75,
+        "intermediate_only_not_final_strategy_pass": true
+      }
     },
     "three_handed_640": {
       "roots_per_seed": 640,
@@ -141,19 +150,6 @@
     "equivalence_schema": "SPINCORE_R7_4_STAGED_RESUME_EQUIVALENCE_V1",
     "equivalence_status": "PASS_EXACT",
     "checkpoint_boundary": "POST_ADVANTAGE_FIT_PER_ITERATION",
-    "preserves": [
-      "ADVANTAGE_RESERVOIR_AND_RNG",
-      "STRATEGY_RESERVOIR_AND_RNG",
-      "LIVE_BATCH_RNG",
-      "GLOBAL_TORCH_RNG",
-      "PRIMARY_AND_SIDE_MODELS",
-      "OPTIMIZERS",
-      "COUNTERS",
-      "UNCERTAINTY_BEHAVIOR_DIAGNOSTICS",
-      "GLOBAL_ROOT",
-      "SCENARIO_COUNTS",
-      "ITERATION_REPORTS"
-    ],
     "changes_strategic_gate": false,
     "equivalence_evidence": "validation/R7_4_STAGED_RESUME_EQUIVALENCE.json",
     "equivalence_checks": {
@@ -172,9 +168,32 @@
     }
   },
   "r8": {
-    "status": "BLOCKED_UNTIL_FINITE_R7_4_FINAL_GATE_PASS",
-    "ready_to_start": false
+    "status": "ENGINEERING_MAY_CONTINUE_BUT_OFFICIAL_EXECUTION_BLOCKED",
+    "r8_0": {
+      "status": "INCOMPLETE_FAIL_CLOSED",
+      "profile_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
+      "selected_state_evidence_binding_required": true,
+      "exact_ggpoker_multiplier_stack_blind_payout_tables_missing": true,
+      "pilot_constants_forbidden_as_substitute": true
+    },
+    "r8_1": {
+      "status": "COMPONENT_HARDENING_PASS_NOT_INTEGRATED_GATE_PASS",
+      "stream_scheduler_schema": "SPINCORE_R8_INDEPENDENT_STREAM_SCHEDULER_V2",
+      "central_algorithm_r_schema": "SPINCORE_R8_CENTRAL_ALGORITHM_R_V2",
+      "scheduler_checkpoint_schema": "SPINCORE_R8_SCHEDULER_DURABLE_CHECKPOINT_V1",
+      "durable_receipt_before_iteration_advance": true,
+      "checkpoint_parent_sha_lineage_required": true,
+      "algorithm_seed_isolation_required": true,
+      "roots_per_iteration_schedule_bound": true,
+      "atomic_scheduler_checkpoint": true,
+      "profile_v3_regression": 31638697150,
+      "algorithm_r_v2_regression": 31639134952,
+      "scheduler_checkpoint_regression": 31639331611,
+      "remaining_blocker": "INTEGRATED_PRODUCTION_MODEL_RNG_RESERVOIR_SCHEDULER_RECOVERY_TRANSACTION_NOT_YET_CERTIFIED"
+    },
+    "r8_2_r8_5": "BLOCKED_BY_R7_4_FINAL_AND_R8_0_R8_1",
+    "ready_to_start_official_training": false
   },
-  "next_physical_step": "Both frozen held-out 3H320 seeds are executing iteration 1 of five at 64 roots/iteration after exact staged-resume equivalence PASS. Continue the deterministic checkpoint chain through iteration 5, finalize each seed, aggregate unchanged gates, and only on genuine 3H320 PASS auto-authorize staged 3H640 confirmation. No strategic threshold, seed, scenario, deck schedule, root count, behavior parameter, or thread contract may change.",
+  "next_physical_step": "Continue both frozen held-out 3H320 seeds through deterministic iteration-boundary checkpoints from iteration 2 through 5. Finalize AveragePolicy, aggregate unchanged per-seed and cross-seed gates, and only on genuine 3H320 PASS auto-authorize staged 3H640 confirmation. In parallel, R8.1 engineering may continue, but no R8 official training may start before finite R7.4 final PASS and exact R8.0 GGPoker profiles.",
   "ready_for_tables": false
 }
