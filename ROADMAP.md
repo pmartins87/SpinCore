@@ -1,6 +1,8 @@
-# SpinCore finite roadmap — canonical recovery generation 2
+# SpinCore finite roadmap — canonical state 2026-08-12
 
-Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate through R12 passes.
+Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate through R12 passes and the deferred R7.3 exact-reproducibility debt is closed.
+
+## Canonical roadmap status
 
 - R0 Foundation / canonical repository — **PASS REBUILT**
 - R1 Complete poker engine — **PASS REBUILT**
@@ -12,250 +14,218 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 - R7 Pilot / performance / statistical stability — **IN PROGRESS**
   - R7.0 approximation metrics / full-reservoir audit — **PASS REBUILT**
   - R7.1 native own-reach frontier — **PASS REBUILT**
-  - R7.2 LCFR weighting / exact checkpoint+resume / fresh-process worker — **PASS REBUILT**
-  - R7.3 multi-seed stability — **5×64 WINNER SELECTED; CERTIFICATION ACTIVE**
-  - R7.4 larger held-out HU + 3H pilot — **FINITE GATE PRECOMMITTED; BLOCKED BY R7.3**
-- R8 Production training — TODO after R7.4 PASS
+  - R7.2 LCFR weighting / checkpoint+resume infrastructure / fresh-process worker — **PASS REBUILT**
+  - R7.3 selected strategy quality at 640 roots/seed — **PASS FOR PROVISIONAL R7.4 ADVANCEMENT**
+  - R7.3 exact fresh-process reproducibility — **OPEN RELEASE/CERTIFICATION DEBT; NOT PASS**
+  - R7.4 SPINRULESET-4 source invariance — **PASS**
+  - R7.4 structural HU/3H preflight — **PASS**
+  - R7.4 held-out HU 640 — **PASS**
+  - R7.4 held-out 3H 320 — **IN PROGRESS VIA DETERMINISTIC STAGED RESUME**
+  - R7.4 held-out 3H 640 confirmation — **BLOCKED UNTIL 3H320 PASS**
+- R8 Production training — **BLOCKED UNTIL FINITE R7.4 FINAL PASS**
 - R9 Strategic audit — TODO
 - R10 OpenHoldem runtime — TODO
 - R11 Safe exploitation — TODO
 - R12 Operational homologation — TODO
 
-## R7.3 frozen gates and execution contract
+No intermediate success authorizes table use.
+
+## Frozen strategic contract
 
 ```text
+selected behavior = size4_uncertainty_s175
+behavior semantic = SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1
+ensemble size = 4
+epsilon scale = 1.75
+epsilon cap = 0.50
+
 Advantage weighted NRMSE <= 0.75
 AveragePolicy weighted mean TV <= 0.12
 cross-seed mean TV <= 0.15
 cross-seed p95 TV <= 0.35
-selection seeds = 20260829, 20260807
+
+R7.3 selection seeds = 20260829, 20260807
 deck_seed = seed * 1_000_003 + global_root * 97 + iteration
 global_root continuous across iterations
 partial-exact opponent level = 2
 primary RNG = one persistent live bundle.batch_rng
-training device = cpu
-learning rate = 0.001
+production utility = ICM_EXACT_V1 explicit payout delta
+thread contract = SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE
 ```
 
-No gate has been relaxed.
+No strategic threshold has been relaxed.
 
-## R7.3 causal resolution
+## R7.3 selected winner and 640 strategy bridge
 
-The confirmed instability chain is:
+Original frozen 5×64 winner:
 
 ```text
-Advantage approximation
--> nonlinear regret matching
--> divergent behavior
--> divergent next trajectories
--> divergent strategy targets
--> repeated CFR feedback amplification
+roots/seed = 320
+mean TV = 0.1329178512096405       PASS
+p95 TV  = 0.2854667007923126       PASS
+all per-seed fit gates             PASS
+source workflow = 31451592073
+source head = 01edcb4697ae07f8f379d79b0b4b8e43e309d65e
+evidence commit = 05c0976e8311874ea9a55f5c899a088abe3b4f00
+evidence SHA256 = 39bc31e0198df1ba8b6b5033271ae8da839ec32a80cd42a22b09647b9b1e130e
 ```
 
-Iteration-1 shared strategy targets are identical under initial uniform behavior. The first fitted Advantage feedback is the first physically confirmed transition to large shared-target divergence in iteration 2. Support fragmentation and exact shared-state disagreement are both material.
-
-The strongest durable control mechanism is state-local **uncertainty-adaptive damping** of a policy mixture. It uses disagreement among independently fitted regret policies as a proxy for epistemic instability and mixes only uncertain states toward legal uniform behavior.
-
-## R7.3 selected winner
-
-The completed uncertainty sweep produced several genuine 5×64 gate passes. Deliberate selection chose the smallest robust winner rather than automatically selecting the numerically lowest mean.
-
-### Selected: `size4_uncertainty_s175`
+The unchanged 5×128 provisional strategy-quality bridge subsequently passed at 640 roots/seed:
 
 ```text
-ensemble size = 4
-epsilon scale = 1.75
-epsilon cap = 0.50
-5 CFR iterations × 64 roots = 320 roots/seed
-mean TV = 0.1329178512       PASS
-p50 TV  = 0.1155516654
-p95 TV  = 0.2854667008       PASS
-max TV  = 0.5646659136
-all per-seed fit gates       PASS
-R7.3 durability gate         PASS
+workflow = 31579597855
+evidence commit = 872f53a053ac83160be54977715ba1ceae4d8b25
+mean TV = 0.13625219464302063       PASS
+p95 TV  = 0.3153517544269562        PASS
+seed 20260829 Advantage NRMSE = 0.48132333159446716
+seed 20260829 Policy TV = 0.0904657244682312
+seed 20260807 Advantage NRMSE = 0.4868704676628113
+seed 20260807 Policy TV = 0.09239403158426285
 ```
 
-Margins:
+This is the strategy-quality prerequisite that authorizes provisional R7.4 engineering.
+
+## R7.3 exact-reproducibility debt
+
+Strict fresh-process recertification remains unresolved:
 
 ```text
-mean gate margin = 0.0170821488
-p95 gate margin  = 0.0645332992
+fresh_process_reproducible = false
+difference_count = 734 report fields
+numeric tolerance = 1e-9
+strict run = 31565565329
 ```
 
-Authoritative provenance:
+The failure is not reclassified as PASS and is not hidden by tolerance or thread hacks. Decision record:
 
 ```text
-source workflow run = 31451592073
-source head         = 01edcb4697ae07f8f379d79b0b4b8e43e309d65e
-evidence commit     = 05c0976e8311874ea9a55f5c899a088abe3b4f00
-evidence file       = validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s175_320.json
-selection file      = validation/R7_3_WINNER_SELECTION.json
+validation/R7_3_EXACT_REPRO_DEFERRED_DECISION_20260812.md
 ```
 
-A size8 uncertainty candidate achieved slightly lower mean TV but required twice as many Advantage models and had worse p95/max behavior. The size4 s175 candidate therefore won the complexity/robustness decision.
+Controlled deferral means:
 
-**This 5×64 PASS does not by itself make R7.3 PASS.** Certification remains mandatory.
+1. exact reproducibility does not block R7.4/R8 engineering while unchanged strategy-quality gates continue to pass;
+2. exact reproducibility remains explicit release/certification debt;
+3. the debt **must close before `READY FOR TABLES`**;
+4. action-level canonical/extreme sentinels are also required before table use.
 
-## R7.3 corrected certification chain
+## R7.4 accepted rules source and structural gate
 
-The selected winner is frozen by `SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1`, including exact evidence bytes, source commit/tree identities, hyperparameters, deck/RNG contract and behavior parameters.
-
-A certification audit uncovered two ways a nominal “exact-source” rerun could silently cease to be exact:
-
-1. certification workflows had injected PyTorch/OpenMP/MKL thread-count overrides that the source evidence workflow never set;
-2. the checkpoint worker could execute from current-main `tools`, causing imports to resolve current-main training modules instead of the frozen source tree.
-
-Both paths are now rejected. The corrected contract is:
+R7.4 extends the frozen training implementation with `SPINRULESET-4` at source head:
 
 ```text
-thread_environment_contract = SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE
-certifier injects no thread-count overrides
-checkpoint helper + worker are overlaid into detached frozen-source worktree
-worker executes from frozen-source worktree/tools
-all behavior/training imports resolve there
+e43b2cfea31f927393cf2751485d712902d6f02d
 ```
 
-There is an older workflow run `31468467215` using the pre-hardening snapshot. It is explicitly **NONAUTHORITATIVE**.
+HU invariance is based on byte identity of the selected R7.3 training components plus extension regression, not on pretending the unresolved historical numeric reproduction passed.
 
-Because old and corrected Actions can write the same canonical evidence paths, certification now uses `tools/r7_3_certification_evidence.py`: current HEAD evidence is accepted only if it satisfies immutable provenance; otherwise Git history is searched newest-first for the newest provenance-valid version. If none exists, certification fails closed. A stale legacy overwrite can therefore no longer silently replace corrected evidence.
-
-### Corrected active cascade
-
-Workflow `31469278146`:
+Authoritative accepted evidence:
 
 ```text
-semantic freeze                    PASS
-exact-source fresh reproduction    PHYSICAL IN PROGRESS
-checkpoint recertification         waits for fresh PASS
-5×128 = 640 acceptance             waits for checkpoint PASS
+validation/R7_4_RULESET_ACCEPTANCE.json
+hu_invariance_pass = true
+selected_training_components_byte_identical = true
+historical_numeric_evidence_reproduction_evaluated = false
+historical_exact_reproducibility_debt_preserved = true
 ```
 
-Fresh reproduction requires recursive evidence equality with numeric tolerance `1e-9`, ignoring only `generated_at_unix` and `duration_seconds`. Checkpoint recertification requires exact final state across counters, both reservoirs and their RNGs, live batch RNG, global torch RNG, primary/side networks, AveragePolicy, optimizers and wrapper state.
-
-Only a corrected exact-source 640 PASS changes R7.3 to PASS and authorizes R7.4.
-
-## Candidate checkpoint determinism
-
-Base checkpoint remains `SPINCORE_R7_CHECKPOINT_V2`. Ensemble behavior state is stored in its existing `extra` field under:
+Structural preflight also passed:
 
 ```text
-SPINCORE_R7_CANDIDATE_BEHAVIOR_V1
+corrected workflow = 31600267534
+case_count = 15
+HU cases = 6
+all_chip_zero_sum = true
+all_clone_neural_exact = true
+all_icm_zero_sum_within_1e12 = true
 ```
 
-Side model reconstruction is global-torch-RNG neutral via `torch.random.fork_rng(devices=[])`, fixing a hidden restart divergence mechanism. The physical recert worker supports the selected uncertainty mechanism and temporal candidates, but only the selected winner will receive full certification.
+## R7.4 finite physical sequence
 
-## R7.4 gate is now finite and precommitted
-
-The full design is frozen before observing any R7.4 strategic result in:
+The precommitted design remains:
 
 ```text
-validation/R7_4_GATE_DESIGN_20260811.md
-```
-
-R7.4 carries the exact accepted s175 algorithm forward. It does **not** search for another algorithm or tune thresholds after seeing domain results.
-
-### Held-out seed policy
-
-R7.3 selection seeds are forbidden. Two R7.4 seeds are derived deterministically from the immutable frozen evidence SHA-256:
-
-```text
-SHA256("SpinCore|R7.4|heldout|index|" + evidence_sha256)
--> positive 31-bit seed
--> reject zero, duplicates, and R7.3-seed collisions
-```
-
-The same held-out seed pair is used throughout R7.4.
-
-### Scenario coverage
-
-TRUE_HEADS_UP uses six deterministic stack/dealer variants:
-
-```text
-(0,750,750), (0,500,1000), (0,1000,500)
-× dealer 1/2
-```
-
-THREE_HANDED uses fifteen deterministic variants:
-
-```text
-(500,500,500)
-(250,500,750)
-(250,750,500)
-(500,250,750)
-(750,250,500)
-× dealer 0/1/2
-```
-
-Every scenario must be exercised. Scenario selection is deterministic by global root index and the authoritative deck formula is retained.
-
-### R7.4 finite physical sequence
-
-```text
-A. corrected accepted-source structural HU/3H preflight
+A. accepted SPINRULESET-4 source invariance + structural preflight
 B. held-out HU:  5 × 128 = 640 roots/seed
 C. held-out 3H:  5 ×  64 = 320 roots/seed screen
 D. only if B+C PASS: held-out 3H 5 × 128 = 640 roots/seed confirmation
 E. R7.4 PASS only if B + C + D all PASS
 ```
 
-The 3H 320 stage is only a compute filter and can never finish R7.4 by itself.
-
-R7.4 reuses the same fit and cross-seed thresholds as R7.3. No easier 3H-specific gate exists.
-
-Prepared automation:
+Held-out seeds are derived mechanically from the immutable winner evidence hash and never reuse the R7.3 selection seeds. Current pair:
 
 ```text
-.github/workflows/r7_4_domain_preflight.yml
-.github/workflows/r7_4_heldout_domain_screen.yml
-.github/workflows/r7_4_three_handed_640_confirmation.yml
-
-tools/run_r7_4_domain_preflight.py
-tools/run_r7_4_stability_pilot.py
-tools/r7_4_stability_pilot_worker.py
-tools/summarize_r7_4_heldout_screen.py
-tools/finalize_r7_4_gate.py
+1954132610
+372483540
 ```
 
-Final schema:
+Scenario cycles remain fixed at 6 TRUE_HEADS_UP variants and 15 THREE_HANDED stack/dealer variants.
+
+### Current physical evidence
+
+HU640 passed unchanged gates:
 
 ```text
-SPINCORE_R7_4_FINAL_GATE_V1
+validation/R7_4_HELDOUT_HU_640.json
+mean TV = 0.12478918582201004
+p95 TV = 0.2732357978820801
+r7_4_domain_stability_pass = true
 ```
 
-R7.4 PASS authorizes **R8 only**, never table use.
+The original combined 3H320 job was **cancelled by the GitHub-hosted runner's 6-hour ceiling while still progressing normally**. That cancellation is infrastructure, not a strategic failure.
 
-## Regression state
-
-Main regression workflow `31470937877`, commit `b0aadb263be39c8ed83d6c8673c99ae2fcb80705`:
+Runtime consistency relevant to the accepted 640 bridge and current held-out execution is:
 
 ```text
-C++ regression PASS
-Python 65 passed
+Ubuntu 24.04
+Python 3.11.15
+PyTorch 2.13.0+cpu
 ```
 
-The Python suite includes exact-source/provenance rejection, stale-evidence Git-history recovery, checkpoint RNG neutrality, R7.4 held-out seed derivation, HU/3H scenario coverage, seed-local uncertainty diagnostics and the finite R7.4 final gate.
+To preserve the exact frozen strategic test without reducing roots, changing seeds, or relaxing gates, 3H execution is now split at deterministic post-Advantage-fit iteration boundaries using the existing authoritative checkpoint state:
 
-## Closed / deprioritized primary branches
+```text
+SPINCORE_R7_CHECKPOINT_V2
+SPINCORE_R7_CANDIDATE_BEHAVIOR_V1
+SPINCORE_R7_4_STAGED_CHECKPOINT_V1
+```
 
-Raw root scaling, independent x8/x16 path multiplication as standalone fix, common-path RNG, antithetic x4, exhaustive opponent expectation, simply increasing optimizer capacity, behavior-aware MSE auxiliary objective, duplicate-target aggregation, multistart selection, raw Advantage ensemble standalone, common-mode centering, robust median/trimmed aggregation, card/suit rewrite as dominant explanation, ordinary Direct Behavior, aggregated-regret Direct Behavior, regret-floor as primary mechanism and direct plain-size4 640 escalation are closed or deprioritized.
+The checkpoint preserves both reservoirs and reservoir RNGs, live `bundle.batch_rng`, global torch RNG, models, optimizers, counters, ensemble side models, behavior diagnostics, global-root position, scenario counts and iteration reports.
+
+Before staged 3H evidence is accepted, a physical continuous-versus-resumed THREE_HANDED regression must report exact equality:
+
+```text
+SPINCORE_R7_4_STAGED_RESUME_EQUIVALENCE_V1
+all_exact = true
+```
+
+Current staged repair workflow:
+
+```text
+.github/workflows/r7_4_three_handed_staged_repair.yml
+run = 31637418697
+status = IN PROGRESS
+```
+
+The 3H640 confirmation workflow has already been converted to the same deterministic staged mechanism and will gate on a genuine HU640 + 3H320 screen PASS.
 
 ## Remaining finite path to table use
 
 ```text
-R7.3 corrected fresh PASS
--> R7.3 checkpoint recert PASS
--> R7.3 exact-source 640 PASS
--> R7.4 structural PASS
--> R7.4 held-out HU640 + 3H320 PASS
--> R7.4 held-out 3H640 PASS
+R7.4 staged-resume equivalence PASS
+-> R7.4 3H320 unchanged strategic gates PASS
+-> R7.4 3H640 unchanged strategic gates PASS
+-> R7.4 FINAL PASS
 -> R8 production training
 -> R9 strategic audit
 -> R10 OpenHoldem runtime
 -> R11 safe exploitation
 -> R12 operational homologation
+-> close R7.3 exact-reproducibility release debt
+-> complete required action-level sentinels
 -> READY FOR TABLES
 ```
 
-No intermediate success bypasses a later stage.
+R7.4 PASS authorizes **R8 only**, never table use.
 
 `READY FOR TABLES = NO`.
