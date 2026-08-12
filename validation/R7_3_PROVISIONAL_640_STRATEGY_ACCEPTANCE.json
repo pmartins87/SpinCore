@@ -1,11 +1,81 @@
 {
-  "schema": "SPINCORE_R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE_V1",
-  "runner_failed_before_report": true,
+  "action_level_sentinels_required_before_ready_for_tables": true,
+  "behavior_semantic_id": "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
   "certification_sequence_exception": true,
+  "decision_record": "validation/R7_3_EXACT_REPRO_DEFERRED_DECISION_20260812.md",
+  "durability_evidence_commit_sha": "05c0976e8311874ea9a55f5c899a088abe3b4f00",
+  "durability_evidence_sha256": "39bc31e0198df1ba8b6b5033271ae8da839ec32a80cd42a22b09647b9b1e130e",
+  "exact_opponent_levels": 2,
   "exact_reproducibility_deferred": true,
+  "exact_reproducibility_difference_count": 734,
   "exact_reproducibility_must_close_before_ready_for_tables": true,
-  "r7_3_strategy_quality_640_pass": false,
-  "r7_4_provisional_advance_allowed": false,
+  "exact_reproducibility_pass": false,
+  "frozen_cross_seed_gates_pass": true,
+  "iterations": 5,
+  "label": "size4_uncertainty_s175",
+  "per_seed_fit_pass": true,
   "r7_3_fully_certified": false,
-  "ready_for_tables": false
+  "r7_3_strategy_quality_640_pass": true,
+  "r7_4_provisional_advance_allowed": true,
+  "ready_for_tables": false,
+  "roots_per_iteration": 128,
+  "roots_per_seed": 640,
+  "schema": "SPINCORE_R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE_V1",
+  "seed_contract_pass": true,
+  "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+  "strategic_acceptance_gate_changed": false,
+  "strategy_evidence_path": "/tmp/R7_3_PROVISIONAL_640_STRATEGY_EVIDENCE.json",
+  "strategy_gate_detail": {
+    "aggregate_evidence_flags_pass": true,
+    "cross_seed": {
+      "max_tv": 0.6557016372680664,
+      "mean_tv": 0.13625219464302063,
+      "p50_tv": 0.11664662510156631,
+      "p95_tv": 0.3153517544269562
+    },
+    "cross_seed_strategy_pass": true,
+    "evidence_algorithm_seeds": [
+      20260829,
+      20260807
+    ],
+    "expected_algorithm_seeds": [
+      20260829,
+      20260807
+    ],
+    "frozen_gates": {
+      "advantage_weighted_nrmse_max": 0.75,
+      "cross_seed_mean_tv_max": 0.15,
+      "cross_seed_p95_tv_max": 0.35,
+      "policy_weighted_mean_tv_max": 0.12
+    },
+    "per_seed": [
+      {
+        "advantage_gate_pass": true,
+        "ensemble_advantage_weighted_nrmse": 0.48132333159446716,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.0904657244682312,
+        "seed": 20260829,
+        "strategy_fit_pass": true
+      },
+      {
+        "advantage_gate_pass": true,
+        "ensemble_advantage_weighted_nrmse": 0.4868704676628113,
+        "policy_gate_pass": true,
+        "policy_weighted_mean_tv": 0.09239403158426285,
+        "seed": 20260807,
+        "strategy_fit_pass": true
+      }
+    ],
+    "per_seed_algorithm_seeds": [
+      20260829,
+      20260807
+    ],
+    "per_seed_strategy_fit_pass": true,
+    "seed_contract_pass": true,
+    "strategic_gates_unchanged": true,
+    "structural_contract_pass": true
+  },
+  "structural_contract_pass": true,
+  "thread_environment_contract": "SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE",
+  "thread_environment_overrides_injected_by_bridge": false
 }
