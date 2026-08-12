@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+from pathlib import Path
+import re
 from typing import Iterable
 
 
 SUPPORTED_DOMAINS = ("TRUE_HEADS_UP", "THREE_HANDED")
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True, order=True)
@@ -54,12 +57,85 @@ class IterationLease:
     lease_id: str
 
 
+@dataclass(frozen=True)
+class DurableIterationReceipt:
+    """Proof that a leased iteration has a durable checkpoint before advance.
+
+    The scheduler does not write model checkpoints itself.  It accepts progress
+    only after the orchestrator supplies a receipt for already-persisted bytes.
+    The parent digest makes the checkpoint lineage explicit and prevents a
+    resumed scheduler from silently splicing iteration N+1 onto the wrong
+    iteration-N model state.
+    """
+
+    key: ProductionStreamKey
+    iteration: int
+    lease_id: str
+    checkpoint_locator: str
+    checkpoint_sha256: str
+    checkpoint_size_bytes: int
+    parent_checkpoint_sha256: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.iteration <= 0:
+            raise ValueError("receipt iteration must be positive")
+        if not self.lease_id:
+            raise ValueError("receipt lease_id is required")
+        if not self.checkpoint_locator.strip():
+            raise ValueError("durable checkpoint locator is required")
+        if not _SHA256_RE.fullmatch(self.checkpoint_sha256):
+            raise ValueError("checkpoint_sha256 must be 64 lowercase hex characters")
+        if self.checkpoint_size_bytes <= 0:
+            raise ValueError("durable checkpoint must contain bytes")
+        if self.parent_checkpoint_sha256 is not None:
+            if not _SHA256_RE.fullmatch(self.parent_checkpoint_sha256):
+                raise ValueError("parent checkpoint SHA256 must be 64 lowercase hex characters")
+            if self.parent_checkpoint_sha256 == self.checkpoint_sha256:
+                raise ValueError("checkpoint cannot name itself as parent")
+
+    @classmethod
+    def from_file(
+        cls,
+        lease: IterationLease,
+        path: str | Path,
+        *,
+        parent_checkpoint_sha256: str | None,
+        locator: str | None = None,
+    ) -> "DurableIterationReceipt":
+        """Hash bytes only after a checkpoint file exists locally."""
+        p = Path(path)
+        raw = p.read_bytes()
+        if not raw:
+            raise ValueError("durable checkpoint file is empty")
+        return cls(
+            key=lease.key,
+            iteration=lease.iteration,
+            lease_id=lease.lease_id,
+            checkpoint_locator=str(locator or p),
+            checkpoint_sha256=hashlib.sha256(raw).hexdigest(),
+            checkpoint_size_bytes=len(raw),
+            parent_checkpoint_sha256=parent_checkpoint_sha256,
+        )
+
+    @property
+    def receipt_id(self) -> str:
+        raw = (
+            f"{self.key.stream_id}|{self.iteration}|{self.checkpoint_sha256}|"
+            f"{self.parent_checkpoint_sha256 or 'GENESIS'}"
+        ).encode()
+        return "spinreceipt-v1:" + hashlib.sha256(raw).hexdigest()
+
+
 @dataclass
 class _Progress:
     total_iterations: int
     next_iteration: int = 1
     active_lease_id: str | None = None
     failed_attempts_for_next_iteration: int = 0
+    last_checkpoint_sha256: str | None = None
+    last_checkpoint_locator: str | None = None
+    last_checkpoint_size_bytes: int | None = None
+    last_receipt_id: str | None = None
 
 
 class IndependentStreamScheduler:
@@ -72,10 +148,13 @@ class IndependentStreamScheduler:
     for a key guarantees this scheduler cannot introduce intra-stream root/RNG
     parallelism.
 
-    The scheduler owns no application RNG and never derives per-root seeds.
+    Progress is fail-closed as well: an iteration advances only after a durable
+    checkpoint receipt whose parent digest matches this stream's last accepted
+    checkpoint. The scheduler owns no application RNG and never derives per-root
+    seeds.
     """
 
-    SCHEMA = "SPINCORE_R8_INDEPENDENT_STREAM_SCHEDULER_V1"
+    SCHEMA = "SPINCORE_R8_INDEPENDENT_STREAM_SCHEDULER_V2"
 
     def __init__(self, plans: Iterable[ProductionStreamPlan]) -> None:
         rows = sorted(plans, key=lambda row: row.key)
@@ -111,8 +190,24 @@ class IndependentStreamScheduler:
             out.append(IterationLease(key=key, iteration=state.next_iteration, lease_id=lease_id))
         return tuple(out)
 
-    def complete(self, lease: IterationLease) -> None:
+    def complete(
+        self,
+        lease: IterationLease,
+        receipt: DurableIterationReceipt | None = None,
+    ) -> None:
+        """Advance exactly once, but only after durable checkpoint proof."""
         state = self._validate_active(lease)
+        if receipt is None:
+            raise ValueError("durable checkpoint receipt is required before stream progress can advance")
+        if receipt.key != lease.key or receipt.iteration != lease.iteration or receipt.lease_id != lease.lease_id:
+            raise ValueError("durable checkpoint receipt does not belong to the active lease")
+        if receipt.parent_checkpoint_sha256 != state.last_checkpoint_sha256:
+            raise ValueError("durable checkpoint parent does not match accepted stream lineage")
+
+        state.last_checkpoint_sha256 = receipt.checkpoint_sha256
+        state.last_checkpoint_locator = receipt.checkpoint_locator
+        state.last_checkpoint_size_bytes = receipt.checkpoint_size_bytes
+        state.last_receipt_id = receipt.receipt_id
         state.active_lease_id = None
         state.next_iteration += 1
         state.failed_attempts_for_next_iteration = 0
@@ -132,6 +227,12 @@ class IndependentStreamScheduler:
         if state.active_lease_id != lease.lease_id:
             raise ValueError("lease is not the active exclusive lease")
         return state
+
+    def last_checkpoint_sha256(self, key: ProductionStreamKey) -> str | None:
+        state = self._progress.get(key)
+        if state is None:
+            raise ValueError("unknown production stream")
+        return state.last_checkpoint_sha256
 
     @property
     def complete_all(self) -> bool:
@@ -162,6 +263,10 @@ class IndependentStreamScheduler:
                     "next_iteration": state.next_iteration,
                     "active_lease_id": state.active_lease_id,
                     "failed_attempts_for_next_iteration": state.failed_attempts_for_next_iteration,
+                    "last_checkpoint_sha256": state.last_checkpoint_sha256,
+                    "last_checkpoint_locator": state.last_checkpoint_locator,
+                    "last_checkpoint_size_bytes": state.last_checkpoint_size_bytes,
+                    "last_receipt_id": state.last_receipt_id,
                 }
                 for key, state in sorted(self._progress.items())
             ],
@@ -200,4 +305,26 @@ class IndependentStreamScheduler:
             state.active_lease_id = None if clear_active_leases else active
             if state.next_iteration < 1 or state.next_iteration > state.total_iterations + 1:
                 raise ValueError("invalid next_iteration in scheduler checkpoint")
+
+            sha = row.get("last_checkpoint_sha256")
+            locator = row.get("last_checkpoint_locator")
+            size = row.get("last_checkpoint_size_bytes")
+            receipt_id = row.get("last_receipt_id")
+            completed = state.next_iteration - 1
+            if completed == 0:
+                if any(x is not None for x in (sha, locator, size, receipt_id)):
+                    raise ValueError("scheduler checkpoint has durable receipt before any completed iteration")
+            else:
+                if not isinstance(sha, str) or not _SHA256_RE.fullmatch(sha):
+                    raise ValueError("completed stream is missing valid durable checkpoint SHA256")
+                if not isinstance(locator, str) or not locator.strip():
+                    raise ValueError("completed stream is missing durable checkpoint locator")
+                if not isinstance(size, int) or size <= 0:
+                    raise ValueError("completed stream is missing durable checkpoint size")
+                if not isinstance(receipt_id, str) or not receipt_id.startswith("spinreceipt-v1:"):
+                    raise ValueError("completed stream is missing durable receipt identity")
+            state.last_checkpoint_sha256 = sha
+            state.last_checkpoint_locator = locator
+            state.last_checkpoint_size_bytes = size
+            state.last_receipt_id = receipt_id
         return obj
