@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 
 import pytest
+import torch
 
 from spincore.production_reservoir import CentralAlgorithmRReservoirs, RootSampleBatch
 from spincore_nn.reservoir import AdvantageSample, StrategySample
@@ -96,6 +97,28 @@ def test_checkpoint_with_pending_roots_round_trips_exactly():
     resumed = CentralAlgorithmRReservoirs.from_state_dict(state)
     resumed.submit(_batch(1))
     resumed.submit_many([_batch(i) for i in range(4, 20)])
+
+    baseline.assert_drained()
+    resumed.assert_drained()
+    assert _observable_state(resumed) == _observable_state(baseline)
+
+
+def test_physical_torch_checkpoint_preserves_pending_roots_and_algorithm_r_rng(tmp_path):
+    baseline = _coordinator()
+    resumed = _coordinator()
+    batches = [_batch(i) for i in range(25)]
+    baseline.submit_many(batches)
+
+    # Mimic workers 4/2 completing before roots 0/1/3, then stop the process.
+    resumed.submit(batches[4])
+    resumed.submit(batches[2])
+    checkpoint = tmp_path / "central_algorithm_r.pt"
+    torch.save(resumed.state_dict(), checkpoint)
+    loaded = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    resumed = CentralAlgorithmRReservoirs.from_state_dict(loaded)
+
+    for index in [0, 1, 3] + list(range(5, 25)):
+        resumed.submit(batches[index])
 
     baseline.assert_drained()
     resumed.assert_drained()
