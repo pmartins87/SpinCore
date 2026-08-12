@@ -1,35 +1,22 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.25",
+  "version": "1.12.1-recovery.26",
   "recovery_generation": 2,
-  "physical_state": "SELF_CONTAINED_REBUILT_R7_2_R7_3_SELECTED_WINNER_CERTIFICATION_ACTIVE",
+  "physical_state": "R7_4_HELDOUT_3H_STAGED_REPAIR_ACTIVE_R7_3_EXACT_REPRO_DEBT_DEFERRED",
   "byte_identical_to_lost_r5": false,
-  "current_gate": "R7.3",
-  "current_gate_status": "S175_SELECTED_AND_FROZEN_CORRECTED_EXACT_SOURCE_FRESH_REPRO_IN_PROGRESS",
+  "current_gate": "R7.4",
+  "current_gate_status": "HU640_PASS_3H320_STAGED_RESUME_EQUIVALENCE_AND_SCREEN_IN_PROGRESS",
   "ready_for_tables": false,
   "roadmap": {
     "R0_R6": "PASS_REBUILT",
     "R7_0": "PASS_REBUILT",
     "R7_1": "PASS_REBUILT",
     "R7_2": "PASS_REBUILT",
-    "R7_3": "FAIL_GATE_ACTIVE_CERTIFICATION",
-    "R7_4": "BLOCKED_BY_R7_3_PIPELINE_PRECOMMITTED",
-    "R8_R12": "TODO"
-  },
-  "latest_regression": {
-    "workflow": 31470937877,
-    "commit": "b0aadb263be39c8ed83d6c8673c99ae2fcb80705",
-    "cpp": "PASS",
-    "python_tests_passed": 65,
-    "python_warnings": 1,
-    "r7_3_certification_provenance_tests": true,
-    "r7_4_heldout_seed_scenario_runtime_and_final_gate_tests": true
-  },
-  "network_recovery": {
-    "generation2_trainable_params_per_network": 152438,
-    "historical_recorded_params_per_network": 152434,
-    "delta": 4,
-    "byte_equivalence_claimed": false
+    "R7_3_strategy_quality_640": "PASS_PROVISIONAL_ADVANCEMENT",
+    "R7_3_exact_reproducibility": "OPEN_RELEASE_CERTIFICATION_DEBT_NOT_PASS",
+    "R7_4": "IN_PROGRESS_HU640_PASS_3H320_STAGED",
+    "R8": "BLOCKED_UNTIL_R7_4_FINAL_PASS",
+    "R9_R12": "TODO"
   },
   "frozen_gates": {
     "advantage_weighted_nrmse_max": 0.75,
@@ -41,20 +28,14 @@
     "deck_formula": "seed*1000003 + global_root*97 + iteration",
     "global_root_continuous_across_iterations": true,
     "r7_3_selection_seeds": [20260829, 20260807],
+    "r7_4_heldout_seeds": [1954132610, 372483540],
     "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
     "partial_exact_opponent_levels": 2,
+    "thread_environment_contract": "SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE",
     "base_checkpoint_schema": "SPINCORE_R7_CHECKPOINT_V2",
-    "candidate_behavior_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1"
-  },
-  "r7_3_durability_baseline": {
-    "label": "size4_policy_mixture_no_damping",
-    "workflow": 31432403037,
-    "iterations": 5,
-    "roots_per_seed": 320,
-    "mean_tv": 0.2665907144546509,
-    "p95_tv": 0.5670017600059509,
-    "per_seed_fit_pass": true
+    "candidate_behavior_checkpoint_extra_schema": "SPINCORE_R7_CANDIDATE_BEHAVIOR_V1",
+    "r7_4_staged_checkpoint_schema": "SPINCORE_R7_4_STAGED_CHECKPOINT_V1"
   },
   "r7_3_selected_winner": {
     "label": "size4_uncertainty_s175",
@@ -63,103 +44,121 @@
     "ensemble_size": 4,
     "epsilon_scale": 1.75,
     "epsilon_cap": 0.5,
-    "iterations": 5,
-    "roots_per_seed": 320,
-    "mean_tv": 0.1329178512096405,
-    "p50_tv": 0.1155516654253006,
-    "p95_tv": 0.2854667007923126,
-    "max_tv": 0.5646659135818481,
-    "per_seed_fit_pass": true,
-    "cross_seed_pass": true,
-    "r7_3_durability_pass": true,
-    "mean_margin_to_gate": 0.01708214879035949,
-    "p95_margin_to_gate": 0.06453329920768736,
+    "selection_roots_per_seed": 320,
+    "selection_mean_tv": 0.1329178512096405,
+    "selection_p95_tv": 0.2854667007923126,
     "source_workflow": 31451592073,
     "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
-    "evidence_path": "validation/R7_3_POLICY_MIXTURE_UNCERTAINTY_DAMPING_s175_320.json",
     "evidence_commit_sha": "05c0976e8311874ea9a55f5c899a088abe3b4f00",
-    "selection_file": "validation/R7_3_WINNER_SELECTION.json",
-    "selection_rationale": "SMALLEST_PASSING_ENSEMBLE_WITH_STRONGER_P95_AND_MAX_THAN_SIZE8_UNCERTAINTY_S10"
+    "evidence_sha256": "39bc31e0198df1ba8b6b5033271ae8da839ec32a80cd42a22b09647b9b1e130e"
   },
-  "r7_3_semantic_freeze": {
-    "schema": "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1",
-    "file": "validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json",
-    "status": "PASS",
-    "pins_evidence_bytes_sha256": true,
-    "pins_source_commit_and_git_objects": true,
-    "thread_environment_contract": "SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE",
-    "hidden_thread_overrides_forbidden": true
+  "r7_3_provisional_640": {
+    "workflow": 31579597855,
+    "evidence_commit_sha": "872f53a053ac83160be54977715ba1ceae4d8b25",
+    "strategy_quality_pass": true,
+    "r7_4_provisional_advance_allowed": true,
+    "mean_tv": 0.13625219464302063,
+    "p95_tv": 0.3153517544269562,
+    "per_seed_fit_pass": true,
+    "acceptance_gate_changed": false,
+    "exact_reproducibility_pass": false,
+    "fully_certified": false
   },
-  "r7_3_corrected_certification": {
-    "workflow": 31469278146,
-    "freeze_job": {
-      "job": 93708818978,
-      "status": "PASS"
+  "r7_3_exact_reproducibility_debt": {
+    "strict_run": 31565565329,
+    "fresh_process_reproducible": false,
+    "difference_count": 734,
+    "numeric_tolerance": 1e-9,
+    "decision_record": "validation/R7_3_EXACT_REPRO_DEFERRED_DECISION_20260812.md",
+    "development_blocker": false,
+    "ready_for_tables_blocker": true,
+    "status": "DEFERRED_OPEN_DEBT_NOT_PASS"
+  },
+  "runtime_consistency": {
+    "r7_3_provisional_640": {
+      "os": "Ubuntu 24.04",
+      "python": "3.11.15",
+      "torch": "2.13.0+cpu"
     },
-    "fresh_repro_job": {
-      "job": 93708858056,
-      "status": "EXACT_SOURCE_FRESH_PROCESS_REPRODUCIBILITY_IN_PROGRESS"
+    "r7_4_heldout": {
+      "os": "Ubuntu 24.04",
+      "python": "3.11.15",
+      "torch": "2.13.0+cpu"
     },
-    "checkpoint_recert": "PENDING_FRESH_PASS",
-    "acceptance_640": "PENDING_CHECKPOINT_PASS",
-    "r7_3_pass": false
+    "consistent_for_current_strategy_quality_chain": true
   },
-  "legacy_certification_run": {
-    "workflow": 31468467215,
-    "authoritative": false,
-    "reason": "LEGACY_SNAPSHOT_FORCED_THREAD_OVERRIDES_AND_PREDATED_EXACT_FROZEN_WORKTREE_WORKER_HARDENING",
-    "canonical_evidence_overwrite_risk": "MITIGATED_BY_PROVENANCE_VALID_GIT_HISTORY_RESOLVER"
+  "r7_4_ruleset": {
+    "schema": "SPINRULESET-4",
+    "extension_source_head_sha": "e43b2cfea31f927393cf2751485d712902d6f02d",
+    "invariance_basis": "FROZEN_TRAINING_COMPONENT_BLOB_IDENTITY_PLUS_EXTENSION_REGRESSION",
+    "selected_training_components_byte_identical": true,
+    "hu_invariance_pass": true,
+    "historical_numeric_reproduction_evaluated": false,
+    "historical_exact_reproducibility_debt_preserved": true
   },
-  "certification_hardening": {
-    "candidate_side_restore_torch_rng_neutral": true,
-    "checkpoint_worker_executed_from_frozen_worktree_overlay": true,
-    "fresh_repro_requires_zero_differences": true,
-    "fresh_repro_numeric_tolerance": 1e-9,
-    "fresh_repro_ignored_fields": ["generated_at_unix", "duration_seconds"],
-    "certifier_injected_thread_overrides": false,
-    "stale_or_legacy_head_evidence_resolution": "NEWEST_PROVENANCE_VALID_GIT_HISTORY_VERSION_OR_FAIL_CLOSED",
-    "evidence_resolver": "tools/r7_3_certification_evidence.py"
+  "r7_4_structural_preflight": {
+    "workflow": 31600267534,
+    "pass": true,
+    "case_count": 15,
+    "hu_case_count": 6,
+    "all_chip_zero_sum": true,
+    "all_clone_neural_exact": true,
+    "all_icm_zero_sum_within_1e12": true,
+    "r7_3_prerequisite_mode": "PROVISIONAL_640_STRATEGY_QUALITY",
+    "exact_reproducibility_debt_preserved": true
   },
-  "r7_4_precommitted_gate": {
-    "design": "validation/R7_4_GATE_DESIGN_20260811.md",
-    "status": "PREPARED_BLOCKED_BY_R7_3",
-    "structural_preflight": {
-      "workflow": ".github/workflows/r7_4_domain_preflight.yml",
-      "schema": "SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1",
-      "requires_corrected_r7_3_640": true
-    },
-    "heldout_seed_rule": "SHA256_FROZEN_EVIDENCE_DERIVED_POSITIVE_31_BIT_REJECT_R7_3_COLLISIONS",
-    "r7_3_selection_seeds_reused": false,
-    "heldout_domains": {
-      "TRUE_HEADS_UP": {
-        "scenario_count": 6,
-        "screen_roots_per_seed": 640
-      },
-      "THREE_HANDED": {
-        "scenario_count": 15,
-        "screen_roots_per_seed": 320,
-        "confirmation_roots_per_seed": 640
-      }
-    },
-    "heldout_screen_workflow": ".github/workflows/r7_4_heldout_domain_screen.yml",
-    "three_handed_640_confirmation_workflow": ".github/workflows/r7_4_three_handed_640_confirmation.yml",
-    "final_gate_schema": "SPINCORE_R7_4_FINAL_GATE_V1",
-    "r7_4_pass_rule": "HU_640_PASS_AND_3H_320_SCREEN_PASS_AND_3H_640_CONFIRMATION_PASS",
+  "r7_4_heldout": {
+    "pass_rule": "HU_640_PASS_AND_3H_320_SCREEN_PASS_AND_3H_640_CONFIRMATION_PASS",
     "same_frozen_fit_and_cross_seed_gates": true,
-    "r7_4_ready_to_advance_to_r8_only_after_final_gate": true
+    "hu640": {
+      "workflow": 31600346715,
+      "pass": true,
+      "roots_per_seed": 640,
+      "mean_tv": 0.12478918582201004,
+      "p95_tv": 0.2732357978820801
+    },
+    "three_handed_320": {
+      "original_workflow": 31600346715,
+      "original_job_conclusion": "CANCELLED_AT_GITHUB_HOSTED_RUNNER_6H_CEILING_WHILE_PROGRESSING",
+      "strategic_failure_observed": false,
+      "repair_workflow": 31637418697,
+      "repair_status": "IN_PROGRESS",
+      "roots_per_seed": 320,
+      "staged_resume_equivalence_required": true
+    },
+    "three_handed_640": {
+      "roots_per_seed": 640,
+      "status": "BLOCKED_UNTIL_3H320_PASS",
+      "workflow": ".github/workflows/r7_4_three_handed_640_confirmation.yml",
+      "staged_resume_ready": true
+    }
   },
-  "r7_4_reporting_hardening": {
-    "uncertainty_runtime_statistics_seed_local": true,
-    "global_instance_registry_not_used_for_seed_labeling": true,
-    "runtime_fix_commit": "915cfb500da6cc5e495abeeb1b2c8d799267bd48"
+  "r7_4_staged_resume": {
+    "worker": "tools/r7_4_staged_domain_worker.py",
+    "screen_workflow": ".github/workflows/r7_4_three_handed_staged_repair.yml",
+    "confirmation_workflow": ".github/workflows/r7_4_three_handed_640_confirmation.yml",
+    "equivalence_schema": "SPINCORE_R7_4_STAGED_RESUME_EQUIVALENCE_V1",
+    "equivalence_status": "IN_PROGRESS",
+    "checkpoint_boundary": "POST_ADVANTAGE_FIT_PER_ITERATION",
+    "preserves": [
+      "ADVANTAGE_RESERVOIR_AND_RNG",
+      "STRATEGY_RESERVOIR_AND_RNG",
+      "LIVE_BATCH_RNG",
+      "GLOBAL_TORCH_RNG",
+      "PRIMARY_AND_SIDE_MODELS",
+      "OPTIMIZERS",
+      "COUNTERS",
+      "UNCERTAINTY_BEHAVIOR_DIAGNOSTICS",
+      "GLOBAL_ROOT",
+      "SCENARIO_COUNTS",
+      "ITERATION_REPORTS"
+    ],
+    "changes_strategic_gate": false
   },
-  "prepared_but_blocked": {
-    "r7_3_checkpoint_recertification": "BLOCKED_UNTIL_CORRECTED_FRESH_REPRO_PASS",
-    "r7_3_640_acceptance": "BLOCKED_UNTIL_CORRECTED_CHECKPOINT_RECERT_PASS",
-    "r7_4_structural_preflight": "BLOCKED_UNTIL_CORRECTED_R7_3_640_PASS",
-    "r7_4_heldout_hu_3h": "BLOCKED_UNTIL_STRUCTURAL_PREFLIGHT_PASS",
-    "r8": "BLOCKED_UNTIL_FINITE_R7_4_FINAL_GATE_PASS"
+  "r8": {
+    "status": "BLOCKED_UNTIL_FINITE_R7_4_FINAL_GATE_PASS",
+    "ready_to_start": false
   },
-  "next_physical_step": "Let corrected workflow 31469278146 finish exact-source fresh reproduction. On PASS, its current-main checkpoint job will use provenance-valid evidence resolution and the frozen-worktree worker overlay; then exact-source 5x128=640 R7.3 acceptance runs. Only after that can the already-precommitted R7.4 structural and held-out HU/3H pipeline execute. No gate relaxation and no R7.4 result may alter its precommitted seeds, scenarios, thresholds, or scales.",
+  "next_physical_step": "Complete physical staged-resume equivalence. If exact, execute both frozen held-out 3H320 seeds through five 64-root iterations using iteration-boundary checkpoints, aggregate unchanged gates, and only on PASS auto-authorize staged 3H640 confirmation. No strategic threshold, seed, scenario, deck schedule, root count, behavior parameter, or thread contract may change.",
   "ready_for_tables": false
 }
