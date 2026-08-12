@@ -23,6 +23,10 @@ def _events(stdout: str) -> list[dict]:
 
 
 def test_heartbeat_reports_liveness_without_changing_child_exit_code():
+    # Leave ample margin over the 1 s heartbeat interval. The observability
+    # snapshot itself invokes `ps` and can take a non-trivial fraction of a
+    # second on a busy hosted runner, so a 1.2 s child made this a timing test
+    # rather than a heartbeat-contract test.
     proc = subprocess.run(
         [
             sys.executable,
@@ -34,7 +38,7 @@ def test_heartbeat_reports_liveness_without_changing_child_exit_code():
             "--",
             sys.executable,
             "-c",
-            "import time; time.sleep(1.2)",
+            "import time; time.sleep(3.0)",
         ],
         text=True,
         capture_output=True,
