@@ -37,10 +37,10 @@ R8 does not merge HU and 3H into one production policy artifact merely because t
 Before production training, materialize a machine-readable production profile describing the real target game configuration. At minimum it must identify:
 
 - platform/game family and ruleset version/source;
-- multiplier/economic profile identity;
+- buy-in/currency and multiplier/economic profile identity;
 - starting chip structure;
 - blind/ante schedule and any level-dependent structure needed by the solver input;
-- payout vector / prize semantics needed by the exact ICM utility;
+- normalized payout shares / prize semantics needed by the exact ICM utility;
 - TRUE_HEADS_UP and THREE_HANDED applicability;
 - action abstraction identity;
 - utility model identity;
@@ -50,17 +50,37 @@ Before production training, materialize a machine-readable production profile de
 
 R8.0 PASS requires complete, internally consistent, provenance-backed profiles. Missing or uncertain production rules fail closed; they are not filled with assumptions.
 
-### R8.1 — parallel workers + central Algorithm-R reservoirs
+### R8.1 — deterministic production workers + central Algorithm-R reservoirs
 
 Implement/validate the production data-generation architecture before scale-up:
 
-- parallel traversal workers;
 - deterministic profile/domain assignment;
 - central Algorithm-R reservoir semantics for Advantage and AveragePolicy samples;
-- no duplicate weighting caused by worker count;
+- no duplicate weighting caused by worker count or completion order;
 - deterministic checkpoint metadata and provenance;
 - worker failure/restart without silent profile mixing;
-- separate storage/identity for HU and 3H policies and for distinct economic profiles.
+- separate storage/identity for HU and 3H policies and for distinct economic profiles;
+- parallel execution only where it is proven semantically neutral to the frozen learning/RNG contract.
+
+#### Persistent-RNG constraint discovered before production
+
+The selected R7.3/R7.4 mechanism explicitly freezes:
+
+```text
+primary RNG = one persistent live bundle.batch_rng in execution order
+```
+
+That RNG is consumed not only by Algorithm-R replacement, but also by traversal/action sampling and training minibatch sampling. Therefore a naive design that assigns independent per-root RNGs to parallel workers would **change the selected algorithm**, even if a central reservoir later merged the samples in root order.
+
+`CentralAlgorithmRReservoirs` solves one necessary problem — worker completion order cannot change central Algorithm-R insertion/replacement order — but it does **not** by itself prove that traversal RNG consumption is equivalent to the frozen serial stream.
+
+Consequently R8.1 must fail closed against naive root-level parallelism within a single `(profile, domain, algorithm-seed)` stream. Safe choices are, in priority order:
+
+1. parallelize independent streams whose RNG histories are already independent by contract (for example different accepted profile/domain jobs), while preserving serial execution inside each stream;
+2. implement a genuinely stream-preserving traversal dispatcher and prove exact equivalence against the persistent serial RNG contract before using it;
+3. if no such speed-up has favorable complexity/throughput trade-off, keep root collection serial and optimize elsewhere.
+
+CPU utilization is not an acceptance criterion. Strategic semantics and throughput per correct sample are the objective.
 
 R8.1 is an infrastructure gate, not a strategic PASS.
 
@@ -83,7 +103,7 @@ epsilon scale: 1.75
 epsilon cap: 0.50
 partial-exact opponent levels: 2
 primary RNG: one persistent live batch RNG in execution order
-utility: exact explicit-payout ICM delta for the accepted production profile
+utility: exact explicit-payout ICM delta using normalized payout shares for the accepted production profile
 action abstraction: frozen profile identity
 ```
 
@@ -128,7 +148,7 @@ R8 fails or remains blocked if any of the following occurs:
 - a production rule/economic parameter is guessed from pilot data;
 - profile/domain identities are mixed;
 - HU policy is used as 3H policy or vice versa;
-- worker parallelism changes Algorithm-R sampling semantics or sample weights;
+- worker parallelism changes Algorithm-R sampling semantics, traversal RNG semantics, minibatch RNG semantics, or sample weights;
 - a restart/checkpoint loses deterministic identity/provenance;
 - the selected R7/R7.4 strategic mechanism is silently changed during throughput calibration;
 - a production policy artifact cannot be tied to immutable model bytes and a complete production-profile identity;
@@ -138,7 +158,7 @@ R8 fails or remains blocked if any of the following occurs:
 
 ```text
 R8.0 profile/rules
--> R8.1 worker + central reservoir semantics
+-> R8.1 deterministic worker + central reservoir semantics
 -> R8.2 exact-profile Ryzen9 calibration
 -> R8.3 official HU training
 -> R8.4 official 3H training
