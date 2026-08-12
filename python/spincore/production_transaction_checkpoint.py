@@ -15,10 +15,6 @@ POINTER_SCHEMA = "SPINCORE_R8_PRODUCTION_TRANSACTION_POINTER_V1"
 REQUIRED_COMPONENTS = ("stream", "scheduler", "algorithm_r")
 
 
-def _sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
 def _sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -108,6 +104,107 @@ def _generation_id(identity: ProductionTransactionIdentity, components: Mapping[
     return "spingen-v1-" + hashlib.sha256(canonical).hexdigest()
 
 
+def _load_torch_mapping(path: Path) -> dict:
+    try:
+        import torch
+    except ImportError as exc:  # pragma: no cover - production runtime includes torch
+        raise RuntimeError("torch is required to validate production checkpoints") from exc
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(payload, dict):
+        raise ValueError(f"checkpoint is not a mapping: {path.name}")
+    return payload
+
+
+def _load_algorithm_r_mapping(path: Path) -> dict:
+    try:
+        raw = path.read_bytes()
+        if raw[:1] in (b"{", b"["):
+            payload = json.loads(raw.decode("utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("Algorithm-R JSON checkpoint is not a mapping")
+            return payload
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        pass
+    return _load_torch_mapping(path)
+
+
+def _semantic_validate_components(
+    *,
+    identity: ProductionTransactionIdentity,
+    stream_path: Path,
+    scheduler_path: Path,
+    algorithm_r_path: Path,
+) -> None:
+    """Prove that all checkpoint components describe one exact logical state."""
+    stream = _load_torch_mapping(stream_path)
+    if stream.get("schema") != "SPINCORE_R7_CHECKPOINT_V2":
+        raise ValueError("wrong production stream checkpoint schema")
+    if str(stream.get("domain")) != identity.domain:
+        raise ValueError("stream checkpoint domain mismatch")
+    if int(stream.get("seed", -1)) != identity.algorithm_seed:
+        raise ValueError("stream checkpoint algorithm-seed mismatch")
+    progress = stream.get("progress") or {}
+    if int(progress.get("iteration", -1)) != identity.completed_iteration:
+        raise ValueError("stream checkpoint completed-iteration mismatch")
+
+    stream_sha = _sha256_file(stream_path)
+    stream_size = int(stream_path.stat().st_size)
+
+    try:
+        wrapper = json.loads(scheduler_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("scheduler checkpoint is not canonical JSON") from exc
+    if wrapper.get("schema") != "SPINCORE_R8_SCHEDULER_DURABLE_CHECKPOINT_V1":
+        raise ValueError("wrong durable scheduler checkpoint schema")
+    if wrapper.get("ready_for_tables", False) is not False:
+        raise ValueError("scheduler checkpoint cannot authorize table use")
+    scheduler = wrapper.get("scheduler") or {}
+    if scheduler.get("schema") != "SPINCORE_R8_INDEPENDENT_STREAM_SCHEDULER_V2":
+        raise ValueError("wrong production scheduler state schema")
+    matches = [
+        row for row in list(scheduler.get("streams") or [])
+        if str(row.get("profile_id")) == identity.profile_id
+        and str(row.get("domain")) == identity.domain
+        and int(row.get("algorithm_seed", -1)) == identity.algorithm_seed
+    ]
+    if len(matches) != 1:
+        raise ValueError("scheduler does not contain exactly one matching production stream")
+    row = matches[0]
+    if row.get("active_lease_id") is not None:
+        raise ValueError("scheduler transaction cannot publish an active lease")
+    if int(row.get("next_iteration", -1)) != identity.completed_iteration + 1:
+        raise ValueError("scheduler completed-iteration mismatch")
+    if identity.completed_iteration == 0:
+        if row.get("last_checkpoint_sha256") is not None:
+            raise ValueError("genesis scheduler unexpectedly names a stream checkpoint")
+    else:
+        if str(row.get("last_checkpoint_sha256")) != stream_sha:
+            raise ValueError("scheduler stream checkpoint SHA does not match transaction stream bytes")
+        if int(row.get("last_checkpoint_size_bytes", -1)) != stream_size:
+            raise ValueError("scheduler stream checkpoint size does not match transaction stream bytes")
+
+    algorithm_r = _load_algorithm_r_mapping(algorithm_r_path)
+    if algorithm_r.get("schema") != "SPINCORE_R8_CENTRAL_ALGORITHM_R_V2":
+        raise ValueError("wrong central Algorithm-R checkpoint schema")
+    if algorithm_r.get("ready_for_tables", False) is not False:
+        raise ValueError("Algorithm-R checkpoint cannot authorize table use")
+    if str(algorithm_r.get("profile_id")) != identity.profile_id:
+        raise ValueError("Algorithm-R production profile mismatch")
+    if str(algorithm_r.get("domain")) != identity.domain:
+        raise ValueError("Algorithm-R domain mismatch")
+    if int(algorithm_r.get("algorithm_seed", -1)) != identity.algorithm_seed:
+        raise ValueError("Algorithm-R algorithm-seed mismatch")
+    if int(algorithm_r.get("roots_per_iteration", -1)) != identity.roots_per_iteration:
+        raise ValueError("Algorithm-R roots-per-iteration mismatch")
+    expected_root = identity.completed_iteration * identity.roots_per_iteration
+    if int(algorithm_r.get("next_global_root", -1)) != expected_root:
+        raise ValueError("Algorithm-R global-root/iteration mismatch")
+    if int(algorithm_r.get("committed_roots", -1)) != expected_root:
+        raise ValueError("Algorithm-R committed-root count mismatch")
+    if list(algorithm_r.get("pending") or []):
+        raise ValueError("Algorithm-R transaction cannot publish pending root gaps")
+
+
 def publish_production_transaction(
     root: Path,
     *,
@@ -116,14 +213,7 @@ def publish_production_transaction(
     scheduler_checkpoint: Path,
     algorithm_r_checkpoint: Path,
 ) -> str:
-    """Publish one all-or-nothing durable production checkpoint generation.
-
-    Components are copied into an immutable generation directory and fsynced.
-    The generation manifest is written only after all components are durable.
-    Finally CURRENT.json is atomically replaced. A crash before CURRENT replace
-    leaves the previous generation authoritative; a crash after it sees a fully
-    materialized generation whose component hashes are verified on load.
-    """
+    """Publish one semantically consistent, all-or-nothing durable generation."""
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     generations = root / "generations"
@@ -139,6 +229,13 @@ def publish_production_transaction(
             raise FileNotFoundError(f"missing {name} checkpoint: {src}")
         if src.stat().st_size <= 0:
             raise ValueError(f"empty {name} checkpoint")
+
+    _semantic_validate_components(
+        identity=identity,
+        stream_path=inputs["stream"],
+        scheduler_path=inputs["scheduler"],
+        algorithm_r_path=inputs["algorithm_r"],
+    )
 
     component_meta = {
         name: {
@@ -165,11 +262,18 @@ def publish_production_transaction(
                 if _sha256_file(dst) != component_meta[name]["sha256"]:
                     raise RuntimeError(f"copied {name} checkpoint hash mismatch")
 
+            _semantic_validate_components(
+                identity=identity,
+                stream_path=stage / component_meta["stream"]["filename"],
+                scheduler_path=stage / component_meta["scheduler"]["filename"],
+                algorithm_r_path=stage / component_meta["algorithm_r"]["filename"],
+            )
             manifest = {
                 "schema": SCHEMA,
                 "generation_id": generation_id,
                 "identity": identity.as_dict(),
                 "components": component_meta,
+                "semantic_consistency_validated": True,
                 "ready_for_tables": False,
             }
             _atomic_json(stage / "manifest.json", manifest)
@@ -207,6 +311,8 @@ def _load_generation(generation_dir: Path) -> LoadedProductionTransaction:
         raise ValueError("wrong production transaction schema")
     if manifest.get("ready_for_tables", False) is not False:
         raise ValueError("R8 checkpoint cannot authorize table use")
+    if manifest.get("semantic_consistency_validated") is not True:
+        raise ValueError("production transaction lacks semantic-consistency certification")
     if manifest.get("generation_id") != generation_dir.name:
         raise ValueError("generation directory/manifest mismatch")
 
@@ -230,6 +336,12 @@ def _load_generation(generation_dir: Path) -> LoadedProductionTransaction:
     expected_id = _generation_id(identity, components)
     if expected_id != generation_dir.name:
         raise ValueError("production generation identity hash mismatch")
+    _semantic_validate_components(
+        identity=identity,
+        stream_path=paths["stream"],
+        scheduler_path=paths["scheduler"],
+        algorithm_r_path=paths["algorithm_r"],
+    )
     return LoadedProductionTransaction(identity, generation_dir.name, generation_dir, paths, manifest)
 
 
