@@ -49,21 +49,205 @@ jobs:
           print('torch.get_num_threads()=',torch.get_num_threads())
           PY
       - name: Exact frozen-source fresh-process reproduction
+        id: fresh_gate
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
           python tools/run_r7_3_frozen_candidate_fresh_repro.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
             --fresh-out /tmp/R7_3_FROZEN_CANDIDATE_FRESH_EVIDENCE.json \
             --report /tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json
-      - name: Enforce exact zero-difference fresh gate
+          rc=$?
+          echo "exit_code=${rc}" >> "$GITHUB_OUTPUT"
+          echo "fresh-process runner exit code: ${rc}"
+          exit 0
+      - name: Capture fresh-process diagnostic
+        if: always()
         shell: bash
+        env:
+          FRESH_EXIT_CODE: ${{ steps.fresh_gate.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import platform
+          import shutil
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          try:
+              import numpy as np
+          except Exception as exc:
+              np = None
+              numpy_error = repr(exc)
+          else:
+              numpy_error = None
+
+          try:
+              import torch
+          except Exception as exc:
+              torch = None
+              torch_error = repr(exc)
+          else:
+              torch_error = None
+
+          source_report = Path('/tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json')
+          last_report_tmp = Path('/tmp/R7_3_FRESH_REPRO_LAST_REPORT.json')
+          diagnostic_tmp = Path('/tmp/R7_3_FRESH_REPRO_LAST_DIAGNOSTIC.json')
+          validation_dir = Path('validation')
+          validation_dir.mkdir(parents=True, exist_ok=True)
+
+          report = None
+          report_sha256 = None
+          if source_report.exists():
+              report_bytes = source_report.read_bytes()
+              report_sha256 = hashlib.sha256(report_bytes).hexdigest()
+              last_report_tmp.write_bytes(report_bytes)
+              shutil.copyfile(last_report_tmp, validation_dir / last_report_tmp.name)
+              report = json.loads(report_bytes.decode('utf-8'))
+
+          diffs = list((report or {}).get('differences') or [])
+          numeric_diffs = [
+              d for d in diffs
+              if isinstance(d, dict) and isinstance(d.get('abs_delta'), (int, float))
+          ]
+          largest = max(numeric_diffs, key=lambda d: abs(float(d['abs_delta'])), default=None)
+          mismatch_keys = sorted({
+              str(d.get('path')) for d in diffs
+              if isinstance(d, dict) and d.get('path') is not None
+          })
+
+          def run_text(cmd):
+              try:
+                  p = subprocess.run(cmd, text=True, capture_output=True, check=False)
+                  return {
+                      'command': cmd,
+                      'returncode': p.returncode,
+                      'stdout': p.stdout,
+                      'stderr': p.stderr,
+                  }
+              except Exception as exc:
+                  return {'command': cmd, 'error': repr(exc)}
+
+          torch_info = {'import_error': torch_error}
+          if torch is not None:
+              torch_info.update({
+                  'version': getattr(torch, '__version__', None),
+                  'git_version': getattr(getattr(torch, 'version', None), 'git_version', None),
+                  'cuda_version': getattr(getattr(torch, 'version', None), 'cuda', None),
+                  'config': torch.__config__.show(),
+                  'num_threads': torch.get_num_threads(),
+                  'num_interop_threads': torch.get_num_interop_threads(),
+              })
+
+          diagnostic = {
+              'schema': 'SPINCORE_R7_3_FRESH_REPRO_DIAGNOSTIC_V1',
+              'fresh_exit_code': int(os.environ.get('FRESH_EXIT_CODE') or 999),
+              'source_report_exists': source_report.exists(),
+              'report_sha256': report_sha256,
+              'difference_count': (report or {}).get('difference_count'),
+              'fresh_process_reproducible': (report or {}).get('fresh_process_reproducible'),
+              'numeric_tolerance': (report or {}).get('numeric_tolerance'),
+              'first_differences': diffs[:20],
+              'largest_recorded_difference': largest,
+              'mismatch_keys': mismatch_keys,
+              'python': {
+                  'version': sys.version,
+                  'version_info': list(sys.version_info),
+                  'executable': sys.executable,
+                  'implementation': platform.python_implementation(),
+              },
+              'numpy': {
+                  'version': getattr(np, '__version__', None) if np is not None else None,
+                  'import_error': numpy_error,
+              },
+              'torch': torch_info,
+              'thread_environment': {
+                  key: os.environ.get(key)
+                  for key in ('SPINCORE_TORCH_THREADS', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS')
+              },
+              'runner_environment': {
+                  key: os.environ.get(key)
+                  for key in (
+                      'RUNNER_OS', 'RUNNER_ARCH', 'RUNNER_NAME', 'RUNNER_ENVIRONMENT',
+                      'ImageOS', 'ImageVersion', 'GITHUB_ACTIONS', 'GITHUB_RUN_ID',
+                      'GITHUB_RUN_ATTEMPT', 'GITHUB_SHA', 'GITHUB_REF_NAME'
+                  )
+              },
+              'platform': platform.platform(),
+              'uname': run_text(['uname', '-a']),
+              'lscpu': run_text(['lscpu']),
+              'pip_freeze': run_text([sys.executable, '-m', 'pip', 'freeze']),
+          }
+          diagnostic_tmp.write_text(json.dumps(diagnostic, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          shutil.copyfile(diagnostic_tmp, validation_dir / diagnostic_tmp.name)
+          print(json.dumps({
+              'fresh_exit_code': diagnostic['fresh_exit_code'],
+              'difference_count': diagnostic['difference_count'],
+              'fresh_process_reproducible': diagnostic['fresh_process_reproducible'],
+              'report_sha256': diagnostic['report_sha256'],
+              'largest_recorded_difference': diagnostic['largest_recorded_difference'],
+          }, indent=2, sort_keys=True))
+          PY
+      - name: Upload fresh-process diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-3-fresh-repro-diagnostics
+          if-no-files-found: warn
+          path: |
+            validation/R7_3_FRESH_REPRO_LAST_REPORT.json
+            validation/R7_3_FRESH_REPRO_LAST_DIAGNOSTIC.json
+      - name: Persist last fresh-process diagnostics separately
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f /tmp/R7_3_FRESH_REPRO_LAST_DIAGNOSTIC.json ]]; then
+            echo 'Fresh diagnostic was not produced.' >&2
+            exit 1
+          fi
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p validation
+            cp /tmp/R7_3_FRESH_REPRO_LAST_DIAGNOSTIC.json validation/R7_3_FRESH_REPRO_LAST_DIAGNOSTIC.json
+            if [[ -f /tmp/R7_3_FRESH_REPRO_LAST_REPORT.json ]]; then
+              cp /tmp/R7_3_FRESH_REPRO_LAST_REPORT.json validation/R7_3_FRESH_REPRO_LAST_REPORT.json
+              git add -f validation/R7_3_FRESH_REPRO_LAST_REPORT.json
+            fi
+            git add -f validation/R7_3_FRESH_REPRO_LAST_DIAGNOSTIC.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Record R7.3 fresh repro diagnostics [r7-evidence-skip]'
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 2))
+          done
+          echo 'Unable to persist fresh-process diagnostics after retries.' >&2
+          exit 1
+      - name: Enforce exact zero-difference fresh gate
+        if: always()
+        shell: bash
+        env:
+          FRESH_EXIT_CODE: ${{ steps.fresh_gate.outputs.exit_code }}
         run: |
           set -euo pipefail
           python - <<'PY'
           import json
-          d=json.load(open('/tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json'))
+          import os
+          from pathlib import Path
+
+          p=Path('/tmp/R7_3_FROZEN_CANDIDATE_FRESH_REPRO.json')
+          if not p.exists():
+              raise SystemExit('missing fresh-process report')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          rc=int(os.environ.get('FRESH_EXIT_CODE') or 999)
           assert d['schema']=='SPINCORE_R7_3_FROZEN_CANDIDATE_FRESH_REPRO_V1'
+          assert rc == 0, f'fresh runner exit code={rc}'
           assert d['difference_count']==0, d.get('differences',[])[:5]
           assert d['fresh_process_reproducible'] is True
           assert d['thread_environment_overrides_injected_by_certifier'] is False
