@@ -36,13 +36,23 @@ def _same_number(a, b) -> bool:
         return False
 
 
-def _validate_strategy_evidence(evidence: dict) -> tuple[bool, dict]:
+def _validate_strategy_evidence(evidence: dict, freeze: dict) -> tuple[bool, dict]:
     frozen_gates = dict(evidence.get("frozen_gates") or {})
     gates_unchanged = all(_same_number(frozen_gates.get(k), v) for k, v in EXPECTED_GATES.items())
 
+    expected_seeds = [int(x) for x in (freeze.get("algorithm_seeds") or [])]
+    evidence_seeds = [int(x) for x in (evidence.get("algorithm_seeds") or [])]
     per_seed = list(evidence.get("per_seed") or [])
+    per_seed_ids = [int(item.get("algorithm_seed", -1)) for item in per_seed]
+    seed_contract_pass = bool(
+        expected_seeds
+        and evidence_seeds == expected_seeds
+        and per_seed_ids == expected_seeds
+        and len(per_seed) == len(expected_seeds)
+    )
+
     per_seed_details = []
-    per_seed_pass = len(per_seed) == 5
+    per_seed_pass = seed_contract_pass
     for item in per_seed:
         final_fit = dict(item.get("final_fit") or {})
         adv = float(final_fit.get("ensemble_advantage_weighted_nrmse", float("inf")))
@@ -58,7 +68,7 @@ def _validate_strategy_evidence(evidence: dict) -> tuple[bool, dict]:
         row_pass = bool(adv_pass and policy_pass)
         per_seed_pass = bool(per_seed_pass and row_pass)
         per_seed_details.append({
-            "seed": item.get("seed", item.get("algorithm_seed")),
+            "seed": item.get("algorithm_seed"),
             "ensemble_advantage_weighted_nrmse": adv,
             "policy_weighted_mean_tv": policy,
             "advantage_gate_pass": adv_pass,
@@ -84,6 +94,7 @@ def _validate_strategy_evidence(evidence: dict) -> tuple[bool, dict]:
         and evidence.get("extra_members_perturb_primary_rng") is False
         and evidence.get("acceptance_gate_changed") is False
         and gates_unchanged
+        and seed_contract_pass
     )
 
     aggregate_flags_pass = bool(
@@ -95,6 +106,10 @@ def _validate_strategy_evidence(evidence: dict) -> tuple[bool, dict]:
     detail = {
         "frozen_gates": frozen_gates,
         "strategic_gates_unchanged": gates_unchanged,
+        "expected_algorithm_seeds": expected_seeds,
+        "evidence_algorithm_seeds": evidence_seeds,
+        "per_seed_algorithm_seeds": per_seed_ids,
+        "seed_contract_pass": seed_contract_pass,
         "per_seed": per_seed_details,
         "per_seed_strategy_fit_pass": per_seed_pass,
         "cross_seed": {k: float(v) for k, v in cross.items()},
@@ -164,7 +179,7 @@ def main() -> int:
             )
 
     evidence = json.loads(args.evidence_out.read_text(encoding="utf-8"))
-    strategy_pass, detail = _validate_strategy_evidence(evidence)
+    strategy_pass, detail = _validate_strategy_evidence(evidence, freeze)
 
     exact_pass = bool(
         exact_report.get("fresh_process_reproducible") is True
@@ -186,6 +201,7 @@ def main() -> int:
         "roots_per_seed": 640,
         "exact_opponent_levels": 2,
         "strategy_gate_detail": detail,
+        "seed_contract_pass": bool(detail["seed_contract_pass"]),
         "per_seed_fit_pass": bool(detail["per_seed_strategy_fit_pass"]),
         "frozen_cross_seed_gates_pass": bool(detail["cross_seed_strategy_pass"]),
         "structural_contract_pass": bool(detail["structural_contract_pass"]),
