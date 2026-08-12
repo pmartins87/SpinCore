@@ -1,8 +1,8 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.29",
+  "version": "1.12.1-recovery.30",
   "recovery_generation": 2,
-  "physical_state": "R7_4_HELDOUT_3H_STAGED_ITERATION3_ACTIVE_R8_1_INFRA_PASS_R8_0_OFFICIAL_WEB_PARTIAL_R7_3_EXACT_REPRO_DEBT_DEFERRED",
+  "physical_state": "R7_4_HELDOUT_3H_STAGED_ITERATION3_ACTIVE_R8_1_INFRA_PASS_R8_0_ACQUISITION_PIPELINE_PASS_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_DEFERRED",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.4",
   "current_gate_status": "HU640_PASS_STAGED_RESUME_EQUIVALENCE_PASS_3H320_ITERATION3_ONE_SEED_PASS_ONE_RUNNING",
@@ -15,7 +15,7 @@
     "R7_3_strategy_quality_640": "PASS_PROVISIONAL_ADVANCEMENT",
     "R7_3_exact_reproducibility": "OPEN_RELEASE_CERTIFICATION_DEBT_NOT_PASS",
     "R7_4": "IN_PROGRESS_HU640_PASS_3H320_STAGED",
-    "R8_0": "PARTIAL_OFFICIAL_WEB_EVIDENCE_FAIL_CLOSED_SELECTED_STATE_DATA_MISSING",
+    "R8_0": "ACQUISITION_PIPELINE_PASS_PRODUCTION_PROFILE_GATE_DATA_BLOCKED",
     "R8_1": "PASS_INFRASTRUCTURE_ONLY",
     "R8_2_R8_5": "BLOCKED",
     "R9_R12": "TODO"
@@ -164,16 +164,23 @@
     "equivalence_evidence": "validation/R7_4_STAGED_RESUME_EQUIVALENCE.json"
   },
   "r8": {
-    "status": "R8_1_INFRA_PASS_R8_0_PARTIAL_OFFICIAL_WEB_OFFICIAL_EXECUTION_STILL_BLOCKED",
+    "status": "R8_1_INFRA_PASS_R8_0_ACQUISITION_PIPELINE_PASS_DATA_BLOCKED_OFFICIAL_EXECUTION_STILL_BLOCKED",
     "r8_0": {
-      "status": "PARTIAL_OFFICIAL_WEB_EVIDENCE_FAIL_CLOSED",
+      "status": "ACQUISITION_PIPELINE_PASS_PRODUCTION_PROFILE_DATA_BLOCKED",
       "profile_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
       "official_web_evidence_record": "validation/R8_0_GGPOKER_OFFICIAL_WEB_EVIDENCE_20260812.md",
       "official_global_facts_captured": true,
       "official_tournament_fee_fraction": 0.07,
       "selected_state_evidence_binding_required": true,
+      "selected_state_packet_schema": "SPINCORE_R8_SELECTED_STATE_EVIDENCE_PACKET_V1",
+      "evidence_acquisition_pipeline_acceptance": "validation/R8_0_EVIDENCE_ACQUISITION_PIPELINE_ACCEPTANCE_20260812.md",
+      "evidence_acquisition_regression": 31651412158,
+      "evidence_acquisition_head": "22d58d816e8d2b0257498a1de43128a6791803d6",
+      "evidence_acquisition_regression_pass": true,
+      "profile_builder_ready": true,
       "exact_dynamic_selected_state_stack_blind_payout_mapping_missing": true,
-      "pilot_constants_forbidden_as_substitute": true
+      "pilot_constants_forbidden_as_substitute": true,
+      "production_profile_gate_pass": false
     },
     "r8_1": {
       "status": "PASS_INFRASTRUCTURE_ONLY",
@@ -199,6 +206,6 @@
     "r8_2_r8_5": "BLOCKED_BY_R7_4_FINAL_AND_R8_0",
     "ready_to_start_official_training": false
   },
-  "next_physical_step": "Finish held-out 3H320 seed 1954132610 iteration 3, then continue both frozen seeds through iterations 4 and 5. Finalize AveragePolicy and unchanged per-seed/cross-seed gates. Only on genuine 3H320 PASS auto-authorize staged 3H640 confirmation. In parallel, acquire first-party selected-state GGPoker evidence for exact 3-max stack/blind/payout mappings. R8.1 infrastructure is accepted, but no R8 official training may start before finite R7.4 final PASS and exact R8.0 profiles.",
+  "next_physical_step": "Finish held-out 3H320 seed 1954132610 iteration 3, then continue both frozen seeds through iterations 4 and 5. Finalize AveragePolicy and unchanged per-seed/cross-seed gates. Only on genuine 3H320 PASS auto-authorize staged 3H640 confirmation. R8.0 acquisition/validation machinery is accepted; remaining R8.0 work is to acquire exact first-party selected-state GGPoker stack/blind/payout mappings. R8.1 infrastructure is accepted, but no R8 official training may start before finite R7.4 final PASS and exact R8.0 production profiles.",
   "ready_for_tables": false
 }
