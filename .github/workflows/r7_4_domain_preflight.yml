@@ -1,6 +1,12 @@
 name: SpinCore R7.4 exact-source HU and 3H structural preflight
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_4_domain_preflight.yml'
+      - 'tools/run_r7_4_domain_preflight.py'
+      - 'tools/r7_4_domain_preflight_worker.py'
   workflow_run:
     workflows:
       - 'SpinCore R7.4 SPINRULESET-4 HU invariance'
@@ -9,6 +15,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: spincore-r7-4-domain-preflight
+  cancel-in-progress: true
 
 jobs:
   preflight:
@@ -82,6 +92,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install Python dependencies
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
       - name: Run frozen SPINRULESET-4 HU/3H preflight
         if: steps.gate.outputs.run == 'true'
         shell: bash
