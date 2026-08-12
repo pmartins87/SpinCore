@@ -1,6 +1,7 @@
 #include "spincore/scenario_sampler.hpp"
 #include "spincore/ruleset_contract.hpp"
 #include <algorithm>
+#include <stdexcept>
 namespace spincore {
 ScenarioSampler::ScenarioSampler(std::uint64_t seed,ScenarioSamplerConfig cfg):state_(seed),cfg_(cfg){
  if(cfg_.total_chips<2) throw std::invalid_argument("scenario sampler total_chips too small");
