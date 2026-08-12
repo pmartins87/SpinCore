@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: spincore-r7-3-provisional-640-strategy-bridge
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   strategy_640:
@@ -145,6 +145,7 @@ jobs:
           assert d['schema']=='SPINCORE_R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE_V1', d
           assert d.get('r7_3_strategy_quality_640_pass') is True, d
           assert d.get('r7_4_provisional_advance_allowed') is True
+          assert d.get('seed_contract_pass') is True
           assert d.get('per_seed_fit_pass') is True
           assert d.get('frozen_cross_seed_gates_pass') is True
           assert d.get('structural_contract_pass') is True
