@@ -20,13 +20,13 @@ def _load(path: Path) -> dict:
     return data
 
 
-def _validate_domain(row: dict, *, domain: str, roots_per_iteration: int, freeze: dict, ruleset_freeze: dict) -> None:
+def _validate_domain(row: dict, *, domain: str, roots_per_iteration: int, freeze: dict, ruleset_freeze: dict, prerequisite_mode: str) -> None:
     if row.get("schema") != DOMAIN_SCHEMA:
         raise ValueError(f"{domain}: wrong domain evidence schema")
     if row.get("domain") != domain:
         raise ValueError(f"{domain}: wrong domain label")
-    if row.get("r7_3_certified_source_head_sha") != freeze.get("source_head_sha"):
-        raise ValueError(f"{domain}: certified R7.3 base source differs from frozen winner")
+    if row.get("r7_3_frozen_source_head_sha") != freeze.get("source_head_sha"):
+        raise ValueError(f"{domain}: frozen R7.3 base source differs from winner")
     if row.get("r7_4_ruleset_source_head_sha") != ruleset_freeze.get("ruleset_extension_source_head_sha"):
         raise ValueError(f"{domain}: R7.4 rules source differs from frozen SPINRULESET-4 source")
     if row.get("r7_3_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
@@ -41,8 +41,15 @@ def _validate_domain(row: dict, *, domain: str, roots_per_iteration: int, freeze
         raise ValueError(f"{domain}: worker provenance incomplete")
     if row.get("thread_environment_overrides_injected_by_r7_4_orchestrator") is not False:
         raise ValueError(f"{domain}: hidden thread override detected or unproven")
-    if row.get("r7_3_640_acceptance_passed_first") is not True:
-        raise ValueError(f"{domain}: R7.3 640 prerequisite not proven")
+    if row.get("r7_3_640_strategy_prerequisite_passed_first") is not True:
+        raise ValueError(f"{domain}: R7.3 640 strategy prerequisite not proven")
+    if row.get("r7_3_prerequisite_mode") != prerequisite_mode:
+        raise ValueError(f"{domain}: R7.3 prerequisite mode differs from preflight")
+    if prerequisite_mode == "PROVISIONAL_640_STRATEGY_QUALITY":
+        if row.get("r7_3_exact_reproducibility_debt_preserved") is not True:
+            raise ValueError(f"{domain}: exact-reproducibility debt was lost")
+        if row.get("r7_3_640_acceptance_passed_first") is not False:
+            raise ValueError(f"{domain}: provisional path incorrectly claims strict acceptance")
     if row.get("r7_4_ruleset_hu_invariance_passed_first") is not True:
         raise ValueError(f"{domain}: SPINRULESET-4 HU invariance prerequisite not proven")
     if row.get("r7_4_structural_preflight_passed_first") is not True:
@@ -96,9 +103,17 @@ def main() -> int:
         raise SystemExit("ruleset acceptance source differs from ruleset freeze")
     if preflight.get("schema") != PREFLIGHT_SCHEMA or preflight.get("r7_4_structural_preflight_pass") is not True:
         raise SystemExit("R7.4 structural preflight missing")
+    prerequisite_mode = str(preflight.get("r7_3_prerequisite_mode", ""))
+    if prerequisite_mode not in ("STRICT_EXACT_CERTIFICATION", "PROVISIONAL_640_STRATEGY_QUALITY"):
+        raise SystemExit("R7.4 structural preflight has unknown R7.3 prerequisite mode")
+    if prerequisite_mode == "PROVISIONAL_640_STRATEGY_QUALITY":
+        if preflight.get("r7_3_exact_reproducibility_debt_preserved") is not True:
+            raise SystemExit("R7.4 structural preflight lost exact-reproducibility debt")
+        if ruleset_acceptance.get("r7_3_exact_reproducibility_debt_preserved") is not True:
+            raise SystemExit("R7.4 ruleset acceptance lost exact-reproducibility debt")
     try:
-        _validate_domain(hu, domain="TRUE_HEADS_UP", roots_per_iteration=128, freeze=freeze, ruleset_freeze=ruleset_freeze)
-        _validate_domain(three, domain="THREE_HANDED", roots_per_iteration=64, freeze=freeze, ruleset_freeze=ruleset_freeze)
+        _validate_domain(hu, domain="TRUE_HEADS_UP", roots_per_iteration=128, freeze=freeze, ruleset_freeze=ruleset_freeze, prerequisite_mode=prerequisite_mode)
+        _validate_domain(three, domain="THREE_HANDED", roots_per_iteration=64, freeze=freeze, ruleset_freeze=ruleset_freeze, prerequisite_mode=prerequisite_mode)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
     if list(hu.get("algorithm_seeds") or []) != list(three.get("algorithm_seeds") or []):
@@ -110,7 +125,9 @@ def main() -> int:
     payload = {
         "schema": SCHEMA,
         "behavior_semantic_id": freeze["behavior_semantic_id"],
-        "r7_3_certified_source_head_sha": freeze["source_head_sha"],
+        "r7_3_frozen_source_head_sha": freeze["source_head_sha"],
+        "r7_3_prerequisite_mode": prerequisite_mode,
+        "r7_3_exact_reproducibility_debt_preserved": prerequisite_mode == "PROVISIONAL_640_STRATEGY_QUALITY",
         "r7_4_ruleset_schema": "SPINRULESET-4",
         "r7_4_ruleset_source_head_sha": ruleset_freeze["ruleset_extension_source_head_sha"],
         "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
