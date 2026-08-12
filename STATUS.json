@@ -5,7 +5,7 @@
   "physical_state": "R7_4_HELDOUT_3H_STAGED_REPAIR_ACTIVE_R7_3_EXACT_REPRO_DEBT_DEFERRED",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.4",
-  "current_gate_status": "HU640_PASS_3H320_STAGED_RESUME_EQUIVALENCE_AND_SCREEN_IN_PROGRESS",
+  "current_gate_status": "HU640_PASS_STAGED_RESUME_EQUIVALENCE_PASS_3H320_ITERATION1_IN_PROGRESS",
   "ready_for_tables": false,
   "roadmap": {
     "R0_R6": "PASS_REBUILT",
@@ -124,7 +124,8 @@
       "repair_workflow": 31637418697,
       "repair_status": "IN_PROGRESS",
       "roots_per_seed": 320,
-      "staged_resume_equivalence_required": true
+      "staged_resume_equivalence_required": true,
+      "staged_resume_equivalence_pass": true
     },
     "three_handed_640": {
       "roots_per_seed": 640,
@@ -138,7 +139,7 @@
     "screen_workflow": ".github/workflows/r7_4_three_handed_staged_repair.yml",
     "confirmation_workflow": ".github/workflows/r7_4_three_handed_640_confirmation.yml",
     "equivalence_schema": "SPINCORE_R7_4_STAGED_RESUME_EQUIVALENCE_V1",
-    "equivalence_status": "IN_PROGRESS",
+    "equivalence_status": "PASS_EXACT",
     "checkpoint_boundary": "POST_ADVANTAGE_FIT_PER_ITERATION",
     "preserves": [
       "ADVANTAGE_RESERVOIR_AND_RNG",
@@ -153,12 +154,27 @@
       "SCENARIO_COUNTS",
       "ITERATION_REPORTS"
     ],
-    "changes_strategic_gate": false
+    "changes_strategic_gate": false,
+    "equivalence_evidence": "validation/R7_4_STAGED_RESUME_EQUIVALENCE.json",
+    "equivalence_checks": {
+      "adv_mem": true,
+      "adv_opt": true,
+      "advantage": true,
+      "batch_rng": true,
+      "behavior_stats": true,
+      "counters": true,
+      "models": true,
+      "pol_mem": true,
+      "pol_opt": true,
+      "policy": true,
+      "stage": true,
+      "torch_rng": true
+    }
   },
   "r8": {
     "status": "BLOCKED_UNTIL_FINITE_R7_4_FINAL_GATE_PASS",
     "ready_to_start": false
   },
-  "next_physical_step": "Complete physical staged-resume equivalence. If exact, execute both frozen held-out 3H320 seeds through five 64-root iterations using iteration-boundary checkpoints, aggregate unchanged gates, and only on PASS auto-authorize staged 3H640 confirmation. No strategic threshold, seed, scenario, deck schedule, root count, behavior parameter, or thread contract may change.",
+  "next_physical_step": "Both frozen held-out 3H320 seeds are executing iteration 1 of five at 64 roots/iteration after exact staged-resume equivalence PASS. Continue the deterministic checkpoint chain through iteration 5, finalize each seed, aggregate unchanged gates, and only on genuine 3H320 PASS auto-authorize staged 3H640 confirmation. No strategic threshold, seed, scenario, deck schedule, root count, behavior parameter, or thread contract may change.",
   "ready_for_tables": false
 }
