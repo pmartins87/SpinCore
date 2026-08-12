@@ -53,15 +53,20 @@ def test_r7_4_structural_preflight_exercises_hu_and_three_handed(tmp_path, monke
     assert d["ready_for_tables"] is False
 
 
-def _valid_certification_pair():
-    freeze = {
+def _freeze():
+    return {
         "schema": orchestrator.FREEZE_SCHEMA,
         "source_head_sha": "a" * 40,
         "evidence_commit_sha": "b" * 40,
+        "evidence_sha256": "c" * 64,
+        "behavior_semantic_id": "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
         "thread_environment_contract": orchestrator.THREAD_ENV_CONTRACT,
     }
-    acceptance = {
-        "schema": orchestrator.ACCEPT_SCHEMA,
+
+
+def _strict_acceptance(freeze):
+    return {
+        "schema": orchestrator.STRICT_ACCEPT_SCHEMA,
         "r7_3_640_acceptance_pass": True,
         "r7_3_ready_to_advance_to_r7_4": True,
         "per_seed_fit_pass": True,
@@ -74,12 +79,49 @@ def _valid_certification_pair():
         "thread_environment_overrides_injected_by_certifier": False,
         "acceptance_gate_changed": False,
     }
-    return freeze, acceptance
 
 
-def test_r7_4_requires_corrected_exact_source_certification_contract():
-    freeze, acceptance = _valid_certification_pair()
+def _provisional_acceptance(freeze):
+    return {
+        "schema": orchestrator.PROVISIONAL_ACCEPT_SCHEMA,
+        "source_head_sha": freeze["source_head_sha"],
+        "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
+        "durability_evidence_sha256": freeze["evidence_sha256"],
+        "behavior_semantic_id": freeze["behavior_semantic_id"],
+        "thread_environment_contract": orchestrator.THREAD_ENV_CONTRACT,
+        "thread_environment_overrides_injected_by_bridge": False,
+        "iterations": 5,
+        "roots_per_iteration": 128,
+        "roots_per_seed": 640,
+        "exact_opponent_levels": 2,
+        "per_seed_fit_pass": True,
+        "frozen_cross_seed_gates_pass": True,
+        "structural_contract_pass": True,
+        "strategic_acceptance_gate_changed": False,
+        "r7_3_strategy_quality_640_pass": True,
+        "r7_4_provisional_advance_allowed": True,
+        "certification_sequence_exception": True,
+        "exact_reproducibility_must_close_before_ready_for_tables": True,
+        "r7_3_fully_certified": False,
+        "ready_for_tables": False,
+    }
+
+
+def test_r7_4_accepts_strict_exact_source_certification_contract():
+    freeze = _freeze()
+    acceptance = _strict_acceptance(freeze)
     assert orchestrator._validate_r7_3_prerequisites(freeze, acceptance) == freeze["source_head_sha"]
+    assert orchestrator._acceptance_mode(acceptance) == "STRICT_EXACT_CERTIFICATION"
+
+
+def test_r7_4_accepts_explicit_provisional_strategy_quality_contract_without_claiming_full_certification():
+    freeze = _freeze()
+    acceptance = _provisional_acceptance(freeze)
+    assert orchestrator._validate_r7_3_prerequisites(freeze, acceptance) == freeze["source_head_sha"]
+    assert orchestrator._acceptance_mode(acceptance) == "PROVISIONAL_640_STRATEGY_QUALITY"
+    assert acceptance["exact_reproducibility_must_close_before_ready_for_tables"] is True
+    assert acceptance["r7_3_fully_certified"] is False
+    assert acceptance["ready_for_tables"] is False
 
 
 @pytest.mark.parametrize(
@@ -87,14 +129,34 @@ def test_r7_4_requires_corrected_exact_source_certification_contract():
     [
         lambda f, a: a.pop("thread_environment_contract"),
         lambda f, a: a.__setitem__("thread_environment_overrides_injected_by_certifier", True),
-        lambda f, a: a.__setitem__("durability_evidence_commit_sha", "c" * 40),
+        lambda f, a: a.__setitem__("durability_evidence_commit_sha", "d" * 40),
         lambda f, a: a.__setitem__("roots_per_seed", 320),
         lambda f, a: a.__setitem__("per_seed_fit_pass", False),
         lambda f, a: a.__setitem__("acceptance_gate_changed", True),
     ],
 )
-def test_r7_4_rejects_legacy_or_incomplete_acceptance(mutation):
-    freeze, acceptance = _valid_certification_pair()
+def test_r7_4_rejects_legacy_or_incomplete_strict_acceptance(mutation):
+    freeze = _freeze()
+    acceptance = _strict_acceptance(freeze)
+    mutation(freeze, acceptance)
+    with pytest.raises(ValueError):
+        orchestrator._validate_r7_3_prerequisites(freeze, acceptance)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda f, a: a.__setitem__("r7_3_strategy_quality_640_pass", False),
+        lambda f, a: a.__setitem__("frozen_cross_seed_gates_pass", False),
+        lambda f, a: a.__setitem__("thread_environment_overrides_injected_by_bridge", True),
+        lambda f, a: a.__setitem__("exact_reproducibility_must_close_before_ready_for_tables", False),
+        lambda f, a: a.__setitem__("r7_3_fully_certified", True),
+        lambda f, a: a.__setitem__("ready_for_tables", True),
+    ],
+)
+def test_r7_4_provisional_path_fails_closed_if_exception_or_strategy_gate_is_weakened(mutation):
+    freeze = _freeze()
+    acceptance = _provisional_acceptance(freeze)
     mutation(freeze, acceptance)
     with pytest.raises(ValueError):
         orchestrator._validate_r7_3_prerequisites(freeze, acceptance)
