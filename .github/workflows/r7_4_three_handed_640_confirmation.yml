@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json
+          import json,os
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
           rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
           ra=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
@@ -45,11 +45,24 @@ jobs:
           assert s['schema']=='SPINCORE_R7_4_HELDOUT_SCREEN_SUMMARY_V1'
           assert s['r7_4_heldout_screen_pass'] is True
           assert s['three_handed_640_confirmation_required'] is True
-          assert s['r7_3_certified_source_head_sha']==f['source_head_sha']==rf['base_r7_3_source_head_sha']
+          assert s['r7_3_frozen_source_head_sha']==f['source_head_sha']==rf['base_r7_3_source_head_sha']
           assert s['r7_4_ruleset_source_head_sha']==rf['ruleset_extension_source_head_sha']==ra['ruleset_extension_source_head_sha']==p['r7_4_rules_source_head_sha']
           assert s['durability_evidence_commit_sha']==f['evidence_commit_sha']==rf['base_r7_3_evidence_commit_sha']
           assert s['r7_3_selection_seeds_reused'] is False
+          mode=s['r7_3_prerequisite_mode']
+          assert mode==p['r7_3_prerequisite_mode']
+          if mode=='STRICT_EXACT_CERTIFICATION':
+              acceptance='validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json'
+          elif mode=='PROVISIONAL_640_STRATEGY_QUALITY':
+              assert s['r7_3_exact_reproducibility_debt_preserved'] is True
+              assert p['r7_3_exact_reproducibility_debt_preserved'] is True
+              assert ra['r7_3_exact_reproducibility_debt_preserved'] is True
+              acceptance='validation/R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE.json'
+          else:
+              raise AssertionError('unknown R7.3 prerequisite mode '+repr(mode))
           assert s['ready_for_tables'] is False
+          with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf-8') as fh:
+              fh.write('acceptance='+acceptance+'\n')
           PY
           echo 'run=true' >> "$GITHUB_OUTPUT"
       - name: Set up Python
@@ -70,11 +83,13 @@ jobs:
         id: physical
         continue-on-error: true
         shell: bash
+        env:
+          R7_ACCEPTANCE: ${{ steps.gate.outputs.acceptance }}
         run: |
           set -euo pipefail
           python tools/run_r7_4_stability_pilot.py \
             --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
-            --acceptance validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json \
+            --acceptance "$R7_ACCEPTANCE" \
             --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
             --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
             --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
@@ -149,6 +164,10 @@ jobs:
           assert d['r7_4_pass'] is True, d
           assert d['r7_4_ready_to_advance_to_r8'] is True
           assert d['acceptance_gate_changed'] is False
+          if d.get('r7_3_prerequisite_mode')=='PROVISIONAL_640_STRATEGY_QUALITY':
+              assert d.get('r7_3_exact_reproducibility_debt_preserved') is True
+              assert d.get('r7_3_exact_reproducibility_must_close_before_ready_for_tables') is True
+              assert d.get('r7_3_fully_certified') is False
           assert d['ready_for_tables'] is False
           print('R7.4 PASS; R8 may begin. READY FOR TABLES remains NO.')
           PY
