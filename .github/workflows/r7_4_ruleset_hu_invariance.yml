@@ -5,6 +5,7 @@ on:
     workflows:
       - 'SpinCore R7.3 certify selected winner through 640'
       - 'SpinCore R7.3 source-exact recertification repair'
+      - 'SpinCore R7.3 provisional 640 strategy bridge'
     types: [completed]
   workflow_dispatch:
 
@@ -25,7 +26,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Resolve corrected R7.3 640 prerequisite
+      - name: Resolve strict or provisional R7.3 640 prerequisite
         id: gate
         shell: bash
         run: |
@@ -36,7 +37,11 @@ jobs:
           sys.path.insert(0, 'tools')
           import r7_3_certification_evidence as resolver
           import run_r7_4_domain_preflight as preflight
+
           freeze=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          accepted=False
+          origin=None
+          strict_error=None
           try:
               acceptance, origin=resolver.resolve_valid_json(
                   'validation/R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE.json',
@@ -44,13 +49,58 @@ jobs:
                   repo_root='.',
               )
           except Exception as exc:
-              print(f'R7.4 ruleset invariance remains gated: {exc}')
-              with open('/tmp/r7_4_gate.txt','w') as f: f.write('false')
+              strict_error=repr(exc)
           else:
               assert acceptance['r7_3_640_acceptance_pass'] is True
               assert acceptance['r7_3_ready_to_advance_to_r7_4'] is True
+              accepted=True
+              mode='STRICT_EXACT_CERTIFICATION'
+
+          if not accepted:
+              p=Path('validation/R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE.json')
+              try:
+                  d=json.loads(p.read_text(encoding='utf-8'))
+                  assert d['schema']=='SPINCORE_R7_3_PROVISIONAL_640_STRATEGY_ACCEPTANCE_V1'
+                  assert d['source_head_sha']==freeze['source_head_sha']
+                  assert d['durability_evidence_commit_sha']==freeze['evidence_commit_sha']
+                  assert d['durability_evidence_sha256']==freeze['evidence_sha256']
+                  assert d['behavior_semantic_id']==freeze['behavior_semantic_id']
+                  assert d['thread_environment_contract']==freeze['thread_environment_contract']
+                  assert d['thread_environment_overrides_injected_by_bridge'] is False
+                  assert d['iterations']==5
+                  assert d['roots_per_iteration']==128
+                  assert d['roots_per_seed']==640
+                  assert d['exact_opponent_levels']==2
+                  assert d['per_seed_fit_pass'] is True
+                  assert d['frozen_cross_seed_gates_pass'] is True
+                  assert d['structural_contract_pass'] is True
+                  assert d['strategic_acceptance_gate_changed'] is False
+                  assert d['r7_3_strategy_quality_640_pass'] is True
+                  assert d['r7_4_provisional_advance_allowed'] is True
+                  assert d['certification_sequence_exception'] is True
+                  assert d['exact_reproducibility_must_close_before_ready_for_tables'] is True
+                  assert d['r7_3_fully_certified'] is False
+                  assert d['ready_for_tables'] is False
+              except Exception as exc:
+                  print('Strict R7.3 prerequisite unavailable:', strict_error)
+                  print('Provisional R7.3 strategy prerequisite unavailable:', repr(exc))
+              else:
+                  accepted=True
+                  mode='PROVISIONAL_640_STRATEGY_QUALITY'
+                  origin={
+                      'path': str(p),
+                      'mode': mode,
+                      'exact_reproducibility_deferred': bool(d.get('exact_reproducibility_deferred')),
+                      'release_debt_must_close': True,
+                  }
+
+          if accepted:
               json.dump(origin,open('/tmp/r7_3_acceptance_origin.json','w'),indent=2,sort_keys=True)
-              with open('/tmp/r7_4_gate.txt','w') as f: f.write('true')
+              Path('/tmp/r7_4_gate.txt').write_text('true',encoding='utf-8')
+              Path('/tmp/r7_3_prerequisite_mode.txt').write_text(mode,encoding='utf-8')
+              print('R7.4 prerequisite accepted in mode:', mode)
+          else:
+              Path('/tmp/r7_4_gate.txt').write_text('false',encoding='utf-8')
           PY
           echo "run=$(cat /tmp/r7_4_gate.txt)" >> "$GITHUB_OUTPUT"
       - name: Set up Python
@@ -86,8 +136,10 @@ jobs:
           if [ -f validation/R7_4_HU_INVARIANCE.json ]; then
             python - <<'PY'
           import json
+          from pathlib import Path
           r=json.load(open('validation/R7_4_HU_INVARIANCE.json'))
           f=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          mode=Path('/tmp/r7_3_prerequisite_mode.txt').read_text(encoding='utf-8').strip()
           passed=r.get('selected_r7_3_hu_evidence_invariant') is True and r.get('difference_count')==0
           out={
             'schema':'SPINCORE_R7_4_RULESET_ACCEPTANCE_V1',
@@ -97,6 +149,8 @@ jobs:
             'base_r7_3_evidence_sha256':f['base_r7_3_evidence_sha256'],
             'ruleset_extension_source_head_sha':f['ruleset_extension_source_head_sha'],
             'semantic_extension':f['semantic_extension'],
+            'r7_3_prerequisite_mode':mode,
+            'r7_3_exact_reproducibility_debt_preserved': mode=='PROVISIONAL_640_STRATEGY_QUALITY',
             'selected_training_components_byte_identical':bool(r.get('selected_training_components_byte_identical')),
             'hu_invariance_difference_count':int(r.get('difference_count',-1)),
             'hu_invariance_pass':passed,
@@ -140,6 +194,7 @@ jobs:
           assert r['difference_count']==0
           assert a['hu_invariance_pass'] is True, a
           assert a['r7_4_rules_source_accepted'] is True
+          assert a['r7_4_gate_changed'] is False
           assert a['ready_for_tables'] is False
           print('SPINRULESET-4 HU invariance PASS; frozen rules source may enter R7.4 preflight.')
           PY
