@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import copy
-
 import pytest
 
 from spincore.production_profile import (
@@ -12,17 +10,26 @@ from spincore.production_profile import (
 )
 
 
-def _profile(*, multiplier: int = 2, starting: int = 500, payout=(1.0, 0.0, 0.0)) -> ProductionProfile:
-    # Synthetic values are used only to test identity/validation mechanics.
-    # They are not asserted to be a real GGPoker production profile.
+def _profile(
+    *,
+    buy_in_minor_units: int = 500,
+    multiplier: int = 2,
+    starting: int = 500,
+    payout=(1.0, 0.0, 0.0),
+) -> ProductionProfile:
+    # Synthetic structural values are used only to test identity/validation
+    # mechanics. The official URL proves source-host validation, not that these
+    # particular fixture values are a current production profile.
     return ProductionProfile(
         platform="GGPOKER",
         game_family="SPIN_AND_GOLD_3MAX_TEST_FIXTURE",
         table_size=3,
+        currency="USD",
+        buy_in_minor_units=buy_in_minor_units,
         multiplier=multiplier,
         starting_chips_per_player=starting,
         blind_levels=(BlindLevel(10, 20, 0, 180), BlindLevel(15, 30, 0, 180)),
-        payout_by_place=tuple(payout),
+        payout_share_by_place=tuple(payout),
         tournament_fee_fraction=0.07,
         ruleset_id="SPINRULESET-4",
         action_abstraction_id="TEST_ACTION_ABSTRACTION",
@@ -31,9 +38,9 @@ def _profile(*, multiplier: int = 2, starting: int = 500, payout=(1.0, 0.0, 0.0)
         evidence=(
             ProductionEvidence(
                 source_kind="OFFICIAL_WEB",
-                locator="https://example.invalid/test-fixture-not-production",
+                locator="https://ggpoker.com/poker-games/spin-gold/",
                 observed_at_utc="2026-08-12T00:00:00Z",
-                note="unit-test fixture only",
+                note="unit-test provenance fixture only",
             ),
         ),
     )
@@ -43,6 +50,7 @@ def test_profile_id_is_stable_and_domain_policy_ids_are_separate():
     a = _profile()
     b = ProductionProfile.from_dict(a.to_dict())
     assert a.profile_id == b.profile_id
+    assert a.profile_id.startswith("spinprofile-v2:")
     assert a.policy_id("TRUE_HEADS_UP") != a.policy_id("THREE_HANDED")
     assert a.policy_id("TRUE_HEADS_UP") == b.policy_id("TRUE_HEADS_UP")
 
@@ -50,6 +58,7 @@ def test_profile_id_is_stable_and_domain_policy_ids_are_separate():
 def test_economic_or_structural_change_forces_new_profile_identity():
     base = _profile()
     variants = [
+        _profile(buy_in_minor_units=1000),
         _profile(multiplier=3),
         _profile(starting=750),
         _profile(payout=(0.8, 0.2, 0.0)),
@@ -68,7 +77,7 @@ def test_provenance_timestamp_does_not_change_semantic_identity():
 
 def test_identity_hash_tampering_fails_closed():
     row = _profile().to_dict()
-    row["starting_chips_per_player"] += 1
+    row["buy_in_minor_units"] += 1
     with pytest.raises(ValueError, match="identity hash mismatch"):
         ProductionProfile.from_dict(row)
 
@@ -80,10 +89,12 @@ def test_incomplete_or_non_first_party_profile_cannot_be_constructed():
             platform=p.platform,
             game_family=p.game_family,
             table_size=p.table_size,
+            currency=p.currency,
+            buy_in_minor_units=p.buy_in_minor_units,
             multiplier=p.multiplier,
             starting_chips_per_player=p.starting_chips_per_player,
             blind_levels=(),
-            payout_by_place=p.payout_by_place,
+            payout_share_by_place=p.payout_share_by_place,
             tournament_fee_fraction=p.tournament_fee_fraction,
             ruleset_id=p.ruleset_id,
             action_abstraction_id=p.action_abstraction_id,
@@ -93,6 +104,15 @@ def test_incomplete_or_non_first_party_profile_cannot_be_constructed():
         )
     with pytest.raises(ValueError, match="first-party"):
         ProductionEvidence("COMMUNITY_WIKI", "somewhere", "2026-08-12T00:00:00Z")
+    with pytest.raises(ValueError, match="GGPoker first-party"):
+        ProductionEvidence("OFFICIAL_WEB", "https://example.com/spin-gold", "2026-08-12T00:00:00Z")
+
+
+def test_payout_contract_requires_normalized_prize_pool_shares():
+    with pytest.raises(ValueError, match="sum to exactly one"):
+        _profile(multiplier=10, payout=(8.0, 2.0, 0.0))
+    p = _profile(multiplier=10, payout=(0.8, 0.2, 0.0))
+    assert p.payout_share_by_place == (0.8, 0.2, 0.0)
 
 
 def test_r8_profile_never_claims_table_readiness():
