@@ -127,15 +127,19 @@ jobs:
           R7_ACCEPTANCE: ${{ steps.prerequisite.outputs.path }}
         run: |
           set -euo pipefail
-          python tools/run_r7_4_stability_pilot.py \
-            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
-            --acceptance "$R7_ACCEPTANCE" \
-            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
-            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
-            --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
-            --domain "$DOMAIN" \
-            --roots-per-iteration "$ROOTS" \
-            --out "$OUT"
+          python tools/run_with_heartbeat.py \
+            --label "r7.4-${{ matrix.label }}" \
+            --interval-seconds 300 \
+            -- \
+            python tools/run_r7_4_stability_pilot.py \
+              --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+              --acceptance "$R7_ACCEPTANCE" \
+              --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+              --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
+              --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
+              --domain "$DOMAIN" \
+              --roots-per-iteration "$ROOTS" \
+              --out "$OUT"
       - name: Persist held-out domain evidence
         if: always()
         shell: bash
