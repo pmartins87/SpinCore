@@ -1,0 +1,563 @@
+name: SpinCore R7.4 staged 3H320 repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/r7_4_staged_domain_worker.py'
+      - '.github/workflows/r7_4_three_handed_staged_repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-4-staged-3h320-repair
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    outputs:
+      seeds: ${{ steps.gate.outputs.seeds }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Verify unchanged R7.4 strategic contract and existing HU640 PASS
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os
+          f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          ra=json.load(open('validation/R7_4_RULESET_ACCEPTANCE.json'))
+          p=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
+          hu=json.load(open('validation/R7_4_HELDOUT_HU_640.json'))
+          assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
+          assert rf['ruleset_schema']=='SPINRULESET-4'
+          assert ra['r7_4_rules_source_accepted'] is True and ra['hu_invariance_pass'] is True
+          assert p['r7_4_structural_preflight_pass'] is True
+          assert hu['schema']=='SPINCORE_R7_4_HELDOUT_DOMAIN_STABILITY_V1'
+          assert hu['domain']=='TRUE_HEADS_UP' and hu['roots_per_iteration']==128 and hu['roots_per_seed']==640
+          assert hu['r7_4_domain_stability_pass'] is True
+          assert hu['acceptance_gate_changed'] is False and hu['ready_for_tables'] is False
+          mode=p['r7_3_prerequisite_mode']
+          assert mode in ('STRICT_EXACT_CERTIFICATION','PROVISIONAL_640_STRATEGY_QUALITY')
+          if mode=='PROVISIONAL_640_STRATEGY_QUALITY':
+              assert p['r7_3_exact_reproducibility_debt_preserved'] is True
+              assert hu['r7_3_exact_reproducibility_debt_preserved'] is True
+          evidence_hash=str(f['evidence_sha256'])
+          selected={int(x) for x in f['algorithm_seeds']}
+          seeds=[]; index=0
+          while len(seeds)<2:
+              d=hashlib.sha256(f"SpinCore|R7.4|heldout|{index}|{evidence_hash}".encode()).digest()
+              s=int.from_bytes(d[:8],'big') & 0x7fffffff; index+=1
+              if s>0 and s not in selected and s not in seeds: seeds.append(s)
+          assert seeds==[int(x) for x in hu['algorithm_seeds']]
+          with open(os.environ['GITHUB_OUTPUT'],'a') as fh:
+              fh.write('seeds='+json.dumps(seeds,separators=(',',':'))+'\n')
+          print('heldout seeds',seeds,'mode',mode)
+          PY
+
+  equivalence:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install pytest
+      - name: Prove monolithic versus resumed continuation equivalence
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          ctest --test-dir "$wt/build" --output-on-failure
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python "$wt/tools/r7_4_staged_domain_worker.py" equivalence \
+            --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+            --solver "$wt/build/libspincore_solver_c.so" \
+            --checkpoint "$RUNNER_TEMP/equivalence.pt" \
+            --out "$GITHUB_WORKSPACE/validation/R7_4_STAGED_RESUME_EQUIVALENCE.json"
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_4_STAGED_RESUME_EQUIVALENCE.json'))
+          assert d['all_exact'] is True, d
+          assert d['frozen_strategy_gate_changed'] is False
+          assert d['ready_for_tables'] is False
+          PY
+      - name: Persist resume-equivalence evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_4_STAGED_RESUME_EQUIVALENCE.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Prove exact R7.4 staged-resume equivalence [r7-evidence-skip]'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+  stage1:
+    needs: [equivalence, gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: ${{ fromJSON(needs.gate.outputs.seeds) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Run THREE_HANDED 320 iteration 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          mkdir -p output
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python tools/run_with_heartbeat.py --label "r7.4-3h320-i1-${{ matrix.seed }}" --interval-seconds 300 -- \
+            python "$wt/tools/r7_4_staged_domain_worker.py" advance \
+              --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+              --solver "$wt/build/libspincore_solver_c.so" \
+              --domain THREE_HANDED --roots-per-iteration 64 --seed "${{ matrix.seed }}" \
+              --iteration 1 --checkpoint-out "$GITHUB_WORKSPACE/output/checkpoint.pt"
+      - name: Upload exact staged checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-4-3h320-i1-${{ matrix.seed }}
+          path: output/checkpoint.pt
+          retention-days: 2
+          compression-level: 1
+
+  stage2:
+    needs: [stage1, gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: ${{ fromJSON(needs.gate.outputs.seeds) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download prior seed checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-4-3h320-i1-${{ matrix.seed }}
+          path: input
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Run THREE_HANDED 320 iteration 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          mkdir -p output
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python tools/run_with_heartbeat.py --label "r7.4-3h320-i2-${{ matrix.seed }}" --interval-seconds 300 -- \
+            python "$wt/tools/r7_4_staged_domain_worker.py" advance \
+              --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+              --solver "$wt/build/libspincore_solver_c.so" \
+              --domain THREE_HANDED --roots-per-iteration 64 --seed "${{ matrix.seed }}" \
+              --iteration 2 --checkpoint-in "$GITHUB_WORKSPACE/input/checkpoint.pt" --checkpoint-out "$GITHUB_WORKSPACE/output/checkpoint.pt"
+      - name: Upload exact staged checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-4-3h320-i2-${{ matrix.seed }}
+          path: output/checkpoint.pt
+          retention-days: 2
+          compression-level: 1
+
+  stage3:
+    needs: [stage2, gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: ${{ fromJSON(needs.gate.outputs.seeds) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download prior seed checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-4-3h320-i2-${{ matrix.seed }}
+          path: input
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Run THREE_HANDED 320 iteration 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          mkdir -p output
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python tools/run_with_heartbeat.py --label "r7.4-3h320-i3-${{ matrix.seed }}" --interval-seconds 300 -- \
+            python "$wt/tools/r7_4_staged_domain_worker.py" advance \
+              --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+              --solver "$wt/build/libspincore_solver_c.so" \
+              --domain THREE_HANDED --roots-per-iteration 64 --seed "${{ matrix.seed }}" \
+              --iteration 3 --checkpoint-in "$GITHUB_WORKSPACE/input/checkpoint.pt" --checkpoint-out "$GITHUB_WORKSPACE/output/checkpoint.pt"
+      - name: Upload exact staged checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-4-3h320-i3-${{ matrix.seed }}
+          path: output/checkpoint.pt
+          retention-days: 2
+          compression-level: 1
+
+  stage4:
+    needs: [stage3, gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: ${{ fromJSON(needs.gate.outputs.seeds) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download prior seed checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-4-3h320-i3-${{ matrix.seed }}
+          path: input
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Run THREE_HANDED 320 iteration 4
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          mkdir -p output
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python tools/run_with_heartbeat.py --label "r7.4-3h320-i4-${{ matrix.seed }}" --interval-seconds 300 -- \
+            python "$wt/tools/r7_4_staged_domain_worker.py" advance \
+              --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+              --solver "$wt/build/libspincore_solver_c.so" \
+              --domain THREE_HANDED --roots-per-iteration 64 --seed "${{ matrix.seed }}" \
+              --iteration 4 --checkpoint-in "$GITHUB_WORKSPACE/input/checkpoint.pt" --checkpoint-out "$GITHUB_WORKSPACE/output/checkpoint.pt"
+      - name: Upload exact staged checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-4-3h320-i4-${{ matrix.seed }}
+          path: output/checkpoint.pt
+          retention-days: 2
+          compression-level: 1
+
+  stage5:
+    needs: [stage4, gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: ${{ fromJSON(needs.gate.outputs.seeds) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download prior seed checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-4-3h320-i4-${{ matrix.seed }}
+          path: input
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Run THREE_HANDED 320 iteration 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          mkdir -p output
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python tools/run_with_heartbeat.py --label "r7.4-3h320-i5-${{ matrix.seed }}" --interval-seconds 300 -- \
+            python "$wt/tools/r7_4_staged_domain_worker.py" advance \
+              --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+              --solver "$wt/build/libspincore_solver_c.so" \
+              --domain THREE_HANDED --roots-per-iteration 64 --seed "${{ matrix.seed }}" \
+              --iteration 5 --checkpoint-in "$GITHUB_WORKSPACE/input/checkpoint.pt" --checkpoint-out "$GITHUB_WORKSPACE/output/checkpoint.pt"
+      - name: Upload exact staged checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-4-3h320-i5-${{ matrix.seed }}
+          path: output/checkpoint.pt
+          retention-days: 2
+          compression-level: 1
+
+  finalize:
+    needs: [stage5, gate]
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: ${{ fromJSON(needs.gate.outputs.seeds) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download iteration-5 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-4-3h320-i5-${{ matrix.seed }}
+          path: input
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Fit frozen average policy and finalize seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          cmake -S "$wt" -B "$wt/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$wt/build" -j2
+          mkdir -p output
+          export PYTHONPATH="$wt/python:$wt/tools"
+          python tools/run_with_heartbeat.py --label "r7.4-3h320-final-${{ matrix.seed }}" --interval-seconds 300 -- \
+            python "$wt/tools/r7_4_staged_domain_worker.py" finalize \
+              --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+              --solver "$wt/build/libspincore_solver_c.so" \
+              --domain THREE_HANDED --roots-per-iteration 64 --seed "${{ matrix.seed }}" \
+              --checkpoint-in "$GITHUB_WORKSPACE/input/checkpoint.pt" \
+              --checkpoint-out "$GITHUB_WORKSPACE/output/final.pt" \
+              --seed-report-out "$GITHUB_WORKSPACE/output/seed_report.json"
+      - name: Upload final seed state
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-4-3h320-final-${{ matrix.seed }}
+          path: |
+            output/final.pt
+            output/seed_report.json
+          retention-days: 2
+          compression-level: 1
+
+  aggregate:
+    needs: [finalize, gate, equivalence]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download both final seed states
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-4-3h320-final-*
+          path: finals
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - name: Aggregate unchanged frozen gates and restore provenance
+        id: physical
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_head=$(python -c "import json;print(json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))['ruleset_extension_source_head_sha'])")
+          wt="$RUNNER_TEMP/ruleset4"
+          git worktree add --detach "$wt" "$source_head"
+          cp tools/r7_4_staged_domain_worker.py "$wt/tools/"
+          cp tools/r7_4_stability_pilot_worker.py "$wt/tools/"
+          export PYTHONPATH="$wt/python:$wt/tools"
+          mapfile -t cps < <(find "$GITHUB_WORKSPACE/finals" -name final.pt -type f | sort)
+          test "${#cps[@]}" -eq 2
+          python "$wt/tools/r7_4_staged_domain_worker.py" aggregate \
+            --freeze "$GITHUB_WORKSPACE/validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json" \
+            --domain THREE_HANDED --roots-per-iteration 64 \
+            --checkpoint "${cps[0]}" --checkpoint "${cps[1]}" \
+            --out "$GITHUB_WORKSPACE/validation/R7_4_HELDOUT_3H_320.json"
+      - name: Add accepted-source provenance to staged evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          out=Path('validation/R7_4_HELDOUT_3H_320.json')
+          if not out.exists():
+              raise SystemExit('staged 3H320 worker produced no report')
+          d=json.load(out.open())
+          f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          rf=json.load(open('validation/R7_4_RULESET_EXTENSION_FREEZE.json'))
+          p=json.load(open('validation/R7_4_DOMAIN_PREFLIGHT.json'))
+          mode=p['r7_3_prerequisite_mode']
+          d.update({
+              'r7_3_640_strategy_prerequisite_passed_first': True,
+              'r7_3_640_acceptance_passed_first': mode=='STRICT_EXACT_CERTIFICATION',
+              'r7_3_prerequisite_mode': mode,
+              'r7_3_exact_reproducibility_debt_preserved': mode=='PROVISIONAL_640_STRATEGY_QUALITY',
+              'r7_4_ruleset_hu_invariance_passed_first': True,
+              'r7_4_structural_preflight_passed_first': True,
+              'r7_3_frozen_source_head_sha': f['source_head_sha'],
+              'r7_4_ruleset_source_head_sha': rf['ruleset_extension_source_head_sha'],
+              'r7_3_evidence_commit_sha': f['evidence_commit_sha'],
+              'accepted_r7_3_behavior_semantic_id': f['behavior_semantic_id'],
+              'r7_4_ruleset_schema': rf['ruleset_schema'],
+              'thread_environment_contract': f['thread_environment_contract'],
+              'thread_environment_overrides_injected_by_r7_4_orchestrator': False,
+              'exact_frozen_r7_4_rules_source_used': True,
+              'pilot_worker_executed_from_rules_worktree_overlay': True,
+              'staged_resume_equivalence_passed_first': True,
+              'staged_resume_equivalence_evidence': 'validation/R7_4_STAGED_RESUME_EQUIVALENCE.json',
+              'ready_for_tables': False,
+          })
+          out.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Materialize held-out screen summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/summarize_r7_4_heldout_screen.py \
+            --freeze validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json \
+            --ruleset-freeze validation/R7_4_RULESET_EXTENSION_FREEZE.json \
+            --ruleset-acceptance validation/R7_4_RULESET_ACCEPTANCE.json \
+            --preflight validation/R7_4_DOMAIN_PREFLIGHT.json \
+            --hu validation/R7_4_HELDOUT_HU_640.json \
+            --three-handed validation/R7_4_HELDOUT_3H_320.json \
+            --out validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
+      - name: Persist repaired 3H320 and screen summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SpinCore R7 Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_4_HELDOUT_3H_320.json validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record staged R7.4 3H320 held-out evidence [r7-evidence-skip]'
+            for attempt in 1 2 3 4 5; do
+              git pull --rebase origin main
+              if git push origin HEAD:main; then break; fi
+              test "$attempt" -lt 5
+              sleep $((attempt * 2))
+            done
+          fi
+      - name: Enforce precommitted 3H320 screen
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/R7_4_HELDOUT_3H_320.json'))
+          s=json.load(open('validation/R7_4_HELDOUT_SCREEN_SUMMARY.json'))
+          assert d['staged_resume_used'] is True
+          assert d['staged_resume_equivalence_passed_first'] is True
+          assert d['acceptance_gate_changed'] is False
+          assert d['r7_4_domain_stability_pass'] is True, d
+          assert s['r7_4_heldout_screen_pass'] is True, s
+          assert s['three_handed_640_confirmation_required'] is True
+          assert s['ready_for_tables'] is False
+          print('R7.4 HU640 + staged 3H320 PASS; 3H640 confirmation authorized.')
+          PY
