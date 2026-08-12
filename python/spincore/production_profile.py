@@ -8,9 +8,43 @@ from typing import Iterable
 from urllib.parse import urlparse
 
 
-PROFILE_SCHEMA = "SPINCORE_R8_PRODUCTION_PROFILE_V2"
+PROFILE_SCHEMA = "SPINCORE_R8_PRODUCTION_PROFILE_V3"
 SUPPORTED_DOMAINS = ("TRUE_HEADS_UP", "THREE_HANDED")
 _ALLOWED_WEB_HOSTS = ("ggpoker.com",)
+_EVIDENCE_SCOPES = ("GLOBAL_GAME", "SELECTED_PROFILE_STATE")
+_ALLOWED_PROVEN_FIELDS = frozenset(
+    {
+        "table_size",
+        "currency",
+        "buy_in_minor_units",
+        "multiplier",
+        "starting_chips_per_player",
+        "blind_levels",
+        "payout_share_by_place",
+        "tournament_fee_fraction",
+    }
+)
+_STATE_BOUND_FIELDS = frozenset(
+    {
+        "table_size",
+        "buy_in_minor_units",
+        "multiplier",
+        "starting_chips_per_player",
+        "blind_levels",
+        "payout_share_by_place",
+    }
+)
+_REQUIRED_PROFILE_EVIDENCE_FIELDS = frozenset(
+    {
+        "table_size",
+        "buy_in_minor_units",
+        "multiplier",
+        "starting_chips_per_player",
+        "blind_levels",
+        "payout_share_by_place",
+        "tournament_fee_fraction",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -33,9 +67,23 @@ class BlindLevel:
 
 @dataclass(frozen=True)
 class ProductionEvidence:
+    """First-party evidence with an explicit semantic scope.
+
+    A dynamic official URL is provenance, not proof that the values rendered by
+    a crawler belong to a particular buy-in/multiplier.  V3 therefore requires
+    every evidence item to declare what fields it proves and, for any
+    profile-state-dependent fact, the exact selected 3-max state it was
+    captured from.
+    """
+
     source_kind: str
     locator: str
     observed_at_utc: str
+    scope: str
+    proven_fields: tuple[str, ...]
+    bound_table_size: int | None = None
+    bound_buy_in_minor_units: int | None = None
+    bound_multiplier: int | None = None
     note: str = ""
 
     def __post_init__(self) -> None:
@@ -52,6 +100,35 @@ class ProductionEvidence:
             if parsed.scheme != "https" or not any(host == root or host.endswith("." + root) for root in _ALLOWED_WEB_HOSTS):
                 raise ValueError("OFFICIAL_WEB evidence must be an HTTPS GGPoker first-party URL")
 
+        if self.scope not in _EVIDENCE_SCOPES:
+            raise ValueError("production evidence scope must be GLOBAL_GAME or SELECTED_PROFILE_STATE")
+        fields = tuple(str(x) for x in self.proven_fields)
+        if not fields:
+            raise ValueError("production evidence must name at least one proven field")
+        if len(set(fields)) != len(fields):
+            raise ValueError("production evidence proven_fields cannot contain duplicates")
+        unknown = set(fields) - _ALLOWED_PROVEN_FIELDS
+        if unknown:
+            raise ValueError(f"production evidence contains unsupported proven fields: {sorted(unknown)}")
+
+        bindings = (self.bound_table_size, self.bound_buy_in_minor_units, self.bound_multiplier)
+        if self.scope == "GLOBAL_GAME":
+            if any(x is not None for x in bindings):
+                raise ValueError("GLOBAL_GAME evidence cannot carry selected-state bindings")
+            forbidden = set(fields) & _STATE_BOUND_FIELDS
+            if forbidden:
+                raise ValueError(
+                    "GLOBAL_GAME evidence cannot prove selected-state fields: "
+                    + ", ".join(sorted(forbidden))
+                )
+        else:
+            if self.bound_table_size is None or self.bound_table_size <= 0:
+                raise ValueError("SELECTED_PROFILE_STATE evidence requires bound_table_size")
+            if self.bound_buy_in_minor_units is None or self.bound_buy_in_minor_units <= 0:
+                raise ValueError("SELECTED_PROFILE_STATE evidence requires bound_buy_in_minor_units")
+            if self.bound_multiplier is None or self.bound_multiplier <= 0:
+                raise ValueError("SELECTED_PROFILE_STATE evidence requires bound_multiplier")
+
 
 @dataclass(frozen=True)
 class ProductionProfile:
@@ -60,7 +137,8 @@ class ProductionProfile:
     R7 pilot constants must never be promoted into this object merely because
     they allowed a validation run to execute. Construction is intentionally
     fail-closed: a production profile contains no optional economic/structural
-    fields and must cite first-party evidence.
+    fields and must cite first-party evidence that is explicitly bound to the
+    selected state for every state-dependent production constant.
 
     `payout_share_by_place` is normalized to the total tournament prize pool.
     This avoids accidentally feeding raw buy-in multiples into the learning
@@ -123,6 +201,32 @@ class ProductionProfile:
                 raise ValueError(f"{name} is required")
         if not self.evidence:
             raise ValueError("first-party production evidence is mandatory")
+        self._validate_evidence_binding()
+
+    def _validate_evidence_binding(self) -> None:
+        covered: set[str] = set()
+        expected_binding = (self.table_size, self.buy_in_minor_units, self.multiplier)
+        for evidence in self.evidence:
+            fields = set(evidence.proven_fields)
+            if evidence.scope == "SELECTED_PROFILE_STATE":
+                actual_binding = (
+                    evidence.bound_table_size,
+                    evidence.bound_buy_in_minor_units,
+                    evidence.bound_multiplier,
+                )
+                if actual_binding != expected_binding:
+                    raise ValueError(
+                        "selected-state production evidence binding does not match profile "
+                        f"(expected table/buy-in/multiplier={expected_binding}, got {actual_binding})"
+                    )
+            covered.update(fields)
+
+        missing = _REQUIRED_PROFILE_EVIDENCE_FIELDS - covered
+        if missing:
+            raise ValueError(
+                "production evidence does not prove all required profile fields: "
+                + ", ".join(sorted(missing))
+            )
 
     def semantic_payload(self) -> dict:
         """Canonical policy-selection identity; provenance timestamps are separate."""
@@ -147,7 +251,7 @@ class ProductionProfile:
     @property
     def profile_id(self) -> str:
         raw = json.dumps(self.semantic_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
-        return "spinprofile-v2:" + hashlib.sha256(raw).hexdigest()
+        return "spinprofile-v3:" + hashlib.sha256(raw).hexdigest()
 
     def policy_id(self, domain: str) -> str:
         if domain not in SUPPORTED_DOMAINS:
@@ -181,7 +285,20 @@ class ProductionProfile:
             action_abstraction_id=str(data["action_abstraction_id"]),
             utility_model_id=str(data["utility_model_id"]),
             learning_profile_id=str(data["learning_profile_id"]),
-            evidence=tuple(ProductionEvidence(**row) for row in data["evidence"]),
+            evidence=tuple(
+                ProductionEvidence(
+                    source_kind=str(row["source_kind"]),
+                    locator=str(row["locator"]),
+                    observed_at_utc=str(row["observed_at_utc"]),
+                    scope=str(row["scope"]),
+                    proven_fields=tuple(str(x) for x in row["proven_fields"]),
+                    bound_table_size=(None if row.get("bound_table_size") is None else int(row["bound_table_size"])),
+                    bound_buy_in_minor_units=(None if row.get("bound_buy_in_minor_units") is None else int(row["bound_buy_in_minor_units"])),
+                    bound_multiplier=(None if row.get("bound_multiplier") is None else int(row["bound_multiplier"])),
+                    note=str(row.get("note", "")),
+                )
+                for row in data["evidence"]
+            ),
         )
         if str(data.get("profile_id", obj.profile_id)) != obj.profile_id:
             raise ValueError("production profile identity hash mismatch")
