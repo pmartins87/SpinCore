@@ -199,12 +199,25 @@ SPINCORE_R7_4_STAGED_RESUME_EQUIVALENCE_V1
 all_exact = true
 ```
 
+The physical staged-resume regression has now passed exactly:
+
+```text
+validation/R7_4_STAGED_RESUME_EQUIVALENCE.json
+all_exact = true
+adv_mem / pol_mem = exact
+reservoir RNGs / live batch RNG / torch RNG = exact
+primary + side models / policy = exact
+optimizers / counters / behavior diagnostics / stage state = exact
+```
+
+This regression is a mechanism proof, not strategic evidence; it authorizes the staged execution to preserve the precommitted strategic test.
+
 Current staged repair workflow:
 
 ```text
 .github/workflows/r7_4_three_handed_staged_repair.yml
 run = 31637418697
-status = IN PROGRESS
+status = 3H320 ITERATION 1 IN PROGRESS FOR BOTH HELD-OUT SEEDS
 ```
 
 The 3H640 confirmation workflow has already been converted to the same deterministic staged mechanism and will gate on a genuine HU640 + 3H320 screen PASS.
@@ -212,7 +225,7 @@ The 3H640 confirmation workflow has already been converted to the same determini
 ## Remaining finite path to table use
 
 ```text
-R7.4 staged-resume equivalence PASS
+R7.4 staged-resume equivalence PASS ✅
 -> R7.4 3H320 unchanged strategic gates PASS
 -> R7.4 3H640 unchanged strategic gates PASS
 -> R7.4 FINAL PASS
