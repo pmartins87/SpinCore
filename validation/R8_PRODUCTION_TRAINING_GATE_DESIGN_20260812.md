@@ -50,6 +50,8 @@ Before production training, materialize a machine-readable production profile de
 
 R8.0 PASS requires complete, internally consistent, provenance-backed profiles. Missing or uncertain production rules fail closed; they are not filled with assumptions.
 
+The current machine-readable contract is `SPINCORE_R8_PRODUCTION_PROFILE_V3`. It rejects profile-dependent evidence unless the evidence is explicitly scoped to `SELECTED_PROFILE_STATE`, names the fields it proves, and is bound to the exact `table_size × buy_in_minor_units × multiplier`. Global evidence cannot claim state-dependent stack/blind/payout fields. This specifically prevents a dynamically rendered official table whose selected buy-in was not captured from being silently assigned to a production profile.
+
 ### R8.1 — deterministic production workers + central Algorithm-R reservoirs
 
 Implement/validate the production data-generation architecture before scale-up:
@@ -76,13 +78,37 @@ That RNG is consumed not only by Algorithm-R replacement, but also by traversal/
 
 Consequently R8.1 must fail closed against naive root-level parallelism within a single `(profile, domain, algorithm-seed)` stream. Safe choices are, in priority order:
 
-1. parallelize independent streams whose RNG histories are already independent by contract (for example different accepted profile/domain jobs), while preserving serial execution inside each stream;
+1. parallelize independent streams whose RNG histories are already independent by contract, while preserving serial execution inside each stream;
 2. implement a genuinely stream-preserving traversal dispatcher and prove exact equivalence against the persistent serial RNG contract before using it;
 3. if no such speed-up has favorable complexity/throughput trade-off, keep root collection serial and optimize elsewhere.
 
 CPU utilization is not an acceptance criterion. Strategic semantics and throughput per correct sample are the objective.
 
-R8.1 is an infrastructure gate, not a strategic PASS.
+#### R8.1 component hardening completed before R7.4 final
+
+The following infrastructure components have now been hardened and regression-tested, but this **does not mark R8.1 PASS** because the integrated production worker/checkpoint transaction is not yet certified and R7.4 final is still pending:
+
+```text
+SPINCORE_R8_INDEPENDENT_STREAM_SCHEDULER_V2
+SPINCORE_R8_CENTRAL_ALGORITHM_R_V2
+SPINCORE_R8_SCHEDULER_DURABLE_CHECKPOINT_V1
+```
+
+The scheduler leases at most one whole iteration per exact `(profile, domain, algorithm_seed)` stream. It will not advance `next_iteration` without a `DurableIterationReceipt` carrying a non-empty checkpoint locator, byte size, SHA-256 and parent-checkpoint SHA-256 matching the accepted stream lineage. A crash with an active in-memory lease therefore replays the same iteration instead of silently advancing.
+
+The central Algorithm-R reservoir is now also keyed by exact `profile × domain × algorithm_seed × roots_per_iteration`. It rejects cross-seed batches, rejects a `global_root` whose declared iteration disagrees with the fixed root schedule, and rejects Advantage or AveragePolicy samples whose own iteration differs from the root batch. This prevents a reservoir that is correct in insertion order from nevertheless mixing independent training streams.
+
+Scheduler state persistence uses same-directory temporary-file write + file fsync + atomic replace + directory fsync where supported. Loading can require an expected SHA-256 and fails closed on truncated/corrupted JSON. Thus scheduler progress is either the previous durable state or the next durable state; a partial state file is not accepted.
+
+Regression evidence for these component contracts:
+
+```text
+profile V3 regression: 31638697150 = PASS
+Algorithm-R V2 regression: 31639134952 = PASS
+scheduler durable-checkpoint regression: 31639331611 = PASS
+```
+
+R8.1 remains an infrastructure gate, not a strategic PASS. The remaining R8.1 work is to bind the actual production model/RNG checkpoint, its Algorithm-R state and the durable scheduler receipt into one tested orchestration/recovery transaction before any long official run.
 
 ### R8.2 — exact production profile + Ryzen9 calibration
 
@@ -147,9 +173,10 @@ R8 fails or remains blocked if any of the following occurs:
 - R7.4 final PASS is absent;
 - a production rule/economic parameter is guessed from pilot data;
 - profile/domain identities are mixed;
+- algorithm seeds are mixed in one stream/reservoir without a separately precommitted and validated merge algorithm;
 - HU policy is used as 3H policy or vice versa;
 - worker parallelism changes Algorithm-R sampling semantics, traversal RNG semantics, minibatch RNG semantics, or sample weights;
-- a restart/checkpoint loses deterministic identity/provenance;
+- a restart/checkpoint loses deterministic identity/provenance or advances scheduler progress before a durable stream checkpoint exists;
 - the selected R7/R7.4 strategic mechanism is silently changed during throughput calibration;
 - a production policy artifact cannot be tied to immutable model bytes and a complete production-profile identity;
 - any stage claims `READY FOR TABLES` before R12.
