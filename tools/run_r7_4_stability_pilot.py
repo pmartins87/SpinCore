@@ -15,7 +15,6 @@ import run_r7_4_domain_preflight as preflight_gate
 
 
 FREEZE_SCHEMA = "SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1"
-ACCEPT_SCHEMA = "SPINCORE_R7_3_FROZEN_CANDIDATE_640_ACCEPTANCE_V1"
 PREFLIGHT_SCHEMA = "SPINCORE_R7_4_DOMAIN_PREFLIGHT_V1"
 PILOT_SCHEMA = "SPINCORE_R7_4_HELDOUT_DOMAIN_STABILITY_V1"
 WORKER_REL = Path("tools/r7_4_stability_pilot_worker.py")
@@ -32,18 +31,28 @@ def _sha256(path: Path) -> str:
 
 def _validate_prerequisites(freeze: dict, acceptance: dict, ruleset_freeze: dict, ruleset_acceptance: dict, preflight: dict) -> str:
     source_head = preflight_gate._validate_ruleset_prerequisites(freeze, acceptance, ruleset_freeze, ruleset_acceptance)
+    mode = preflight_gate._acceptance_mode(acceptance)
     if preflight.get("schema") != PREFLIGHT_SCHEMA:
         raise ValueError("wrong R7.4 structural-preflight schema")
     if preflight.get("r7_4_structural_preflight_pass") is not True:
         raise ValueError("R7.4 structural preflight must pass before held-out stability pilot")
+    if preflight.get("r7_3_640_strategy_prerequisite_passed_first") is not True:
+        raise ValueError("R7.4 structural preflight lacks 640 strategy prerequisite")
+    if preflight.get("r7_3_prerequisite_mode") != mode:
+        raise ValueError("R7.4 preflight prerequisite mode differs from held-out prerequisite")
+    if mode == "PROVISIONAL_640_STRATEGY_QUALITY":
+        if preflight.get("r7_3_exact_reproducibility_debt_preserved") is not True:
+            raise ValueError("R7.4 preflight lost provisional exact-repro release debt")
+        if preflight.get("r7_3_640_acceptance_passed_first") is not False:
+            raise ValueError("provisional R7.4 preflight incorrectly claims strict R7.3 acceptance")
     if preflight.get("exact_frozen_r7_4_rules_source_used") is not True:
         raise ValueError("R7.4 structural preflight did not use frozen SPINRULESET-4 source")
     if preflight.get("preflight_worker_executed_from_rules_worktree_overlay") is not True:
         raise ValueError("R7.4 structural worker provenance is incomplete")
     if preflight.get("r7_4_rules_source_head_sha") != source_head:
         raise ValueError("R7.4 preflight rules source differs from accepted SPINRULESET-4 source")
-    if preflight.get("r7_3_certified_source_head_sha") != freeze.get("source_head_sha"):
-        raise ValueError("R7.4 preflight lost certified R7.3 base provenance")
+    if preflight.get("r7_3_frozen_source_head_sha") != freeze.get("source_head_sha"):
+        raise ValueError("R7.4 preflight lost frozen R7.3 base provenance")
     if preflight.get("r7_3_durability_evidence_commit_sha") != freeze.get("evidence_commit_sha"):
         raise ValueError("R7.4 preflight durability provenance differs from semantic freeze")
     if preflight.get("r7_4_hu_invariance_passed_first") is not True:
@@ -75,6 +84,7 @@ def main() -> int:
         )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
+    prerequisite_mode = preflight_gate._acceptance_mode(acceptance)
     ruleset_freeze = json.loads(args.ruleset_freeze.read_text(encoding="utf-8"))
     ruleset_acceptance = json.loads(args.ruleset_acceptance.read_text(encoding="utf-8"))
     preflight = json.loads(args.preflight.read_text(encoding="utf-8"))
@@ -120,11 +130,14 @@ def main() -> int:
     report = json.loads(args.out.read_text(encoding="utf-8"))
     if report.get("schema") != PILOT_SCHEMA:
         raise SystemExit("wrong R7.4 held-out pilot schema")
-    report["r7_3_640_acceptance_passed_first"] = True
+    report["r7_3_640_strategy_prerequisite_passed_first"] = True
+    report["r7_3_640_acceptance_passed_first"] = prerequisite_mode == "STRICT_EXACT_CERTIFICATION"
+    report["r7_3_prerequisite_mode"] = prerequisite_mode
+    report["r7_3_exact_reproducibility_debt_preserved"] = prerequisite_mode == "PROVISIONAL_640_STRATEGY_QUALITY"
     report["r7_3_acceptance_origin"] = acceptance_origin
     report["r7_4_ruleset_hu_invariance_passed_first"] = True
     report["r7_4_structural_preflight_passed_first"] = True
-    report["r7_3_certified_source_head_sha"] = freeze["source_head_sha"]
+    report["r7_3_frozen_source_head_sha"] = freeze["source_head_sha"]
     report["r7_4_ruleset_source_head_sha"] = source_head
     report["r7_3_evidence_commit_sha"] = freeze["evidence_commit_sha"]
     report["accepted_r7_3_behavior_semantic_id"] = freeze["behavior_semantic_id"]
