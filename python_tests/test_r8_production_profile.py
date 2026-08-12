@@ -10,6 +10,41 @@ from spincore.production_profile import (
 )
 
 
+def _selected_evidence(*, buy_in_minor_units: int, multiplier: int) -> ProductionEvidence:
+    # Synthetic fixture values exercise binding mechanics only. The locator is
+    # first-party, but no test below promotes these structural values into a
+    # real production profile.
+    return ProductionEvidence(
+        source_kind="OFFICIAL_WEB",
+        locator="https://ggpoker.com/poker-games/spin-gold/",
+        observed_at_utc="2026-08-12T00:00:00Z",
+        scope="SELECTED_PROFILE_STATE",
+        proven_fields=(
+            "table_size",
+            "buy_in_minor_units",
+            "multiplier",
+            "starting_chips_per_player",
+            "blind_levels",
+            "payout_share_by_place",
+        ),
+        bound_table_size=3,
+        bound_buy_in_minor_units=buy_in_minor_units,
+        bound_multiplier=multiplier,
+        note="unit-test selected-state provenance fixture only",
+    )
+
+
+def _global_fee_evidence() -> ProductionEvidence:
+    return ProductionEvidence(
+        source_kind="OFFICIAL_WEB",
+        locator="https://ggpoker.com/poker-games/spin-gold/",
+        observed_at_utc="2026-08-12T00:00:00Z",
+        scope="GLOBAL_GAME",
+        proven_fields=("tournament_fee_fraction", "currency"),
+        note="unit-test global-rule provenance fixture only",
+    )
+
+
 def _profile(
     *,
     buy_in_minor_units: int = 500,
@@ -17,9 +52,6 @@ def _profile(
     starting: int = 500,
     payout=(1.0, 0.0, 0.0),
 ) -> ProductionProfile:
-    # Synthetic structural values are used only to test identity/validation
-    # mechanics. The official URL proves source-host validation, not that these
-    # particular fixture values are a current production profile.
     return ProductionProfile(
         platform="GGPOKER",
         game_family="SPIN_AND_GOLD_3MAX_TEST_FIXTURE",
@@ -36,12 +68,11 @@ def _profile(
         utility_model_id="ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
         learning_profile_id="SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
         evidence=(
-            ProductionEvidence(
-                source_kind="OFFICIAL_WEB",
-                locator="https://ggpoker.com/poker-games/spin-gold/",
-                observed_at_utc="2026-08-12T00:00:00Z",
-                note="unit-test provenance fixture only",
+            _selected_evidence(
+                buy_in_minor_units=buy_in_minor_units,
+                multiplier=multiplier,
             ),
+            _global_fee_evidence(),
         ),
     )
 
@@ -50,7 +81,7 @@ def test_profile_id_is_stable_and_domain_policy_ids_are_separate():
     a = _profile()
     b = ProductionProfile.from_dict(a.to_dict())
     assert a.profile_id == b.profile_id
-    assert a.profile_id.startswith("spinprofile-v2:")
+    assert a.profile_id.startswith("spinprofile-v3:")
     assert a.policy_id("TRUE_HEADS_UP") != a.policy_id("THREE_HANDED")
     assert a.policy_id("TRUE_HEADS_UP") == b.policy_id("TRUE_HEADS_UP")
 
@@ -77,7 +108,7 @@ def test_provenance_timestamp_does_not_change_semantic_identity():
 
 def test_identity_hash_tampering_fails_closed():
     row = _profile().to_dict()
-    row["buy_in_minor_units"] += 1
+    row["starting_chips_per_player"] += 1
     with pytest.raises(ValueError, match="identity hash mismatch"):
         ProductionProfile.from_dict(row)
 
@@ -103,9 +134,121 @@ def test_incomplete_or_non_first_party_profile_cannot_be_constructed():
             evidence=p.evidence,
         )
     with pytest.raises(ValueError, match="first-party"):
-        ProductionEvidence("COMMUNITY_WIKI", "somewhere", "2026-08-12T00:00:00Z")
+        ProductionEvidence(
+            "COMMUNITY_WIKI",
+            "somewhere",
+            "2026-08-12T00:00:00Z",
+            "GLOBAL_GAME",
+            ("tournament_fee_fraction",),
+        )
     with pytest.raises(ValueError, match="GGPoker first-party"):
-        ProductionEvidence("OFFICIAL_WEB", "https://example.com/spin-gold", "2026-08-12T00:00:00Z")
+        ProductionEvidence(
+            "OFFICIAL_WEB",
+            "https://example.com/spin-gold",
+            "2026-08-12T00:00:00Z",
+            "GLOBAL_GAME",
+            ("tournament_fee_fraction",),
+        )
+
+
+def test_dynamic_official_url_without_selected_state_binding_fails_closed():
+    with pytest.raises(ValueError, match="cannot prove selected-state fields"):
+        ProductionEvidence(
+            source_kind="OFFICIAL_WEB",
+            locator="https://ggpoker.com/poker-games/spin-gold/",
+            observed_at_utc="2026-08-12T00:00:00Z",
+            scope="GLOBAL_GAME",
+            proven_fields=("blind_levels", "payout_share_by_place"),
+        )
+
+    with pytest.raises(ValueError, match="requires bound_buy_in_minor_units"):
+        ProductionEvidence(
+            source_kind="OFFICIAL_WEB",
+            locator="https://ggpoker.com/poker-games/spin-gold/",
+            observed_at_utc="2026-08-12T00:00:00Z",
+            scope="SELECTED_PROFILE_STATE",
+            proven_fields=("blind_levels",),
+            bound_table_size=3,
+            bound_multiplier=2,
+        )
+
+
+def test_selected_state_evidence_must_match_profile_buyin_and_multiplier():
+    p = _profile()
+    bad_buyin = _selected_evidence(buy_in_minor_units=1000, multiplier=p.multiplier)
+    with pytest.raises(ValueError, match="binding does not match profile"):
+        ProductionProfile(
+            platform=p.platform,
+            game_family=p.game_family,
+            table_size=p.table_size,
+            currency=p.currency,
+            buy_in_minor_units=p.buy_in_minor_units,
+            multiplier=p.multiplier,
+            starting_chips_per_player=p.starting_chips_per_player,
+            blind_levels=p.blind_levels,
+            payout_share_by_place=p.payout_share_by_place,
+            tournament_fee_fraction=p.tournament_fee_fraction,
+            ruleset_id=p.ruleset_id,
+            action_abstraction_id=p.action_abstraction_id,
+            utility_model_id=p.utility_model_id,
+            learning_profile_id=p.learning_profile_id,
+            evidence=(bad_buyin, _global_fee_evidence()),
+        )
+
+    bad_multiplier = _selected_evidence(
+        buy_in_minor_units=p.buy_in_minor_units,
+        multiplier=3,
+    )
+    with pytest.raises(ValueError, match="binding does not match profile"):
+        ProductionProfile(
+            platform=p.platform,
+            game_family=p.game_family,
+            table_size=p.table_size,
+            currency=p.currency,
+            buy_in_minor_units=p.buy_in_minor_units,
+            multiplier=p.multiplier,
+            starting_chips_per_player=p.starting_chips_per_player,
+            blind_levels=p.blind_levels,
+            payout_share_by_place=p.payout_share_by_place,
+            tournament_fee_fraction=p.tournament_fee_fraction,
+            ruleset_id=p.ruleset_id,
+            action_abstraction_id=p.action_abstraction_id,
+            utility_model_id=p.utility_model_id,
+            learning_profile_id=p.learning_profile_id,
+            evidence=(bad_multiplier, _global_fee_evidence()),
+        )
+
+
+def test_profile_rejects_missing_evidence_coverage_even_with_first_party_url():
+    p = _profile()
+    partial = ProductionEvidence(
+        source_kind="OFFICIAL_WEB",
+        locator="https://ggpoker.com/poker-games/spin-gold/",
+        observed_at_utc="2026-08-12T00:00:00Z",
+        scope="SELECTED_PROFILE_STATE",
+        proven_fields=("table_size", "buy_in_minor_units", "multiplier"),
+        bound_table_size=3,
+        bound_buy_in_minor_units=p.buy_in_minor_units,
+        bound_multiplier=p.multiplier,
+    )
+    with pytest.raises(ValueError, match="does not prove all required profile fields"):
+        ProductionProfile(
+            platform=p.platform,
+            game_family=p.game_family,
+            table_size=p.table_size,
+            currency=p.currency,
+            buy_in_minor_units=p.buy_in_minor_units,
+            multiplier=p.multiplier,
+            starting_chips_per_player=p.starting_chips_per_player,
+            blind_levels=p.blind_levels,
+            payout_share_by_place=p.payout_share_by_place,
+            tournament_fee_fraction=p.tournament_fee_fraction,
+            ruleset_id=p.ruleset_id,
+            action_abstraction_id=p.action_abstraction_id,
+            utility_model_id=p.utility_model_id,
+            learning_profile_id=p.learning_profile_id,
+            evidence=(partial, _global_fee_evidence()),
+        )
 
 
 def test_payout_contract_requires_normalized_prize_pool_shares():
