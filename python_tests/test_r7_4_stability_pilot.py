@@ -33,6 +33,9 @@ orchestrator = _load("run_r7_4_stability_pilot_test", TOOLS / "run_r7_4_stabilit
 screen_mod = _load("summarize_r7_4_heldout_screen_test", TOOLS / "summarize_r7_4_heldout_screen.py")
 finalizer = _load("finalize_r7_4_gate_test", TOOLS / "finalize_r7_4_gate.py")
 
+STRICT_MODE = "STRICT_EXACT_CERTIFICATION"
+PROVISIONAL_MODE = "PROVISIONAL_640_STRATEGY_QUALITY"
+
 
 def _freeze():
     return {
@@ -75,7 +78,7 @@ def _ruleset(f):
     }
 
 
-def _ruleset_accept(f, rf):
+def _ruleset_accept(f, rf, *, mode: str = STRICT_MODE):
     return {
         "schema": "SPINCORE_R7_4_RULESET_ACCEPTANCE_V1",
         "ruleset_schema": "SPINRULESET-4",
@@ -87,17 +90,24 @@ def _ruleset_accept(f, rf):
         "selected_training_components_byte_identical": True,
         "r7_4_rules_source_accepted": True,
         "r7_4_gate_changed": False,
+        "r7_3_prerequisite_mode": mode,
+        "r7_3_exact_reproducibility_debt_preserved": mode == PROVISIONAL_MODE,
+        "ready_for_tables": False,
     }
 
 
-def _preflight(f, rf):
+def _preflight(f, rf, *, mode: str = STRICT_MODE):
     return {
         "schema": orchestrator.PREFLIGHT_SCHEMA,
         "r7_4_structural_preflight_pass": True,
+        "r7_3_640_strategy_prerequisite_passed_first": True,
+        "r7_3_640_acceptance_passed_first": mode == STRICT_MODE,
+        "r7_3_prerequisite_mode": mode,
+        "r7_3_exact_reproducibility_debt_preserved": mode == PROVISIONAL_MODE,
         "exact_frozen_r7_4_rules_source_used": True,
         "preflight_worker_executed_from_rules_worktree_overlay": True,
         "r7_4_rules_source_head_sha": rf["ruleset_extension_source_head_sha"],
-        "r7_3_certified_source_head_sha": f["source_head_sha"],
+        "r7_3_frozen_source_head_sha": f["source_head_sha"],
         "r7_3_durability_evidence_commit_sha": f["evidence_commit_sha"],
         "r7_4_hu_invariance_passed_first": True,
         "ready_for_tables": False,
@@ -178,11 +188,11 @@ def test_r7_4_orchestrator_requires_accepted_ruleset_and_structural_preflight():
     with pytest.raises(ValueError): orchestrator._validate_prerequisites(f, a, rf, bad_ra, p)
 
 
-def _domain_evidence(f, rf, *, roots_per_iteration: int, passed: bool = True):
+def _domain_evidence(f, rf, *, roots_per_iteration: int, passed: bool = True, mode: str = STRICT_MODE):
     return {
         "schema": screen_mod.DOMAIN_SCHEMA,
         "domain": "THREE_HANDED",
-        "r7_3_certified_source_head_sha": f["source_head_sha"],
+        "r7_3_frozen_source_head_sha": f["source_head_sha"],
         "r7_4_ruleset_source_head_sha": rf["ruleset_extension_source_head_sha"],
         "r7_3_evidence_commit_sha": f["evidence_commit_sha"],
         "accepted_r7_3_behavior_semantic_id": f["behavior_semantic_id"],
@@ -190,7 +200,10 @@ def _domain_evidence(f, rf, *, roots_per_iteration: int, passed: bool = True):
         "exact_frozen_r7_4_rules_source_used": True,
         "pilot_worker_executed_from_rules_worktree_overlay": True,
         "thread_environment_overrides_injected_by_r7_4_orchestrator": False,
-        "r7_3_640_acceptance_passed_first": True,
+        "r7_3_640_strategy_prerequisite_passed_first": True,
+        "r7_3_640_acceptance_passed_first": mode == STRICT_MODE,
+        "r7_3_prerequisite_mode": mode,
+        "r7_3_exact_reproducibility_debt_preserved": mode == PROVISIONAL_MODE,
         "r7_4_ruleset_hu_invariance_passed_first": True,
         "r7_4_structural_preflight_passed_first": True,
         "iterations": 5,
@@ -212,11 +225,36 @@ def _domain_evidence(f, rf, *, roots_per_iteration: int, passed: bool = True):
 
 def test_r7_4_domain_validator_requires_ruleset_source_and_exact_scale():
     f = _freeze(); rf = _ruleset(f); row = _domain_evidence(f, rf, roots_per_iteration=128)
-    screen_mod._validate_domain(row, domain="THREE_HANDED", roots_per_iteration=128, freeze=f, ruleset_freeze=rf)
+    screen_mod._validate_domain(
+        row,
+        domain="THREE_HANDED",
+        roots_per_iteration=128,
+        freeze=f,
+        ruleset_freeze=rf,
+        prerequisite_mode=STRICT_MODE,
+    )
     bad = dict(row); bad["roots_per_seed"] = 320
-    with pytest.raises(ValueError): screen_mod._validate_domain(bad, domain="THREE_HANDED", roots_per_iteration=128, freeze=f, ruleset_freeze=rf)
+    with pytest.raises(ValueError):
+        screen_mod._validate_domain(bad, domain="THREE_HANDED", roots_per_iteration=128, freeze=f, ruleset_freeze=rf, prerequisite_mode=STRICT_MODE)
     bad = dict(row); bad["r7_4_ruleset_source_head_sha"] = "e" * 40
-    with pytest.raises(ValueError): screen_mod._validate_domain(bad, domain="THREE_HANDED", roots_per_iteration=128, freeze=f, ruleset_freeze=rf)
+    with pytest.raises(ValueError):
+        screen_mod._validate_domain(bad, domain="THREE_HANDED", roots_per_iteration=128, freeze=f, ruleset_freeze=rf, prerequisite_mode=STRICT_MODE)
+
+
+def test_r7_4_domain_validator_preserves_provisional_release_debt():
+    f = _freeze(); rf = _ruleset(f)
+    row = _domain_evidence(f, rf, roots_per_iteration=64, mode=PROVISIONAL_MODE)
+    screen_mod._validate_domain(
+        row,
+        domain="THREE_HANDED",
+        roots_per_iteration=64,
+        freeze=f,
+        ruleset_freeze=rf,
+        prerequisite_mode=PROVISIONAL_MODE,
+    )
+    bad = dict(row); bad["r7_3_exact_reproducibility_debt_preserved"] = False
+    with pytest.raises(ValueError):
+        screen_mod._validate_domain(bad, domain="THREE_HANDED", roots_per_iteration=64, freeze=f, ruleset_freeze=rf, prerequisite_mode=PROVISIONAL_MODE)
 
 
 def test_r7_4_finalizer_requires_three_handed_640_pass_and_ruleset_provenance(tmp_path, monkeypatch):
@@ -225,13 +263,18 @@ def test_r7_4_finalizer_requires_three_handed_640_pass_and_ruleset_provenance(tm
     fp.write_text(json.dumps(f)+"\n"); rfp.write_text(json.dumps(rf)+"\n")
     screen = {
         "schema": finalizer.SCREEN_SCHEMA,
-        "r7_3_certified_source_head_sha": f["source_head_sha"],
+        "r7_3_frozen_source_head_sha": f["source_head_sha"],
+        "r7_3_prerequisite_mode": STRICT_MODE,
+        "r7_3_exact_reproducibility_debt_preserved": False,
         "r7_4_ruleset_source_head_sha": rf["ruleset_extension_source_head_sha"],
         "durability_evidence_commit_sha": f["evidence_commit_sha"],
         "behavior_semantic_id": f["behavior_semantic_id"],
         "heldout_algorithm_seeds": [111,222],
+        "r7_3_selection_seeds_reused": False,
         "r7_4_heldout_screen_pass": True,
-        "hu": {"pass": True}, "three_handed_screen": {"pass": True}, "ready_for_tables": False,
+        "hu": {"pass": True},
+        "three_handed_screen": {"pass": True},
+        "ready_for_tables": False,
     }
     sp.write_text(json.dumps(screen)+"\n")
     three=_domain_evidence(f,rf,roots_per_iteration=128,passed=True); tp.write_text(json.dumps(three)+"\n")
