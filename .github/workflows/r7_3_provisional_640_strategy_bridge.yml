@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/r7_3_provisional_640_strategy_bridge.yml'
+      - 'tools/run_r7_3_provisional_640_strategy_acceptance.py'
+      - 'validation/R7_3_EXACT_REPRO_DEFERRED_DECISION_20260812.md'
   workflow_dispatch:
 
 permissions:
@@ -46,12 +48,20 @@ jobs:
           python - <<'PY'
           import json
           f=json.load(open('validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json'))
+          ec=f['execution_contract']
+          gates=f['frozen_gates']
           assert f['schema']=='SPINCORE_R7_3_CANDIDATE_SEMANTIC_FREEZE_V1'
           assert f['evidence_r7_3_pass'] is True
           assert f['ensemble_size']==4
-          assert f['exact_opponent_levels']==2
+          assert ec['exact_opponent_levels']==2
+          assert ec['iterations']==5
           assert f['thread_environment_contract']=='SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE'
-          assert float(f['execution_contract']['advantage_fit_target']) > 0
+          assert gates == {
+              'advantage_weighted_nrmse_max': 0.75,
+              'cross_seed_mean_tv_max': 0.15,
+              'cross_seed_p95_tv_max': 0.35,
+              'policy_weighted_mean_tv_max': 0.12,
+          }
           print('Frozen R7.3 candidate unchanged; exact-repro exception is explicit and release-blocking.')
           PY
 
@@ -141,6 +151,7 @@ jobs:
           assert d.get('strategic_acceptance_gate_changed') is False
           assert d.get('certification_sequence_exception') is True
           assert d.get('exact_reproducibility_must_close_before_ready_for_tables') is True
+          assert d.get('r7_3_fully_certified') is False
           assert d.get('ready_for_tables') is False
           print('R7.3 provisional 640 STRATEGY gate PASS. Exact reproducibility remains separate release debt.')
           PY
