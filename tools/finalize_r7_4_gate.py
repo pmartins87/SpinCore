@@ -38,7 +38,7 @@ def main() -> int:
         raise SystemExit("invalid R7.4 ruleset freeze")
     if screen.get("schema") != SCREEN_SCHEMA:
         raise SystemExit("wrong R7.4 held-out screen schema")
-    if screen.get("r7_3_certified_source_head_sha") != freeze.get("source_head_sha"):
+    if screen.get("r7_3_frozen_source_head_sha") != freeze.get("source_head_sha"):
         raise SystemExit("R7.4 screen R7.3 base source differs from frozen winner")
     if screen.get("r7_4_ruleset_source_head_sha") != ruleset_freeze.get("ruleset_extension_source_head_sha"):
         raise SystemExit("R7.4 screen rules source differs from frozen SPINRULESET-4 source")
@@ -46,6 +46,12 @@ def main() -> int:
         raise SystemExit("R7.4 screen evidence provenance differs from frozen winner")
     if screen.get("r7_4_heldout_screen_pass") is not True:
         raise SystemExit("R7.4 held-out screen must pass before 3H confirmation can finalize the gate")
+    prerequisite_mode = str(screen.get("r7_3_prerequisite_mode", ""))
+    if prerequisite_mode not in ("STRICT_EXACT_CERTIFICATION", "PROVISIONAL_640_STRATEGY_QUALITY"):
+        raise SystemExit("R7.4 screen has unknown R7.3 prerequisite mode")
+    exact_debt = prerequisite_mode == "PROVISIONAL_640_STRATEGY_QUALITY"
+    if exact_debt and screen.get("r7_3_exact_reproducibility_debt_preserved") is not True:
+        raise SystemExit("R7.4 screen lost deferred exact-reproducibility debt")
     try:
         screen_mod._validate_domain(
             three,
@@ -53,6 +59,7 @@ def main() -> int:
             roots_per_iteration=128,
             freeze=freeze,
             ruleset_freeze=ruleset_freeze,
+            prerequisite_mode=prerequisite_mode,
         )
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
@@ -66,7 +73,10 @@ def main() -> int:
     payload = {
         "schema": SCHEMA,
         "behavior_semantic_id": freeze["behavior_semantic_id"],
-        "r7_3_certified_source_head_sha": freeze["source_head_sha"],
+        "r7_3_frozen_source_head_sha": freeze["source_head_sha"],
+        "r7_3_prerequisite_mode": prerequisite_mode,
+        "r7_3_exact_reproducibility_debt_preserved": exact_debt,
+        "r7_3_exact_reproducibility_must_close_before_ready_for_tables": exact_debt,
         "r7_4_ruleset_schema": "SPINRULESET-4",
         "r7_4_ruleset_source_head_sha": ruleset_freeze["ruleset_extension_source_head_sha"],
         "durability_evidence_commit_sha": freeze["evidence_commit_sha"],
@@ -89,6 +99,7 @@ def main() -> int:
         },
         "r7_4_pass": passed,
         "r7_4_ready_to_advance_to_r8": passed,
+        "r7_3_fully_certified": not exact_debt,
         "acceptance_gate_changed": False,
         "ready_for_tables": False,
     }
