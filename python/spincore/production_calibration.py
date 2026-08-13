@@ -4,8 +4,54 @@ from dataclasses import dataclass
 import math
 from typing import Mapping, Sequence
 
+from .production_transaction_checkpoint import LoadedProductionTransaction
+
 
 SCHEMA = "SPINCORE_R8_PRODUCTION_CALIBRATION_V1"
+
+
+def transaction_stream_key(transaction: LoadedProductionTransaction) -> str:
+    """Canonical independent-stream key for calibration comparisons."""
+    identity = transaction.identity
+    return f"{identity.profile_id}|{identity.domain}|{identity.algorithm_seed}"
+
+
+def transaction_semantic_digest(transaction: LoadedProductionTransaction) -> str:
+    """Return the already-validated integrated production generation identity.
+
+    `load_current_production_transaction` / the transaction loader verifies the
+    component hashes and semantic agreement among stream/model/RNG, scheduler
+    and central Algorithm-R state before constructing this object.  Calibration
+    therefore compares the integrated durable generation, not a caller-defined
+    checksum from a log or performance harness.
+    """
+    manifest = dict(transaction.manifest)
+    if manifest.get("semantic_consistency_validated") is not True:
+        raise ValueError("calibration transaction lacks semantic-consistency validation")
+    if manifest.get("ready_for_tables", False) is not False:
+        raise ValueError("calibration transaction cannot authorize table use")
+    if str(manifest.get("generation_id")) != str(transaction.generation_id):
+        raise ValueError("calibration transaction generation identity mismatch")
+    generation_id = str(transaction.generation_id)
+    if not generation_id.startswith("spingen-v1-") or len(generation_id) != len("spingen-v1-") + 64:
+        raise ValueError("calibration transaction generation id is malformed")
+    return generation_id
+
+
+def transaction_digest_map(
+    transactions: Sequence[LoadedProductionTransaction],
+) -> dict[str, str]:
+    """Build a unique stream->integrated-generation map, fail closed."""
+    if not transactions:
+        raise ValueError("calibration transaction set cannot be empty")
+    out: dict[str, str] = {}
+    for transaction in transactions:
+        key = transaction_stream_key(transaction)
+        digest = transaction_semantic_digest(transaction)
+        if key in out:
+            raise ValueError(f"duplicate calibration production stream: {key}")
+        out[key] = digest
+    return out
 
 
 @dataclass(frozen=True)
