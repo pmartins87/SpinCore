@@ -14,9 +14,13 @@ These two layers must never be conflated.
 ```text
 python/spincore/strategic_sentinel.py
 schema = SPINCORE_STRATEGIC_ACTION_SENTINELS_V1
+
+python/spincore/sentinel_state_catalog.py
 ```
 
-Each observation binds:
+The state catalog can deterministically locate Hold'em hand classes such as `AA`, `72o` and `AKs` by scanning an explicit deck-seed interval against the real solver observation. It can also bind an exact actor and an exact abstract-action prefix. Therefore future sentinel identities can be reproduced from exact `(production episode, action_prefix, deck_seed)` inputs rather than from manually fabricated neural observations.
+
+Each policy observation binds:
 
 ```text
 sentinel_id
@@ -75,11 +79,24 @@ Before READY FOR TABLES, the final sentinel set must include both domains and mu
 
 The final list and numerical plausibility bounds must be committed **before inspecting the audited production policy's outputs on those sentinel states**. That precommit is required to avoid tuning the audit around the answer.
 
+## Infrastructure acceptance
+
+The framework and deterministic state locator have passed the complete main regression path:
+
+```text
+strategic sentinel framework regression = 31661499555 PASS
+deterministic state-catalog regression = 31661639444 PASS
+C++ build / CTest = PASS
+Python syntax / regression = PASS
+```
+
+This is **infrastructure acceptance only**. It does not populate or pass the eventual production strategic sentinel gate.
+
 ## Current status
 
 ```text
-sentinel framework implementation = IMPLEMENTED
-framework regression = PENDING at document creation
+sentinel framework implementation = PASS / INFRASTRUCTURE
+sentinel deterministic state locator = PASS / INFRASTRUCTURE
 production sentinel state set = NOT YET POPULATED
 production integrity baselines = NOT YET FROZEN
 production plausibility bounds = NOT YET FROZEN
@@ -87,4 +104,4 @@ strategic sentinel gate = NOT PASS
 READY FOR TABLES = NO
 ```
 
-Population is intentionally deferred until exact R8.0 profile evidence and frozen R8.5 production policy identities exist. The framework itself can be regression-tested now without inventing production strategy thresholds.
+Population is intentionally deferred until exact R8.0 profile evidence and frozen R8.5 production policy identities exist. The framework itself is already accepted without inventing production strategy thresholds.
