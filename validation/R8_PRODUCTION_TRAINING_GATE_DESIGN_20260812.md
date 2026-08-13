@@ -2,9 +2,9 @@
 
 `READY FOR TABLES = NO`.
 
-This document freezes the **shape and sequencing** of R8 before any R8 production result is observed. It does not authorize R8 execution before `validation/R7_4_FINAL_GATE.json` reports `r7_4_pass = true` and `r7_4_ready_to_advance_to_r8 = true`.
+This document freezes the **shape and sequencing** of R8 before any official production result is observed. It does not authorize official R8 training before `validation/R7_4_FINAL_GATE.json` reports `r7_4_pass = true` and `r7_4_ready_to_advance_to_r8 = true`.
 
-The deferred R7.3 exact historical reproducibility issue remains a release debt. R8 may be engineered under the explicitly provisional strategy-quality path, but that debt cannot be silently converted to PASS and must still be closed or formally dispositioned before final table homologation.
+The deferred R7.3 exact historical reproducibility issue remains release debt. R8 engineering may proceed under the explicitly provisional strategy-quality path, but that debt is not PASS and must close or be formally dispositioned before final table homologation.
 
 ## R8 identity
 
@@ -19,108 +19,131 @@ Economic/Structure Profile
 × Learning Profile
 ```
 
-No policy may be reused across a different tuple by fallback or convenience.
-
-The strategy domains remain separate:
+No policy may be reused across a different tuple by fallback or convenience. Strategy domains remain separate:
 
 ```text
 TRUE_HEADS_UP
 THREE_HANDED
 ```
 
-R8 does not merge HU and 3H into one production policy artifact merely because they share the same encoder/network implementation.
+HU and 3H therefore remain independent production artifacts even when they share encoder/network implementation.
 
 ## Frozen R8 sequence
 
 ### R8.0 — production profile / identity / rules
 
-Before production training, materialize a machine-readable production profile describing the real target game configuration. At minimum it must identify:
+Before official production training, materialize a machine-readable production profile describing the real target game configuration. At minimum it must bind:
 
-- platform/game family and ruleset version/source;
-- buy-in/currency and multiplier/economic profile identity;
-- starting chip structure;
-- blind/ante schedule and any level-dependent structure needed by the solver input;
-- normalized payout shares / prize semantics needed by the exact ICM utility;
-- TRUE_HEADS_UP and THREE_HANDED applicability;
+- platform/game family and ruleset source/version;
+- table size, buy-in/currency and multiplier;
+- starting chips;
+- complete blind/ante structure needed by the solver input;
+- normalized payout shares used by exact ICM utility;
 - action abstraction identity;
 - utility model identity;
-- source/provenance timestamp and evidence.
+- learning profile identity;
+- immutable source/provenance evidence.
 
-**No GGPoker economic constant is to be invented from R7.4 pilot values.** The R7.4 `(1500 chips, 10/20, payout 0.5/0.3/0.2)` pilot configuration is validation evidence only unless independently proven to match a production profile.
+**No GGPoker economic constant may be invented from R7.4 pilot values.** The R7.4 pilot configuration is validation evidence only unless independently proven to equal a production state.
 
-R8.0 PASS requires complete, internally consistent, provenance-backed profiles. Missing or uncertain production rules fail closed; they are not filled with assumptions.
+The machine-readable contract is `SPINCORE_R8_PRODUCTION_PROFILE_V3`. State-dependent evidence must be scoped to `SELECTED_PROFILE_STATE` and bound to the exact `table_size × buy_in_minor_units × multiplier`. Global evidence cannot prove state-dependent stack/blind/payout fields.
 
-The current machine-readable contract is `SPINCORE_R8_PRODUCTION_PROFILE_V3`. It rejects profile-dependent evidence unless the evidence is explicitly scoped to `SELECTED_PROFILE_STATE`, names the fields it proves, and is bound to the exact `table_size × buy_in_minor_units × multiplier`. Global evidence cannot claim state-dependent stack/blind/payout fields. This specifically prevents a dynamically rendered official table whose selected buy-in was not captured from being silently assigned to a production profile.
+The acquisition/validation pipeline is already accepted as infrastructure:
 
-### R8.1 — deterministic production workers + central Algorithm-R reservoirs
+```text
+SPINCORE_R8_SELECTED_STATE_EVIDENCE_PACKET_V1
+ProductionProfile V3 builder
+validation/R8_0_EVIDENCE_ACQUISITION_PIPELINE_ACCEPTANCE_20260812.md
+regression 31651412158 = PASS
+```
 
-Implement/validate the production data-generation architecture before scale-up:
+R8.0 itself is **not PASS** until the exact selected-state GGPoker data are captured from bound first-party evidence. The current public web representation proves important global facts but does not reliably bind every dynamically rendered stack/blind/payout row to the selected buy-in/multiplier. Missing data remain fail-closed.
 
-- deterministic profile/domain assignment;
-- central Algorithm-R reservoir semantics for Advantage and AveragePolicy samples;
-- no duplicate weighting caused by worker count or completion order;
-- deterministic checkpoint metadata and provenance;
-- worker failure/restart without silent profile mixing;
-- separate storage/identity for HU and 3H policies and for distinct economic profiles;
-- parallel execution only where it is proven semantically neutral to the frozen learning/RNG contract.
+### R8.1 — deterministic production streams + durable transaction
 
-#### Persistent-RNG constraint discovered before production
-
-The selected R7.3/R7.4 mechanism explicitly freezes:
+The selected R7.3/R7.4 mechanism freezes:
 
 ```text
 primary RNG = one persistent live bundle.batch_rng in execution order
 ```
 
-That RNG is consumed not only by Algorithm-R replacement, but also by traversal/action sampling and training minibatch sampling. Therefore a naive design that assigns independent per-root RNGs to parallel workers would **change the selected algorithm**, even if a central reservoir later merged the samples in root order.
+That RNG is consumed by traversal/action sampling, Algorithm-R replacement and training minibatch sampling. Therefore naive root-level parallelism within one `(profile, domain, algorithm_seed)` stream would change the selected algorithm and is forbidden unless a separately designed dispatcher later proves exact stream preservation.
 
-`CentralAlgorithmRReservoirs` solves one necessary problem — worker completion order cannot change central Algorithm-R insertion/replacement order — but it does **not** by itself prove that traversal RNG consumption is equivalent to the frozen serial stream.
+Accepted R8.1 execution model:
 
-Consequently R8.1 must fail closed against naive root-level parallelism within a single `(profile, domain, algorithm-seed)` stream. Safe choices are, in priority order:
+1. parallelize only genuinely independent `(profile, domain, algorithm_seed)` streams;
+2. execute each individual stream serially in its persistent RNG order;
+3. central Algorithm-R insertion remains bound to exact root order and stream identity;
+4. scheduler progress advances only after a durable stream checkpoint receipt exists;
+5. a production generation atomically binds stream/model/RNG checkpoint, scheduler state and Algorithm-R state.
 
-1. parallelize independent streams whose RNG histories are already independent by contract, while preserving serial execution inside each stream;
-2. implement a genuinely stream-preserving traversal dispatcher and prove exact equivalence against the persistent serial RNG contract before using it;
-3. if no such speed-up has favorable complexity/throughput trade-off, keep root collection serial and optimize elsewhere.
-
-CPU utilization is not an acceptance criterion. Strategic semantics and throughput per correct sample are the objective.
-
-#### R8.1 component hardening completed before R7.4 final
-
-The following infrastructure components have now been hardened and regression-tested, but this **does not mark R8.1 PASS** because the integrated production worker/checkpoint transaction is not yet certified and R7.4 final is still pending:
+Accepted infrastructure schemas:
 
 ```text
 SPINCORE_R8_INDEPENDENT_STREAM_SCHEDULER_V2
 SPINCORE_R8_CENTRAL_ALGORITHM_R_V2
 SPINCORE_R8_SCHEDULER_DURABLE_CHECKPOINT_V1
+SPINCORE_R8_PRODUCTION_TRANSACTION_V1
+SPINCORE_R8_PRODUCTION_TRANSACTION_POINTER_V1
 ```
 
-The scheduler leases at most one whole iteration per exact `(profile, domain, algorithm_seed)` stream. It will not advance `next_iteration` without a `DurableIterationReceipt` carrying a non-empty checkpoint locator, byte size, SHA-256 and parent-checkpoint SHA-256 matching the accepted stream lineage. A crash with an active in-memory lease therefore replays the same iteration instead of silently advancing.
+The central Algorithm-R reservoir is keyed by exact `profile × domain × algorithm_seed × roots_per_iteration`; it rejects cross-seed batches, root/iteration disagreement, sample/iteration disagreement and root gaps. Scheduler leases at most one whole iteration per exact stream and requires checkpoint locator, size, SHA-256 and parent SHA-256 before advancing.
 
-The central Algorithm-R reservoir is now also keyed by exact `profile × domain × algorithm_seed × roots_per_iteration`. It rejects cross-seed batches, rejects a `global_root` whose declared iteration disagrees with the fixed root schedule, and rejects Advantage or AveragePolicy samples whose own iteration differs from the root batch. This prevents a reservoir that is correct in insertion order from nevertheless mixing independent training streams.
+The integrated production transaction uses immutable generations plus an atomic `CURRENT` pointer. Publication validates that stream checkpoint, scheduler and Algorithm-R all describe the same profile/domain/seed/iteration/root position and verifies their bytes/hashes. A crash therefore leaves either the previous complete generation or the next complete generation authoritative; a partial generation is not accepted.
 
-Scheduler state persistence uses same-directory temporary-file write + file fsync + atomic replace + directory fsync where supported. Loading can require an expected SHA-256 and fails closed on truncated/corrupted JSON. Thus scheduler progress is either the previous durable state or the next durable state; a partial state file is not accepted.
-
-Regression evidence for these component contracts:
+Regression evidence:
 
 ```text
-profile V3 regression: 31638697150 = PASS
-Algorithm-R V2 regression: 31639134952 = PASS
-scheduler durable-checkpoint regression: 31639331611 = PASS
+profile V3 regression                 31638697150 = PASS
+Algorithm-R V2 regression             31639134952 = PASS
+scheduler durable-checkpoint          31639331611 = PASS
+integrated production transaction     31650375049 = PASS
 ```
 
-R8.1 remains an infrastructure gate, not a strategic PASS. The remaining R8.1 work is to bind the actual production model/RNG checkpoint, its Algorithm-R state and the durable scheduler receipt into one tested orchestration/recovery transaction before any long official run.
+Acceptance record:
 
-### R8.2 — exact production profile + Ryzen9 calibration
+```text
+validation/R8_1_INFRASTRUCTURE_ACCEPTANCE_20260812.md
+```
 
-For each accepted production profile/domain pair, calibrate throughput and resource use on the intended Ryzen9 execution path before committing a long official run.
+Accordingly **R8.1 = PASS — INFRASTRUCTURE ONLY**. This does not authorize official production training while R7.4 final and R8.0 remain unresolved prerequisites.
 
-Calibration chooses operational batch/worker/chunk sizes for throughput and memory safety only. It may not change the frozen strategic mechanism or relax strategic gates. Calibration evidence must record wall-clock throughput, sample throughput, memory usage, checkpoint cost, worker count, and any CPU/thread configuration that materially changes execution.
+CPU utilization is not an R8.1 acceptance criterion. Correct semantic throughput is the objective.
 
-No long production run starts until the exact R8.0 profile identity and R8.1 reservoir/worker semantics are proven.
+### R8.2 — exact-profile Ryzen9 calibration
+
+The calibration rule is frozen before physical calibration in:
+
+```text
+validation/R8_2_CALIBRATION_GATE_DESIGN_20260812.md
+python/spincore/production_calibration.py
+SPINCORE_R8_PRODUCTION_CALIBRATION_V1
+```
+
+Official R8.2 calibration is forbidden until:
+
+1. finite R7.4 final PASS authorizes R8;
+2. exact R8.0 production profile is materialized from bound first-party evidence;
+3. R8.1 remains accepted;
+4. profile/domain/algorithm-seed/workload identities are frozen for the benchmark.
+
+Calibration is only across genuinely independent streams. For the exact frozen set of streams, a serial reference first produces an authoritative integrated production generation for each stream. Candidate concurrency levels execute the identical fixed workload.
+
+A trial is eligible only if it completes without error/OOM and its complete stream-to-state mapping is **exactly equal** to the serial reference. The authoritative per-stream state identity is the validated R8.1 integrated `generation_id`, which binds production identity and hashes of stream/model/RNG, scheduler and Algorithm-R components. Caller-defined log checksums cannot substitute for it.
+
+Among eligible trials, select the greatest measured semantic throughput (`completed_work_units / elapsed_seconds`). Exact throughput ties choose the lower concurrency. CPU utilization, peak memory and checkpoint cost are telemetry; there is no arbitrary CPU percentage or minimum speedup threshold.
+
+Regression evidence for the precommitted selector is recorded in:
+
+```text
+validation/R8_2_CALIBRATION_INFRASTRUCTURE_ACCEPTANCE_20260812.md
+```
+
+The selector/precommit being accepted is **not R8.2 PASS**. R8.2 becomes PASS only after the actual Ryzen calibration runs under all prerequisites and persists a valid selected concurrency.
 
 ### R8.3 — official TRUE_HEADS_UP production training
 
-Train the official HU policy for each accepted production profile using the selected R7 mechanism carried through R7.4:
+Train the official HU policy for every accepted production profile using the R7 mechanism carried through R7.4:
 
 ```text
 behavior semantic: SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1
@@ -129,37 +152,30 @@ epsilon scale: 1.75
 epsilon cap: 0.50
 partial-exact opponent levels: 2
 primary RNG: one persistent live batch RNG in execution order
-utility: exact explicit-payout ICM delta using normalized payout shares for the accepted production profile
+utility: exact explicit-payout ICM delta for the accepted profile
 action abstraction: frozen profile identity
 ```
 
-Production training must cover the accepted production stack/blind/profile support rather than only the finite R7.4 pilot scenarios.
-
-R8.3 does not authorize table use; it produces a candidate official HU artifact plus training/checkpoint evidence for R9 audit.
+Production training must cover the accepted production stack/blind/profile support rather than only the finite R7.4 pilot scenarios. R8.3 produces a candidate official HU artifact and evidence for R9; it never authorizes table use.
 
 ### R8.4 — official THREE_HANDED production training
 
-Train the official 3H policy under the same production identity discipline and the accepted 3H scenario/profile support.
+Train the official 3H policy under the same identity discipline and accepted 3H production support. The 3H artifact is independent of HU; HU success cannot substitute for absent or failed 3H training.
 
-The 3H artifact is independent of the HU artifact. A successful HU production run cannot substitute for an absent or failed 3H run.
-
-R8.4 does not authorize table use; it produces a candidate official 3H artifact plus evidence for R9 audit.
+R8.4 produces a candidate official 3H artifact and evidence for R9; it never authorizes table use.
 
 ### R8.5 — freeze official production policies
 
-Freeze every official production policy artifact with immutable provenance sufficient for R9/R10 to verify exactly what is being audited and later loaded by OpenHoldem.
+Freeze every official production policy artifact with immutable provenance sufficient for R9/R10 to verify exactly what is being audited and later loaded by OpenHoldem. At minimum bind:
 
-At minimum the freeze must bind:
-
-- production profile identity;
-- domain (`TRUE_HEADS_UP` or `THREE_HANDED`);
+- production profile and strategy domain;
 - ruleset/action-abstraction/utility/learning identities;
 - source commit/tree identities;
 - network architecture/configuration;
 - exact model bytes/hash;
-- relevant optimizer/checkpoint lineage;
+- optimizer/checkpoint lineage;
 - training counters/sample counts;
-- production scenario/profile coverage evidence;
+- production coverage evidence;
 - R7.4 prerequisite provenance;
 - explicit preservation of any still-open R7.3 exact-reproducibility debt;
 - `ready_for_tables = false`.
@@ -172,21 +188,22 @@ R8 fails or remains blocked if any of the following occurs:
 
 - R7.4 final PASS is absent;
 - a production rule/economic parameter is guessed from pilot data;
-- profile/domain identities are mixed;
-- algorithm seeds are mixed in one stream/reservoir without a separately precommitted and validated merge algorithm;
+- profile/domain/algorithm-seed identities are mixed;
 - HU policy is used as 3H policy or vice versa;
-- worker parallelism changes Algorithm-R sampling semantics, traversal RNG semantics, minibatch RNG semantics, or sample weights;
-- a restart/checkpoint loses deterministic identity/provenance or advances scheduler progress before a durable stream checkpoint exists;
-- the selected R7/R7.4 strategic mechanism is silently changed during throughput calibration;
-- a production policy artifact cannot be tied to immutable model bytes and a complete production-profile identity;
-- any stage claims `READY FOR TABLES` before R12.
+- worker parallelism changes Algorithm-R, traversal RNG, minibatch RNG or sample weights;
+- a restart advances scheduler progress without a durable matching stream checkpoint;
+- integrated generation components are from different logical states;
+- throughput calibration accepts a state different from serial reference;
+- the selected R7/R7.4 strategic mechanism is silently changed during calibration;
+- a production artifact cannot be tied to immutable model bytes and full production identity;
+- any R8 stage claims `READY FOR TABLES`.
 
 ## Finite path after R8
 
 ```text
-R8.0 profile/rules
--> R8.1 deterministic worker + central reservoir semantics
--> R8.2 exact-profile Ryzen9 calibration
+R8.0 exact profile/rules
+-> R8.1 deterministic streams + durable transaction       [INFRA PASS]
+-> R8.2 exact-profile Ryzen9 calibration                  [PRECOMMIT READY; NOT RUN]
 -> R8.3 official HU training
 -> R8.4 official 3H training
 -> R8.5 freeze official policies
