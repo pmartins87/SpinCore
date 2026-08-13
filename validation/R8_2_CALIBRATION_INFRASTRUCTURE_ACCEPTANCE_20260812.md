@@ -14,12 +14,14 @@ READY FOR TABLES: **NO**
 - selector: `python/spincore/production_calibration.py`
 - schema: `SPINCORE_R8_PRODUCTION_CALIBRATION_V1`
 - regression: `python_tests/test_r8_production_calibration.py`
-- authoritative regression run: `31657522354`
+- authoritative regression run: `31657726682`
 - regression result: **PASS**
 
 ## Proven semantics
 
 The selector fails closed unless a candidate concurrency produces exactly the same complete stream-to-semantic-digest mapping as the serial reference and completes without an error. A faster trial with any changed, missing or extra stream state is ineligible.
+
+The authoritative digest is not caller-defined. It is the validated `generation_id` of `SPINCORE_R8_PRODUCTION_TRANSACTION_V1`, which binds the production stream identity and hashes of the stream/model/RNG checkpoint, scheduler checkpoint and central Algorithm-R checkpoint. Calibration rejects transactions lacking semantic-consistency validation, mismatched generation identity, malformed generation identity or duplicate stream identity.
 
 Among eligible trials, the highest semantic throughput wins. Exact throughput ties select the lower concurrency. CPU utilization and memory are telemetry only; no arbitrary CPU target or minimum speedup can override semantic equivalence.
 
