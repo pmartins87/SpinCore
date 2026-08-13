@@ -85,12 +85,13 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Run THREE_HANDED 640 iteration 1
         shell: bash
         run: |
@@ -138,12 +139,13 @@ jobs:
           path: input
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Run THREE_HANDED 640 iteration 2
         shell: bash
         run: |
@@ -191,12 +193,13 @@ jobs:
           path: input
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Run THREE_HANDED 640 iteration 3
         shell: bash
         run: |
@@ -244,12 +247,13 @@ jobs:
           path: input
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Run THREE_HANDED 640 iteration 4
         shell: bash
         run: |
@@ -297,12 +301,13 @@ jobs:
           path: input
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Run THREE_HANDED 640 iteration 5
         shell: bash
         run: |
@@ -350,12 +355,13 @@ jobs:
           path: input
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Fit frozen average policy and finalize confirmation seed
         shell: bash
         run: |
@@ -403,12 +409,13 @@ jobs:
           path: finals
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11.15'
       - name: Install frozen runtime
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -c "import sys,torch; assert sys.version_info[:3]==(3,11,15),sys.version; assert torch.__version__=='2.13.0+cpu',torch.__version__; print('frozen runtime',sys.version.split()[0],torch.__version__)"
       - name: Aggregate unchanged 3H640 frozen gates
         id: physical
         continue-on-error: true
