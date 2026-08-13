@@ -3,11 +3,59 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import signal
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+
+_R7_4_3H_PYTHON = "3.11.15"
+_R7_4_3H_TORCH = "2.13.0+cpu"
+
+
+def _required_runtime_for_label(label: str) -> tuple[str, str] | None:
+    if str(label).startswith("r7.4-3h"):
+        return (_R7_4_3H_PYTHON, _R7_4_3H_TORCH)
+    return None
+
+
+def _validate_runtime_contract(label: str, python_version: str, torch_version: str) -> None:
+    required = _required_runtime_for_label(label)
+    if required is None:
+        return
+    required_python, required_torch = required
+    if python_version != required_python or torch_version != required_torch:
+        raise RuntimeError(
+            "frozen R7.4 3H runtime mismatch: "
+            f"required python={required_python} torch={required_torch}; "
+            f"observed python={python_version} torch={torch_version}"
+        )
+
+
+def _enforce_runtime_contract(label: str) -> None:
+    required = _required_runtime_for_label(label)
+    if required is None:
+        return
+    try:
+        import torch
+    except Exception as exc:  # pragma: no cover - exercised as fail-closed integration behavior
+        raise RuntimeError("frozen R7.4 3H runtime requires importable torch") from exc
+    _validate_runtime_contract(str(label), platform.python_version(), str(torch.__version__))
+    print(
+        json.dumps(
+            {
+                "event": "runtime_contract_pass",
+                "label": str(label),
+                "python": platform.python_version(),
+                "runtime_contract_schema": "SPINCORE_R7_4_3H_RUNTIME_CONTRACT_V1",
+                "torch": str(torch.__version__),
+            },
+            sort_keys=True,
+        ),
+        flush=True,
+    )
 
 
 def _process_snapshot(root_pid: int) -> dict:
@@ -95,6 +143,7 @@ def main() -> int:
     if not (1.0 <= float(args.interval_seconds) <= 3600.0):
         raise SystemExit("interval-seconds must be between 1 and 3600")
 
+    _enforce_runtime_contract(str(args.label))
     print("+ heartbeat child:", " ".join(command), flush=True)
     proc = subprocess.Popen(command, start_new_session=(os.name == "posix"))
     started = time.monotonic()
