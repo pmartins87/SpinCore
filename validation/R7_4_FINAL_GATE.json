@@ -1,0 +1,41 @@
+{
+  "acceptance_gate_changed": false,
+  "behavior_semantic_id": "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
+  "durability_evidence_commit_sha": "05c0976e8311874ea9a55f5c899a088abe3b4f00",
+  "gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "policy_weighted_mean_tv_max": 0.12
+  },
+  "heldout_algorithm_seeds": [
+    1954132610,
+    372483540
+  ],
+  "hu_heldout_640_pass": true,
+  "r7_3_exact_reproducibility_debt_preserved": true,
+  "r7_3_exact_reproducibility_must_close_before_ready_for_tables": true,
+  "r7_3_frozen_source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+  "r7_3_fully_certified": false,
+  "r7_3_prerequisite_mode": "PROVISIONAL_640_STRATEGY_QUALITY",
+  "r7_3_selection_seeds_reused": false,
+  "r7_4_pass": true,
+  "r7_4_ready_to_advance_to_r8": true,
+  "r7_4_ruleset_schema": "SPINRULESET-4",
+  "r7_4_ruleset_source_head_sha": "e43b2cfea31f927393cf2751485d712902d6f02d",
+  "ready_for_tables": false,
+  "schema": "SPINCORE_R7_4_FINAL_GATE_V1",
+  "three_handed_heldout_320_screen_pass": true,
+  "three_handed_heldout_640_confirmation": {
+    "cross_seed": {
+      "max_tv": 0.4369678199291229,
+      "mean_tv": 0.08999575674533844,
+      "p50_tv": 0.07728470116853714,
+      "p95_tv": 0.20019790530204773
+    },
+    "pass": true,
+    "per_seed_fit_pass": true,
+    "roots_per_seed": 640,
+    "scenario_coverage_pass": true
+  }
+}
