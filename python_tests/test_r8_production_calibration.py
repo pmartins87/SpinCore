@@ -1,6 +1,18 @@
+from pathlib import Path
+
 import pytest
 
-from spincore.production_calibration import CalibrationTrial, select_calibration
+from spincore.production_calibration import (
+    CalibrationTrial,
+    select_calibration,
+    transaction_digest_map,
+    transaction_semantic_digest,
+    transaction_stream_key,
+)
+from spincore.production_transaction_checkpoint import (
+    LoadedProductionTransaction,
+    ProductionTransactionIdentity,
+)
 
 
 REF = {"hu-seed-a": "sha256:aaa", "3h-seed-b": "sha256:bbb"}
@@ -14,6 +26,28 @@ def _trial(concurrency, seconds, *, digests=None, error=None, cpu=None):
         stream_state_digests=REF if digests is None else digests,
         mean_cpu_percent=cpu,
         error=error,
+    )
+
+
+def _transaction(*, profile="profile-a", domain="TRUE_HEADS_UP", seed=11, suffix="a"):
+    identity = ProductionTransactionIdentity(
+        profile_id=profile,
+        domain=domain,
+        algorithm_seed=seed,
+        completed_iteration=3,
+        roots_per_iteration=64,
+    )
+    generation_id = "spingen-v1-" + suffix * 64
+    return LoadedProductionTransaction(
+        identity=identity,
+        generation_id=generation_id,
+        generation_dir=Path("unused"),
+        component_paths={},
+        manifest={
+            "generation_id": generation_id,
+            "semantic_consistency_validated": True,
+            "ready_for_tables": False,
+        },
     )
 
 
@@ -86,3 +120,29 @@ def test_invalid_trial_inputs_fail_closed():
         CalibrationTrial(1, 0, 1, REF)
     with pytest.raises(ValueError):
         CalibrationTrial(1, 1, 0, REF)
+
+
+def test_integrated_transaction_generation_is_authoritative_digest():
+    tx = _transaction()
+    assert transaction_stream_key(tx) == "profile-a|TRUE_HEADS_UP|11"
+    assert transaction_semantic_digest(tx) == "spingen-v1-" + "a" * 64
+    assert transaction_digest_map([tx]) == {
+        "profile-a|TRUE_HEADS_UP|11": "spingen-v1-" + "a" * 64
+    }
+
+
+def test_unvalidated_or_malformed_integrated_generation_fails_closed():
+    tx = _transaction()
+    tx.manifest["semantic_consistency_validated"] = False
+    with pytest.raises(ValueError, match="semantic-consistency"):
+        transaction_semantic_digest(tx)
+
+    bad = _transaction(suffix="b")
+    bad.manifest["generation_id"] = "not-the-loaded-generation"
+    with pytest.raises(ValueError, match="identity mismatch"):
+        transaction_semantic_digest(bad)
+
+
+def test_duplicate_integrated_stream_identity_fails_closed():
+    with pytest.raises(ValueError, match="duplicate calibration production stream"):
+        transaction_digest_map([_transaction(suffix="a"), _transaction(suffix="b")])
