@@ -18,16 +18,6 @@ struct AggressionRef {
     return static_cast<int>(street);
 }
 
-[[nodiscard]] bool is_forced_blind_event(const std::vector<ActionEvent>& history, std::size_t index) noexcept {
-    // BettingEngine deterministically records SB and BB as the first two BetTo
-    // events at construction. They are forced posts, not strategic aggression.
-    if (index >= history.size() || index >= 2U) {
-        return false;
-    }
-    const auto& event = history[index];
-    return event.street == Street::Preflop && event.action.type == ExactActionType::BetTo;
-}
-
 [[nodiscard]] std::int32_t prior_max_commitment_on_street(
     const std::vector<ActionEvent>& history,
     std::size_t index,
@@ -45,7 +35,7 @@ struct AggressionRef {
 }
 
 [[nodiscard]] bool is_aggressive_event(const std::vector<ActionEvent>& history, std::size_t index) noexcept {
-    if (index >= history.size() || is_forced_blind_event(history, index)) {
+    if (index >= history.size() || history[index].forced) {
         return false;
     }
     const auto& event = history[index];
