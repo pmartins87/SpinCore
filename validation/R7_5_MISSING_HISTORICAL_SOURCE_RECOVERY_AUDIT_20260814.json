@@ -1,0 +1,48 @@
+{
+  "schema": "SPINCORE_R7_5_MISSING_HISTORICAL_SOURCE_RECOVERY_AUDIT_V1",
+  "date": "2026-08-14",
+  "targets": [
+    "aof_deep_generator_unificado_150k_v2.py",
+    "aof_deep_generator_balanceado.py",
+    "aof_deep_generator_balanceado_v2.py"
+  ],
+  "searches": [
+    {
+      "surface": "all loose readable files under the active /mnt/data project workspace",
+      "method": "recursive filename/content search excluding binary model/build products",
+      "result": "NO_SOURCE_FOUND; names occur only in the newly created heritage debt records"
+    },
+    {
+      "surface": "all ZIP archives physically present in /mnt/data",
+      "method": "enumerate every archive member name and search for exact/related balanceado/unificado_v2 names",
+      "archives_examined": [
+        "PreFlopEquities.zip",
+        "Tentativas anteriores SpinGo.zip",
+        "Tentativas anteriores de SpinGo.zip",
+        "log aof nl200..zip",
+        "oh_primeira entrega ryzen9.zip",
+        "r7-3-provisional-640-strategy-bridge.zip",
+        "r7-4-3h640-i1-1954132610.zip",
+        "r7-4-3h640-i1-372483540.zip",
+        "r7-5-3-corpus-HU-1202035427.zip",
+        "r7-5-3-corpus-HU-2078778133.zip",
+        "r7-5-4-action-structural.zip",
+        "r7_5_4_uncertainty_evidence.zip",
+        "user.zip",
+        "vs1_generator_v2_progress_package.zip"
+      ],
+      "result": "NO_MATCHING_ARCHIVE_MEMBER"
+    },
+    {
+      "surface": "pmartins87/SpinCore GitHub repository",
+      "method": "repository code search for aof_deep_generator_unificado_150k_v2 and aof_deep_generator_balanceado",
+      "result": "NO_MATCH"
+    }
+  ],
+  "conclusion": "The three historical variants are not currently recoverable from the physical project workspace, available archives, or SpinCore repository. They remain explicit source-recovery debt and are not claimed as reviewed.",
+  "release_rule": "Before the final production/release freeze, recover and review a missing variant if unique still-relevant behavior cannot be proven superseded by reviewed sources; otherwise document the supersession proof.",
+  "current_r7_5_3_dependency": false,
+  "strategic_output": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
