@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from spincore.r7_5_eval_artifacts import (
     CANDIDATE_CELL_SCHEMA,
     DENSE_CACHE_SCHEMA,
@@ -31,7 +33,7 @@ def test_spr_buckets_and_objective_omission_groups_are_frozen() -> None:
         StateDiagnostic(2, 5.0, "SPR_4_8", "ST2_M1_FD1_SD0_PB1_MS3"),
     )
     summary = summarize_omission((0.0, 0.1, 0.2), diagnostics)
-    assert summary["overall"]["mean"] == 0.1
+    assert summary["overall"]["mean"] == pytest.approx(0.1)
     assert summary["overall"]["p50"] == 0.1
     assert summary["overall"]["p95"] == 0.2
     assert summary["by_street"]["1"]["count"] == 2
