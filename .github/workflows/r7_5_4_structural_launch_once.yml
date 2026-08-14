@@ -1,0 +1,29 @@
+name: Launch R7.5.4 structural audit once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_4_structural_launch_once.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Dispatch frozen structural audit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -f validation/R7_5_4_ACTION_STRUCTURAL_AUDIT.json
+          gh workflow run r7_5_4_action_structural_audit.yml --ref main
+          echo 'Official R7.5.4 structural audit submitted.'
