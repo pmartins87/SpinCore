@@ -41,13 +41,14 @@ jobs:
           v1=json.loads(Path('validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json').read_text())
           v2=json.loads(Path('validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json').read_text())
           v3=json.loads(Path('validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json').read_text())
-          freeze=json.loads(Path('validation/R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2.json').read_text())
+          freeze=json.loads(Path('validation/R7_5_4_STRUCTURAL_AUDIT_FREEZE_V3.json').read_text())
           assert v1['schema']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V1'
           assert v2['schema']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2'
           assert v3['schema']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3'
-          assert freeze['schema']=='SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2'
+          assert freeze['schema']=='SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V3'
           assert v3['seed_derivation']['paired_evaluation_seeds']==[1817694185,1617273629]
           assert freeze['evaluation_seeds']==[1817694185,1617273629]
+          assert freeze['trajectories_per_scenario_seed']==96
           assert v2['corrections']['PF0_CONTROL_33_75_AI_exact_legacy_equivalence_required'] is True
           assert v1['production_training_authorized'] is False
           assert v3['production_training_authorized'] is False
@@ -75,7 +76,7 @@ jobs:
           cmake --build build -j2
           ctest --test-dir build --output-on-failure
 
-      - name: Run frozen 2,688-trajectory structural audit
+      - name: Run frozen 4,032-trajectory structural audit
         id: run
         shell: bash
         run: |
@@ -91,10 +92,11 @@ jobs:
           import json
           from pathlib import Path
           p=json.loads(Path('evidence/R7_5_4_ACTION_STRUCTURAL_AUDIT.json').read_text())
-          assert p['schema']=='SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V2'
-          assert p['freeze_schema']=='SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2'
+          assert p['schema']=='SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V3'
+          assert p['freeze_schema']=='SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V3'
           assert p['authoritative_action_precommit']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3'
           assert p['evaluation_seeds']==[1817694185,1617273629]
+          assert p['trajectories_per_scenario_seed']==96
           assert p['production_training_authorized'] is False
           assert p['ready_for_tables'] is False
           PY
