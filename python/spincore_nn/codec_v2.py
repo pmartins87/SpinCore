@@ -79,8 +79,13 @@ def decode_spnniv2(payload: bytes) -> DecodedInputV2:
     )
 
 
-def collate_inputs_v2(items: list[DecodedInputV2], device: str = "cpu") -> dict[str, torch.Tensor]:
-    return {
+def collate_inputs_v2(
+    items: list[DecodedInputV2],
+    device: str = "cpu",
+    *,
+    flop_candidate: str | None = None,
+) -> dict[str, torch.Tensor]:
+    batch = {
         "preflop_class_id": torch.tensor(
             [item.preflop_class_id for item in items], dtype=torch.long, device=device
         ),
@@ -110,3 +115,12 @@ def collate_inputs_v2(items: list[DecodedInputV2], device: str = "cpu") -> dict[
             [item.history_len for item in items], dtype=torch.long, device=device
         ),
     }
+    if flop_candidate is not None:
+        from spincore.flop_candidate_tokens import flop_token
+
+        batch["flop_token"] = torch.tensor(
+            [flop_token(flop_candidate, item.canonical_flop_signature) for item in items],
+            dtype=torch.long,
+            device=device,
+        )
+    return batch
