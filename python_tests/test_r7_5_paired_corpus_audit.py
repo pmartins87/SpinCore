@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -13,7 +12,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 import r7_5_audit_paired_corpus as audit
-from spincore.r7_5_paired_corpus import PairedSample, immutable_sample_identity
+from spincore.r7_5_paired_corpus import BottomHashCorpus, PairedSample
 
 
 def _v1(index: int) -> bytes:
@@ -28,7 +27,6 @@ def _v2(index: int, street: int) -> bytes:
     payload = bytearray(830)
     payload[:8] = b"SPNNIV2\x00"
     payload[8] = index % 169
-    # categorical begins at 111; populate objective semantic tags.
     payload[111 + 1] = street
     payload[111 + 10] = index % 4
     payload[111 + 17] = index % 5
@@ -70,11 +68,11 @@ def _samples(kind: str, domain: str, seed: int, count: int) -> list[PairedSample
     return out
 
 
-def _digest(samples: list[PairedSample]) -> str:
-    h = hashlib.sha256()
-    for sample in sorted(samples, key=immutable_sample_identity):
-        h.update(immutable_sample_identity(sample))
-    return h.hexdigest()
+def _producer_corpus(samples: list[PairedSample], capacity: int) -> BottomHashCorpus[PairedSample]:
+    corpus = BottomHashCorpus[PairedSample](capacity)
+    for sample in samples:
+        corpus.add(sample)
+    return corpus
 
 
 def _save_rows(path: Path, samples: list[PairedSample]) -> None:
@@ -97,6 +95,17 @@ def _save_rows(path: Path, samples: list[PairedSample]) -> None:
     )
 
 
+def test_auditor_reconstructs_producer_hash_after_save_load(tmp_path: Path) -> None:
+    samples = _samples("advantage", "TRUE_HEADS_UP", audit.EXPECTED_SEEDS[0], 12)
+    corpus = _producer_corpus(samples, capacity=5)
+    saved = corpus.items
+    path = tmp_path / "pairs.pt"
+    _save_rows(path, saved)
+    loaded = audit._load_samples(path, "advantage", "TRUE_HEADS_UP", audit.EXPECTED_SEEDS[0])
+    assert len(loaded) == 5
+    assert audit._identity_digest(loaded) == corpus.state_summary()["ordered_identity_sha256"]
+
+
 def test_audit_validates_full_domain_seed_matrix_and_semantic_counts(tmp_path: Path) -> None:
     old_adv = audit.MIN_ADVANTAGE
     old_strategy = audit.MIN_STRATEGY
@@ -108,8 +117,12 @@ def test_audit_validates_full_domain_seed_matrix_and_semantic_counts(tmp_path: P
             for seed in audit.EXPECTED_SEEDS:
                 directory = tmp_path / f"{domain}_{seed}"
                 directory.mkdir()
-                advantage = _samples("advantage", domain, seed, 4)
-                strategy = _samples("strategy", domain, seed, 3)
+
+                adv_corpus = _producer_corpus(_samples("advantage", domain, seed, 8), capacity=4)
+                strategy_corpus = _producer_corpus(_samples("strategy", domain, seed, 7), capacity=3)
+                advantage = adv_corpus.items
+                strategy = strategy_corpus.items
+
                 adv_path = directory / "advantage_pairs.pt"
                 pol_path = directory / "strategy_pairs.pt"
                 _save_rows(adv_path, advantage)
@@ -126,14 +139,8 @@ def test_audit_validates_full_domain_seed_matrix_and_semantic_counts(tmp_path: P
                     "behavior_observation_wire": "SPNNIV1",
                     "paired_secondary_wire": "SPNNIV2",
                     "ready_for_tables": False,
-                    "advantage": {
-                        "kept": len(advantage),
-                        "ordered_identity_sha256": _digest(advantage),
-                    },
-                    "strategy": {
-                        "kept": len(strategy),
-                        "ordered_identity_sha256": _digest(strategy),
-                    },
+                    "advantage": adv_corpus.state_summary(),
+                    "strategy": strategy_corpus.state_summary(),
                 }
                 (directory / "report.json").write_text(
                     json.dumps(report, sort_keys=True), encoding="utf-8"
@@ -145,6 +152,7 @@ def test_audit_validates_full_domain_seed_matrix_and_semantic_counts(tmp_path: P
         assert len(payload["matrix_entries"]) == 4
         assert payload["global_street_counts"]["advantage/street:0"] > 0
         assert payload["global_semantic_tag_counts"]["advantage/flush_draw"] > 0
+        assert payload["identity_digest_order"] == "BOTTOM_HASH_RETENTION_KEY_CANONICAL_ORDER"
         assert payload["candidate_inference_used"] is False
         assert payload["ready_for_tables"] is False
     finally:
