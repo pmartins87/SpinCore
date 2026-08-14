@@ -1,0 +1,181 @@
+name: SpinCore R7.5 real-game reachability
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_real_game_reachability.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-5-real-game-reachability
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+      reachability_pass: ${{ steps.read.outputs.reachability_pass }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze execution SHA
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+
+      - name: Build exact solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+
+      - name: Execute real-game reachability audit
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          set +e
+          python tools/r7_5_real_game_reachability_audit.py \
+            --lib build/libspincore_solver_c.so \
+            --execution-sha '${{ steps.freeze.outputs.execution_sha }}' \
+            --out evidence/R7_5_REAL_GAME_REACHABILITY_AUDIT.json
+          rc=$?
+          set -e
+          test -f evidence/R7_5_REAL_GAME_REACHABILITY_AUDIT.json
+          echo "$rc" > evidence/audit_rc.txt
+
+      - name: Read semantic result and write manifest
+        id: read
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ steps.freeze.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/reachability_outputs
+          import json,os,platform
+          from pathlib import Path
+          import numpy,torch
+          p=json.loads(Path('evidence/R7_5_REAL_GAME_REACHABILITY_AUDIT.json').read_text())
+          rc=int(Path('evidence/audit_rc.txt').read_text().strip())
+          assert p['schema']=='SPINCORE_R7_5_REAL_GAME_REACHABILITY_AUDIT_V1'
+          assert p['execution_sha']==os.environ['EXECUTION_SHA']
+          assert p['episode_count']==5
+          assert p['seeds']==[1,7,31,127,509,20260814]
+          assert p['modes']==['LEGACY','UNIVERSAL']
+          assert p['totals']['trajectories']==60
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          semantic=bool(p['reachability_gate_pass'])
+          assert (rc==0)==semantic
+          print('reachability_pass=' + ('true' if semantic else 'false'))
+          m={
+            'schema':'SPINCORE_R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST_V1',
+            'execution_sha':os.environ['EXECUTION_SHA'],
+            'workflow_run_id':int(os.environ['GITHUB_RUN_ID']),
+            'workflow_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'python':platform.python_version(),
+            'torch':torch.__version__,
+            'numpy':numpy.__version__,
+            'audit_rc':rc,
+            'reachability_gate_pass':semantic,
+            'strategic_output':False,
+            'production_training_authorized':False,
+            'ready_for_tables':False,
+          }
+          assert m['python']=='3.11.15'
+          assert m['torch']=='2.13.0+cpu'
+          assert m['numpy']=='2.3.5'
+          Path('evidence/R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST.json').write_text(
+            json.dumps(m,indent=2,sort_keys=True)+'\n'
+          )
+          PY
+          cat /tmp/reachability_outputs >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable reachability evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-reachability-${{ steps.freeze.outputs.execution_sha }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main before artifact download
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download reachability evidence after checkout
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-reachability-${{ needs.audit.outputs.execution_sha }}
+          path: computed
+
+      - name: Revalidate and persist
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.audit.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=json.loads(Path('computed/R7_5_REAL_GAME_REACHABILITY_AUDIT.json').read_text())
+          m=json.loads(Path('computed/R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST.json').read_text())
+          assert p['execution_sha']==os.environ['EXECUTION_SHA']
+          assert m['execution_sha']==os.environ['EXECUTION_SHA']
+          assert p['reachability_gate_pass']==m['reachability_gate_pass']
+          assert p['production_training_authorized'] is False and p['ready_for_tables'] is False
+          PY
+          cp computed/R7_5_REAL_GAME_REACHABILITY_AUDIT.json validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json
+          cp computed/R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST.json validation/R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST.json
+          git config user.name 'SpinCore Evidence Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json \
+                     validation/R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST.json
+          if ! git diff --cached --quiet; then
+            git commit -m "validation: persist R7.5 real-game reachability (${EXECUTION_SHA})"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+  enforce:
+    needs: [audit, persist]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce real-game reachability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test '${{ needs.audit.outputs.reachability_pass }}' = 'true'
+          echo 'R7.5 real-game reachability PASS. Mechanism evidence only; READY FOR TABLES remains false.'
