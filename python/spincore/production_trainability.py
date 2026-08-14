@@ -7,11 +7,13 @@ from typing import Sequence
 from .production_stream_scheduler import SUPPORTED_DOMAINS
 
 
-SCHEMA = "SPINCORE_R8_PRODUCTION_TRAINABILITY_V1"
+SCHEMA = "SPINCORE_R8_PRODUCTION_TRAINABILITY_V2"
 HARD_CAP_DAYS = 90.0
 RESERVE_MULTIPLIER = 1.20
 MIN_TIMING_SAMPLES_PER_STREAM = 3
 FULL_ITERATION_SCOPE = "FULL_DURABLE_ITERATION_CHECKPOINT_TO_CHECKPOINT_V1"
+MATURE_COST_BASIS = "MATURE_OR_WORST_CASE_CERTIFIED_V1"
+NON_ITERATION_SCOPE = "ALL_FROZEN_NON_ITERATION_TRAINING_AND_FINAL_FREEZE_WORK_V1"
 SECONDS_PER_DAY = 86400.0
 
 
@@ -41,6 +43,7 @@ class MeasuredTrainingStream:
     stream_id: str
     selected_concurrency: int
     iteration_seconds_samples: tuple[float, ...]
+    cost_basis: str
     semantic_exact: bool = True
     error: str | None = None
     measurement_scope: str = FULL_ITERATION_SCOPE
@@ -52,6 +55,10 @@ class MeasuredTrainingStream:
             raise ValueError("selected_concurrency must be positive")
         if self.measurement_scope != FULL_ITERATION_SCOPE:
             raise ValueError("trainability timing must cover one full durable production iteration")
+        if self.cost_basis != MATURE_COST_BASIS:
+            raise ValueError(
+                "trainability timing must be certified from a mature or otherwise demonstrated worst-case-cost production state"
+            )
         if len(self.iteration_seconds_samples) < MIN_TIMING_SAMPLES_PER_STREAM:
             raise ValueError(
                 f"at least {MIN_TIMING_SAMPLES_PER_STREAM} complete-iteration timing samples are required per stream"
@@ -61,8 +68,43 @@ class MeasuredTrainingStream:
 
     @property
     def conservative_seconds_per_iteration(self) -> float:
-        """Use the slowest valid complete-iteration observation, not the mean."""
+        """Use the slowest valid mature/worst-case complete iteration, not the mean."""
         return float(max(self.iteration_seconds_samples))
+
+
+@dataclass(frozen=True)
+class MeasuredNonIterationTrainingWork:
+    """Wall-clock work required by the frozen plan but not inside stream iterations.
+
+    Examples include a final AveragePolicy fit when it is not already part of the
+    checkpoint-to-checkpoint iteration, final model materialization, and the R8.5
+    training-side freeze/export step.  Measuring this separately prevents a
+    nominal 90-day stream projection from hiding extra weeks after the last
+    iteration.  A zero sample is allowed only to represent a physically verified
+    absence of such work in the final frozen implementation.
+    """
+
+    selected_concurrency: int
+    seconds_samples: tuple[float, ...]
+    semantic_exact: bool = True
+    error: str | None = None
+    measurement_scope: str = NON_ITERATION_SCOPE
+
+    def __post_init__(self) -> None:
+        if self.selected_concurrency <= 0:
+            raise ValueError("non-iteration selected_concurrency must be positive")
+        if self.measurement_scope != NON_ITERATION_SCOPE:
+            raise ValueError("non-iteration timing scope is incomplete")
+        if len(self.seconds_samples) < MIN_TIMING_SAMPLES_PER_STREAM:
+            raise ValueError(
+                f"at least {MIN_TIMING_SAMPLES_PER_STREAM} non-iteration timing samples are required"
+            )
+        if any(not math.isfinite(value) or value < 0.0 for value in self.seconds_samples):
+            raise ValueError("non-iteration timing samples must be finite and non-negative")
+
+    @property
+    def conservative_seconds(self) -> float:
+        return float(max(self.seconds_samples))
 
 
 def _lpt_stream_pinned_upper_bound_seconds(
@@ -70,11 +112,9 @@ def _lpt_stream_pinned_upper_bound_seconds(
 ) -> tuple[float, tuple[float, ...]]:
     """Return a conservative makespan upper bound for independent serial streams.
 
-    Each production stream is serial by the persistent-RNG contract.  Treating an
+    Each production stream is serial by the persistent-RNG contract. Treating an
     entire stream as pinned to one worker is at least as restrictive as the actual
     scheduler, which may move a stream between workers at iteration boundaries.
-    LPT therefore gives a simple deterministic *upper bound* without assuming
-    unsafe intra-stream parallelism or optimistic perfect packing.
     """
     if concurrency <= 0:
         raise ValueError("concurrency must be positive")
@@ -92,20 +132,17 @@ def project_production_trainability(
     *,
     plans: Sequence[PlannedTrainingStream],
     measurements: Sequence[MeasuredTrainingStream],
+    non_iteration_measurement: MeasuredNonIterationTrainingWork,
     selected_concurrency: int,
     hard_cap_days: float = HARD_CAP_DAYS,
     reserve_multiplier: float = RESERVE_MULTIPLIER,
 ) -> dict:
     """Project complete R8 baseline-training wall time and enforce the hard cap.
 
-    The caller must supply the *complete frozen* official workload: every selected
-    production profile, both TRUE_HEADS_UP and THREE_HANDED domains, and every
-    required algorithm-seed stream.  Timings must be measured on the intended
-    production host at the already-selected semantically exact R8.2 concurrency.
-
-    A timing sample is one full durable iteration from one accepted checkpoint to
-    the next, so traversal, reservoir work, neural fitting and checkpoint overhead
-    are included.  For every stream we use its slowest repeated observation.
+    The workload must contain every selected profile, both domains, every required
+    seed stream, all frozen iterations, and all frozen training/freeze work outside
+    those iterations. Stream timings must come from mature or independently proven
+    worst-case-cost states on the selected semantically exact production topology.
 
     This function never reduces iterations, seeds, ensemble size, roots, optimizer
     steps or strategic coverage to make the result fit the deadline.
@@ -120,6 +157,10 @@ def project_production_trainability(
         raise ValueError("complete production training plan cannot be empty")
     if not measurements:
         raise ValueError("physical trainability measurements cannot be empty")
+    if non_iteration_measurement.selected_concurrency != int(selected_concurrency):
+        raise ValueError(
+            "non-iteration measurement concurrency differs from selected R8.2 concurrency"
+        )
 
     plan_by_id: dict[str, PlannedTrainingStream] = {}
     for plan in plans:
@@ -148,6 +189,9 @@ def project_production_trainability(
 
     semantically_eligible = all(
         row.semantic_exact and row.error is None for row in measurements
+    ) and bool(
+        non_iteration_measurement.semantic_exact
+        and non_iteration_measurement.error is None
     )
 
     rows: list[dict] = []
@@ -167,6 +211,7 @@ def project_production_trainability(
                 "total_iterations": int(plan.total_iterations),
                 "timing_sample_count": len(measured.iteration_seconds_samples),
                 "iteration_seconds_samples": [float(x) for x in measured.iteration_seconds_samples],
+                "cost_basis": measured.cost_basis,
                 "conservative_seconds_per_iteration": seconds_per_iteration,
                 "projected_serial_seconds": projected_serial_seconds,
                 "semantic_exact": bool(measured.semantic_exact),
@@ -174,9 +219,11 @@ def project_production_trainability(
             }
         )
 
-    nominal_upper_seconds, worker_loads = _lpt_stream_pinned_upper_bound_seconds(
+    stream_nominal_upper_seconds, worker_loads = _lpt_stream_pinned_upper_bound_seconds(
         durations, concurrency=int(selected_concurrency)
     )
+    non_iteration_seconds = non_iteration_measurement.conservative_seconds
+    nominal_upper_seconds = stream_nominal_upper_seconds + non_iteration_seconds
     projected_with_reserve_seconds = nominal_upper_seconds * float(reserve_multiplier)
     hard_cap_seconds = float(hard_cap_days) * SECONDS_PER_DAY
     nominal_days = nominal_upper_seconds / SECONDS_PER_DAY
@@ -188,6 +235,8 @@ def project_production_trainability(
     return {
         "schema": SCHEMA,
         "measurement_scope": FULL_ITERATION_SCOPE,
+        "cost_basis": MATURE_COST_BASIS,
+        "non_iteration_measurement_scope": NON_ITERATION_SCOPE,
         "selected_concurrency": int(selected_concurrency),
         "hard_cap_days": float(hard_cap_days),
         "hard_cap_seconds": hard_cap_seconds,
@@ -196,9 +245,14 @@ def project_production_trainability(
         "implied_nominal_budget_days": float(hard_cap_days) / float(reserve_multiplier),
         "stream_count": len(rows),
         "domains": sorted(domains),
-        "timing_rule": "MAX_REPEATED_FULL_DURABLE_ITERATION_SECONDS_PER_STREAM",
-        "scheduling_projection": "LPT_STREAM_PINNED_CONSERVATIVE_UPPER_BOUND",
+        "timing_rule": "MAX_REPEATED_MATURE_OR_WORST_CASE_FULL_ITERATION_SECONDS_PER_STREAM",
+        "scheduling_projection": "LPT_STREAM_PINNED_CONSERVATIVE_UPPER_BOUND_PLUS_NON_ITERATION_WORK",
         "worker_projected_load_seconds": [float(x) for x in worker_loads],
+        "stream_nominal_projected_upper_bound_seconds": stream_nominal_upper_seconds,
+        "non_iteration_timing_samples": [
+            float(x) for x in non_iteration_measurement.seconds_samples
+        ],
+        "non_iteration_conservative_seconds": non_iteration_seconds,
         "nominal_projected_upper_bound_seconds": nominal_upper_seconds,
         "nominal_projected_upper_bound_days": nominal_days,
         "projected_with_reserve_seconds": projected_with_reserve_seconds,
