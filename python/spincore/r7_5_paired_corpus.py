@@ -74,8 +74,12 @@ T = TypeVar("T", bound=PairedSample)
 class BottomHashCorpus(Generic[T]):
     """Streaming deterministic cap that never consumes traversal RNG.
 
-    Keeps the lexicographically smallest SHA256 retention keys. The result is
-    independent of insertion order, process RNG state and Python hash salt.
+    Keeps the lexicographically smallest SHA256 retention keys. Exact duplicate
+    samples are intentionally not deduplicated: the frozen empirical sampling
+    distribution is preserved. A monotonic insertion sequence is used only to
+    prevent heapq from ever comparing PairedSample objects when two identities
+    are byte-identical. Because such samples are themselves identical, this
+    tie-break cannot change retained semantic content or any hash-based split.
     """
 
     def __init__(self, capacity: int):
@@ -83,14 +87,17 @@ class BottomHashCorpus(Generic[T]):
             raise ValueError("positive paired-corpus capacity required")
         self.capacity = int(capacity)
         self.seen = 0
-        # Max-heap via negated big-endian integer key.
-        self._heap: list[tuple[int, bytes, T]] = []
+        self._sequence = 0
+        # Max-heap via negated big-endian integer key. Sequence is a comparison
+        # tie-breaker only; it never participates in retention/split hashes.
+        self._heap: list[tuple[int, bytes, int, T]] = []
 
     def add(self, sample: T) -> None:
         key = retention_key(sample)
         key_int = int.from_bytes(key, "big")
         self.seen += 1
-        item = (-key_int, key, sample)
+        self._sequence += 1
+        item = (-key_int, key, self._sequence, sample)
         if len(self._heap) < self.capacity:
             heapq.heappush(self._heap, item)
             return
@@ -100,7 +107,7 @@ class BottomHashCorpus(Generic[T]):
 
     @property
     def items(self) -> list[T]:
-        return [sample for _, _, sample in sorted(self._heap, key=lambda row: row[1])]
+        return [sample for _, _, _, sample in sorted(self._heap, key=lambda row: (row[1], row[2]))]
 
     def state_summary(self) -> dict[str, object]:
         items = self.items
