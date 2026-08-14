@@ -1,0 +1,56 @@
+{
+  "schema": "SPINCORE_R7_5_4_AGGREGATOR_IMPLEMENTATION_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_ANY_R7_5_4_STRATEGIC_ACTION_TRAINING_OUTPUT",
+  "inherits": [
+    "validation/R7_5_4_SELECTION_AGGREGATION_SEMANTIC_FREEZE_20260814.json",
+    "validation/R7_5_4_REFEREE_EVALUATION_SEMANTIC_FREEZE_20260814.json"
+  ],
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "pooled_pairwise_bootstrap": {
+    "engine": "numpy.random.Generator(PCG64(stable_seed64(...)))",
+    "replicates": 2000,
+    "confidence": 0.95,
+    "seed_key": ["bootstrap", "<omission|crossplay>", "root_level", "domain", "POOLED", "lexically_ordered_candidate_pair"],
+    "candidate_pair_affects_only_bootstrap_resampling": true,
+    "candidate_pair_does_not_affect_poker_rng": true,
+    "pairing": "elementwise canonical pooled raw samples from identical state/hand identities"
+  },
+  "rank_2_omission": {
+    "absolute_score": "max over domains of pooled mean omission",
+    "current_best": "minimum absolute_score, lexical candidate id only for deterministic reference when means are exactly equal",
+    "challenger_worst_domain": "domain with larger challenger pooled mean omission; exact ties use lexical domain id",
+    "paired_difference": "challenger omission minus current-best omission on challenger_worst_domain",
+    "discard_if": "paired difference mean > 0.001 AND paired 95% CI lower bound > 0"
+  },
+  "rank_3_crossplay": {
+    "absolute_score": "min over domains of pooled mean paired crossplay score",
+    "current_best": "maximum absolute_score, lexical candidate id only for deterministic reference when means are exactly equal",
+    "challenger_worst_domain": "domain with smaller challenger pooled mean crossplay; exact ties use lexical domain id",
+    "paired_difference": "current-best crossplay minus challenger crossplay on challenger_worst_domain",
+    "discard_if": "paired difference mean > 0.001 AND paired 95% CI lower bound > 0"
+  },
+  "rank_4_nodes": {"score":"max domain nodes_per_root","keep_if":"score <= best_score * 1.10; if best_score=0 keep exact zero only"},
+  "rank_5_seconds": {"score":"max domain tree_seconds_per_root","keep_if":"score <= best_score * 1.10; if best_score=0 keep exact zero only"},
+  "rank_6_branches": {"score":"max domain effective_unique_aggressive_branches_per_decision","keep":"exact minimum score survivors"},
+  "level_rules": {
+    "160":"no rank-7 fallback; output rank1-6 survivors for 320",
+    "320":"select only if exactly one rank1-6 survivor; otherwise output survivors for 640",
+    "640":"if multiple rank1-6 survivors remain, choose PF0_CONTROL_33_75_AI if eligible, otherwise lexical id"
+  },
+  "mandatory_next_level_execution": {
+    "postflop_control":"PF0_CONTROL_33_75_AI",
+    "referee":"PF_DENSE_REFERENCE",
+    "winner_eligibility":"only candidates in the prior level survivor set; control/referee reruns do not resurrect pruned candidates"
+  },
+  "failure": {
+    "dense_reference_learning_gate_failure":"BLOCKED",
+    "missing_domain_or_sample_identity_mismatch":"BLOCKED",
+    "no_candidate_passes_learning_gates":"FAIL"
+  },
+  "strategic_output_seen_before_freeze": false,
+  "threshold_changed": false,
+  "material_effect_floor_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
