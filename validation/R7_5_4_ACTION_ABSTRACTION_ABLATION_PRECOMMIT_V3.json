@@ -1,0 +1,40 @@
+{
+  "schema": "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3",
+  "date": "2026-08-13",
+  "status": "AUTHORITATIVE_FROZEN_BEFORE_ACTION_ABLATION_OUTPUTS",
+  "supersedes_seed_contract_in": "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+  "inherits": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json"
+  ],
+  "inheritance_rule": "V1 remains the full candidate/gate contract. V2 remains authoritative for llround sizing semantics. V3 replaces only the seed-derivation section with a mechanically reproducible definition. All other V1+V2 fields remain binding.",
+  "reason": "Pre-output audit found that the constants written in V1 did not reproduce its underspecified 'first positive 31 bits' prose. No R7.5.4 structural or strategic output had been executed. V3 removes ambiguity by freezing the exact byte slice, endian rule, mask, phase literals and collision handling.",
+  "seed_derivation": {
+    "anchor": "ba2eab3c51cdf86057c18dd160cb6febe8cc60f7",
+    "algorithm": "digest = SHA256(UTF8('SpinCore|R7.5.4|' + phase + '|' + decimal_index + '|' + anchor)); seed = int.from_bytes(digest[0:8], 'big') & 0x7fffffff; increment index and retry only if seed == 0 or collides with any previously accepted seed in this V3 set",
+    "phase_literals": {
+      "postflop_training": "postflop_training",
+      "preflop_training": "preflop_training",
+      "paired_evaluation": "paired_evaluation"
+    },
+    "postflop_training_seeds": [1737995611,645939859,1311335590],
+    "preflop_training_seeds": [687339791,1390820010,700916856],
+    "paired_evaluation_seeds": [1817694185,1617273629],
+    "seed_shopping_allowed": false
+  },
+  "verification_examples": [
+    {"phase":"postflop_training","index":0,"seed":1737995611},
+    {"phase":"preflop_training","index":0,"seed":687339791},
+    {"phase":"paired_evaluation","index":0,"seed":1817694185}
+  ],
+  "superseded_v1_seed_constants_must_not_be_used": [355310618,1215469455,920558322,898861073,221020240,2067264989,1412935182,816404962],
+  "action_outputs_observed_before_correction": false,
+  "structural_audit_output_observed_before_correction": false,
+  "candidate_set_changed": false,
+  "gate_changed": false,
+  "root_budgets_changed": false,
+  "material_effect_floor_changed": false,
+  "production_training_authorized": false,
+  "r7_5_pass": false,
+  "ready_for_tables": false
+}
