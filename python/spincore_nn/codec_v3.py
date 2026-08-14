@@ -124,6 +124,40 @@ def _validate(decoded: DecodedInputV3) -> None:
             if (not visible[left] or not visible[right]) and matrix[left][right] != 0:
                 raise ValueError("SPNNIV3 suit relation references unrevealed card")
 
+    # `same_suit` is an equivalence relation on visible cards.  Corrupting one
+    # bit must not silently create an impossible pseudo-deck such as A~B and
+    # B~C but A!~C.  The C++ encoder can only emit a valid partition, so this is
+    # a strict runtime/parity guard rather than a normal-game restriction.
+    visible_indices = [index for index, is_visible in enumerate(visible) if is_visible]
+    for a in visible_indices:
+        for b in visible_indices:
+            if a == b:
+                continue
+            for c in visible_indices:
+                if c == a or c == b:
+                    continue
+                if matrix[a][b] and matrix[b][c] and not matrix[a][c]:
+                    raise ValueError("SPNNIV3 same-suit relation is not transitive")
+
+    # Same rank + same suit means the exact same physical card was serialized
+    # twice.  Reject duplicate cards even though physical suit names themselves
+    # are intentionally absent from the wire.
+    for left in visible_indices:
+        for right in visible_indices:
+            if right <= left:
+                continue
+            if decoded.rank_tokens[left] == decoded.rank_tokens[right] and matrix[left][right]:
+                raise ValueError("SPNNIV3 contains duplicate visible physical card")
+
+    # A standard deck has exactly four suit equivalence classes.  Fewer are
+    # normal when not all suits are visible; more than four is impossible.
+    representatives: list[int] = []
+    for index in visible_indices:
+        if not any(matrix[index][rep] for rep in representatives):
+            representatives.append(index)
+    if len(representatives) > 4:
+        raise ValueError("SPNNIV3 implies more than four physical suits")
+
     if any(value not in (0, 1) for value in decoded.primitive_legal):
         raise ValueError("SPNNIV3 primitive legal mask is not binary")
 
