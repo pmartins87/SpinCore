@@ -1,0 +1,19 @@
+{
+  "schema": "SPINCORE_R7_5_4A_EVALUATION_THROUGHPUT_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_FINALIZED_R7_5_4A_POLICY_OUTPUTS",
+  "training_execution_sha": "457996944f76e9f1fa0475691df978f450259641",
+  "crossplay_rollout_batch_size": 256,
+  "cross_seed_inference_batch_size": 256,
+  "semantics": [
+    "Batching is only an inference/throughput optimization across independent exact hands or independent common states.",
+    "Every hand keeps its own authoritative C++ state, scenario, deck seed, candidate seat, action ordinal, legal exact-action set and keyed common-random-number draw.",
+    "No game state is merged, abstracted further, translated, dropped, resampled or given a different random draw because of batching.",
+    "Policies are evaluated with the same finalized AveragePolicy weights and the same state-local deduplicated ten-action legality mask.",
+    "The official evaluator uses the fixed batch size above; evaluation sample counts frozen in R7.5.4 are unchanged.",
+    "Dense-reference cache reuse remains exact: the same baseline terminal result is reused, not approximated.",
+    "R7.5.4A-160 remains prune-only and cannot authorize production training or table use."
+  ],
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}

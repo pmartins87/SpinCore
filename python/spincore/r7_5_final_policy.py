@@ -7,7 +7,7 @@ from typing import Sequence
 import torch
 
 from spincore.r7_5_action_checkpoint import load_action_checkpoint
-from spincore.r7_5_action_cfr import legal_mask
+from spincore.r7_5_action_cfr import legal_mask, validate_policy
 from spincore.r7_5_action_stage import FINAL_REPORT_SCHEMA
 from spincore.r7_5_action_stage_contract import (
     ITERATIONS,
@@ -16,6 +16,8 @@ from spincore.r7_5_action_stage_contract import (
     SELECTED_REPRESENTATION,
 )
 from spincore_nn.action_models import collate_action_observations
+
+DEFAULT_EVALUATION_BATCH_SIZE = 256
 
 
 @dataclass
@@ -38,22 +40,44 @@ class FinalizedActionPolicy:
     def training_seed(self) -> int:
         return int(self.bundle.seed)
 
-    def __call__(self, _state, observation: bytes, legal: tuple[int, ...]) -> tuple[float, ...]:
-        mask = legal_mask(legal)
-        batch = collate_action_observations(
-            SELECTED_REPRESENTATION,
-            [observation],
-            [mask],
-            device="cpu",
-        )
+    def batch_probabilities(
+        self,
+        observations: Sequence[bytes],
+        legal_sets: Sequence[tuple[int, ...]],
+        *,
+        batch_size: int = DEFAULT_EVALUATION_BATCH_SIZE,
+    ) -> tuple[tuple[float, ...], ...]:
+        if len(observations) != len(legal_sets):
+            raise ValueError("final policy batch observation/legal count mismatch")
+        if not observations:
+            return ()
+        width = int(batch_size)
+        if width <= 0:
+            raise ValueError("positive final-policy evaluation batch size required")
+        out: list[tuple[float, ...]] = []
         self.bundle.policy.eval()
-        with torch.no_grad():
-            logits = self.bundle.policy(batch).masked_fill(~batch["legal"], -1e9)
-            probabilities = torch.softmax(logits, dim=-1)[0].detach().cpu().tolist()
-        out = tuple(float(value) for value in probabilities)
-        if len(out) != 10:
-            raise RuntimeError("final action policy emitted non-ten-action distribution")
-        return out
+        for start in range(0, len(observations), width):
+            obs_chunk = observations[start:start + width]
+            legal_chunk = legal_sets[start:start + width]
+            masks = [legal_mask(legal) for legal in legal_chunk]
+            batch = collate_action_observations(
+                SELECTED_REPRESENTATION,
+                obs_chunk,
+                masks,
+                device="cpu",
+            )
+            with torch.no_grad():
+                logits = self.bundle.policy(batch).masked_fill(~batch["legal"], -1e9)
+                probabilities = torch.softmax(logits, dim=-1).detach().cpu().tolist()
+            for raw, legal in zip(probabilities, legal_chunk):
+                row = validate_policy(tuple(float(value) for value in raw), tuple(legal))
+                out.append(row)
+        if len(out) != len(observations):
+            raise RuntimeError("final policy batch output count drift")
+        return tuple(out)
+
+    def __call__(self, _state, observation: bytes, legal: tuple[int, ...]) -> tuple[float, ...]:
+        return self.batch_probabilities([observation], [legal], batch_size=1)[0]
 
 
 def load_finalized_action_policy(
@@ -65,12 +89,7 @@ def load_finalized_action_policy(
     expected_domain: str | None = None,
     expected_training_seed: int | None = None,
 ) -> FinalizedActionPolicy:
-    """Load one final R7.5.4 policy without perturbing caller Torch RNG.
-
-    load_action_checkpoint restores the checkpoint Torch RNG as required for
-    training resume. Evaluation must be observational, so this wrapper saves and
-    restores the caller's global Torch RNG around the load operation.
-    """
+    """Load one final R7.5.4 policy without perturbing caller Torch RNG."""
     if not str(expected_execution_sha).strip():
         raise ValueError("expected immutable execution SHA is required")
     torch_rng = torch.get_rng_state().clone()
