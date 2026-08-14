@@ -81,10 +81,21 @@ def test_final_policy_loader_is_rng_neutral_and_infers_ten_action_policy(tmp_pat
     try:
         active = loaded.action_spec.active_mask(0)
         legal = state.universal_legal_actions(active)
-        probabilities = loaded(state, state.neural_bytes(), legal)
+        observation = state.neural_bytes()
+        probabilities = loaded(state, observation, legal)
         assert len(probabilities) == 10
         assert sum(probabilities[action] for action in legal) == pytest.approx(1.0)
         assert all(probabilities[action] == 0.0 for action in range(10) if action not in legal)
+        batched = loaded.batch_probabilities(
+            [observation, observation],
+            [legal, legal],
+            batch_size=2,
+        )
+        assert len(batched) == 2
+        assert batched[0] == batched[1]
+        for row in batched:
+            assert sum(row[action] for action in legal) == pytest.approx(1.0)
+            assert all(row[action] == 0.0 for action in range(10) if action not in legal)
     finally:
         state.close()
 

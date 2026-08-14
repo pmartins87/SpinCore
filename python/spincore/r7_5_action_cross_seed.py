@@ -19,6 +19,7 @@ from spincore.r7_5_referee_states import (
 
 MEAN_TV_MAX = 0.15
 P95_TV_MAX = 0.35
+INFERENCE_BATCH_SIZE = 256
 
 
 def build_cross_seed_common_corpus(
@@ -68,6 +69,20 @@ def _nearest_rank(values: Sequence[float], quantile: float) -> float:
     return float(ordered[index])
 
 
+def _policy_rows(policy, states, observations, legal_sets):
+    batch_fn = getattr(policy, "batch_probabilities", None)
+    if callable(batch_fn):
+        raw_rows = batch_fn(observations, legal_sets)
+    else:
+        raw_rows = tuple(
+            policy(state, observation, legal)
+            for state, observation, legal in zip(states, observations, legal_sets)
+        )
+    if len(raw_rows) != len(states):
+        raise RuntimeError("cross-seed policy batch output count mismatch")
+    return tuple(validate_policy(raw, legal) for raw, legal in zip(raw_rows, legal_sets))
+
+
 def cross_seed_policy_stability(
     *,
     solver,
@@ -77,42 +92,59 @@ def cross_seed_policy_stability(
     policies_by_seed: Mapping[int, object],
     candidate_id: str,
     domain: str,
+    inference_batch_size: int = INFERENCE_BATCH_SIZE,
 ) -> dict:
     if set(int(seed) for seed in policies_by_seed) != set(POSTFLOP_TRAINING_SEEDS):
         raise ValueError("cross-seed policy set differs from frozen training seeds")
     rows = tuple(descriptors)
     if not rows:
         raise ValueError("cross-seed stability requires common states")
+    width = int(inference_batch_size)
+    if width <= 0:
+        raise ValueError("positive cross-seed inference batch size required")
     pair_ids = tuple(combinations(POSTFLOP_TRAINING_SEEDS, 2))
     tv_values: list[float] = []
     pair_values: dict[str, list[float]] = {f"{a}:{b}": [] for a, b in pair_ids}
-    for descriptor in rows:
-        if descriptor.domain != str(domain):
-            raise ValueError("cross-seed descriptor domain mismatch")
-        state = replay_heldout_referee_state(
-            solver=solver,
-            action_spec=dense_action_spec,
-            descriptor=descriptor,
-        )
+
+    for start in range(0, len(rows), width):
+        chunk = rows[start:start + width]
+        states = []
+        observations = []
+        legal_sets = []
         try:
-            active_mask = int(candidate_action_spec.active_mask(state_street(state)))
-            legal = state.universal_legal_actions(active_mask)
-            if not legal:
-                raise RuntimeError("candidate has no effective legal action on common state")
-            observation = state.neural_bytes()
-            probabilities: dict[int, tuple[float, ...]] = {}
-            for seed in POSTFLOP_TRAINING_SEEDS:
-                policy = policies_by_seed[int(seed)]
-                probabilities[int(seed)] = validate_policy(
-                    policy(state, observation, legal),
-                    legal,
+            for descriptor in chunk:
+                if descriptor.domain != str(domain):
+                    raise ValueError("cross-seed descriptor domain mismatch")
+                state = replay_heldout_referee_state(
+                    solver=solver,
+                    action_spec=dense_action_spec,
+                    descriptor=descriptor,
                 )
-            for first_seed, second_seed in pair_ids:
-                value = _tv(probabilities[first_seed], probabilities[second_seed])
-                tv_values.append(value)
-                pair_values[f"{first_seed}:{second_seed}"].append(value)
+                states.append(state)
+                active_mask = int(candidate_action_spec.active_mask(state_street(state)))
+                legal = state.universal_legal_actions(active_mask)
+                if not legal:
+                    raise RuntimeError("candidate has no effective legal action on common state")
+                observations.append(state.neural_bytes())
+                legal_sets.append(legal)
+            probabilities = {
+                int(seed): _policy_rows(
+                    policies_by_seed[int(seed)], states, observations, legal_sets
+                )
+                for seed in POSTFLOP_TRAINING_SEEDS
+            }
+            for row_index in range(len(states)):
+                for first_seed, second_seed in pair_ids:
+                    value = _tv(
+                        probabilities[first_seed][row_index],
+                        probabilities[second_seed][row_index],
+                    )
+                    tv_values.append(value)
+                    pair_values[f"{first_seed}:{second_seed}"].append(value)
         finally:
-            state.close()
+            for state in states:
+                state.close()
+
     mean_tv = sum(tv_values) / len(tv_values)
     p95_tv = _nearest_rank(tv_values, 0.95)
     return {
