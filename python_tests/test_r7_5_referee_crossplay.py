@@ -3,7 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from spincore.r7_5_action_contract import postflop_candidate_specs
-from spincore.r7_5_referee_crossplay import candidate_seats, paired_crossplay_scores
+from spincore.r7_5_referee_crossplay import (
+    build_dense_crossplay_reference,
+    candidate_seats,
+    paired_crossplay_scores,
+    score_candidate_from_crossplay_reference,
+)
 from spincore.solver import SolverLibrary
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,9 +26,19 @@ def test_dense_self_crossplay_is_exactly_zero_for_every_physical_candidate_seat(
     solver = SolverLibrary(LIB)
     dense = postflop_candidate_specs(ROOT)["PF_DENSE_REFERENCE"]
     for domain in ("TRUE_HEADS_UP", "THREE_HANDED"):
+        refs = build_dense_crossplay_reference(
+            solver=solver,
+            dense_action_spec=dense,
+            dense_policy=_uniform,
+            domain=domain,
+            training_seed=1737995611,
+            evaluation_seed=1817694185,
+            hand_count=24,
+        )
         for seat in candidate_seats(domain):
-            scores = paired_crossplay_scores(
+            scores = score_candidate_from_crossplay_reference(
                 solver=solver,
+                references=refs,
                 dense_action_spec=dense,
                 dense_policy=_uniform,
                 candidate_action_spec=dense,
@@ -32,9 +47,59 @@ def test_dense_self_crossplay_is_exactly_zero_for_every_physical_candidate_seat(
                 training_seed=1737995611,
                 evaluation_seed=1817694185,
                 candidate_seat=seat,
-                hand_count=24,
             )
             assert scores == (0.0,) * 24
+
+
+def test_cached_crossplay_is_exactly_equal_to_direct_path() -> None:
+    solver = SolverLibrary(LIB)
+    specs = postflop_candidate_specs(ROOT)
+    domain = "TRUE_HEADS_UP"
+    training_seed = 645939859
+    evaluation_seed = 1617273629
+    refs = build_dense_crossplay_reference(
+        solver=solver,
+        dense_action_spec=specs["PF_DENSE_REFERENCE"],
+        dense_policy=_uniform,
+        domain=domain,
+        training_seed=training_seed,
+        evaluation_seed=evaluation_seed,
+        hand_count=20,
+    )
+    for candidate_id in (
+        "PF0_CONTROL_33_75_AI",
+        "PF1_33_50_75_AI",
+        "PF2_33_50_75_100_AI",
+        "PF3_COMPACT_33_66_100_AI",
+        "PF4_CRUSHER_COMPACT_40_66_100_AI",
+        "PF_DENSE_REFERENCE",
+    ):
+        for seat in candidate_seats(domain):
+            cached = score_candidate_from_crossplay_reference(
+                solver=solver,
+                references=refs,
+                dense_action_spec=specs["PF_DENSE_REFERENCE"],
+                dense_policy=_uniform,
+                candidate_action_spec=specs[candidate_id],
+                candidate_policy=_uniform,
+                domain=domain,
+                training_seed=training_seed,
+                evaluation_seed=evaluation_seed,
+                candidate_seat=seat,
+            )
+            direct = paired_crossplay_scores(
+                solver=solver,
+                dense_action_spec=specs["PF_DENSE_REFERENCE"],
+                dense_policy=_uniform,
+                candidate_action_spec=specs[candidate_id],
+                candidate_policy=_uniform,
+                domain=domain,
+                training_seed=training_seed,
+                evaluation_seed=evaluation_seed,
+                candidate_seat=seat,
+                hand_count=20,
+            )
+            assert cached == direct
 
 
 def test_crossplay_is_reproducible_for_compact_candidate_and_seed_sensitive() -> None:
