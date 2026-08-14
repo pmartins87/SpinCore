@@ -1,0 +1,59 @@
+name: SpinCore R7.5.3C SPNNIV3 cross-language parity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_5_3c_v3_cross_language_parity.yml'
+      - 'CMakeLists.txt'
+      - 'include/spincore/neural_encoder_v3.hpp'
+      - 'src/neural_encoder_v3.cpp'
+      - 'include/spincore/solver_c_api.h'
+      - 'src/solver_c_api.cpp'
+      - 'python/spincore_nn/codec_v3.py'
+      - 'tools/r7_5_3c_v3_cross_language_parity.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-r7-5-3c-v3-parity
+  cancel-in-progress: false
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable push SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Build solver C API with SPNNIV3
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target spincore_solver_c spincore_tests -j2
+
+      - name: Run C++ SPNNIV3 regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./build/spincore_tests
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Run C++ to C API to pure-Python decoder parity
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r7_5_3c_v3_cross_language_parity.py \
+            --library build/libspincore_solver_c.so
