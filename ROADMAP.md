@@ -1,4 +1,4 @@
-# SpinCore finite roadmap — canonical state 2026-08-12
+# SpinCore finite roadmap — canonical state 2026-08-13
 
 Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate through R12 passes and every release debt, including the deferred R7.3 exact-reproducibility debt, is closed.
 
@@ -6,29 +6,36 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 - R0 Foundation / canonical repository — **PASS REBUILT**
 - R1 Complete poker engine — **PASS REBUILT**
-- R2 Canonical infoset + neural encoder — **PASS REBUILT**
+- R2 Canonical infoset + neural encoder — **PASS REBUILT; V1 IS NOW CONTROL FOR R7.5, NOT PRODUCTION FREEZE**
 - R3 Tournament continuation value (`ICM_EXACT_V1`, explicit payout) — **PASS REBUILT**
 - R4 Neural infrastructure — **PASS REBUILT**
 - R5 CFR correctness oracle — **PASS REBUILT**
 - R6 Deep CFR integration on authoritative `SpinTraversalState` — **PASS REBUILT**
-- R7 Pilot / performance / statistical stability — **IN PROGRESS**
+- R7 Pilot / performance / statistical stability — **R7.4 PASS; REPRESENTATION REVIEW ADDED BEFORE PRODUCTION**
   - R7.0 approximation metrics / full-reservoir audit — **PASS REBUILT**
   - R7.1 native own-reach frontier — **PASS REBUILT**
   - R7.2 LCFR weighting / checkpoint+resume infrastructure / fresh-process worker — **PASS REBUILT**
-  - R7.3 selected strategy quality at 640 roots/seed — **PASS FOR PROVISIONAL R7.4 ADVANCEMENT**
+  - R7.3 selected strategy quality at 640 roots/seed — **PASS FOR PROVISIONAL ADVANCEMENT**
   - R7.3 exact fresh-process reproducibility — **OPEN RELEASE/CERTIFICATION DEBT; NOT PASS**
   - R7.4 SPINRULESET-4 source invariance — **PASS**
   - R7.4 structural HU/3H preflight — **PASS**
   - R7.4 staged-resume equivalence — **PASS EXACT**
   - R7.4 held-out HU 640 — **PASS**
   - R7.4 held-out 3H 320 screen — **PASS**
-  - R7.4 held-out 3H 640 confirmation — **IN PROGRESS; STAGE 1 ACTIVE FOR BOTH SEEDS**
-  - R7.4 final gate — **PENDING 3H640**
-- R8 Production training — **OFFICIAL TRAINING BLOCKED UNTIL R7.4 FINAL + R8.0 EXACT PROFILE**
+  - R7.4 held-out 3H 640 confirmation — **PASS**
+  - R7.4 final gate — **PASS; READY TO ADVANCE TO R8 ENGINEERING**
+- R7.5 Strategic representation & action abstraction — **IN PROGRESS**
+  - R7.5.0 legacy evidence + architecture precommit — **PASS AS DESIGN PRECOMMIT ONLY**
+  - R7.5.1 recover/regenerate + audit flop mappings — **PENDING**
+  - R7.5.2 NeuralInputV2 + semantic regression — **PENDING**
+  - R7.5.3 frozen representation ablation — **PENDING**
+  - R7.5.4 frozen action-abstraction ablation — **PENDING**
+  - R7.5.5 production representation/action freeze — **PENDING**
+- R8 Production training — **OFFICIAL TRAINING BLOCKED UNTIL R7.5.5 FINAL + R8.0 EXACT PROFILE**
   - R8.0 production-profile acquisition/validation pipeline — **INFRASTRUCTURE PASS; EXACT SELECTED-STATE DATA BLOCKED**
   - R8.1 deterministic production infrastructure — **PASS INFRASTRUCTURE**
   - R8.2 Ryzen calibration selector/precommit — **PASS INFRASTRUCTURE; PHYSICAL CALIBRATION NOT RUN**
-  - R8.3–R8.5 official training/freeze — **BLOCKED**
+  - R8.3–R8.5 official training/freeze — **BLOCKED BY R7.5.5 + R8.0**
 - R9 Strategic audit — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R8.5**
 - R10 OpenHoldem runtime — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R9 PASS**
 - R11 Safe exploitation — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R10 PASS**
@@ -36,7 +43,7 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 No intermediate success authorizes table use.
 
-## Frozen strategic contract
+## Frozen R7.3/R7.4 strategic contract
 
 ```text
 selected behavior = size4_uncertainty_s175
@@ -60,37 +67,11 @@ production utility = ICM_EXACT_V1 explicit payout delta
 thread contract = SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE
 ```
 
-No strategic threshold has been relaxed.
+No R7.3/R7.4 strategic threshold has been relaxed. R7.5 does not retroactively reinterpret those gates; it determines whether the recovered V1 representation/action abstraction is suitable for production or should be replaced before official training.
 
-## R7.3 strategy-quality prerequisite and exact-reproducibility debt
+## R7.3 exact-reproducibility debt
 
-The original frozen 5×64 winner remains:
-
-```text
-roots/seed = 320
-mean TV = 0.1329178512096405       PASS
-p95 TV  = 0.2854667007923126       PASS
-all per-seed fit gates             PASS
-source workflow = 31451592073
-source head = 01edcb4697ae07f8f379d79b0b4b8e43e309d65e
-evidence commit = 05c0976e8311874ea9a55f5c899a088abe3b4f00
-evidence SHA256 = 39bc31e0198df1ba8b6b5033271ae8da839ec32a80cd42a22b09647b9b1e130e
-```
-
-The unchanged provisional 5×128 strategy-quality bridge passed at 640 roots/seed:
-
-```text
-workflow = 31579597855
-evidence commit = 872f53a053ac83160be54977715ba1ceae4d8b25
-mean TV = 0.13625219464302063       PASS
-p95 TV  = 0.3153517544269562        PASS
-seed 20260829 Advantage NRMSE = 0.48132333159446716
-seed 20260829 Policy TV = 0.0904657244682312
-seed 20260807 Advantage NRMSE = 0.4868704676628113
-seed 20260807 Policy TV = 0.09239403158426285
-```
-
-Strict fresh-process recertification remains unresolved:
+The frozen strategy-quality evidence passed, including the provisional 640 roots/seed bridge, but strict fresh-process exact reproduction remains unresolved:
 
 ```text
 fresh_process_reproducible = false
@@ -99,90 +80,66 @@ numeric tolerance = 1e-9
 strict run = 31565565329
 ```
 
-This remains explicit debt, not PASS. It does not block the controlled R7.4/R8 engineering path, but **must be resolved before R12 can emit `READY FOR TABLES = YES`**. No tolerance, seed, gate or thread hack may be used to relabel the debt.
+This remains explicit debt, not PASS. It does not block controlled R7.5/R8 engineering, but **must be resolved before R12 can emit `READY FOR TABLES = YES`**. No tolerance, seed, gate or thread hack may be used to relabel the debt.
 
-## R7.4 accepted physical evidence
+## R7.4 final physical evidence — PASS
 
-Rules/invariance and structural preflight are accepted under `SPINRULESET-4` at extension source head:
+Final gate:
 
 ```text
-e43b2cfea31f927393cf2751485d712902d6f02d
+validation/R7_4_FINAL_GATE.json
+r7_4_pass = true
+r7_4_ready_to_advance_to_r8 = true
+ready_for_tables = false
 ```
 
-Staged continuation has an exact physical mechanism proof:
+Held-out evidence:
 
 ```text
-validation/R7_4_STAGED_RESUME_EQUIVALENCE.json
-all_exact = true
+HU640: PASS
+3H320: PASS
+3H640: PASS
 ```
 
-### Held-out HU640 — PASS
+3H640 confirmation used 640 roots/seed and passed all unchanged per-seed/coverage gates. Cross-seed confirmation:
 
 ```text
-validation/R7_4_HELDOUT_HU_640.json
-roots/seed = 640
-mean TV = 0.12478918582201004
-p95 TV = 0.2732357978820801
-r7_4_domain_stability_pass = true
-```
-
-### Held-out 3H320 — PASS
-
-Authoritative repaired staged workflow:
-
-```text
-run = 31637418697
-validation/R7_4_HELDOUT_3H_320.json
-validation/R7_4_HELDOUT_SCREEN_SUMMARY.json
-roots/seed = 320
-```
-
-Final per-seed gates:
-
-```text
-seed 1954132610:
-  Advantage NRMSE = 0.5119520425796509   PASS
-  Policy mean TV  = 0.1004391759634018   PASS
-
-seed 372483540:
-  Advantage NRMSE = 0.5032332539558411   PASS
-  Policy mean TV  = 0.1074957475066185   PASS
-```
-
-Cross-seed screen:
-
-```text
-mean TV = 0.10584357380867004    PASS
-p95 TV  = 0.2369937151670456     PASS
-max TV  = 0.6491326093673706     diagnostic only
+mean TV = 0.08999575674533844    PASS
+p95 TV  = 0.20019790530204773    PASS
+max TV  = 0.4369678199291229     diagnostic only
 all scenarios exercised          PASS
-r7_4_heldout_screen_pass          true
 ```
 
-### Held-out 3H640 — ACTIVE
+R7.4 authorizes further engineering only. It does not prove that the current neural representation/action abstraction is the best production design and never authorizes table use.
 
-The successful 3H320 evidence automatically triggered:
+## R7.5 — strategic representation & action abstraction
+
+Legacy Spin & Go attempts were audited before production training. The canonical precommit is:
 
 ```text
-workflow = .github/workflows/r7_4_three_handed_640_confirmation.yml
-run = 31661899987
-gate = PASS
-stage 1 = ACTIVE for seeds 1954132610 and 372483540
-roots/iteration = 128
-iterations = 5
-roots/seed = 640
+validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
 ```
 
-The confirmation runtime is explicitly frozen and regression-guarded:
+Key frozen decisions:
 
 ```text
-Ubuntu 24.04
-Python 3.11.15
-PyTorch 2.13.0+cpu
-heartbeat every 300 s
+- exact poker/traversal state stays exact;
+- lossy compression is allowed only at neural-observation boundary;
+- current NeuralInputV1 is a control, not a production freeze;
+- 53-flop taxonomy is too coarse as the sole primary flop abstraction;
+- historical 184-flop mapping is the leading candidate but is NOT accepted without audit;
+- absolute physical card identity must not remain the dominant input channel by default;
+- exact stack/pot/SPR facts stay available even when auxiliary buckets are used;
+- actor-aware and sizing-aware action history is required;
+- c-bet, donk, probe, float, delayed c-bet and related initiative semantics must be reconstructible;
+- richer postflop action sets must justify every extra branch by strategic gain vs Ryzen cost.
 ```
 
-R7.4 final PASS remains false until the 3H640 confirmation itself passes the unchanged per-seed and cross-seed gates.
+The legacy 184 summary covers all 22,100 physical flops with 184 representatives, but the referenced historical `184Flops.json` mapping is not currently present in the supplied legacy package/file library. R7.5.1 must recover it or regenerate an equivalent deterministically before the 184 candidate can be certified.
+
+R7.5.3 will freeze the exact candidates, seeds, budgets, held-out states, numerical acceptance thresholds and tie-break rules **before** candidate outputs are inspected. R7.5.4 then selects the action abstraction under the same anti-post-hoc discipline.
+
+Only R7.5.5 may freeze the production encoder/action abstraction.
 
 ## R8 preparation already accepted without starting official training
 
@@ -190,7 +147,9 @@ R8.0 has a fail-closed production-profile schema/evidence acquisition pipeline, 
 
 R8.1 production infrastructure has accepted deterministic independent-stream scheduling, central Algorithm-R state, durable scheduler checkpoints and integrated semantic transactions. Same-stream root-level parallelism remains forbidden because it would alter the persistent live RNG contract.
 
-R8.2 has an accepted calibration selector/precommit. Candidate concurrency is eligible only if it reproduces the exact validated R8.1 transaction-generation identities; among semantically exact error-free candidates, highest throughput wins and exact ties prefer lower concurrency. CPU utilization is telemetry, not an acceptance target. Physical Ryzen calibration is not yet authorized.
+R8.2 has an accepted calibration selector/precommit. Candidate concurrency is eligible only if it reproduces the exact validated R8.1 transaction-generation identities; among semantically exact error-free candidates, highest throughput wins and exact ties prefer lower concurrency. CPU utilization is telemetry, not an acceptance target. Physical Ryzen calibration is not yet authorized for production training.
+
+R8.0 data acquisition and other non-strategic engineering may proceed while R7.5 executes. R8.3/R8.4 official production training may not start until both R7.5.5 and R8.0 prerequisites are satisfied.
 
 ## Strategic sentinels and finite downstream gates
 
@@ -200,13 +159,11 @@ Action-level sentinel infrastructure is accepted:
 python/spincore/strategic_sentinel.py
 python/spincore/sentinel_state_catalog.py
 validation/STRATEGIC_ACTION_SENTINEL_GATE_DESIGN_20260812.md
-framework regression = 31661499555 PASS
-state-catalog regression = 31661639444 PASS
 ```
 
-This is infrastructure only. The production sentinel set, exact integrity baselines and numerical strategic plausibility bounds are intentionally not frozen until exact production profiles and policy identities exist. Integrity-only evidence can never substitute for strategic plausibility.
+This is infrastructure only. The production sentinel set, exact integrity baselines and numerical strategic plausibility bounds are not substitutes for the R7.5 representation/action selection.
 
-Finite downstream gate designs are now frozen:
+Finite downstream gate designs remain:
 
 ```text
 validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md
@@ -220,10 +177,10 @@ R12.9 is the only gate allowed to emit `READY FOR TABLES = YES`, and only after 
 ## Remaining finite path to table use
 
 ```text
-R7.4 3H640 confirmation ACTIVE
--> R7.4 FINAL PASS
+R7.4 FINAL PASS
+-> R7.5 representation/action audit + production freeze
 -> R8.0 exact production profiles
--> R8.2 physical Ryzen calibration
+-> R8.2 physical Ryzen calibration under selected R7.5 architecture
 -> R8.3 official HU training
 -> R8.4 official 3H training
 -> R8.5 immutable production-policy freeze
@@ -234,7 +191,5 @@ R7.4 3H640 confirmation ACTIVE
 -> close every release debt including R7.3 exact reproducibility
 -> R12.9 READY FOR TABLES gate
 ```
-
-R7.4 PASS authorizes **R8 only**, never table use.
 
 `READY FOR TABLES = NO`.
