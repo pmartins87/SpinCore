@@ -1,0 +1,405 @@
+name: SpinCore R7.5.4A postflop 160
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_4a_postflop_160.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-r7-5-4a-postflop-160
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  TORCH_VERSION: '2.13.0+cpu'
+  NUMPY_VERSION: '2.3.5'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze execution SHA and contracts
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pre=json.loads(Path('validation/R7_5_4A_160_STRATEGIC_PREFLIGHT.json').read_text())
+          rep=json.loads(Path('validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json').read_text())
+          run=json.loads(Path('validation/R7_5_4_RUNNER_IMPLEMENTATION_FREEZE_20260814.json').read_text())
+          ref=json.loads(Path('validation/R7_5_4_REFEREE_EVALUATION_SEMANTIC_FREEZE_20260814.json').read_text())
+          agg=json.loads(Path('validation/R7_5_4_AGGREGATOR_IMPLEMENTATION_FREEZE_20260814.json').read_text())
+          assert pre['schema']=='SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V5' and pre['ready_to_start'] is True
+          assert pre['selected_representation']=='C0_V1_FROZEN_CONTROL'
+          assert rep['r7_5_3_representation_ablation_pass'] is True and rep['selected_candidate']=='C0_V1_FROZEN_CONTROL'
+          assert run['schema']=='SPINCORE_R7_5_4_RUNNER_IMPLEMENTATION_FREEZE_V1'
+          assert ref['schema']=='SPINCORE_R7_5_4_REFEREE_EVALUATION_SEMANTIC_FREEZE_V1'
+          assert agg['schema']=='SPINCORE_R7_5_4_AGGREGATOR_IMPLEMENTATION_FREEZE_V1'
+          assert run['training']['iterations']==5
+          assert run['root_levels']['160']=={'roots_per_iteration':32,'roots_per_seed':160}
+          assert run['training']['advantage_optimizer_steps_per_member_per_iteration']==4096
+          assert run['training']['average_policy_optimizer_steps']==16384
+          assert run['training']['ensemble_size']==4
+          assert run['production_training_authorized'] is False and run['ready_for_tables'] is False
+          PY
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install regression dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+
+      - name: Build and regression-test immutable solver once
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          pytest -q \
+            python_tests/test_r7_5_action_stage_contract.py \
+            python_tests/test_r7_5_action_stage.py \
+            python_tests/test_solver_universal_exact_resolution.py \
+            python_tests/test_r7_5_referee_rng.py \
+            python_tests/test_r7_5_referee_states.py \
+            python_tests/test_r7_5_referee_omission.py \
+            python_tests/test_r7_5_referee_crossplay.py \
+            python_tests/test_r7_5_action_aggregate.py
+
+      - name: Re-run actual strategic preflight on execution SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r7_5_4_strategic_preflight.py \
+            --repo-root . --phase R7_5_4A_POSTFLOP --root-level 160 \
+            --out /tmp/preflight.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/preflight.json'))
+          assert p['ready_to_start'] is True
+          assert p['selected_representation']=='C0_V1_FROZEN_CONTROL'
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          PY
+
+      - name: Upload immutable solver library
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-solver-${{ steps.freeze.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration1:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        candidate:
+          - PF0_CONTROL_33_75_AI
+          - PF1_33_50_75_AI
+          - PF2_33_50_75_100_AI
+          - PF3_COMPACT_33_66_100_AI
+          - PF4_CRUSHER_COMPACT_40_66_100_AI
+          - PF_DENSE_REFERENCE
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        seed: [1737995611, 645939859, 1311335590]
+    steps:
+      - &checkout
+        name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - &python
+        name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - &runtime
+        name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - &solver
+        name: Download immutable solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-160-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build
+      - name: Run staged iteration 1
+        shell: bash
+        env: &env
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'r7.5.4a-i1-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_4a_160_domain_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --candidate '${{ matrix.candidate }}' --domain '${{ matrix.domain }}' \
+              --training-seed '${{ matrix.seed }}' --target-iteration 1 \
+              --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - name: Upload durable iteration 1 checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i1-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration2:
+    needs: [gate, iteration1]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: &matrix
+        candidate: [PF0_CONTROL_33_75_AI, PF1_33_50_75_AI, PF2_33_50_75_100_AI, PF3_COMPACT_33_66_100_AI, PF4_CRUSHER_COMPACT_40_66_100_AI, PF_DENSE_REFERENCE]
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        seed: [1737995611, 645939859, 1311335590]
+    steps:
+      - *checkout
+      - *python
+      - *runtime
+      - *solver
+      - name: Download iteration 1 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i1-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run staged iteration 2
+        shell: bash
+        env: *env
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'r7.5.4a-i2-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_4a_160_domain_worker.py --repo-root . --solver build/libspincore_solver_c.so \
+              --candidate '${{ matrix.candidate }}' --domain '${{ matrix.domain }}' --training-seed '${{ matrix.seed }}' \
+              --target-iteration 2 --resume input/checkpoint.pt --checkpoint-out output/checkpoint.pt \
+              --report-out output/report.json --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - name: Upload durable iteration 2 checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i2-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration3:
+    needs: [gate, iteration2]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: *matrix
+    steps:
+      - *checkout
+      - *python
+      - *runtime
+      - *solver
+      - name: Download iteration 2 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i2-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run staged iteration 3
+        shell: bash
+        env: *env
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'r7.5.4a-i3-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_4a_160_domain_worker.py --repo-root . --solver build/libspincore_solver_c.so \
+              --candidate '${{ matrix.candidate }}' --domain '${{ matrix.domain }}' --training-seed '${{ matrix.seed }}' \
+              --target-iteration 3 --resume input/checkpoint.pt --checkpoint-out output/checkpoint.pt \
+              --report-out output/report.json --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - name: Upload durable iteration 3 checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i3-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration4:
+    needs: [gate, iteration3]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: *matrix
+    steps:
+      - *checkout
+      - *python
+      - *runtime
+      - *solver
+      - name: Download iteration 3 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i3-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run staged iteration 4
+        shell: bash
+        env: *env
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'r7.5.4a-i4-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_4a_160_domain_worker.py --repo-root . --solver build/libspincore_solver_c.so \
+              --candidate '${{ matrix.candidate }}' --domain '${{ matrix.domain }}' --training-seed '${{ matrix.seed }}' \
+              --target-iteration 4 --resume input/checkpoint.pt --checkpoint-out output/checkpoint.pt \
+              --report-out output/report.json --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - name: Upload durable iteration 4 checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i4-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration5:
+    needs: [gate, iteration4]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: *matrix
+    steps:
+      - *checkout
+      - *python
+      - *runtime
+      - *solver
+      - name: Download iteration 4 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-160-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-i4-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run staged iteration 5 and exact final AveragePolicy fit
+        shell: bash
+        env: *env
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'r7.5.4a-i5-final-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_4a_160_domain_worker.py --repo-root . --solver build/libspincore_solver_c.so \
+              --candidate '${{ matrix.candidate }}' --domain '${{ matrix.domain }}' --training-seed '${{ matrix.seed }}' \
+              --target-iteration 5 --resume input/checkpoint.pt --finalize \
+              --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - name: Upload final trained checkpoint and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-final-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.seed }}-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  inventory:
+    needs: [gate, iteration5]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download every completed final artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-4a-160-final-*-${{ needs.gate.outputs.execution_sha }}
+          path: finals
+      - name: Require complete 36-stream final matrix
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.gate.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          count="$(find finals -name report.json -type f | wc -l)"
+          echo "final report count=$count"
+          test "$count" -eq 36
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          reports=[]
+          for path in sorted(Path('finals').rglob('report.json')):
+              row=json.loads(path.read_text())
+              assert row['schema']=='SPINCORE_R7_5_4A_160_STAGED_WORKER_V1'
+              assert row['execution_sha']==os.environ['EXECUTION_SHA']
+              assert row['target_iteration']==5 and row['finalized'] is True
+              final=row['final_report']
+              assert final['schema']=='SPINCORE_R7_5_ACTION_DOMAIN_FINAL_REPORT_V1'
+              assert final['roots']==160
+              assert final['average_policy_optimizer_steps']==16384
+              assert final['side_advantage_optimizer_steps']==3*4096*5
+              assert final['strategic_selection_permitted_at_160'] is False
+              assert final['production_training_authorized'] is False
+              assert final['ready_for_tables'] is False
+              reports.append({
+                  'candidate_id':row['candidate_id'],
+                  'domain':row['domain'],
+                  'training_seed':row['training_seed'],
+                  'advantage_gate_pass':final['advantage_gate_pass'],
+                  'policy_gate_pass':final['policy_gate_pass'],
+                  'nodes_per_root':final['nodes_per_root'],
+                  'tree_seconds_per_root':final['tree_seconds_per_root'],
+                  'full_training_seconds_per_root':final['full_training_seconds_per_root'],
+                  'effective_unique_aggressive_branches_per_decision':final['effective_unique_aggressive_branches_per_decision'],
+              })
+          keys={(r['candidate_id'],r['domain'],r['training_seed']) for r in reports}
+          assert len(keys)==36
+          payload={
+              'schema':'SPINCORE_R7_5_4A_160_TRAINING_INVENTORY_V1',
+              'execution_sha':os.environ['EXECUTION_SHA'],
+              'stream_count':36,
+              'reports':reports,
+              'strategic_selection_permitted_at_160':False,
+              'production_training_authorized':False,
+              'ready_for_tables':False,
+          }
+          Path('R7_5_4A_160_TRAINING_INVENTORY.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Upload complete training inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-training-inventory-${{ needs.gate.outputs.execution_sha }}
+          path: R7_5_4A_160_TRAINING_INVENTORY.json
+          if-no-files-found: error
+          retention-days: 30
