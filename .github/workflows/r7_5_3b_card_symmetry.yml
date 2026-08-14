@@ -50,7 +50,8 @@ jobs:
           assert [x['id'] for x in pre['candidates']] == [
               'S0_V1_FROZEN_CONTROL', 'S1_V1_CARD_SYMMETRY_CANON'
           ]
-          assert old['winner_id'] == 'C0_V1_FROZEN_CONTROL'
+          assert old['selected_candidate'] == 'C0_V1_FROZEN_CONTROL'
+          assert old['r7_5_3_representation_ablation_pass'] is True
           assert pre['paired_corpus_source']['workflow_run_id'] == 31767822186
           assert pre['fit_initialization_seeds'] == [2102028507, 1745216084, 971790437]
           assert pre['split_seed'] == 1925930899
@@ -95,7 +96,10 @@ jobs:
         run: |
           set -euo pipefail
           python -m compileall -q python tools python_tests
-          pytest -q python_tests/test_card_symmetry_v1.py
+          pytest -q \
+            python_tests/test_card_symmetry_v1.py \
+            python_tests/test_card_symmetry_v1_codec.py \
+            python_tests/test_r7_5_action_320_card_symmetry_guard.py
 
   fit:
     needs: [gate, implementation_test]
