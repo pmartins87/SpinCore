@@ -1,0 +1,119 @@
+name: Recover current R7.5.3 evidence persistence
+
+on:
+  workflow_run:
+    workflows:
+      - 'SpinCore R7.5.3 paired representation ablation'
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  persist_if_computed:
+    # This recovery is intentionally bound to the one already-running immutable
+    # scientific run. It cannot persist evidence from any future rerun.
+    if: ${{ github.event.workflow_run.id == 31767822186 && github.event.workflow_run.head_sha == '66923cf50ece3aa9ac5632a11bcd865eb154f3e4' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main before downloading evidence
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Detect immutable final evidence artifact
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          EXECUTION_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="r7-5-3-evidence-${EXECUTION_SHA}"
+          artifact_id="$(
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts?per_page=100" \
+              | jq -r --arg n "$expected" '.artifacts[] | select(.name == $n and .expired == false) | .id' \
+              | head -n 1
+          )"
+          if [[ -z "$artifact_id" || "$artifact_id" == "null" ]]; then
+            echo 'has_evidence=false' >> "$GITHUB_OUTPUT"
+            echo "No final immutable evidence artifact exists for source run ${SOURCE_RUN_ID}; recovery will not persist anything."
+          else
+            echo 'has_evidence=true' >> "$GITHUB_OUTPUT"
+            echo "artifact_id=$artifact_id" >> "$GITHUB_OUTPUT"
+            echo "Found final immutable evidence artifact id=${artifact_id}."
+          fi
+
+      - name: Download final immutable evidence from source run
+        if: ${{ steps.detect.outputs.has_evidence == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3-evidence-${{ github.event.workflow_run.head_sha }}
+          path: computed
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Validate provenance and semantic status
+        if: ${{ steps.detect.outputs.has_evidence == 'true' }}
+        env:
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          EXECUTION_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          root = Path('computed')
+          result = json.loads((root / 'R7_5_3_REPRESENTATION_ABLATION_RESULT.json').read_text())
+          audit = json.loads((root / 'R7_5_3_PAIRED_CORPUS_AUDIT.json').read_text())
+          manifest = json.loads((root / 'R7_5_3_EXECUTION_MANIFEST.json').read_text())
+
+          assert manifest['schema'] == 'SPINCORE_R7_5_3_EXECUTION_MANIFEST_V1'
+          assert manifest['workflow_run_id'] == int(os.environ['SOURCE_RUN_ID'])
+          assert manifest['execution_sha'] == os.environ['EXECUTION_SHA']
+          assert manifest['corpus_coverage_pass'] == bool(audit['coverage_pass'])
+          assert manifest['representation_ablation_pass'] == bool(result['r7_5_3_representation_ablation_pass'])
+          assert manifest['selected_candidate'] == result['selected_candidate']
+          assert result['production_training_authorized'] is False
+          assert result['ready_for_tables'] is False
+          assert manifest['production_training_authorized'] is False
+          assert manifest['ready_for_tables'] is False
+          assert audit['production_training_authorized'] is False
+          assert audit['ready_for_tables'] is False
+          PY
+
+      - name: Persist exact already-computed evidence
+        if: ${{ steps.detect.outputs.has_evidence == 'true' }}
+        env:
+          EXECUTION_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p validation
+          cp computed/R7_5_3_REPRESENTATION_ABLATION_RESULT.json validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json
+          cp computed/R7_5_3_PAIRED_CORPUS_AUDIT.json validation/R7_5_3_PAIRED_CORPUS_AUDIT.json
+          cp computed/R7_5_3_EXECUTION_MANIFEST.json validation/R7_5_3_EXECUTION_MANIFEST.json
+
+          git config user.name 'SpinCore Evidence Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json \
+                  validation/R7_5_3_PAIRED_CORPUS_AUDIT.json \
+                  validation/R7_5_3_EXECUTION_MANIFEST.json
+          if git diff --cached --quiet; then
+            echo 'Exact evidence is already durable on main.'
+            exit 0
+          fi
+          git commit -m "validation: recover R7.5.3 evidence persistence (${EXECUTION_SHA})"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: State no-op explicitly when compute never reached final evidence
+        if: ${{ steps.detect.outputs.has_evidence != 'true' }}
+        shell: bash
+        run: |
+          echo 'Recovery completed as a no-op: no final evidence artifact existed, so no PASS/FAIL was persisted.'
