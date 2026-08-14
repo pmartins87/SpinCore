@@ -38,7 +38,7 @@ def test_every_reviewed_aof_foundation_source_has_explicit_roadmap_destination()
         )
 
     assert set(ledger["missing_historical_variants"]) == set(
-        manifest["prior_attempt_archive"]["historically_referenced_but_not_recovered"]
+        manifest["historically_referenced_but_not_recovered"]
     )
     assert ledger["strategic_output"] is False
     assert ledger["production_training_authorized"] is False
