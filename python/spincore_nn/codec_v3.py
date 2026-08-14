@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import struct
+from typing import TYPE_CHECKING
 
-import torch
+if TYPE_CHECKING:
+    import torch
 
 MAGIC = b"SPNNIV3\0"
 CARD_SLOT_COUNT = 7
@@ -197,7 +199,9 @@ def decode_spnniv3(payload: bytes | bytearray | memoryview) -> DecodedInputV3:
     return decoded
 
 
-def collate_v3(items: list[DecodedInputV3], device: str = "cpu") -> dict[str, torch.Tensor]:
+def collate_v3(items: list[DecodedInputV3], device: str = "cpu") -> dict[str, "torch.Tensor"]:
+    import torch
+
     if not items:
         raise ValueError("cannot collate empty SPNNIV3 batch")
 
