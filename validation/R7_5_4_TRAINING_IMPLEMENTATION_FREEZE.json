@@ -1,0 +1,104 @@
+{
+  "schema": "SPINCORE_R7_5_4_TRAINING_IMPLEMENTATION_FREEZE_V1",
+  "date": "2026-08-13",
+  "status": "FROZEN_BEFORE_STRATEGIC_ACTION_OUTPUTS",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "action_precommit_chain": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json"
+  ],
+  "structural_evidence_required": "validation/R7_5_4_ACTION_STRUCTURAL_AUDIT.json",
+  "representation_selection_required": "validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json",
+  "representation_gate_rule": "No strategic R7.5.4 runner may start unless the durable R7.5.3 result exists, r7_5_3_representation_ablation_pass=true and selected_candidate is one of C0..C5.",
+  "accepted_behavior_reference": {
+    "semantic_id": "SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1",
+    "semantic_freeze": "validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json",
+    "source_head_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+    "base_ensemble_runner_git_object": "1bce11efcaa28084e9dc8c9d929e3e24d18f3fc3",
+    "selected_uncertainty_runner_git_object": "bc7b6e09e2444aaa239878f305ce52446eb89c2d",
+    "behavior_kind": "uncertainty_damping",
+    "ensemble_size": 4,
+    "epsilon_scale": 1.75,
+    "epsilon_cap": 0.5,
+    "primary_rng_contract": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER"
+  },
+  "ten_action_generalization_rule": "The accepted six-action uncertainty-damping algebra, bootstrap behavior, regret matching, ensemble disagreement computation, epsilon scaling/capping and probability normalization must be generalized only by replacing the action dimension 6 with 10 and by using the state-local deduplicated universal legal mask. No coefficient, threshold or mixture rule may change.",
+  "mandatory_semantic_regression_before_action_training": "A dedicated regression must compare the accepted six-action uncertainty implementation with the ten-action generalization on embedded six-action fixtures (actions 6..9 permanently illegal/zero) and require probability/statistic equality to <=1e-12 before any strategic action runner is authorized.",
+  "cfr_execution": {
+    "iterations": 5,
+    "exact_opponent_levels": 2,
+    "terminal_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
+    "payout": [0.5, 0.3, 0.2],
+    "scenario_cycle": "exact R7.4 TRUE_HEADS_UP / THREE_HANDED scenario cycles",
+    "deck_formula": "training_seed*1000003 + global_root*97 + iteration",
+    "global_root_continuous_across_iterations": true,
+    "bootstrap_iteration_1_behavior": "uniform over state-local effective universal legal actions",
+    "iterations_2_to_5_behavior": "frozen accepted uncertainty-damped four-member advantage ensemble generalized to ten actions"
+  },
+  "advantage_fit": {
+    "network_reset_each_iteration": true,
+    "primary_reset_seed_formula": "(training_seed XOR (iteration * 0x9E3779B1)) & 0x7fffffff",
+    "ensemble_members": 4,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "optimizer_steps_per_member_per_iteration": 4096,
+    "optimizer_steps_are_exact_not_maximum": true,
+    "early_stopping": false,
+    "primary_member_role": "PRIMARY_AUTHORITATIVE_COUPLED_RNG",
+    "side_member_role": "SIDE_MEMBER_DOES_NOT_PERTURB_PRIMARY_RNG",
+    "side_member_memory": "same frozen advantage reservoir state as primary at that iteration",
+    "side_member_seed_rule": "Must reuse the accepted R7.3 ensemble member initialization/batch seed derivation semantics from the pinned base_ensemble_runner object. If direct reuse is impossible because of model type, a mechanically equivalent helper must be frozen and regression-proven before execution; no seed may be selected from results."
+  },
+  "average_policy_fit": {
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "optimizer_steps": 16384,
+    "optimizer_steps_are_exact_not_maximum": true,
+    "early_stopping": false,
+    "same_policy_reservoir_for_all_action_candidates_within_a_paired_training_seed": false,
+    "reason": "Different action abstractions induce different strategic trajectories; fairness is enforced by identical chance/training seeds, root budgets, algorithm and compute steps, not by forcing an impossible shared on-policy strategy reservoir."
+  },
+  "root_levels": {
+    "160": {"roots_per_iteration": 32, "roots_per_seed": 160, "selection_role": "PRUNE_ONLY"},
+    "320": {"roots_per_iteration": 64, "roots_per_seed": 320, "selection_role": "MINIMUM_FINAL_SELECTION_LEVEL"},
+    "640": {"roots_per_iteration": 128, "roots_per_seed": 640, "selection_role": "AMBIGUITY_RESOLUTION"}
+  },
+  "candidate_pairing": {
+    "same_training_seeds": true,
+    "same_deck_formula": true,
+    "same_scenario_schedule": true,
+    "same_optimizer_steps": true,
+    "same_network_output_width": 10,
+    "same_selected_representation_within_subgate": true,
+    "same_thread/runtime_contract": true,
+    "candidate_specific_early_stop": false,
+    "candidate_specific_root_extension": false,
+    "exception": "Only survivors selected by the precommitted 160->320->640 cascade advance to the next full fresh level; every survivor at that level receives the same full level budget."
+  },
+  "learning_quality_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "threshold_change_allowed_after_output": false
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "device": "cpu",
+    "thread_override_policy": "A single explicit thread contract must be frozen in the runner workflow and applied identically to every candidate."
+  },
+  "result_handling": {
+    "strategic_failure_is_evidence_not_infrastructure_failure": true,
+    "all_candidate_reports_must_be_persisted_even_when_their_gate_fails": true,
+    "aggregator_recomputes_numeric_gates": true,
+    "no_failed_candidate_can_be_revived_by_relative_ranking": true
+  },
+  "r7_5_4_action_outputs_seen_before_freeze": false,
+  "r7_5_4_strategic_training_started_before_freeze": false
+}
