@@ -1,0 +1,298 @@
+name: SpinCore R7.5.3B card symmetry gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3b-card-symmetry
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout dispatch SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze immutable execution SHA
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "main"
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+          echo "R7.5.3B immutable execution SHA: $execution_sha"
+
+      - name: Validate frozen 3B contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          pre = json.loads(Path('validation/R7_5_3B_CARD_SYMMETRY_PRECOMMIT_20260814.json').read_text())
+          old = json.loads(Path('validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json').read_text())
+          assert pre['schema'] == 'SPINCORE_R7_5_3B_CARD_SYMMETRY_PRECOMMIT_V1'
+          assert pre['status'] == 'FROZEN_BEFORE_CARD_SYMMETRY_COMPARATIVE_OUTPUTS'
+          assert pre['ready_for_tables'] is False
+          assert pre['production_training_authorized'] is False
+          assert [x['id'] for x in pre['candidates']] == [
+              'S0_V1_FROZEN_CONTROL', 'S1_V1_CARD_SYMMETRY_CANON'
+          ]
+          assert old['winner_id'] == 'C0_V1_FROZEN_CONTROL'
+          assert pre['paired_corpus_source']['workflow_run_id'] == 31767822186
+          assert pre['fit_initialization_seeds'] == [2102028507, 1745216084, 971790437]
+          assert pre['split_seed'] == 1925930899
+          assert not Path('validation/R7_5_3B_CARD_SYMMETRY_RESULT.json').exists(), (
+              'R7.5.3B result already exists; completed gate must not be rerun'
+          )
+          PY
+
+  implementation_test:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+          python - <<'PY'
+          import platform, numpy, torch
+          assert platform.python_version() == '3.11.15'
+          assert torch.__version__ == '2.13.0+cpu'
+          assert numpy.__version__ == '2.3.5'
+          PY
+
+      - name: Exact card-symmetry regression
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          python -m compileall -q python tools python_tests
+          pytest -q python_tests/test_card_symmetry_v1.py
+
+  fit:
+    needs: [gate, implementation_test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        fit_seed: [2102028507, 1745216084, 971790437]
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+          python - <<'PY'
+          import platform, numpy, torch
+          assert platform.python_version() == '3.11.15'
+          assert torch.__version__ == '2.13.0+cpu'
+          assert numpy.__version__ == '2.3.5'
+          PY
+
+      - name: Download frozen original R7.5.3 domain corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3-corpus-${{ matrix.domain }}-*
+          path: corpora
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 31767822186
+
+      - name: Fit S0 and S1 on identical source rows
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mapfile -t advantages < <(find corpora -name advantage_pairs.pt -type f | sort)
+          mapfile -t strategies < <(find corpora -name strategy_pairs.pt -type f | sort)
+          test "${#advantages[@]}" -eq 2
+          test "${#strategies[@]}" -eq 2
+          adv_args=()
+          strategy_args=()
+          for f in "${advantages[@]}"; do adv_args+=(--advantage "$f"); done
+          for f in "${strategies[@]}"; do strategy_args+=(--strategy "$f"); done
+
+          mkdir -p fit_outputs
+          for variant in S0_V1_FROZEN_CONTROL S1_V1_CARD_SYMMETRY_CANON; do
+            python tools/run_with_heartbeat.py \
+              --label "r7.5.3b-${{ matrix.domain }}-${{ matrix.fit_seed }}-${variant}" \
+              --interval-seconds 300 -- \
+              python tools/r7_5_3b_fit_card_symmetry.py \
+                --variant "$variant" \
+                --domain '${{ matrix.domain }}' \
+                --fit-seed '${{ matrix.fit_seed }}' \
+                --split-seed 1925930899 \
+                "${adv_args[@]}" \
+                "${strategy_args[@]}" \
+                --out "fit_outputs/${variant}.pt" \
+                --device cpu \
+                --learning-rate 0.001 \
+                --batch-size 256 \
+                --advantage-steps 4096 \
+                --policy-steps 8192 \
+                --min-tag-samples 128
+          done
+          test "$(find fit_outputs -maxdepth 1 -name '*.pt' | wc -l)" -eq 2
+
+      - name: Upload paired 3B fits
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3b-fit-${{ matrix.domain }}-${{ matrix.fit_seed }}
+          path: fit_outputs
+          if-no-files-found: error
+          retention-days: 14
+
+  aggregate:
+    needs: [gate, fit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      aggregate_rc: ${{ steps.aggregate.outputs.aggregate_rc }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+
+      - name: Download all 3B fits
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3b-fit-*
+          path: fits
+
+      - name: Aggregate with frozen noninferiority rule
+        id: aggregate
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          mapfile -t fit_files < <(find fits -name '*.pt' -type f | sort)
+          test "${#fit_files[@]}" -eq 12
+          fit_args=()
+          for f in "${fit_files[@]}"; do fit_args+=(--fit "$f"); done
+          set +e
+          python tools/r7_5_3b_aggregate_card_symmetry.py \
+            "${fit_args[@]}" \
+            --precommit validation/R7_5_3B_CARD_SYMMETRY_PRECOMMIT_20260814.json \
+            --execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            --source-corpus-run-id 31767822186 \
+            --out evidence/R7_5_3B_CARD_SYMMETRY_RESULT.json
+          rc=$?
+          set -e
+          test "$rc" -eq 0 -o "$rc" -eq 2
+          test -s evidence/R7_5_3B_CARD_SYMMETRY_RESULT.json
+          echo "aggregate_rc=$rc" >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable 3B result
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3b-result-${{ needs.gate.outputs.execution_sha }}
+          path: evidence/R7_5_3B_CARD_SYMMETRY_RESULT.json
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: [gate, aggregate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout current main for evidence persistence
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download immutable 3B result
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3b-result-${{ needs.gate.outputs.execution_sha }}
+          path: evidence
+
+      - name: Persist result without rewriting experiment semantics
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.gate.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          test ! -e validation/R7_5_3B_CARD_SYMMETRY_RESULT.json
+          cp evidence/R7_5_3B_CARD_SYMMETRY_RESULT.json validation/R7_5_3B_CARD_SYMMETRY_RESULT.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add validation/R7_5_3B_CARD_SYMMETRY_RESULT.json
+          git commit -m "validation: persist R7.5.3B card symmetry evidence ($EXECUTION_SHA)"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+  enforce:
+    needs: [aggregate, persist]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce strategic outcome after evidence persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rc='${{ needs.aggregate.outputs.aggregate_rc }}'
+          if [ "$rc" != '0' ]; then
+            echo 'R7.5.3B is BLOCKED; evidence was persisted before enforcement.' >&2
+            exit 2
+          fi
+          echo 'R7.5.3B produced a valid frozen winner.'
