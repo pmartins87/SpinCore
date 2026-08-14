@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import permutations
+import struct
 from typing import Iterable
 
 from spincore_nn.codec import DecodedInput
 
 NUM_SUITS = 4
 NUM_CARD_TOKENS = 7
+V1_MAGIC = b"SPNNIV1\x00"
+V1_SIZE = 126
 
 
 def _decode_token(token: int) -> tuple[int, int]:
@@ -66,7 +69,7 @@ def canonicalize_v1_cards(cards: Iterable[int]) -> tuple[int, ...]:
       * one global renaming of the four suits across every visible card.
 
     Turn and river are deliberately never reordered, and private/public roles are
-    never exchanged.  Enumerating all 24 suit permutations makes the quotient
+    never exchanged. Enumerating all 24 suit permutations makes the quotient
     definition explicit and independent of absolute suit names.
     """
     original = tuple(int(token) for token in cards)
@@ -99,5 +102,33 @@ def canonicalize_v1_cards(cards: Iterable[int]) -> tuple[int, ...]:
 
 
 def canonicalize_v1_input(item: DecodedInput) -> DecodedInput:
-    """Return an otherwise byte-for-byte semantic V1 input with canonical cards."""
+    """Return an otherwise identical V1 input with canonical card slots."""
     return replace(item, cards=canonicalize_v1_cards(item.cards))
+
+
+def encode_spnniv1(item: DecodedInput) -> bytes:
+    """Encode DecodedInput back to the frozen 126-byte SPNNIV1 wire format."""
+    cards = tuple(int(value) for value in item.cards)
+    numeric = tuple(float(value) for value in item.numeric)
+    categorical = tuple(int(value) for value in item.categorical)
+    legal = tuple(int(bool(value)) for value in item.legal)
+    history = tuple(int(value) for value in item.history)
+    history_len = int(item.history_len)
+
+    if len(cards) != 7 or len(numeric) != 16 or len(categorical) != 8:
+        raise ValueError("bad SPNNIV1 fixed-width field")
+    if len(legal) != 6 or len(history) != 32 or not 0 <= history_len <= 32:
+        raise ValueError("bad SPNNIV1 legal/history field")
+    if any(not 0 <= value <= 255 for value in cards + categorical + legal + history):
+        raise ValueError("SPNNIV1 byte field outside uint8 range")
+
+    payload = bytearray(V1_MAGIC)
+    payload.extend(bytes(cards))
+    payload.extend(struct.pack("<16f", *numeric))
+    payload.extend(bytes(categorical))
+    payload.extend(bytes(legal))
+    payload.append(history_len)
+    payload.extend(bytes(history))
+    if len(payload) != V1_SIZE:
+        raise RuntimeError(f"SPNNIV1 encoder produced {len(payload)} bytes")
+    return bytes(payload)
