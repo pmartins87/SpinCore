@@ -1,0 +1,130 @@
+{
+  "schema": "SPINCORE_R7_5_4_REFEREE_EVALUATION_SEMANTIC_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_ANY_R7_5_4_STRATEGIC_ACTION_TRAINING_OUTPUT",
+  "inherits": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json",
+    "validation/R7_5_4_RUNNER_IMPLEMENTATION_FREEZE_20260814.json"
+  ],
+  "paired_evaluation_seeds": [1817694185, 1617273629],
+  "training_seed_binding": "Each trained candidate is evaluated only against the PF_DENSE_REFERENCE model trained with the same postflop training_seed. Held-out state generation and crossplay are repeated for every frozen training_seed × paired_evaluation_seed cell.",
+  "stable_rng_derivation": {
+    "hash": "SHA256",
+    "canonical_encoding": "UTF-8 text fields joined by ASCII vertical bar with prefix SpinCore|R7.5.4A|REFV1",
+    "integer_seed": "unsigned little-endian integer from the first 8 bytes of SHA256 digest",
+    "candidate_id_in_rng_key": false,
+    "metric_value_in_rng_key": false,
+    "rule": "Candidate identity is never an RNG input. A lexical candidate-pair id may be used only for a paired bootstrap stream after both candidate sample arrays already exist; it cannot affect poker-state/deal/action/continuation generation."
+  },
+  "exact_action_identity": {
+    "source_of_truth": "spincore_solver_state_resolve_universal_exact",
+    "identity": ["ExactActionType", "amount_to"],
+    "slot_id_is_not_action_identity": true,
+    "state_local_aliases_are_suppressed_before_comparison": true,
+    "rule": "Dense-referee omission compares exact actions, not nominal universal slots. Two nominal sizings that resolve to the same exact action are one action; a candidate is credited with availability whenever any of its effective slots resolves to the same exact identity."
+  },
+  "heldout_referee_states": {
+    "count_per_domain_training_seed_evaluation_seed": 2048,
+    "state_source_policy": "PF_DENSE_REFERENCE AveragePolicy from the matching training_seed",
+    "scenario_cycle": "exact R7.4 cycle, hand_index modulo scenario_count",
+    "deck_seed_key": ["heldout", "domain", "training_seed", "evaluation_seed", "hand_index", "deck"],
+    "policy_uniform_key": ["heldout", "domain", "training_seed", "evaluation_seed", "hand_index", "physical_seat", "seat_decision_ordinal"],
+    "collection": "Start a fresh exact hand for each hand_index, follow the dense referee policy using deterministic keyed uniforms, and append every nonterminal decision state in chronological order until exactly 2048 states are retained. If a hand would exceed the target, retain only the prefix needed to reach 2048.",
+    "stored_replay_descriptor": [
+      "domain",
+      "training_seed",
+      "evaluation_seed",
+      "state_index",
+      "hand_index",
+      "scenario_index",
+      "deck_seed",
+      "ordered effective universal slot path from root to state",
+      "actor",
+      "SPNNIV1 bytes",
+      "PF_DENSE active mask",
+      "PF_DENSE effective exact-action set"
+    ],
+    "replay_must_reproduce_byte_identical_v1_observation": true,
+    "candidate_policy_does_not_generate_heldout_states": true
+  },
+  "dense_referee_omission": {
+    "utility": "ICM_EXACT_V1 payout delta for the actor at the held-out decision state",
+    "referee_action_set": "all unique exact actions from PF_DENSE_REFERENCE effective post-dedup legal set at the state",
+    "candidate_available_set": "intersection by exact-action identity between candidate effective post-dedup actions and referee exact actions",
+    "q_definition": "Apply one exact referee action child, then evaluate frozen partial-exact continuation under PF_DENSE_REFERENCE for every future player.",
+    "omission_per_state": "max(Q over all referee exact actions) - max(Q over candidate-available referee exact actions)",
+    "candidate_missing_all_referee_actions": "hard evaluator error; impossible because CHECK_CALL/FOLD/ALL_IN controls must retain at least one common effective exact action when legal",
+    "continuation": {
+      "target_player": "actor at held-out state",
+      "target_player_future_nodes": "enumerate all effective PF_DENSE actions and probability-weight by dense-referee AveragePolicy",
+      "opponent_nodes_first_exact_levels": 2,
+      "opponent_nodes_after_exact_levels": "sample one effective action from dense-referee AveragePolicy",
+      "chance": "already fixed by the exact hand/deck state",
+      "sample_writes": false,
+      "continuation_uniform_key": ["omission", "domain", "training_seed", "evaluation_seed", "state_index", "exact_action_type", "amount_to", "opponent_sample_ordinal"],
+      "common_random_numbers": "For a given state and exact root action, all candidate evaluations reuse the same keyed continuation stream because candidate_id is absent."
+    },
+    "bootstrap": {
+      "replicates": 2000,
+      "confidence_level": 0.95,
+      "unit": "held-out state paired samples",
+      "resample": "sample state indices with replacement, preserving candidate/referee pairing",
+      "seed_key": ["bootstrap", "omission", "root_level", "domain", "training_seed", "evaluation_seed", "lexically_ordered_candidate_pair_or_SINGLE"],
+      "material_effect_floor_icm": 0.001
+    }
+  },
+  "crossplay": {
+    "reference": "all seats use PF_DENSE_REFERENCE AveragePolicy from the matching training_seed",
+    "candidate_test": "one physical seat uses candidate AveragePolicy; every other seat uses matching PF_DENSE_REFERENCE",
+    "same_exact_hand_and_common_random_numbers_vs_reference": true,
+    "scenario_index": "hand_index modulo exact R7.4 scenario_count",
+    "deck_seed_key": ["crossplay", "domain", "training_seed", "evaluation_seed", "hand_index", "deck"],
+    "policy_uniform_key": ["crossplay", "domain", "training_seed", "evaluation_seed", "hand_index", "physical_seat", "seat_decision_ordinal"],
+    "candidate_id_in_policy_uniform_key": false,
+    "score": "candidate-seat terminal ICM_EXACT_V1 delta in candidate test minus same physical seat terminal ICM_EXACT_V1 delta in all-referee reference hand",
+    "true_heads_up": {
+      "hands_per_evaluation_seed_per_candidate_seat": 20000,
+      "candidate_seats": ["both live physical seats"]
+    },
+    "three_handed": {
+      "hands_per_evaluation_seed_per_candidate_seat": 10000,
+      "candidate_seats": [0, 1, 2]
+    },
+    "bootstrap": {
+      "replicates": 2000,
+      "confidence_level": 0.95,
+      "unit": "paired hand score",
+      "seed_key": ["bootstrap", "crossplay", "root_level", "domain", "training_seed", "evaluation_seed", "candidate_seat", "lexically_ordered_candidate_pair_or_SINGLE"]
+    }
+  },
+  "cross_seed_policy_stability": {
+    "observations_per_training_seed": 1024,
+    "source": "deterministic stratified observations from each seed's final Strategy reservoir, keeping observation bytes and ten-action legal mask together",
+    "all_training_seed_pairs": true,
+    "metric": "total variation distance between candidate AveragePolicy distributions under the same exact observation/legal mask",
+    "gates": {"mean_tv_max": 0.15, "p95_tv_max": 0.35}
+  },
+  "root_level_semantics": {
+    "160": "prune-only; no final action abstraction selection",
+    "320": "minimum level eligible for final selection if frozen evidence cascade resolves",
+    "640": "mandatory escalation when 320 does not resolve under the precommitted cascade"
+  },
+  "forbidden": [
+    "change evaluation RNG derivation after seeing candidate outputs",
+    "compare candidate/referee by nominal slot id instead of exact action identity",
+    "generate held-out states from the candidate being scored",
+    "use different deals or policy uniforms for candidate and all-referee crossplay reference",
+    "drop a bad domain/training seed/evaluation seed cell",
+    "reduce held-out states, crossplay hands, bootstrap replicates, or training seeds because runtime is inconvenient",
+    "use R7.5.4 GitHub timing as physical R8 trainability PASS"
+  ],
+  "strategic_output_seen_before_freeze": false,
+  "candidate_set_changed": false,
+  "training_seed_set_changed": false,
+  "evaluation_seed_set_changed": false,
+  "material_effect_floor_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
