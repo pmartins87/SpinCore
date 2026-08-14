@@ -1,0 +1,78 @@
+{
+  "schema": "SPINCORE_R7_5_LEGACY_184_MAPPING_AUDIT_V1",
+  "date": "2026-08-13",
+  "source": {
+    "package": "Tentativas anteriores de SpinGo.zip",
+    "package_sha256": "0ed90d7ee06a47cc16ced25e716240d94605a000898c21e380a24c024d27eee4",
+    "mapping_path": "solver v2/184Flops.json",
+    "mapping_sha256": "7fb7aebee3b24b5bf6904915194f21835cb06773d7474b3ff8649153337afff8",
+    "summary_path": "solver v2/classes_184_resumo.csv",
+    "summary_sha256": "3d3d01a30cf5748ce26348563b8d3ba16928fec1b4f33b60f48af0ad494e3ecc"
+  },
+  "physical_mapping": {
+    "json_rows": 22100,
+    "normalized_physical_flops": 22100,
+    "missing_physical_flops": 0,
+    "extra_physical_flops": 0,
+    "invalid_rows": 0,
+    "duplicate_conflicts": 0,
+    "unique_representative_texts": 184,
+    "unique_representatives_mod_suit": 184,
+    "complete_22100_pass": true
+  },
+  "bucket_sizes": {
+    "count": 184,
+    "min": 8,
+    "median": 96.0,
+    "mean": 120.1086956521739,
+    "max": 600,
+    "largest_representative": "4s7sTd",
+    "largest_representative_physical_flops": 600
+  },
+  "lossless_suit_isomorphic_reference": {
+    "physical_flops": 22100,
+    "exact_classes": 1755,
+    "exact_classes_split_across_multiple_legacy_buckets": 40,
+    "max_legacy_buckets_for_one_exact_class": 2,
+    "suit_permutation_invariance_pass": false
+  },
+  "exact_classes_per_legacy_bucket": {
+    "min": 1,
+    "median": 7.5,
+    "mean": 9.755434782608695,
+    "max": 50
+  },
+  "representative_duplicate_audit": {
+    "canonical_representative_duplicate_groups": 0
+  },
+  "split_examples": [
+    {
+      "exact_class": "2s5s7h",
+      "legacy_representatives": ["2s3d7s", "2s4s7d"],
+      "note": "physical inputs differ only by global suit renaming"
+    },
+    {
+      "exact_class": "2s6s7h",
+      "legacy_representatives": ["2s3d7s", "2s4s7d"],
+      "note": "physical inputs differ only by global suit renaming"
+    },
+    {
+      "exact_class": "2s8sQh",
+      "legacy_representatives": ["5s7sQd", "5s9dQs"],
+      "note": "physical inputs differ only by global suit renaming"
+    },
+    {
+      "exact_class": "3s4s8h",
+      "legacy_representatives": ["2s3d7s", "2s4s7d"],
+      "note": "physical inputs differ only by global suit renaming"
+    }
+  ],
+  "decision": {
+    "historical_mapping_reference_value": "HIGH",
+    "historical_mapping_eligible_unchanged": false,
+    "reason": "40 exact suit-isomorphic input classes are split by absolute suit spelling",
+    "silent_arbitrary_repair_allowed": false,
+    "corrected_or_new_candidate_required": true
+  },
+  "ready_for_tables": false
+}
