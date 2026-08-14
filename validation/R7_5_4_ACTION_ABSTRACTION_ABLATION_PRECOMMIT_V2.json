@@ -1,0 +1,40 @@
+{
+  "schema": "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2",
+  "date": "2026-08-13",
+  "status": "AUTHORITATIVE_FROZEN_BEFORE_ACTION_ABLATION_OUTPUTS",
+  "supersedes": "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+  "superseded_blob_sha": "27685a196b31486b91acfbf6ef77df5f91e9c36c",
+  "inheritance_rule": "All V1 fields remain binding except the explicit corrections in this V2. Any R7.5.4 executor/aggregator must load V1 plus this V2 overlay and reject V1-only execution.",
+  "reason": "Physical audit of src/spin_traversal_state.cpp proved the current PF0 control uses std::llround(fraction * pot_after_call) followed by max(1, rounded_increment), not ceil. Correcting this before any R7.5.4 candidate output is necessary to preserve the existing 33/75 control exactly.",
+  "physical_source": {
+    "path": "src/spin_traversal_state.cpp",
+    "audited_blob_sha": "df647ef9bf37d8a0d25db4eb55323e6394ca50d9",
+    "current_control_expression": "raw = llround(fraction * pot_after_call); target = clamp(call_target + max(1, raw), min_raise_to, max_raise_to)"
+  },
+  "corrections": {
+    "sizing_semantics.fraction_formula": "call_target + max(1, llround(pot_after_call * fraction)), then exact legal clamp",
+    "PF0_CONTROL_33_75_AI_exact_legacy_equivalence_required": true,
+    "percentage_candidates_use_same_rounding_as_control": true
+  },
+  "unchanged": [
+    "candidate sets",
+    "universal 10-slot vocabulary",
+    "state-local exact-action deduplication",
+    "domains",
+    "root escalation 160/320/640",
+    "training/evaluation seeds",
+    "learning-quality gates",
+    "dense-referee omission metric",
+    "crossplay metric",
+    "material effect floor",
+    "selection cascade",
+    "minimum final selection level 320",
+    "R7.5.5 requirement",
+    "READY FOR TABLES false"
+  ],
+  "action_outputs_observed_before_correction": false,
+  "r7_5_3_representation_outputs_are_not_action_outputs": true,
+  "production_training_authorized": false,
+  "r7_5_pass": false,
+  "ready_for_tables": false
+}
