@@ -15,6 +15,8 @@ from spincore.r7_5_action_uncertainty import uncertainty_damped_policy_from_adva
 from spincore.solver import Episode, SolverLibrary
 
 LIB = ROOT / "build" / "libspincore_solver_c.so"
+EPSILON_SCALE = 1.75
+EPSILON_CAP = 0.50
 
 
 class FixedSix(torch.nn.Module):
@@ -32,6 +34,11 @@ def episode() -> Episode:
 
 
 def _oracle(rows):
+    # R7_3_CANDIDATE_SEMANTIC_FREEZE selected size4_uncertainty_s175.
+    # The historical runner stores these as module globals; set the selected
+    # values explicitly instead of accidentally testing its source defaults.
+    accepted.EPSILON_SCALE = EPSILON_SCALE
+    accepted.EPSILON_CAP = EPSILON_CAP
     solver = SolverLibrary(LIB)
     state = solver.create(episode(), 123456)
     try:
@@ -56,14 +63,20 @@ def _oracle(rows):
 
 
 def _assert_fixture(rows) -> None:
-    old_policy, legal, old_stats = _oracle(rows)
-    widened = [tuple(float(x) for x in row) + (0.0, 0.0, 0.0, 0.0) for row in rows]
+    # The accepted implementation sees float32 network outputs. Quantize once
+    # and feed those exact same values to both paths; tolerance remains 1e-12.
+    rows_f32 = [
+        tuple(float(x) for x in torch.tensor(row, dtype=torch.float32).tolist())
+        for row in rows
+    ]
+    old_policy, legal, old_stats = _oracle(rows_f32)
+    widened = [row + (0.0, 0.0, 0.0, 0.0) for row in rows_f32]
     new_policy, new_stats = uncertainty_damped_policy_from_advantages(
         widened,
         tuple(int(x) for x in legal),
         action_count=10,
-        epsilon_scale=1.75,
-        epsilon_cap=0.5,
+        epsilon_scale=EPSILON_SCALE,
+        epsilon_cap=EPSILON_CAP,
     )
     for action in range(6):
         assert abs(float(new_policy[action]) - float(old_policy[action])) <= 1e-12
