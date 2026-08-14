@@ -150,6 +150,12 @@ class UniversalPartialExactCollector:
     No old collector is modified. Exact child creation is delegated to the
     solver's state-local universal-action resolver, so aliases never enter CFR
     as duplicate actions.
+
+    The collector also records action-geometry telemetry on *advantage traversal
+    decision visits only*.  These counters are observational: they never affect
+    policy, RNG, recursion or child creation.  Because `legal` is returned after
+    state-local exact-action deduplication, the aggressive-branch counter measures
+    realized unique neural branches rather than nominal sizing labels.
     """
 
     def __init__(
@@ -171,15 +177,35 @@ class UniversalPartialExactCollector:
         self.advantage_memory = advantage_memory
         self.strategy_memory = strategy_memory
         self._wire = representation_wire(self.selected_representation)
+        self.telemetry = {
+            "advantage_decision_visits": 0,
+            "nominal_aggressive_branches": 0,
+            "effective_unique_aggressive_branches": 0,
+        }
+
+    def reset_telemetry(self) -> None:
+        for key in self.telemetry:
+            self.telemetry[key] = 0
+
+    def telemetry_snapshot(self) -> dict[str, float | int]:
+        visits = int(self.telemetry["advantage_decision_visits"])
+        nominal = int(self.telemetry["nominal_aggressive_branches"])
+        effective = int(self.telemetry["effective_unique_aggressive_branches"])
+        return {
+            **{key: int(value) for key, value in self.telemetry.items()},
+            "nominal_aggressive_branches_per_decision": (
+                float(nominal) / visits if visits else 0.0
+            ),
+            "effective_unique_aggressive_branches_per_decision": (
+                float(effective) / visits if visits else 0.0
+            ),
+        }
 
     def _observation(self, state) -> bytes:
         return state.neural_bytes() if self._wire == "SPNNIV1" else state.neural_bytes_v2()
 
     @staticmethod
     def _street(state) -> int:
-        # Street is objective public state. SPNNIV2 categorical[1] is the exact
-        # frozen serialization of the betting street and can be read without
-        # introducing a strategic heuristic.
         payload = state.neural_bytes_v2()
         if len(payload) != 830 or not payload.startswith(b"SPNNIV2\x00"):
             raise RuntimeError("universal action traversal requires valid SPNNIV2 state metadata")
@@ -191,6 +217,16 @@ class UniversalPartialExactCollector:
         if not legal:
             raise RuntimeError("nonterminal universal-action state has no effective legal action")
         return active_mask, legal
+
+    def _record_action_geometry(self, active_mask: int, legal: tuple[int, ...]) -> None:
+        # Slots 0/1 are FOLD/CHECK_CALL; every other universal slot is an
+        # aggressive primitive. The active count is nominal. The legal count is
+        # already state-local deduplicated by the authoritative C++ resolver.
+        nominal = sum(1 for action in range(2, NUM_ACTIONS) if int(active_mask) & (1 << action))
+        effective = sum(1 for action in legal if int(action) >= 2)
+        self.telemetry["advantage_decision_visits"] += 1
+        self.telemetry["nominal_aggressive_branches"] += nominal
+        self.telemetry["effective_unique_aggressive_branches"] += effective
 
     def _p(self, state, observation: bytes, legal: tuple[int, ...]) -> Policy:
         return validate_policy(self.policy(state, observation, legal), legal)
@@ -229,6 +265,7 @@ class UniversalPartialExactCollector:
 
         actor = state.actor
         active_mask, legal = self._active_and_legal(state)
+        self._record_action_geometry(active_mask, legal)
         observation = self._observation(state)
         sigma = self._p(state, observation, legal)
 
