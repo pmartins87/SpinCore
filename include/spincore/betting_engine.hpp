@@ -8,7 +8,11 @@ namespace spincore {
 enum class Street : std::uint8_t { Preflop=0, Flop=1, Turn=2, River=3 };
 struct PlayerBetState { std::int32_t stack{0}; std::int32_t street_commitment{0}; std::int32_t total_commitment{0}; bool folded{false}; bool all_in{false}; bool acted_since_full_raise{false}; friend bool operator==(const PlayerBetState&,const PlayerBetState&)=default; };
 struct LegalActions { bool fold{false}; bool check{false}; bool call{false}; bool bet{false}; bool raise{false}; bool all_in{false}; std::int32_t to_call{0}; std::int32_t min_raise_to{0}; std::int32_t max_raise_to{0}; };
-struct ActionEvent { std::int32_t actor{-1}; Street street{Street::Preflop}; ExactAction action{}; std::int32_t paid{0}; std::int32_t resulting_commitment{0}; std::int32_t pot_after{0}; friend bool operator==(const ActionEvent&,const ActionEvent&)=default; };
+// Exact public betting-history event. Existing fields retain their historical
+// order so V1 behavior and aggregate users remain source-compatible. The new
+// fields are observation metadata only: pot_before makes sizing reconstruction
+// lossless, while forced distinguishes blind posts from voluntary aggression.
+struct ActionEvent { std::int32_t actor{-1}; Street street{Street::Preflop}; ExactAction action{}; std::int32_t paid{0}; std::int32_t resulting_commitment{0}; std::int32_t pot_after{0}; std::int32_t pot_before{0}; bool forced{false}; friend bool operator==(const ActionEvent&,const ActionEvent&)=default; };
 class BettingEngine {
 public:
  BettingEngine(const EpisodeScenario& s, GameTopology topology);
