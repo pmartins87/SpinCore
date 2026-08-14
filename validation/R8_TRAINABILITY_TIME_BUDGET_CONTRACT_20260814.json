@@ -1,5 +1,5 @@
 {
-  "schema": "SPINCORE_R8_TRAINABILITY_TIME_BUDGET_CONTRACT_V1",
+  "schema": "SPINCORE_R8_TRAINABILITY_TIME_BUDGET_CONTRACT_V2",
   "date": "2026-08-14",
   "status": "FROZEN_BEFORE_PHYSICAL_R8_2_CALIBRATION_AND_OFFICIAL_R8_TRAINING",
   "user_operational_requirement": "Top-performance core policy training must remain practical; approximately three months is the maximum acceptable wall-clock horizon rather than an architecture whose convergence would require years or decades.",
@@ -34,27 +34,32 @@
     "r8_2_selected_semantically_exact_concurrency_required": true,
     "minimum_complete_iteration_timing_samples_per_stream": 3,
     "timing_unit": "FULL_DURABLE_ITERATION_CHECKPOINT_TO_CHECKPOINT_V1",
+    "timing_cost_basis": "MATURE_OR_WORST_CASE_CERTIFIED_V1",
+    "timing_cost_basis_rule": "Early cheap iterations are not acceptable by themselves. Each stream timing set must come from a mature production state or from a state independently demonstrated to upper-bound the mature iteration cost under the frozen implementation.",
     "timing_unit_includes": [
       "CFR traversal/chance/action work",
       "reservoir insertion/replacement work",
       "all neural Advantage/ensemble fitting required by that production iteration",
-      "policy fitting work attributable to the frozen plan",
+      "policy fitting work that is actually inside that production iteration",
       "serialization and durable checkpoint/transaction overhead needed to advance the scheduler"
     ],
-    "per_stream_runtime_estimator": "maximum observed complete-iteration seconds across the repeated valid measurements",
-    "why_max_not_mean": "The deadline is a feasibility ceiling; using the slowest observed complete iteration avoids an optimistic average-only projection."
+    "per_stream_runtime_estimator": "maximum observed mature-or-worst-case complete-iteration seconds across the repeated valid measurements",
+    "why_max_not_mean": "The deadline is a feasibility ceiling; using the slowest observed mature/worst-case complete iteration avoids an optimistic average-only projection.",
+    "non_iteration_scope": "ALL_FROZEN_NON_ITERATION_TRAINING_AND_FINAL_FREEZE_WORK_V1",
+    "non_iteration_rule": "Any required AveragePolicy fit, final model materialization, export/freeze, or other R8 training-side work not already inside checkpoint-to-checkpoint iterations must be timed separately at least three times and its slowest valid wall-clock observation must be added after the projected stream makespan. A certified zero is allowed only if the final implementation proves that no such work exists outside the iteration scope."
   },
   "projection_contract": {
     "implementation": "python/spincore/production_trainability.py",
-    "schema": "SPINCORE_R8_PRODUCTION_TRAINABILITY_V1",
+    "schema": "SPINCORE_R8_PRODUCTION_TRAINABILITY_V2",
     "complete_workload_required": true,
     "required_domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
     "all_selected_profiles_required": true,
     "all_required_algorithm_seed_streams_required": true,
     "all_frozen_iterations_required": true,
-    "scheduling_upper_bound": "LPT_STREAM_PINNED_CONSERVATIVE_UPPER_BOUND",
-    "rationale": "Each stream remains serial under the persistent live RNG contract. Treating the whole stream as pinned to one worker is at least as restrictive as the actual scheduler and therefore does not assume unsafe intra-stream parallelism or optimistic perfect packing.",
-    "pass_condition": "semantic_exact=true AND projected_with_reserve_days <= 90.0"
+    "all_non_iteration_training_and_freeze_work_required": true,
+    "scheduling_upper_bound": "LPT_STREAM_PINNED_CONSERVATIVE_UPPER_BOUND_PLUS_NON_ITERATION_WORK",
+    "rationale": "Each stream remains serial under the persistent live RNG contract. Treating the whole stream as pinned to one worker is at least as restrictive as the actual scheduler. The conservative non-iteration upper bound is then added so work after the last iteration cannot disappear from the 90-day budget.",
+    "pass_condition": "all stream and non-iteration measurements semantic_exact=true AND projected_with_reserve_days <= 90.0"
   },
   "forbidden_deadline_shortcuts": [
     "reduce required algorithm seeds after seeing a runtime projection",
@@ -64,7 +69,9 @@
     "drop a selected production profile from the projection",
     "introduce root-level/intra-stream parallelism that changes persistent RNG semantics",
     "use GitHub-hosted runner time as a substitute for the physical production calibration",
-    "use mean-only timing when a slower valid repeated complete-iteration timing exists",
+    "use mean-only timing when a slower valid mature/worst-case repeated complete-iteration timing exists",
+    "measure only an early low-cost training state without proving it upper-bounds mature cost",
+    "omit final AveragePolicy/materialization/export/freeze work that occurs outside the timed iteration",
     "declare trainability PASS before R8.0 and physical R8.2 evidence exist"
   ],
   "allowed_engineering_optimizations": [
