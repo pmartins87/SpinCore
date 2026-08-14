@@ -13,6 +13,11 @@ from spincore.r7_5_action_stage_contract import (
 )
 
 DOMAINS = ("TRUE_HEADS_UP", "THREE_HANDED")
+ROOTS_PER_ITERATION_BY_LEVEL = {
+    160: 32,
+    320: 64,
+    640: 128,
+}
 
 
 @dataclass(frozen=True)
@@ -35,14 +40,25 @@ def _finite_nonnegative(report: Mapping, key: str) -> float:
     return value
 
 
+def _validated_root_contract(expected_root_level: int) -> tuple[int, int]:
+    level = int(expected_root_level)
+    try:
+        roots_per_iteration = ROOTS_PER_ITERATION_BY_LEVEL[level]
+    except KeyError as exc:
+        raise ValueError("expected root level must be 160, 320 or 640") from exc
+    return level, roots_per_iteration
+
+
 def validate_final_seed_reports(
     reports: Sequence[Mapping],
     *,
     candidate_id: str,
     domain: str,
+    expected_root_level: int = ROOT_LEVEL,
 ) -> tuple[Mapping, ...]:
     if str(domain) not in DOMAINS:
         raise ValueError(f"unsupported R7.5.4A domain: {domain!r}")
+    required_level, required_roots_per_iteration = _validated_root_contract(expected_root_level)
     rows = tuple(reports)
     if len(rows) != len(POSTFLOP_TRAINING_SEEDS):
         raise ValueError("candidate/domain evidence requires exactly three final seed reports")
@@ -56,12 +72,12 @@ def validate_final_seed_reports(
             raise ValueError("final seed report representation mismatch")
         if int(report.get("iterations", -1)) != ITERATIONS:
             raise ValueError("final seed report iteration count mismatch")
-        if int(report.get("roots_per_iteration", -1)) != ROOTS_PER_ITERATION:
+        if int(report.get("roots_per_iteration", -1)) != required_roots_per_iteration:
             raise ValueError("final seed report roots-per-iteration mismatch")
-        if int(report.get("roots", -1)) != ROOT_LEVEL:
+        if int(report.get("roots", -1)) != required_level:
             raise ValueError("final seed report root-level mismatch")
         if bool(report.get("strategic_selection_permitted_at_160")):
-            raise ValueError("160-root report illegally permits final selection")
+            raise ValueError("R7.5.4 report illegally permits strategic selection at 160 roots")
         if bool(report.get("production_training_authorized")) or bool(report.get("ready_for_tables")):
             raise ValueError("R7.5.4A report illegally authorizes production/table use")
         seed = int(report.get("training_seed", -1))
@@ -88,8 +104,14 @@ def conservative_domain_cost(
     *,
     candidate_id: str,
     domain: str,
+    expected_root_level: int = ROOT_LEVEL,
 ) -> ConservativeDomainCost:
-    rows = validate_final_seed_reports(reports, candidate_id=candidate_id, domain=domain)
+    rows = validate_final_seed_reports(
+        reports,
+        candidate_id=candidate_id,
+        domain=domain,
+        expected_root_level=expected_root_level,
+    )
     return ConservativeDomainCost(
         candidate_id=str(candidate_id),
         domain=str(domain),
@@ -117,11 +139,13 @@ def learning_eligibility(
     candidate_id: str,
     domain: str,
     cross_seed_report: Mapping,
+    expected_root_level: int = ROOT_LEVEL,
 ) -> bool:
     cost = conservative_domain_cost(
         reports,
         candidate_id=candidate_id,
         domain=domain,
+        expected_root_level=expected_root_level,
     )
     if str(cross_seed_report.get("candidate_id")) != str(candidate_id):
         raise ValueError("cross-seed report candidate mismatch")
