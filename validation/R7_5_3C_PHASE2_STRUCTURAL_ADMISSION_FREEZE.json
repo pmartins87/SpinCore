@@ -1,0 +1,59 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_STRUCTURAL_ADMISSION_FREEZE_V1",
+  "created_utc": "2026-08-14",
+  "status": "FROZEN_BEFORE_PHASE2_END_TO_END_OUTPUTS",
+  "parent_precommit": "validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json",
+  "basis": [
+    "Confirmed audit finding A3: V1 public history aliases actor/sizing/provenance and is not information-preserving.",
+    "Confirmed audit finding: legal public histories can exceed the frozen 32-event V1/V2 window.",
+    "The existing solver ABI already returns neural payload size and accepts caller buffer capacity, so a variable-length V3 wire is mechanically possible; no strategic truncation cap is required by ABI design.",
+    "Phase 1 is explicitly diagnostic-only and has no selection authority."
+  ],
+  "ready_for_tables": false,
+  "production_admission": {
+    "H0_FIXED_V1": {
+      "phase2_role": "CONTROL_ONLY",
+      "production_eligible": false,
+      "reason": "Retains confirmed lossy V1 public-history representation."
+    },
+    "H1_RELATIONAL_EXACT": {
+      "phase2_role": "CONTROL_ONLY",
+      "production_eligible": false,
+      "reason": "Fixes card symmetry but deliberately retains confirmed lossy V1 public-history representation."
+    },
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL": {
+      "phase2_role": "PRODUCTION_CANDIDATE",
+      "production_eligible": true,
+      "mandatory_delta_from_phase1_prototype": [
+        "Use complete variable-length structured public history; no last-N strategic truncation.",
+        "Use packed/masked recurrent processing with padding provably neutral.",
+        "Materialize a versioned C++ V3 wire and Python decoder with exact parity tests.",
+        "Retain exact current state and lossless relational card state up to true game symmetries."
+      ]
+    },
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL": {
+      "phase2_role": "PRODUCTION_CANDIDATE",
+      "production_eligible": true,
+      "mandatory_delta_from_phase1_prototype": [
+        "All H2-final requirements.",
+        "Replace known-bad/overloaded old-V2 semantic fields rather than merely excluding some of them.",
+        "Use pairwise opponent stack/effective-stack/SPR geometry with explicit present/contesting/actionable masks.",
+        "No physical suit IDs or ordered-hole-card semantic fields.",
+        "Use objective hand/draw/board relations; no subjective Good/Mid/Weak draw labels.",
+        "Correct wheel-edge 2345 OESD semantics and add exhaustive/property coverage for straight/flush draw descriptors."
+      ]
+    },
+    "H4_HYBRID_CAPACITY_FINAL": {
+      "phase2_role": "NOT_YET_ADMITTED",
+      "production_eligible": false,
+      "reason": "Governed by parent Phase 3 admission; may run only after H3 final structural/resource screen."
+    }
+  },
+  "history_contract": {
+    "strategic_truncation_allowed": false,
+    "wire": "variable_length",
+    "network_batching": "pad only to batch-local maximum and use explicit lengths/packing",
+    "corruption_guard": "An implementation may have a protocol/sanity maximum for malformed input, but reaching it in a legal frozen production profile is a hard error, not silent truncation."
+  },
+  "selection_guard": "Phase 1 H0/H1 diagnostic superiority, if observed, cannot override these structural admission rules. Phase 2 must compare corrected production-eligible candidates on candidate-specific end-to-end learning evidence."
+}
