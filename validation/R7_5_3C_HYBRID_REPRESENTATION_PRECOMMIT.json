@@ -1,0 +1,192 @@
+{
+  "schema": "SPINCORE_R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT_V1",
+  "created_utc": "2026-08-14",
+  "status": "PRECOMMITTED_BEFORE_3C_RESULTS",
+  "ready_for_tables": false,
+  "blocks_r8_production_representation_freeze": true,
+  "purpose": "Select a lossless, symmetry-correct, Ryzen-feasible neural representation without repeating the old raw-exact versus semantic-lossy comparison or using V1-generated offline targets as the sole selection criterion.",
+  "frozen_action_abstraction_during_3c": "R7.5.4A control action abstraction; representation experiments may not change legal action slots or sizing semantics",
+  "known_findings_source": "validation/R7_5_REPRESENTATION_INTEGRITY_AUDIT_20260814.md",
+  "old_paired_corpus_interpretation": {
+    "behavior_wire": "SPNNIV1",
+    "candidate_inference_used_during_collection": false,
+    "allowed_use": [
+      "information-retention diagnostic",
+      "optimization/capacity diagnostic",
+      "throughput benchmark",
+      "regression localization"
+    ],
+    "forbidden_use": "A candidate may not be rejected solely because it fits V1-generated paired targets worse after enforcing a mathematically valid game symmetry."
+  },
+  "card_state_contract": {
+    "must_preserve": [
+      "all exact visible ranks",
+      "Hero private versus public role",
+      "flop versus turn versus river chronology",
+      "all pairwise same-suit relations among visible cards",
+      "visibility/street"
+    ],
+    "must_quotient": [
+      "global physical suit renaming",
+      "order of Hero's two simultaneous private cards",
+      "order of the three simultaneous flop cards"
+    ],
+    "must_not_quotient": [
+      "turn versus river",
+      "private versus public cards",
+      "meaningful 3H positional/history differences"
+    ],
+    "preferred_wire_semantics": "rank tokens plus role/visibility plus label-free pairwise same-suit relation; no physical suit ID is a neural semantic category"
+  },
+  "candidate_family": {
+    "H0_FIXED_V1": {
+      "description": "V1 exact state as control with GRU history length honored and true-HU dead-seat canonicalization; no semantic enrichment.",
+      "core_hidden": 320,
+      "head_hidden": 128,
+      "purpose": "Measure the value of fixing confirmed V1 defects before adding knowledge."
+    },
+    "H1_RELATIONAL_EXACT": {
+      "description": "H0 plus lossless suit-label-invariant/permutation-invariant exact card representation based on ranks, roles and pairwise same-suit relations.",
+      "core_hidden": 320,
+      "head_hidden": 128,
+      "purpose": "Test true card symmetry with a representation designed for relational suits instead of post-hoc remapped rank+suit IDs."
+    },
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY": {
+      "description": "H1 plus structured public history: actor-relative role, street, exact action type, forced flag, normalized paid/resulting commitment/pot-before/pot-after; packed/masked recurrent encoding.",
+      "core_hidden": 320,
+      "head_hidden": 128,
+      "purpose": "Remove V1 action-history aliasing while retaining lossless exact current state."
+    },
+    "H3_HYBRID_EXACT_SEMANTIC": {
+      "description": "H2 plus corrected invariant poker semantics; exact relational card state remains present and no exact information is replaced by buckets.",
+      "core_hidden": 320,
+      "head_hidden": 128,
+      "semantic_requirements": [
+        "board rank/suit texture without physical suit IDs",
+        "exclusive made-hand category and objective relation-to-board features",
+        "objective straight/flush/backdoor/combo draw features with street validity",
+        "preflop lineage and aggressor facts",
+        "postflop lineage/opportunity facts such as c-bet/donk/probe only when derivable unambiguously",
+        "exact current stacks/commitments retained",
+        "correct pairwise effective-stack/SPR features rather than dead-seat minimum"
+      ],
+      "explicitly_excluded_old_v2_fields": [
+        "physical flush_draw_suit ID",
+        "ordered hole0_board_suit_count",
+        "ordered hole1_board_suit_count",
+        "old min_live_opponent_stack/effective_remaining/SPR fields with dead-seat bug"
+      ]
+    },
+    "H4_HYBRID_CAPACITY": {
+      "description": "H3 with additional nonlinear capacity; admitted only after H3 structural correctness and resource screen pass.",
+      "core_hidden": 448,
+      "head_hidden": 192,
+      "parameter_cap_per_model": 500000,
+      "purpose": "Test the hypothesis that capacity formerly spent relearning symmetries can be reinvested in useful poker complexity within the Ryzen envelope."
+    }
+  },
+  "phase_0_structural_gate": {
+    "required_for_every_candidate": true,
+    "properties": [
+      "all 24 global suit renamings invariant",
+      "Hero hole-card swap invariant",
+      "all 6 flop permutations invariant",
+      "turn/river swap remains distinguishable when state differs",
+      "private/public swap remains distinguishable",
+      "exact turn/river perturbations remain distinguishable unless globally suit-isomorphic",
+      "true-HU dead-seat physical permutation invariant",
+      "meaningful 3H BTN/SB/BB/history differences remain distinguishable",
+      "trailing history padding has exactly zero effect",
+      "33pct versus 50pct sizing distinguishable in structured-history candidates",
+      "forced blind versus voluntary bet distinguishable in structured-history candidates",
+      "c-bet/donk/probe lineage differences distinguishable when applicable",
+      "no physical suit number exposed as semantic category",
+      "no villain hole card in observation",
+      "C++ serialization and Python decoding parity"
+    ],
+    "failure_rule": "Any failed mandatory property blocks that candidate from phases 1/2. Thresholds are not weakened after observing outputs."
+  },
+  "phase_1_offline_diagnostic": {
+    "source": "frozen R7.5.3 paired corpus",
+    "fit_seeds": [247244420, 1953786788, 2029202803],
+    "seed_derivation": "low 31 bits of first 32 SHA256 bits for labels R7.5.3C:FIT:0..2",
+    "same_rows_targets_splits_and_sample_order_across_candidates": true,
+    "metrics": [
+      "advantage heldout NRMSE/MAE/sign",
+      "policy heldout total variation",
+      "sentinel distribution",
+      "per-domain metrics",
+      "cross-seed dispersion",
+      "inference seconds/sample",
+      "optimizer seconds/step",
+      "parameter count"
+    ],
+    "selection_rule": "Diagnostic only. Catastrophic information loss, numerical failure or infeasible runtime may block a candidate. Worse imitation of V1-generated targets alone cannot reject a symmetry-correct candidate."
+  },
+  "phase_2_candidate_specific_end_to_end": {
+    "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+    "training_seeds": [1342191342, 1801739323],
+    "training_seed_derivation": "low 31 bits of first 32 SHA256 bits for labels R7.5.3C:E2E:0..1",
+    "evaluation_seeds": [2029384436, 1150634112],
+    "evaluation_seed_derivation": "low 31 bits of first 32 SHA256 bits for labels R7.5.3C:EVAL:0..1",
+    "iterations": 3,
+    "roots_per_iteration": 64,
+    "exact_opponent_levels": 2,
+    "shared_scenario_schedule": true,
+    "shared_root_and_deck_seed_schedule": true,
+    "candidate_generates_own_behavior_and_targets": true,
+    "average_policy_trained_from_candidate_own_strategy_memory": true,
+    "evaluation_must_not_reuse_training_seeds": true,
+    "metrics": [
+      "frozen R7.4-style advantage-fit diagnostics per iteration",
+      "mean positive regret proxy / candidate-native convergence diagnostics",
+      "policy cross-seed stability",
+      "independent fixed strategic sentinels",
+      "heldout action-distribution pathology checks",
+      "candidate-vs-common-reference cross-play value with uncertainty",
+      "candidate pairwise cross-play where mechanically valid",
+      "nodes/root",
+      "seconds/root",
+      "inference throughput",
+      "peak RSS/RAM"
+    ],
+    "anti_overclaim": "No phase-2 proxy is called exact exploitability unless an independently frozen best-response method with uncertainty is implemented."
+  },
+  "phase_3_capacity_reinvestment": {
+    "admission": "H4 runs only if H3 passes phase 0 and is not already resource-infeasible.",
+    "same_end_to_end_schedule_as_phase_2": true,
+    "resource_bands_relative_to_H0": {
+      "parameter_count_ratio_max": 3.3,
+      "inference_seconds_per_sample_ratio_max": 2.0,
+      "seconds_per_root_ratio_max": 1.75,
+      "peak_rss_ratio_max": 2.0
+    },
+    "rule": "H4 is accepted over H3 only for a material strategic/convergence benefit without violating any resource band in either domain."
+  },
+  "winner_rules": {
+    "hard_requirements": [
+      "phase 0 PASS",
+      "finite/numerically valid outputs",
+      "both HU and 3H represented",
+      "no material strategic sentinel regression",
+      "no action-collapse/pathology failure",
+      "resource envelope PASS",
+      "train/runtime contract capable of exact identity"
+    ],
+    "preference_order": [
+      "strategic/convergence evidence from candidate-specific end-to-end phase",
+      "cross-seed robustness",
+      "information-preserving structural correctness",
+      "resource efficiency",
+      "offline V1-target imitation as secondary diagnostic only"
+    ],
+    "tie_break": "Choose the smallest/fastest candidate among candidates with no material strategic difference.",
+    "no_clear_winner": "R7.5.3C remains BLOCKED; do not authorize R8 production training and do not silently default to old V1 merely because it was the historical control."
+  },
+  "evidence_inheritance": {
+    "engine_rules_dealing_icm": "retain unless a demonstrated dependency invalidates them",
+    "old_representation_fit_and_stability": "control/baseline only",
+    "old_action_sizing_run": "may finish as baseline; if representation winner changes, representation-dependent sizing/stability evidence must be rerun or explicitly bridged",
+    "r8_production": "blocked until 3C winner and representation-dependent revalidation are closed"
+  }
+}
