@@ -1,0 +1,99 @@
+{
+  "schema": "SPINCORE_R7_5_4_RUNNER_IMPLEMENTATION_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_STRATEGIC_ACTION_TRAINING_OUTPUTS",
+  "inherits": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json",
+    "validation/R7_5_4_TRAINING_IMPLEMENTATION_FREEZE.json",
+    "validation/R7_5_4_COST_TELEMETRY_SEMANTIC_FREEZE_20260814.json"
+  ],
+  "selected_representation_required": "C0_V1_FROZEN_CONTROL",
+  "selected_representation_source": "validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json",
+  "training": {
+    "reservoir_capacity": 100000,
+    "final_fit_audit_size": 2048,
+    "cross_seed_observations_per_seed": 1024,
+    "iterations": 5,
+    "exact_opponent_levels": 2,
+    "advantage_optimizer_steps_per_member_per_iteration": 4096,
+    "advantage_chunk_steps_for_reporting_only": 256,
+    "advantage_early_stop": false,
+    "average_policy_optimizer_steps": 16384,
+    "average_policy_chunk_steps_for_reporting_only": 256,
+    "average_policy_early_stop": false,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "ensemble_size": 4,
+    "epsilon_scale": 1.75,
+    "epsilon_cap": 0.5
+  },
+  "root_levels": {
+    "160": {"roots_per_iteration": 32, "roots_per_seed": 160},
+    "320": {"roots_per_iteration": 64, "roots_per_seed": 320},
+    "640": {"roots_per_iteration": 128, "roots_per_seed": 640}
+  },
+  "scenario_contract": {
+    "source": "tools/r7_4_stability_pilot_worker.py::_scenario_cycle",
+    "true_heads_up_episode_count": 6,
+    "three_handed_episode_count": 15,
+    "schedule": "global_root modulo scenario_count",
+    "global_root_continuous_across_iterations": true,
+    "deck_formula": "training_seed*1000003 + global_root*97 + iteration"
+  },
+  "ensemble_seed_contract": {
+    "primary_reset_seed": "(training_seed XOR (iteration * 0x9E3779B1)) & 0x7fffffff",
+    "primary_batch_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
+    "side_member_init_xor": "0x0E115EED",
+    "side_member_batch_xor": "0xBA7C8A11",
+    "side_init_seed": "(training_seed XOR 0x0E115EED XOR (iteration * 0x9E3779B1) XOR (member * 0x045D9F3B)) & 0x7fffffff",
+    "side_batch_seed": "(training_seed XOR 0xBA7C8A11 XOR (iteration * 0x85EBCA77) XOR (member * 0xC2B2AE3D)) & 0xffffffffffffffff",
+    "side_members": [1,2,3],
+    "side_members_can_advance_live_batch_rng": false,
+    "source_reference": "tools/run_r7_3_advantage_ensemble_end_to_end.py::_train_member"
+  },
+  "checkpointing": {
+    "stage_unit": "ONE_COMPLETE_CFR_ITERATION_PLUS_ALL_FOUR_ADVANTAGE_MEMBER_FITS",
+    "checkpoint_after_every_iteration": true,
+    "resume_must_restore": [
+      "primary Advantage model and optimizer",
+      "AveragePolicy model and optimizer",
+      "Advantage reservoir including RNG",
+      "Strategy reservoir including RNG",
+      "persistent live batch RNG",
+      "Torch RNG",
+      "four-member behavior ensemble",
+      "uncertainty diagnostic counters",
+      "global_root",
+      "scenario counts",
+      "cost telemetry accumulated so far"
+    ],
+    "average_policy_fit": "after iteration 5 only, exactly 16384 optimizer steps",
+    "final_checkpoint_phase": "post_policy_fit"
+  },
+  "runtime_for_github_ablation": {
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "device": "cpu",
+    "torch_threads": 2,
+    "omp_num_threads": 2,
+    "mkl_num_threads": 2,
+    "physical_r8_calibration_substitute": false
+  },
+  "learning_gate_measurement": {
+    "ensemble_advantage_final_audit_samples": 2048,
+    "policy_final_audit_samples": 2048,
+    "cross_seed_observations_per_seed": 1024,
+    "cross_seed_observation_source": "deterministic stratified observations from each seed's final Strategy reservoir; observation and ten-action legal mask are retained together",
+    "thresholds_unchanged": true
+  },
+  "strategic_output_seen_before_freeze": false,
+  "candidate_set_changed": false,
+  "training_seed_set_changed": false,
+  "root_budget_changed": false,
+  "learning_threshold_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
