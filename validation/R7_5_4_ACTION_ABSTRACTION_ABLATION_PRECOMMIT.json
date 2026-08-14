@@ -1,0 +1,241 @@
+{
+  "schema": "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V1",
+  "date": "2026-08-13",
+  "status": "FROZEN_BEFORE_ACTION_ABLATION_OUTPUTS",
+  "ready_for_tables": false,
+  "r7_5_pass": false,
+  "production_training_authorized": false,
+  "source_audit": "validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md",
+  "crusher_audit": "validation/R7_5_CRUSHER_FRAMEWORK_FULL_SEMANTIC_AUDIT_20260813.md",
+  "crusher_source_sha256": "7ec68e2efc9790bfc02f47da690faa1856ab2be47a8d10bd178a2963fa78ce08",
+  "parent_r7_5_precommit": "validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md",
+  "representation_binding": {
+    "rule": "Every R7.5.4 candidate must use exactly the durable candidate selected by R7.5.3. No action result may be generated before validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json exists and passes.",
+    "selected_candidate_at_precommit_time": null,
+    "r7_5_3_run_active_at_precommit_time": 31767822186,
+    "r7_5_3_execution_sha": "66923cf50ece3aa9ac5632a11bcd865eb154f3e4"
+  },
+  "exact_game_contract": {
+    "authoritative_state_remains_exact": true,
+    "chance_dealing_remains_exact": true,
+    "showdown_remains_exact": true,
+    "terminal_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
+    "payout": [0.5, 0.3, 0.2],
+    "action_abstraction_only_at_traversal_boundary": true,
+    "old_r7_4_evidence_reusable_as_new_action_evidence": false
+  },
+  "universal_action_vocabulary": [
+    "FOLD",
+    "CHECK_CALL",
+    "MIN_RAISE",
+    "POT_33",
+    "POT_40",
+    "POT_50",
+    "POT_66",
+    "POT_75",
+    "POT_100",
+    "ALL_IN"
+  ],
+  "universal_output_width": 10,
+  "max_separate_action": false,
+  "max_reason": "Maximum no-limit commitment is represented once as exact ALL_IN; historical Crusher Max is not a second neural label for the same chip commitment.",
+  "sizing_semantics": {
+    "MIN_RAISE": "exact minimum legal raise-to",
+    "fraction_formula": "call_target + ceil(pot_after_call * fraction), then exact legal clamp",
+    "fractions": {
+      "POT_33": 0.33,
+      "POT_40": 0.40,
+      "POT_50": 0.50,
+      "POT_66": 0.66,
+      "POT_75": 0.75,
+      "POT_100": 1.00
+    },
+    "ALL_IN": "exact all-in action"
+  },
+  "state_local_exact_action_deduplication": {
+    "required": true,
+    "allin_priority": "If a nominal fractional raise reaches the exact all-in commitment and ALL_IN is active, suppress the fractional alias and retain ALL_IN.",
+    "minimum_priority": "If MIN_RAISE is active and a candidate resolves exactly to minimum legal raise-to, retain MIN_RAISE over fractional aliases.",
+    "fractional_collision_rule": "Among fractional primitives resolving to the same exact non-minimum, non-all-in raise target, retain the primitive whose unclamped raw target is closest to the realized target; exact ties use smaller nominal fraction.",
+    "duplicate_neural_branches_allowed": false
+  },
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "subgates": {
+    "R7_5_4A_POSTFLOP": {
+      "preflop_fixed": ["MIN_RAISE", "ALL_IN"],
+      "candidates": [
+        {"id": "PF0_CONTROL_33_75_AI", "eligible_to_win": true, "postflop": ["POT_33", "POT_75", "ALL_IN"], "historical_role": "CURRENT_SPINCORE_CONTROL"},
+        {"id": "PF1_33_50_75_AI", "eligible_to_win": true, "postflop": ["POT_33", "POT_50", "POT_75", "ALL_IN"], "historical_role": "ORIGINAL_PRECOMMIT_B"},
+        {"id": "PF2_33_50_75_100_AI", "eligible_to_win": true, "postflop": ["POT_33", "POT_50", "POT_75", "POT_100", "ALL_IN"], "historical_role": "LEGACY_DEEPSPIN_SIZED_ORIGINAL_PRECOMMIT_C"},
+        {"id": "PF3_COMPACT_33_66_100_AI", "eligible_to_win": true, "postflop": ["POT_33", "POT_66", "POT_100", "ALL_IN"], "historical_role": "NEW_COMPACT_GEOMETRIC"},
+        {"id": "PF4_CRUSHER_COMPACT_40_66_100_AI", "eligible_to_win": true, "postflop": ["POT_40", "POT_66", "POT_100", "ALL_IN"], "historical_role": "NEW_PREOUTPUT_CRUSHER_COMPACT"},
+        {"id": "PF_DENSE_REFERENCE", "eligible_to_win": false, "postflop": ["MIN_RAISE", "POT_33", "POT_40", "POT_50", "POT_66", "POT_75", "POT_100", "ALL_IN"], "historical_role": "REFEREE_UPPER_COVERAGE_REFERENCE"}
+      ],
+      "selection_output": "selected_postflop_candidate"
+    },
+    "R7_5_4B_PREFLOP": {
+      "postflop_fixed": "selected_postflop_candidate from R7.5.4A",
+      "candidates": [
+        {"id": "PR0_CONTROL_MIN_AI", "eligible_to_win": true, "preflop": ["MIN_RAISE", "ALL_IN"]},
+        {"id": "PR1_MIN_75_AI", "eligible_to_win": true, "preflop": ["MIN_RAISE", "POT_75", "ALL_IN"]},
+        {"id": "PR2_MIN_50_75_AI", "eligible_to_win": true, "preflop": ["MIN_RAISE", "POT_50", "POT_75", "ALL_IN"]},
+        {"id": "PR3_MIN_75_100_AI", "eligible_to_win": true, "preflop": ["MIN_RAISE", "POT_75", "POT_100", "ALL_IN"]},
+        {"id": "PR4_MIN_50_75_100_AI", "eligible_to_win": true, "preflop": ["MIN_RAISE", "POT_50", "POT_75", "POT_100", "ALL_IN"]}
+      ],
+      "selection_output": "selected_preflop_candidate"
+    }
+  },
+  "structural_gate": {
+    "must_pass_before_training": true,
+    "requirements": {
+      "legal_exact_actions_valid_fraction": 1.0,
+      "duplicate_exact_neural_actions": 0,
+      "allin_exact_fraction": 1.0,
+      "minimum_raise_exact_when_active_fraction": 1.0,
+      "fraction_targets_monotonic_after_dedup_fraction": 1.0,
+      "exact_settlement_difference_count": 0
+    },
+    "required_diagnostics": [
+      "nominal_aggressive_branches_per_state",
+      "effective_unique_aggressive_branches_per_state",
+      "alias_suppression_fraction",
+      "clamped_to_min_fraction",
+      "clamped_to_allin_fraction",
+      "raise_to_over_pot_after_call_distribution",
+      "collision_distribution_by_spr",
+      "collision_distribution_by_effective_stack_bb"
+    ]
+  },
+  "training_runtime": {
+    "os": "Ubuntu 24.04 or physically calibrated Ryzen runtime with separately recorded environment identity",
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "device": "cpu",
+    "exact_opponent_levels": 2,
+    "iterations": 5,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "advantage_chunk_steps": 256,
+    "advantage_max_steps_per_iteration": 4096,
+    "policy_chunk_steps": 256,
+    "policy_max_steps": 16384,
+    "ensemble_size": 4,
+    "epsilon_scale": 1.75,
+    "epsilon_cap": 0.5,
+    "early_stopping_candidate_specific": false,
+    "same_10_output_model_capacity_across_action_candidates": true
+  },
+  "root_escalation": {
+    "levels_roots_per_seed": [160, 320, 640],
+    "roots_per_iteration_by_level": [32, 64, 128],
+    "rule": "Run every structurally valid candidate at 160. Reapply the frozen selection/equivalence rules. If more than one eligible candidate remains, rerun only survivors plus required controls/referee fresh at 320 using the same frozen seeds. If still ambiguous, rerun survivors plus controls/referee fresh at 640. No threshold or candidate change is allowed between levels.",
+    "maximum_level": 640
+  },
+  "seed_derivation": {
+    "anchor": "ba2eab3c51cdf86057c18dd160cb6febe8cc60f7",
+    "formula": "first positive 31 bits of SHA256('SpinCore|R7.5.4|<phase>|<index>|' + anchor)",
+    "postflop_training_seeds": [355310618, 1215469455, 920558322],
+    "preflop_training_seeds": [898861073, 221020240, 2067264989],
+    "paired_evaluation_seeds": [1412935182, 816404962],
+    "seed_shopping_allowed": false
+  },
+  "unchanged_learning_quality_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "rule": "These are hard eligibility gates, recomputed numerically by the aggregator. They are not relative ranking metrics."
+  },
+  "dense_referee_action_omission_metric": {
+    "required": true,
+    "referee": "PF_DENSE_REFERENCE for R7.5.4A; for R7.5.4B use the union of all active preflop primitives with the selected R7.5.4A postflop set.",
+    "continuation_policy": "frozen referee AveragePolicy at the same root level and training seed",
+    "heldout_decision_states_per_domain_seed": 2048,
+    "state_source": "referee traversal with independent paired evaluation seeds; exact same state identities for every candidate",
+    "q_evaluation": "For each heldout state evaluate every unique exact referee action using exact child state and partial-exact continuation under the frozen referee policy. Candidate omission loss is max referee-action Q minus max Q among exact actions available to the candidate in that state.",
+    "primary_statistic": "weighted mean positive omission loss in ICM payout-delta units",
+    "secondary_statistics": ["p50", "p95", "max", "fraction_zero_loss", "by_street", "by_spr", "by_semantic_sentinel"],
+    "paired_bootstrap_replicates": 2000,
+    "paired_ci": 0.95
+  },
+  "crossplay_metric": {
+    "required": true,
+    "reference_policy": "referee policy at same root level",
+    "hu": "candidate versus referee in both seat assignments on common exact deals",
+    "three_handed": "candidate occupies each of three seats against two referee policies; rotate candidate through all seats on common exact deals",
+    "hands_per_evaluation_seed_hu_per_seat": 20000,
+    "hands_per_evaluation_seed_3h_per_candidate_seat": 10000,
+    "primary_statistic": "paired mean candidate ICM delta relative to referee baseline across seat rotations",
+    "paired_bootstrap_replicates": 2000,
+    "paired_ci": 0.95
+  },
+  "tree_cost_metrics": [
+    "nodes_per_root",
+    "seconds_per_root",
+    "peak_rss",
+    "advantage_samples_per_root",
+    "strategy_samples_per_root",
+    "effective_unique_aggressive_branches_per_decision"
+  ],
+  "material_effect_floor_icm": 0.001,
+  "selection_cascade_each_root_level": [
+    {
+      "rank": 1,
+      "metric": "structural correctness + unchanged learning-quality gates",
+      "rule": "discard failures; referee may remain as diagnostic even though ineligible to win"
+    },
+    {
+      "rank": 2,
+      "metric": "worst-domain paired dense-referee omission loss",
+      "direction": "lower",
+      "equivalence": "A candidate is materially worse than the current best only when mean difference > 0.001 ICM AND paired 95% CI lower bound for the difference is > 0. Otherwise it remains equivalent."
+    },
+    {
+      "rank": 3,
+      "metric": "worst-domain paired crossplay ICM result versus referee",
+      "direction": "higher",
+      "equivalence": "A candidate is materially worse than the current best only when best-minus-candidate mean > 0.001 ICM AND paired 95% CI lower bound for that difference is > 0. Otherwise it remains equivalent."
+    },
+    {
+      "rank": 4,
+      "metric": "worst-domain nodes/root",
+      "direction": "lower",
+      "relative_equivalence_band": 0.10
+    },
+    {
+      "rank": 5,
+      "metric": "worst-domain seconds/root",
+      "direction": "lower",
+      "relative_equivalence_band": 0.10
+    },
+    {
+      "rank": 6,
+      "metric": "effective unique aggressive branches/decision",
+      "direction": "lower"
+    },
+    {
+      "rank": 7,
+      "metric": "deterministic conservative fallback",
+      "rule_postflop": "retain PF0_CONTROL_33_75_AI if still tied; otherwise lexical candidate id",
+      "rule_preflop": "retain PR0_CONTROL_MIN_AI if still tied; otherwise lexical candidate id"
+    }
+  ],
+  "escalation_rule": {
+    "if_single_candidate_after_cascade": "select at current level if level >= 320; a 160-root result can prune but cannot be the final production selection",
+    "if_multiple_candidates_after_160": "advance survivors to 320",
+    "if_multiple_candidates_after_320": "advance survivors to 640",
+    "if_multiple_candidates_after_640": "apply full cascade including cost and conservative fallback",
+    "minimum_final_selection_level": 320
+  },
+  "r7_5_4_pass_condition": "Both R7.5.4A and R7.5.4B have durable selected candidates, structural gates pass, all selected-candidate learning-quality gates pass at >=320 roots/seed, evaluation evidence is complete, and no precommitted rule changed after outputs.",
+  "r7_5_5_still_required": true,
+  "notes": [
+    "Fit quality is eligibility evidence, not the primary strategic ranking criterion.",
+    "The dense reference is a referee/coverage upper reference and is not automatically production-eligible.",
+    "A larger action tree must demonstrate material strategic gain rather than winning by branch count.",
+    "Exact realized action sizes remain in public history for every candidate.",
+    "No R7.5.4 result can set READY FOR TABLES true."
+  ]
+}
