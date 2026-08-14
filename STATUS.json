@@ -2,10 +2,10 @@
   "project": "SpinCore",
   "version": "1.12.1-recovery.31",
   "recovery_generation": 2,
-  "physical_state": "R7_4_FINAL_PASS_R7_5_REPRESENTATION_ACTION_AUDIT_IN_PROGRESS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
+  "physical_state": "R7_4_FINAL_PASS_R7_5_LEGACY_184_RECOVERED_SUIT_INVARIANCE_FAIL_ONTOLOGY_SCAFFOLD_PASS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.5",
-  "current_gate_status": "R7_5_0_PRECOMMIT_PASS_R7_5_1_REFERENCE_IMPLEMENTED_LEGACY_184_MAPPING_MISSING",
+  "current_gate_status": "R7_5_1_LEGACY_184_COVERAGE_PASS_SUIT_INVARIANCE_FAIL_R7_5_2_POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS",
   "ready_for_tables": false,
   "roadmap": {
     "R0_R6": "PASS_REBUILT",
@@ -139,6 +139,8 @@
   "r7_5": {
     "status": "IN_PROGRESS",
     "precommit": "validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md",
+    "legacy_audit": "validation/R7_5_LEGACY_CRUSHER_AND_184_AUDIT_20260813.md",
+    "legacy_184_evidence": "validation/R7_5_LEGACY_184_MAPPING_AUDIT.json",
     "r7_5_0_design_precommit_pass": true,
     "legacy_findings": {
       "deepspin_obs_dims": 292,
@@ -148,7 +150,16 @@
       "legacy_184_summary_rows": 184,
       "legacy_184_physical_flops_claimed": 22100,
       "legacy_184_unique_text_labels": 99,
-      "legacy_184_mapping_available": false
+      "legacy_184_mapping_available": true,
+      "legacy_184_mapping_sha256": "7fb7aebee3b24b5bf6904915194f21835cb06773d7474b3ff8649153337afff8",
+      "legacy_184_complete_22100_pass": true,
+      "legacy_184_unique_representatives": 184,
+      "legacy_184_suit_isomorphic_input_classes_split": 40,
+      "legacy_184_suit_permutation_invariance_pass": false,
+      "legacy_184_eligible_unchanged": false,
+      "crusher_framework_sha256": "7ec68e2efc9790bfc02f47da690faa1856ab2be47a8d10bd178a2963fa78ce08",
+      "crusher_defend_situations": 32,
+      "crusher_attack_situations": 13
     },
     "reference_implementation": {
       "module": "python/spincore/flop_abstraction.py",
@@ -158,12 +169,33 @@
       "exact_suit_isomorphic_flop_classes": 1755,
       "user_53_control_classes": 53
     },
-    "primary_candidate": "AUDITED_184_PLUS_SEMANTIC_V2_NOT_YET_ACCEPTED",
+    "postflop_ontology": {
+      "header": "include/spincore/postflop_ontology.hpp",
+      "implementation": "src/postflop_ontology.cpp",
+      "test": "tests/test_postflop_ontology.cpp",
+      "regression_run": 31761845283,
+      "regression_pass": true,
+      "semantic_lines": [
+        "CBET",
+        "DONK_BET",
+        "PROBE_BET",
+        "FLOAT_BET",
+        "DELAYED_FLOAT_BET",
+        "DELAYED_CBET",
+        "DOUBLE_DELAYED_CBET",
+        "GENERIC_BET",
+        "RAISE"
+      ],
+      "state_action_decomposition": "CALL_AND_RAISE_ARE_POLICY_OUTPUTS_NOT_DUPLICATED_INPUT_STATES",
+      "legacy_sizing_thresholds_frozen": false,
+      "exact_to_call_and_pot_preserved": true
+    },
+    "primary_candidate": "SUIT_INVARIANT_184_DESCENDANT_PLUS_SEMANTIC_V2_NOT_YET_ACCEPTED",
     "flop53_role": "DIAGNOSTIC_CONTROL_NOT_ELIGIBLE_AS_SOLE_PRIMARY_PRODUCTION_ABSTRACTION",
     "exact_game_state_remains_exact": true,
     "lossy_abstraction_only_at_neural_observation_boundary": true,
-    "r7_5_1": "PARTIAL_REFERENCE_DONE_BLOCKED_ON_RECOVER_OR_REGENERATE_AUDITABLE_184_MAPPING",
-    "r7_5_2": "PENDING",
+    "r7_5_1": "LEGACY_184_RECOVERED_COVERAGE_PASS_SUIT_INVARIANCE_FAIL_CORRECTED_OR_NEW_CANDIDATE_PENDING",
+    "r7_5_2": "POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS_NEURALINPUTV2_INTEGRATION_PENDING",
     "r7_5_3": "PENDING",
     "r7_5_4": "PENDING",
     "r7_5_5": "PENDING",
@@ -214,6 +246,6 @@
     "finite_endpoint_defined": true,
     "only_r12_9_can_set_ready_for_tables_true": true
   },
-  "next_physical_step": "Complete R7.5.1 by recovering the historical 184Flops.json or regenerating a deterministic auditable 184-class mapping against the exact 22,100-flop / 1,755 suit-isomorphic reference. Then implement NeuralInputV2 semantic regression before any official R8.3/R8.4 production training.",
+  "next_physical_step": "Precommit and audit suit-invariant descendants of the recovered legacy 184 map against the 1,755 exact flop reference, then integrate the regression-proven compositional postflop ontology into NeuralInputV2. Freeze R7.5.3 representation candidates and acceptance metrics before comparative learning results. Do not start official R8.3/R8.4 production training.",
   "ready_for_tables": false
 }
