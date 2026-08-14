@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V3"
+SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V4"
 REP_SCHEMA = "SPINCORE_R7_5_3_REPRESENTATION_ABLATION_RESULT_V1"
 STRUCT_SCHEMA = "SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V3"
 UNCERTAINTY_SCHEMA = "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1"
@@ -13,11 +13,13 @@ PRECOMMIT_V1_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V1"
 PRECOMMIT_V2_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2"
 PRECOMMIT_V3_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3"
 HERITAGE_SCHEMA = "SPINCORE_LEGACY_HERITAGE_SOURCE_MANIFEST_V1"
+HERITAGE_LEDGER_SCHEMA = "SPINCORE_R7_5_LEGACY_HERITAGE_INTEGRATION_LEDGER_V1"
 REACHABILITY_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_CONTRACT_V1"
 REACHABILITY_AUDIT_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_AUDIT_V1"
 
 HERITAGE_AUDIT = "R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"
 HERITAGE_MANIFEST = "R7_5_LEGACY_HERITAGE_SOURCE_MANIFEST_20260814.json"
+HERITAGE_LEDGER = "R7_5_LEGACY_HERITAGE_INTEGRATION_LEDGER_20260814.json"
 REACHABILITY_CONTRACT = "R7_5_REAL_GAME_REACHABILITY_CONTRACT.json"
 REACHABILITY_AUDIT = "R7_5_REAL_GAME_REACHABILITY_AUDIT.json"
 
@@ -76,22 +78,26 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
     def check(name: str, condition: bool, detail: str) -> None:
         checks[name] = {"pass": bool(condition), "detail": str(detail)}
 
+    readable_source_names: set[str] = set()
+
     # Full prior-attempt heritage is a hard dependency, not conversational context.
     try:
         heritage = _read(validation / HERITAGE_MANIFEST)
         archive = heritage.get("prior_attempt_archive") or {}
         comparison = archive.get("archive_comparison") or {}
         readable = archive.get("readable_sources") or []
+        readable_source_names = {str(row.get("source")) for row in readable}
         check("heritage_schema", heritage.get("schema") == HERITAGE_SCHEMA, str(heritage.get("schema")))
         check(
             "heritage_full_read_inventory",
-            len(readable) >= 17
+            len(readable) == 17
+            and len(readable_source_names) == 17
             and all(
                 str(row.get("full_read_status", "")).endswith(("full_read", "full_parse", "ast_parse"))
                 or "full_" in str(row.get("full_read_status", ""))
                 for row in readable
             ),
-            f"readable_sources={len(readable)}",
+            f"readable_sources={len(readable)} unique={len(readable_source_names)}",
         )
         check(
             "heritage_archive_equivalence",
@@ -116,6 +122,46 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
         str(heritage_audit_path),
     )
 
+    # Per-file disposition is required in addition to full reading. This makes
+    # "use the best of every prior-attempt file" a machine-checkable contract:
+    # no readable source may silently disappear between source audit and design.
+    try:
+        ledger = _read(validation / HERITAGE_LEDGER)
+        entries = ledger.get("entries") or []
+        ledger_sources = {str(row.get("source")) for row in entries}
+        complete_rows = all(
+            bool(row.get("reviewed_full"))
+            and bool(row.get("best_of"))
+            and bool(row.get("preserve"))
+            and bool(str(row.get("destination", "")).strip())
+            and bool(str(row.get("status", "")).strip())
+            and bool(row.get("current_evidence"))
+            and bool(row.get("never_inherit_as_truth"))
+            for row in entries
+        )
+        check(
+            "heritage_ledger_schema",
+            ledger.get("schema") == HERITAGE_LEDGER_SCHEMA,
+            str(ledger.get("schema")),
+        )
+        check(
+            "heritage_ledger_complete",
+            len(entries) == 17
+            and len(ledger_sources) == 17
+            and ledger_sources == readable_source_names
+            and complete_rows,
+            f"entries={len(entries)} ledger_sources={len(ledger_sources)} manifest_sources={len(readable_source_names)}",
+        )
+        check(
+            "heritage_ledger_not_table_authority",
+            not bool(ledger.get("strategic_output"))
+            and not bool(ledger.get("production_training_authorized"))
+            and not bool(ledger.get("ready_for_tables")),
+            "per-file heritage disposition cannot authorize strategy/table use",
+        )
+    except Exception as exc:
+        check("heritage_ledger_available", False, repr(exc))
+
     try:
         reach = _read(validation / REACHABILITY_CONTRACT)
         invariants = reach.get("required_invariants") or {}
@@ -130,9 +176,6 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
     except Exception as exc:
         check("reachability_contract_available", False, repr(exc))
 
-    # The written contract must be backed by a durable execution over engine-reached
-    # HU and 3H trajectories. This prevents a future manual launch from treating a
-    # semantic promise as if it were tested evidence.
     try:
         reach_audit = _read(validation / REACHABILITY_AUDIT)
         totals = reach_audit.get("totals") or {}
