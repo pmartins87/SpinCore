@@ -1,0 +1,218 @@
+name: SpinCore R7.5.3C Phase 1 hybrid diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_5_3c_phase1_diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-phase1-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout immutable launch SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze execution SHA and validate contracts
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          parent = json.loads(Path('validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json').read_text())
+          phase = json.loads(Path('validation/R7_5_3C_PHASE1_DIAGNOSTIC_EXECUTION_FREEZE.json').read_text())
+          assert parent['schema'] == 'SPINCORE_R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT_V1'
+          assert parent['status'] == 'PRECOMMITTED_BEFORE_3C_RESULTS'
+          assert phase['schema'] == 'SPINCORE_R7_5_3C_PHASE1_DIAGNOSTIC_EXECUTION_FREEZE_V1'
+          assert phase['status'] == 'FROZEN_BEFORE_PHASE1_FIT_OUTPUTS'
+          assert phase['selection_authority'] == 'DIAGNOSTIC_ONLY'
+          assert phase['paired_corpus_run_id'] == 31767822186
+          assert phase['candidates'] == [
+              'H0_FIXED_V1',
+              'H1_RELATIONAL_EXACT',
+              'H2_RELATIONAL_EXACT_STRUCTURED_HISTORY',
+              'H3_HYBRID_EXACT_SEMANTIC',
+          ]
+          assert phase['fit_seeds'] == [247244420, 1953786788, 2029202803]
+          assert phase['advantage_steps'] == 2048
+          assert phase['policy_steps'] == 4096
+          assert phase['ready_for_tables'] is False
+          PY
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+
+      - name: Re-run Phase 0 structural and analytic gates
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r7_5_3c_hybrid_property_tests_pruned.py
+          python tools/r7_5_3c_deep_cfr_toy_tests.py
+
+  fit:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        fit_seed: [247244420, 1953786788, 2029202803]
+        candidate:
+          - H0_FIXED_V1
+          - H1_RELATIONAL_EXACT
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY
+          - H3_HYBRID_EXACT_SEMANTIC
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+
+      - name: Download frozen original R7.5.3 domain corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3-corpus-${{ matrix.domain }}-*
+          path: corpora
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 31767822186
+
+      - name: Fit one immutable hybrid diagnostic candidate
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t advantages < <(find corpora -name advantage_pairs.pt -type f | sort)
+          mapfile -t strategies < <(find corpora -name strategy_pairs.pt -type f | sort)
+          test "${#advantages[@]}" -eq 2
+          test "${#strategies[@]}" -eq 2
+          adv_args=()
+          strategy_args=()
+          for f in "${advantages[@]}"; do adv_args+=(--advantage "$f"); done
+          for f in "${strategies[@]}"; do strategy_args+=(--strategy "$f"); done
+          mkdir -p fit_output
+          python tools/run_with_heartbeat.py \
+            --label "r7.5.3c-p1-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.fit_seed }}" \
+            --interval-seconds 300 -- \
+            python tools/r7_5_3c_fit_hybrid_candidate.py \
+              --candidate '${{ matrix.candidate }}' \
+              --domain '${{ matrix.domain }}' \
+              --fit-seed '${{ matrix.fit_seed }}' \
+              --split-seed 1925930899 \
+              "${adv_args[@]}" \
+              "${strategy_args[@]}" \
+              --out 'fit_output/fit.pt' \
+              --device cpu \
+              --learning-rate 0.001 \
+              --batch-size 256 \
+              --advantage-steps 2048 \
+              --policy-steps 4096 \
+              --min-tag-samples 128
+          test -s fit_output/fit.pt
+
+      - name: Upload immutable diagnostic fit
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p1-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.fit_seed }}
+          path: fit_output/fit.pt
+          if-no-files-found: error
+          retention-days: 14
+
+  aggregate:
+    needs: [gate, fit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+
+      - name: Download all Phase 1 fits
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-p1-*
+          path: fits
+
+      - name: Aggregate diagnostics without selecting a winner
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t fit_files < <(find fits -name fit.pt -type f | sort)
+          test "${#fit_files[@]}" -eq 24
+          fit_args=()
+          for f in "${fit_files[@]}"; do fit_args+=(--fit "$f"); done
+          python tools/r7_5_3c_aggregate_phase1_diagnostic.py \
+            "${fit_args[@]}" \
+            --execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            --out phase1_diagnostic_summary.json
+
+      - name: Upload Phase 1 diagnostic summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-phase1-diagnostic-summary
+          path: phase1_diagnostic_summary.json
+          if-no-files-found: error
+          retention-days: 30
