@@ -34,6 +34,8 @@ class SolverLibrary:
         L.spincore_solver_state_domain.argtypes=[C.c_void_p];L.spincore_solver_state_domain.restype=C.c_int32
         L.spincore_solver_state_legal_mask.argtypes=[C.c_void_p];L.spincore_solver_state_legal_mask.restype=C.c_uint32
         L.spincore_solver_state_apply_abstract.argtypes=[C.c_void_p,C.c_int32];L.spincore_solver_state_apply_abstract.restype=C.c_int32
+        L.spincore_solver_state_universal_legal_mask.argtypes=[C.c_void_p,C.c_uint32];L.spincore_solver_state_universal_legal_mask.restype=C.c_uint32
+        L.spincore_solver_state_apply_universal.argtypes=[C.c_void_p,C.c_uint32,C.c_int32];L.spincore_solver_state_apply_universal.restype=C.c_int32
         L.spincore_solver_state_neural_input.argtypes=[C.c_void_p,C.POINTER(C.c_uint8),C.c_size_t];L.spincore_solver_state_neural_input.restype=C.c_size_t
         L.spincore_solver_state_neural_input_v2.argtypes=[C.c_void_p,C.POINTER(C.c_uint8),C.c_size_t];L.spincore_solver_state_neural_input_v2.restype=C.c_size_t
         L.spincore_solver_state_terminal_chip_delta.argtypes=[C.c_void_p,C.POINTER(C.c_int32)];L.spincore_solver_state_terminal_chip_delta.restype=C.c_int32
@@ -82,6 +84,21 @@ class SolverState:
     def child(self,a:int):
         c=self.clone()
         try:return c.apply(a)
+        except Exception:c.close();raise
+    def universal_legal_actions(self,active_mask:int):
+        mask=int(active_mask)
+        if mask<0 or mask>0x3ff:raise ValueError('universal active mask must use only slots 0..9')
+        m=int(self.owner.lib.spincore_solver_state_universal_legal_mask(self._p(),C.c_uint32(mask)))
+        return tuple(i for i in range(10) if m&(1<<i))
+    def apply_universal(self,active_mask:int,a:int):
+        mask=int(active_mask);action=int(a)
+        if mask<0 or mask>0x3ff:raise ValueError('universal active mask must use only slots 0..9')
+        if action<0 or action>9:raise ValueError('bad universal action')
+        if self.owner.lib.spincore_solver_state_apply_universal(self._p(),C.c_uint32(mask),action)!=0:raise RuntimeError(self.owner.error() or 'universal apply failed')
+        return self
+    def child_universal(self,active_mask:int,a:int):
+        c=self.clone()
+        try:return c.apply_universal(active_mask,a)
         except Exception:c.close();raise
     def _neural_payload(self,fn_name:str)->bytes:
         p=self._p();fn=getattr(self.owner.lib,fn_name);n=int(fn(p,None,0));
