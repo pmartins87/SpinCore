@@ -46,6 +46,19 @@ def test_bottom_hash_retention_is_insertion_order_independent() -> None:
     assert forward.state_summary()["kept"] == 10
 
 
+def test_bottom_hash_preserves_exact_duplicates_without_heap_comparison_failure() -> None:
+    sample = _sample(8)
+    corpus = BottomHashCorpus[PairedSample](3)
+    for _ in range(5):
+        corpus.add(sample)
+
+    assert corpus.seen == 5
+    assert len(corpus.items) == 3
+    assert all(item == sample for item in corpus.items)
+    identities = [immutable_sample_identity(item) for item in corpus.items]
+    assert identities == [immutable_sample_identity(sample)] * 3
+
+
 def test_hash_split_is_deterministic_and_disjoint() -> None:
     samples = [_sample(index) for index in range(200)]
     train_a, heldout_a = split_items(samples, split_seed=1925930899)
