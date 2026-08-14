@@ -199,31 +199,11 @@ def _select(summaries: dict[str, dict], pre: dict) -> tuple[str | None, list[dic
 
     bands = dict(pre["noninferiority_bands_reused_from_R7_5_3"])
     comparisons = [
-        (
-            "worst_domain_mean_advantage_weighted_nrmse",
-            "worst_domain_mean_advantage_weighted_nrmse_absolute",
-            "absolute",
-        ),
-        (
-            "worst_domain_mean_policy_weighted_mean_tv",
-            "worst_domain_mean_policy_weighted_mean_tv_absolute",
-            "absolute",
-        ),
-        (
-            "worst_domain_mean_sentinel_macro_nrmse",
-            "worst_domain_mean_sentinel_macro_nrmse_absolute",
-            "absolute",
-        ),
-        (
-            "worst_domain_cross_fit_p95_tv",
-            "worst_domain_cross_fit_p95_tv_absolute",
-            "absolute",
-        ),
-        (
-            "worst_domain_model_inference_seconds_per_sample",
-            "model_inference_seconds_per_sample_relative",
-            "relative",
-        ),
+        ("worst_domain_mean_advantage_weighted_nrmse", "worst_domain_mean_advantage_weighted_nrmse_absolute", "absolute"),
+        ("worst_domain_mean_policy_weighted_mean_tv", "worst_domain_mean_policy_weighted_mean_tv_absolute", "absolute"),
+        ("worst_domain_mean_sentinel_macro_nrmse", "worst_domain_mean_sentinel_macro_nrmse_absolute", "absolute"),
+        ("worst_domain_cross_fit_p95_tv", "worst_domain_cross_fit_p95_tv_absolute", "absolute"),
+        ("worst_domain_model_inference_seconds_per_sample", "model_inference_seconds_per_sample_relative", "relative"),
     ]
     noninferior = True
     for metric, band_key, mode in comparisons:
@@ -232,18 +212,16 @@ def _select(summaries: dict[str, dict], pre: dict) -> tuple[str | None, list[dic
         band = float(bands[band_key])
         threshold = value0 + band if mode == "absolute" else value0 * (1.0 + band)
         passed = bool(value1 <= threshold)
-        trace.append(
-            {
-                "step": "S1_noninferiority",
-                "metric": metric,
-                "S0": value0,
-                "S1": value1,
-                "mode": mode,
-                "band": band,
-                "threshold": threshold,
-                "pass": passed,
-            }
-        )
+        trace.append({
+            "step": "S1_noninferiority",
+            "metric": metric,
+            "S0": value0,
+            "S1": value1,
+            "mode": mode,
+            "band": band,
+            "threshold": threshold,
+            "pass": passed,
+        })
         noninferior = noninferior and passed
     return (VARIANTS[1] if noninferior else VARIANTS[0]), trace
 
@@ -252,6 +230,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Aggregate R7.5.3B card-symmetry gate")
     parser.add_argument("--fit", type=Path, action="append", required=True)
     parser.add_argument("--precommit", type=Path, required=True)
+    parser.add_argument("--execution-sha", required=True)
+    parser.add_argument("--source-corpus-run-id", type=int, default=31767822186)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
@@ -260,16 +240,15 @@ def main() -> int:
         raise ValueError("wrong R7.5.3B precommit schema")
     if pre.get("status") != "FROZEN_BEFORE_CARD_SYMMETRY_COMPARATIVE_OUTPUTS":
         raise ValueError("R7.5.3B precommit is not frozen")
+    if int(args.source_corpus_run_id) != int(pre["paired_corpus_source"]["workflow_run_id"]):
+        raise ValueError("source corpus run differs from frozen precommit")
 
     entries = [_load_fit(path) for path in args.fit]
     expected_count = len(VARIANTS) * len(pre["domains"]) * len(pre["fit_initialization_seeds"])
     if len(entries) != expected_count:
         raise ValueError(f"expected {expected_count} fits, got {len(entries)}")
 
-    summaries = {
-        variant: _summarize_variant(entries, pre, variant)
-        for variant in VARIANTS
-    }
+    summaries = {variant: _summarize_variant(entries, pre, variant) for variant in VARIANTS}
     _assert_exact_pairing(summaries, pre)
     winner, trace = _select(summaries, pre)
     status = "PASS" if winner is not None else "BLOCKED"
@@ -278,6 +257,8 @@ def main() -> int:
         "schema": SCHEMA,
         "status": status,
         "winner_id": winner,
+        "execution_sha": str(args.execution_sha),
+        "source_corpus_run_id": int(args.source_corpus_run_id),
         "precommit": str(args.precommit),
         "summaries": summaries,
         "selection_trace": trace,
