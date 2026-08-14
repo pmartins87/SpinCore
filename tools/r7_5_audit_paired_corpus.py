@@ -8,7 +8,11 @@ from pathlib import Path
 
 import torch
 
-from spincore.r7_5_paired_corpus import PairedSample, immutable_sample_identity
+from spincore.r7_5_paired_corpus import (
+    PairedSample,
+    immutable_sample_identity,
+    retention_key,
+)
 from spincore_nn.codec import decode_spnniv1
 from spincore_nn.codec_v2 import decode_spnniv2
 
@@ -89,8 +93,18 @@ def _load_samples(path: Path, expected_kind: str, domain: str, seed: int) -> lis
 
 
 def _identity_digest(samples: list[PairedSample]) -> str:
+    """Reproduce BottomHashCorpus.state_summary() ordering exactly.
+
+    The producer's canonical item order is retention_key order, with insertion
+    sequence used only to break exact-key ties. Saved corpus files are emitted in
+    that producer order. Sorting by immutable_sample_identity here was a distinct
+    deterministic ordering and caused false hash mismatches on valid corpora.
+
+    Exact retention-key ties imply byte-identical sample identities for this
+    scheme, so their relative order cannot change the concatenated digest.
+    """
     digest = hashlib.sha256()
-    for sample in sorted(samples, key=immutable_sample_identity):
+    for sample in sorted(samples, key=retention_key):
         digest.update(immutable_sample_identity(sample))
     return digest.hexdigest()
 
@@ -198,9 +212,6 @@ def audit_corpus_dirs(corpus_dirs: list[Path]) -> dict:
             }
         )
 
-    # Required objective coverage families. They are not strategic thresholds;
-    # they only prove the corpus actually exercises the semantic channels that
-    # can enter the precommitted sentinel metric.
     family_prefixes = (
         "preflop_lineage:",
         "post_open:",
@@ -231,6 +242,8 @@ def audit_corpus_dirs(corpus_dirs: list[Path]) -> dict:
         "semantic_family_coverage": family_coverage,
         "coverage_pass": bool(all_coverage_pass),
         "candidate_inference_used": False,
+        "identity_digest_order": "BOTTOM_HASH_RETENTION_KEY_CANONICAL_ORDER",
+        "audit_correction_note": "Recomputes producer ordered_identity_sha256 in BottomHashCorpus retention-key order; prior immutable-identity sort was a validation-only ordering defect.",
         "strategic_gate_changed": False,
         "production_training_authorized": False,
         "ready_for_tables": False,
