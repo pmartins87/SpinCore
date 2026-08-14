@@ -27,3 +27,7 @@ add_test(
  COMMAND ${CMAKE_COMMAND} -DPROBE=$<TARGET_FILE:spincore_v2_fresh_process_probe> -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_v2_fresh_process.cmake)
 add_executable(spincore_r7_5_action_structural_audit tools/r7_5_action_structural_audit_v3.cpp)
 target_link_libraries(spincore_r7_5_action_structural_audit PRIVATE spincore)
+add_executable(spincore_r7_5_3c_evaluator_exhaustive_audit tools/r7_5_3c_evaluator_exhaustive_audit.cpp)
+target_link_libraries(spincore_r7_5_3c_evaluator_exhaustive_audit PRIVATE spincore)
+add_executable(spincore_r7_5_3c_engine_property_audit tools/r7_5_3c_engine_property_audit.cpp)
+target_link_libraries(spincore_r7_5_3c_engine_property_audit PRIVATE spincore)
