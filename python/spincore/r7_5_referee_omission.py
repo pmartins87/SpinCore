@@ -13,6 +13,27 @@ PolicyProvider = Callable[[object, bytes, tuple[int, ...]], Sequence[float]]
 
 
 @dataclass(frozen=True)
+class DenseStateQReference:
+    state_index: int
+    actor: int
+    q_values: tuple[tuple[ResolvedExactAction, float], ...]
+    referee_best_action: ResolvedExactAction
+    referee_best_q: float
+
+    def __post_init__(self) -> None:
+        if not self.q_values:
+            raise ValueError("dense Q reference requires at least one exact action")
+        actions = [action for action, _ in self.q_values]
+        if len(actions) != len(set(actions)):
+            raise ValueError("dense Q reference contains duplicate exact actions")
+        if self.referee_best_action not in set(actions):
+            raise ValueError("dense Q reference best action is absent from Q table")
+
+    def as_dict(self) -> dict[ResolvedExactAction, float]:
+        return {action: float(value) for action, value in self.q_values}
+
+
+@dataclass(frozen=True)
 class OmissionStateResult:
     state_index: int
     actor: int
@@ -84,10 +105,7 @@ def dense_partial_exact_value(
                 child.close()
         return float(value)
 
-    uniform = keyed_uniform01(
-        *continuation_key_prefix,
-        int(opponent_sample_ordinal),
-    )
+    uniform = keyed_uniform01(*continuation_key_prefix, int(opponent_sample_ordinal))
     action = sample_discrete_with_uniform(sigma, legal, uniform)
     child = state.child_universal(active_mask, action)
     try:
@@ -105,7 +123,7 @@ def dense_partial_exact_value(
         child.close()
 
 
-def evaluate_omission_state(
+def compute_dense_state_q_reference(
     state,
     *,
     state_index: int,
@@ -113,28 +131,18 @@ def evaluate_omission_state(
     training_seed: int,
     evaluation_seed: int,
     dense_action_spec,
-    candidate_action_spec,
     dense_policy: PolicyProvider,
     exact_opponent_levels: int = 2,
-) -> OmissionStateResult:
+) -> DenseStateQReference:
     if state.terminal:
-        raise ValueError("omission evaluator requires a nonterminal decision state")
+        raise ValueError("dense Q reference requires a nonterminal decision state")
     target = int(state.actor)
     dense_mask, dense_rows = _effective_rows(state, dense_action_spec)
-    _candidate_mask, candidate_rows = _effective_rows(state, candidate_action_spec)
-    dense_by_exact = {exact: slot for slot, exact in dense_rows}
-    candidate_exact = {exact for _, exact in candidate_rows}
-    if not candidate_exact.issubset(set(dense_by_exact)):
-        raise RuntimeError("candidate expresses an exact action absent from dense referee")
-    available = set(dense_by_exact).intersection(candidate_exact)
-    if not available:
-        raise RuntimeError("candidate has no exact action in common with dense referee")
-
-    q: dict[ResolvedExactAction, float] = {}
-    for exact, slot in dense_by_exact.items():
+    q_rows: list[tuple[ResolvedExactAction, float]] = []
+    for slot, exact in dense_rows:
         child = state.child_universal(dense_mask, slot)
         try:
-            q[exact] = dense_partial_exact_value(
+            value = dense_partial_exact_value(
                 child,
                 target_player=target,
                 dense_action_spec=dense_action_spec,
@@ -152,30 +160,152 @@ def evaluate_omission_state(
             )
         finally:
             child.close()
+        q_rows.append((exact, float(value)))
+    q_rows.sort(key=lambda row: row[0])
+    q = {action: value for action, value in q_rows}
+    best = max(q, key=lambda action: (q[action], -action.action_type, -action.amount_to))
+    return DenseStateQReference(
+        state_index=int(state_index),
+        actor=target,
+        q_values=tuple(q_rows),
+        referee_best_action=best,
+        referee_best_q=float(q[best]),
+    )
 
-    referee_best_action = max(q, key=lambda action: (q[action], -action.action_type, -action.amount_to))
+
+def score_candidate_from_dense_q(
+    state,
+    *,
+    reference: DenseStateQReference,
+    candidate_action_spec,
+) -> OmissionStateResult:
+    if state.terminal:
+        raise ValueError("candidate omission scoring requires nonterminal state")
+    if int(state.actor) != int(reference.actor):
+        raise ValueError("candidate omission state actor differs from dense Q reference")
+    _candidate_mask, candidate_rows = _effective_rows(state, candidate_action_spec)
+    q = reference.as_dict()
+    dense_exact = set(q)
+    candidate_exact = {exact for _, exact in candidate_rows}
+    if not candidate_exact.issubset(dense_exact):
+        raise RuntimeError("candidate expresses an exact action absent from dense referee")
+    available = dense_exact.intersection(candidate_exact)
+    if not available:
+        raise RuntimeError("candidate has no exact action in common with dense referee")
     candidate_best_action = max(
         available,
         key=lambda action: (q[action], -action.action_type, -action.amount_to),
     )
-    referee_best = float(q[referee_best_action])
     candidate_best = float(q[candidate_best_action])
-    omission = referee_best - candidate_best
+    omission = float(reference.referee_best_q) - candidate_best
     if omission < -1e-12:
         raise RuntimeError("candidate omission became materially negative")
-    if omission < 0.0:
-        omission = 0.0
+    omission = max(0.0, omission)
     return OmissionStateResult(
-        state_index=int(state_index),
-        actor=target,
-        referee_best_q=referee_best,
+        state_index=int(reference.state_index),
+        actor=int(reference.actor),
+        referee_best_q=float(reference.referee_best_q),
         candidate_best_available_q=candidate_best,
-        omission=float(omission),
-        referee_best_action=referee_best_action,
+        omission=omission,
+        referee_best_action=reference.referee_best_action,
         candidate_best_action=candidate_best_action,
-        referee_action_count=len(dense_by_exact),
+        referee_action_count=len(q),
         candidate_available_action_count=len(available),
     )
+
+
+def evaluate_omission_state(
+    state,
+    *,
+    state_index: int,
+    domain: str,
+    training_seed: int,
+    evaluation_seed: int,
+    dense_action_spec,
+    candidate_action_spec,
+    dense_policy: PolicyProvider,
+    exact_opponent_levels: int = 2,
+) -> OmissionStateResult:
+    reference = compute_dense_state_q_reference(
+        state,
+        state_index=state_index,
+        domain=domain,
+        training_seed=training_seed,
+        evaluation_seed=evaluation_seed,
+        dense_action_spec=dense_action_spec,
+        dense_policy=dense_policy,
+        exact_opponent_levels=exact_opponent_levels,
+    )
+    return score_candidate_from_dense_q(
+        state,
+        reference=reference,
+        candidate_action_spec=candidate_action_spec,
+    )
+
+
+def build_dense_omission_cache(
+    *,
+    solver,
+    descriptors: Sequence[HeldoutRefereeState],
+    dense_action_spec,
+    dense_policy: PolicyProvider,
+    exact_opponent_levels: int = 2,
+) -> tuple[DenseStateQReference, ...]:
+    out: list[DenseStateQReference] = []
+    for descriptor in descriptors:
+        state = replay_heldout_referee_state(
+            solver=solver,
+            action_spec=dense_action_spec,
+            descriptor=descriptor,
+        )
+        try:
+            out.append(
+                compute_dense_state_q_reference(
+                    state,
+                    state_index=descriptor.state_index,
+                    domain=descriptor.domain,
+                    training_seed=descriptor.training_seed,
+                    evaluation_seed=descriptor.evaluation_seed,
+                    dense_action_spec=dense_action_spec,
+                    dense_policy=dense_policy,
+                    exact_opponent_levels=exact_opponent_levels,
+                )
+            )
+        finally:
+            state.close()
+    return tuple(out)
+
+
+def score_candidate_from_omission_cache(
+    *,
+    solver,
+    descriptors: Sequence[HeldoutRefereeState],
+    references: Sequence[DenseStateQReference],
+    dense_action_spec,
+    candidate_action_spec,
+) -> tuple[OmissionStateResult, ...]:
+    if len(descriptors) != len(references):
+        raise ValueError("heldout descriptor/Q-reference count mismatch")
+    out: list[OmissionStateResult] = []
+    for descriptor, reference in zip(descriptors, references):
+        if int(descriptor.state_index) != int(reference.state_index):
+            raise ValueError("heldout descriptor/Q-reference identity mismatch")
+        state = replay_heldout_referee_state(
+            solver=solver,
+            action_spec=dense_action_spec,
+            descriptor=descriptor,
+        )
+        try:
+            out.append(
+                score_candidate_from_dense_q(
+                    state,
+                    reference=reference,
+                    candidate_action_spec=candidate_action_spec,
+                )
+            )
+        finally:
+            state.close()
+    return tuple(out)
 
 
 def evaluate_heldout_omissions(
@@ -187,27 +317,17 @@ def evaluate_heldout_omissions(
     dense_policy: PolicyProvider,
     exact_opponent_levels: int = 2,
 ) -> tuple[OmissionStateResult, ...]:
-    out: list[OmissionStateResult] = []
-    for descriptor in descriptors:
-        state = replay_heldout_referee_state(
-            solver=solver,
-            action_spec=dense_action_spec,
-            descriptor=descriptor,
-        )
-        try:
-            out.append(
-                evaluate_omission_state(
-                    state,
-                    state_index=descriptor.state_index,
-                    domain=descriptor.domain,
-                    training_seed=descriptor.training_seed,
-                    evaluation_seed=descriptor.evaluation_seed,
-                    dense_action_spec=dense_action_spec,
-                    candidate_action_spec=candidate_action_spec,
-                    dense_policy=dense_policy,
-                    exact_opponent_levels=int(exact_opponent_levels),
-                )
-            )
-        finally:
-            state.close()
-    return tuple(out)
+    references = build_dense_omission_cache(
+        solver=solver,
+        descriptors=descriptors,
+        dense_action_spec=dense_action_spec,
+        dense_policy=dense_policy,
+        exact_opponent_levels=exact_opponent_levels,
+    )
+    return score_candidate_from_omission_cache(
+        solver=solver,
+        descriptors=descriptors,
+        references=references,
+        dense_action_spec=dense_action_spec,
+        candidate_action_spec=candidate_action_spec,
+    )
