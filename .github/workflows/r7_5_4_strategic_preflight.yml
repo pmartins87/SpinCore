@@ -1,0 +1,161 @@
+name: SpinCore R7.5.4 strategic preflight
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_4_strategic_preflight.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-5-4-strategic-preflight
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+      ready_to_start: ${{ steps.read.outputs.ready_to_start }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze execution SHA
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Execute actual R7.5.4A 160 preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          set +e
+          python tools/r7_5_4_strategic_preflight.py \
+            --repo-root . \
+            --phase R7_5_4A_POSTFLOP \
+            --root-level 160 \
+            --out evidence/R7_5_4A_160_STRATEGIC_PREFLIGHT.json
+          rc=$?
+          set -e
+          test -f evidence/R7_5_4A_160_STRATEGIC_PREFLIGHT.json
+          echo "$rc" > evidence/preflight_rc.txt
+
+      - name: Read exact result and write provenance manifest
+        id: read
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ steps.freeze.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/preflight_outputs
+          import json, os, platform
+          from pathlib import Path
+          p=json.loads(Path('evidence/R7_5_4A_160_STRATEGIC_PREFLIGHT.json').read_text())
+          rc=int(Path('evidence/preflight_rc.txt').read_text().strip())
+          assert p['schema']=='SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V5'
+          assert p['phase']=='R7_5_4A_POSTFLOP'
+          assert p['root_level']==160
+          assert p['selected_representation']=='C0_V1_FROZEN_CONTROL'
+          assert p['physical_trainability_pass_required_now'] is False
+          assert p['physical_trainability_gate_required_before_r8_official_training'] is True
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          semantic=bool(p['ready_to_start'])
+          assert (rc==0)==semantic
+          print('ready_to_start=' + ('true' if semantic else 'false'))
+          manifest={
+            'schema':'SPINCORE_R7_5_4A_160_PREFLIGHT_EXECUTION_MANIFEST_V1',
+            'execution_sha':os.environ['EXECUTION_SHA'],
+            'workflow_run_id':int(os.environ['GITHUB_RUN_ID']),
+            'workflow_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'python':platform.python_version(),
+            'phase':'R7_5_4A_POSTFLOP',
+            'root_level':160,
+            'selected_representation':'C0_V1_FROZEN_CONTROL',
+            'ready_to_start':semantic,
+            'physical_trainability_pass_required_now':False,
+            'physical_trainability_gate_required_before_r8_official_training':True,
+            'production_training_authorized':False,
+            'ready_for_tables':False,
+          }
+          assert manifest['python']=='3.11.15'
+          Path('evidence/R7_5_4A_160_PREFLIGHT_EXECUTION_MANIFEST.json').write_text(
+            json.dumps(manifest,indent=2,sort_keys=True)+'\n'
+          )
+          PY
+          cat /tmp/preflight_outputs >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable preflight evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-preflight-${{ steps.freeze.outputs.execution_sha }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main before artifact download
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download immutable preflight evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-160-preflight-${{ needs.preflight.outputs.execution_sha }}
+          path: computed
+
+      - name: Revalidate and persist
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.preflight.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=json.loads(Path('computed/R7_5_4A_160_STRATEGIC_PREFLIGHT.json').read_text())
+          m=json.loads(Path('computed/R7_5_4A_160_PREFLIGHT_EXECUTION_MANIFEST.json').read_text())
+          assert m['execution_sha']==os.environ['EXECUTION_SHA']
+          assert m['ready_to_start']==p['ready_to_start']
+          assert p['production_training_authorized'] is False and p['ready_for_tables'] is False
+          PY
+          cp computed/R7_5_4A_160_STRATEGIC_PREFLIGHT.json validation/R7_5_4A_160_STRATEGIC_PREFLIGHT.json
+          cp computed/R7_5_4A_160_PREFLIGHT_EXECUTION_MANIFEST.json validation/R7_5_4A_160_PREFLIGHT_EXECUTION_MANIFEST.json
+          git config user.name 'SpinCore Evidence Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f validation/R7_5_4A_160_STRATEGIC_PREFLIGHT.json \
+                     validation/R7_5_4A_160_PREFLIGHT_EXECUTION_MANIFEST.json
+          if ! git diff --cached --quiet; then
+            git commit -m "validation: persist R7.5.4A 160 strategic preflight (${EXECUTION_SHA})"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+  enforce:
+    needs: [preflight, persist]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce actual strategic preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          test '${{ needs.preflight.outputs.ready_to_start }}' = 'true'
+          echo 'R7.5.4A 160 strategic preflight PASS. This authorizes sizing research only; R8 physical trainability and READY FOR TABLES remain false.'
