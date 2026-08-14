@@ -9,16 +9,37 @@ import torch
 import r7_4_stability_pilot_worker as mono
 import r7_4_staged_domain_worker as staged
 from run_r7_3_partial_exact_advantage_screen import PartialExactAdvantageCollector
-from spincore.deep_cfr import _validate_policy, icm_delta_utility
+from spincore.deep_cfr import icm_delta_utility, sample_action
 from spincore.r7_5_paired_corpus import BottomHashCorpus, PairedSample
 from spincore.solver import SolverLibrary
+from spincore_nn.reservoir import AdvantageSample, StrategySample
 
 PAYOUT = (0.5, 0.3, 0.2)
 SCHEMA = "SPINCORE_R7_5_PAIRED_CORPUS_V1"
 
 
+class _DiscardMemory:
+    """Memory sink used during the frozen paired-collection phase.
+
+    The accepted behavior ensemble is already fitted before paired collection.
+    Mutating the old R7.4 reservoirs cannot affect that frozen policy, so keeping
+    duplicate V1 samples would only waste memory and advance reservoir-local RNG.
+    Traversal RNG and targets remain exactly those of the accepted collector.
+    """
+
+    def add(self, _sample) -> None:
+        return None
+
+
 class PairedPartialExactCollector(PartialExactAdvantageCollector):
-    """R7.4 behavior semantics plus side-effect-free V1/V2 sample pairing."""
+    """Accepted R7.4 collector plus side-effect-free SPNNIV2 pairing.
+
+    The recursion, behavior-policy calls, opponent exact-enumeration depth,
+    sampled branches, weights and return accounting intentionally mirror
+    `PartialExactAdvantageCollector` / `ExternalSamplingCollector` exactly.
+    The only extra operation is serializing SPNNIV2 at the same sample state and
+    retaining the immutable pair in BottomHashCorpus, which consumes no RNG.
+    """
 
     def __init__(
         self,
@@ -46,145 +67,182 @@ class PairedPartialExactCollector(PartialExactAdvantageCollector):
         self.corpus_seed = int(corpus_seed)
 
     @staticmethod
-    def _legal_mask(state) -> tuple[int, ...]:
-        legal = set(int(action) for action in state.legal_actions())
-        return tuple(1 if action in legal else 0 for action in range(6))
+    def _legal_mask(legal: tuple[int, ...]) -> tuple[int, ...]:
+        legal_set = set(int(action) for action in legal)
+        return tuple(1 if action in legal_set else 0 for action in range(6))
 
-    def _add_pair(self, *, kind: str, state, target, weight: float, iteration: int) -> None:
+    def _add_pair(
+        self,
+        *,
+        kind: str,
+        state,
+        observation_v1: bytes,
+        legal: tuple[int, ...],
+        target,
+        weight: float,
+        iteration: int,
+    ) -> None:
         sample = PairedSample(
             kind=kind,
             domain=self.domain_name,
             corpus_seed=self.corpus_seed,
-            observation_v1=state.neural_bytes(),
+            observation_v1=observation_v1,
             observation_v2=state.neural_bytes_v2(),
-            legal=self._legal_mask(state),
+            legal=self._legal_mask(legal),
             target=tuple(float(value) for value in target),
             weight=float(weight),
             iteration=int(iteration),
         )
         (self.paired_advantage if kind == "advantage" else self.paired_strategy).add(sample)
 
-    def _adv_partial(self, state, traverser, iteration, exact_opponent_levels, exact_depth):
-        self.nodes += 1
+    def _adv_partial(
+        self,
+        state,
+        traverser: int,
+        iteration: int,
+        exact_levels: int,
+        explicit_opponent_mass: float,
+    ):
         if state.terminal:
-            return self._utility(state, traverser)
+            return float(self.terminal_utility(state)[traverser]), 1, 0
+
         actor = state.actor
-        observation = state.neural_bytes()
         legal = state.legal_actions()
-        probabilities = self._p(observation, legal, actor, state.domain)
+        observation = state.neural_bytes()
+        sigma = self._p(state, observation, legal)
+
         if actor == traverser:
-            utilities = [0.0] * 6
-            node_utility = 0.0
+            values = [0.0] * 6
+            nodes = 1
+            added = 0
             for action in legal:
                 child = state.child(action)
                 try:
-                    utilities[action] = self._adv_partial(
+                    value, child_nodes, child_added = self._adv_partial(
                         child,
                         traverser,
                         iteration,
-                        exact_opponent_levels,
-                        exact_depth,
+                        exact_levels,
+                        explicit_opponent_mass,
                     )
                 finally:
                     child.close()
-                node_utility += probabilities[action] * utilities[action]
-            regrets = [0.0] * 6
-            for action in legal:
-                regrets[action] = utilities[action] - node_utility
-            sample_weight = max(1.0, float(iteration))
-            self.advantage_memory.add(
-                __import__("spincore.deep_cfr", fromlist=["AdvantageSample"]).AdvantageSample(
-                    observation,
-                    tuple(regrets),
-                    tuple(1 if action in legal else 0 for action in range(6)),
-                    sample_weight,
-                    state.domain,
-                )
-            )
-            self._add_pair(
-                kind="advantage",
-                state=state,
-                target=regrets,
-                weight=sample_weight,
-                iteration=iteration,
-            )
-            self.samples += 1
-            return node_utility
+                values[action] = float(value)
+                nodes += int(child_nodes)
+                added += int(child_added)
 
-        if exact_depth < exact_opponent_levels:
-            node_utility = 0.0
+            node_value = sum(float(sigma[action]) * float(values[action]) for action in legal)
+            target = [0.0] * 6
             for action in legal:
-                probability = probabilities[action]
+                target[action] = float(values[action]) - float(node_value)
+
+            if explicit_opponent_mass > 0.0:
+                weight = float(iteration) * float(explicit_opponent_mass)
+                legal_mask = self._legal_mask(legal)
+                self.advantage_memory.add(
+                    AdvantageSample(
+                        observation,
+                        legal_mask,
+                        tuple(target),
+                        weight,
+                        int(iteration),
+                    )
+                )
+                self._add_pair(
+                    kind="advantage",
+                    state=state,
+                    observation_v1=observation,
+                    legal=legal,
+                    target=target,
+                    weight=weight,
+                    iteration=iteration,
+                )
+                added += 1
+            return float(node_value), int(nodes), int(added)
+
+        if exact_levels > 0:
+            value = 0.0
+            nodes = 1
+            added = 0
+            for action in legal:
+                probability = float(sigma[action])
                 if probability <= 0.0:
                     continue
                 child = state.child(action)
                 try:
-                    child_utility = self._adv_partial(
+                    child_value, child_nodes, child_added = self._adv_partial(
                         child,
                         traverser,
                         iteration,
-                        exact_opponent_levels,
-                        exact_depth + 1,
+                        exact_levels - 1,
+                        float(explicit_opponent_mass) * probability,
                     )
                 finally:
                     child.close()
-                node_utility += probability * child_utility
-            return node_utility
+                value += probability * float(child_value)
+                nodes += int(child_nodes)
+                added += int(child_added)
+            return float(value), int(nodes), int(added)
 
-        action = self._sample(probabilities, legal)
+        action = sample_action(sigma, legal, self.rng)
         child = state.child(action)
         try:
-            return self._adv_partial(
+            value, nodes, added = self._adv_partial(
                 child,
                 traverser,
                 iteration,
-                exact_opponent_levels,
-                exact_depth,
+                0,
+                explicit_opponent_mass,
             )
         finally:
             child.close()
+        return float(value), int(nodes) + 1, int(added)
 
-    def _strategy(self, state, target_player, iteration, own_reach):
+    def _strategy(self, state, target_player: int, iteration: int):
         if state.terminal:
-            return
+            return 0
+
         actor = state.actor
-        observation = state.neural_bytes()
         legal = state.legal_actions()
-        probabilities = self._p(observation, legal, actor, state.domain)
+        observation = state.neural_bytes()
+        sigma = self._p(state, observation, legal)
+
         if actor == target_player:
-            sample_weight = max(float(own_reach), 1.0e-12) * max(1.0, float(iteration))
+            weight = float(iteration)
+            legal_mask = self._legal_mask(legal)
             self.strategy_memory.add(
-                __import__("spincore.deep_cfr", fromlist=["StrategySample"]).StrategySample(
+                StrategySample(
                     observation,
-                    tuple(probabilities),
-                    tuple(1 if action in legal else 0 for action in range(6)),
-                    sample_weight,
-                    state.domain,
+                    legal_mask,
+                    tuple(sigma),
+                    weight,
+                    int(iteration),
                 )
             )
             self._add_pair(
                 kind="strategy",
                 state=state,
-                target=probabilities,
-                weight=sample_weight,
+                observation_v1=observation,
+                legal=legal,
+                target=sigma,
+                weight=weight,
                 iteration=iteration,
             )
-            for action in legal:
-                probability = probabilities[action]
-                if probability <= 0.0:
-                    continue
-                child = state.child(action)
-                try:
-                    self._strategy(child, target_player, iteration, own_reach * probability)
-                finally:
-                    child.close()
-            return
-        action = self._sample(probabilities, legal)
-        child = state.child(action)
-        try:
-            self._strategy(child, target_player, iteration, own_reach)
-        finally:
-            child.close()
+            action = sample_action(sigma, legal, self.rng)
+            child = state.child(action)
+            try:
+                return 1 + self._strategy(child, target_player, iteration)
+            finally:
+                child.close()
+
+        total = 0
+        for action in legal:
+            child = state.child(action)
+            try:
+                total += self._strategy(child, target_player, iteration)
+            finally:
+                child.close()
+        return total
 
 
 def _save_samples(path: Path, samples: list[PairedSample]) -> None:
@@ -210,7 +268,6 @@ def _collect_chunk(
     *,
     solver,
     collector: PairedPartialExactCollector,
-    bundle,
     seed: int,
     domain: str,
     iteration: int,
@@ -218,19 +275,22 @@ def _collect_chunk(
     global_root: int,
     scenario_counts: list[int],
     exact_opponent_levels: int,
-) -> int:
+) -> tuple[int, dict[str, int]]:
     scenarios = mono._scenario_cycle(domain)
     live_by_scenario = [tuple(i for i, stack in enumerate(ep.stacks) if stack > 0) for ep in scenarios]
+    stats = {"roots": 0, "nodes": 0, "advantage_samples": 0, "strategy_samples": 0}
+
     for _ in range(int(roots)):
         scenario_index = global_root % len(scenarios)
         episode = scenarios[scenario_index]
         live = live_by_scenario[scenario_index]
         scenario_counts[scenario_index] += 1
         deck_seed = (int(seed) * 1_000_003 + global_root * 97 + int(iteration)) & ((1 << 64) - 1)
+
         for traverser in live:
             root = solver.create(episode, deck_seed)
             try:
-                collector.collect_advantage_partial_exact(
+                result = collector.collect_advantage_partial_exact(
                     root,
                     traverser=int(traverser),
                     iteration=int(iteration),
@@ -238,19 +298,26 @@ def _collect_chunk(
                 )
             finally:
                 root.close()
+            stats["nodes"] += int(result.nodes)
+            stats["advantage_samples"] += int(result.samples_added)
+
         for target_player in live:
             root = solver.create(episode, deck_seed)
             try:
-                collector.collect_strategy_own_reach(
-                    root,
-                    target_player=int(target_player),
-                    iteration=int(iteration),
+                stats["strategy_samples"] += int(
+                    collector.collect_strategy_own_reach(
+                        root,
+                        target_player=int(target_player),
+                        iteration=int(iteration),
+                    )
                 )
             finally:
                 root.close()
+
         global_root += 1
-        bundle.counters["roots"] += 1
-    return global_root
+        stats["roots"] += 1
+
+    return global_root, stats
 
 
 def main() -> int:
@@ -269,6 +336,11 @@ def main() -> int:
     parser.add_argument("--min-strategy", type=int, default=2000)
     parser.add_argument("--capacity", type=int, default=100000)
     args = parser.parse_args()
+
+    if int(args.bootstrap_roots) <= 0 or int(args.initial_paired_roots) <= 0:
+        raise ValueError("root budgets must be positive")
+    if int(args.extension_roots) <= 0 or int(args.max_paired_roots) < int(args.initial_paired_roots):
+        raise ValueError("invalid paired coverage-extension budget")
 
     freeze = json.loads(args.freeze.read_text(encoding="utf-8"))
     solver = SolverLibrary(args.lib)
@@ -309,8 +381,8 @@ def main() -> int:
         policy=behavior,
         terminal_utility=icm_delta_utility(PAYOUT),
         rng=bundle.batch_rng,
-        advantage_memory=bundle.adv_mem,
-        strategy_memory=bundle.pol_mem,
+        advantage_memory=_DiscardMemory(),
+        strategy_memory=_DiscardMemory(),
         paired_advantage=paired_advantage,
         paired_strategy=paired_strategy,
         domain=args.domain,
@@ -319,13 +391,15 @@ def main() -> int:
 
     paired_roots = 0
     global_root = int(stage["global_root"])
+    global_root_start = global_root
     scenario_counts = [0] * len(mono._scenario_cycle(args.domain))
+    totals = {"roots": 0, "nodes": 0, "advantage_samples": 0, "strategy_samples": 0}
     chunk = int(args.initial_paired_roots)
+
     while True:
-        global_root = _collect_chunk(
+        global_root, chunk_stats = _collect_chunk(
             solver=solver,
             collector=collector,
-            bundle=bundle,
             seed=int(args.seed),
             domain=args.domain,
             iteration=2,
@@ -335,9 +409,12 @@ def main() -> int:
             exact_opponent_levels=int(run_args.exact_opponent_levels),
         )
         paired_roots += chunk
+        for key in totals:
+            totals[key] += int(chunk_stats[key])
+
         enough = (
-            paired_advantage.seen >= int(args.min_advantage)
-            and paired_strategy.seen >= int(args.min_strategy)
+            len(paired_advantage.items) >= int(args.min_advantage)
+            and len(paired_strategy.items) >= int(args.min_strategy)
         )
         if enough or paired_roots >= int(args.max_paired_roots):
             break
@@ -346,8 +423,8 @@ def main() -> int:
             break
 
     coverage_pass = bool(
-        paired_advantage.seen >= int(args.min_advantage)
-        and paired_strategy.seen >= int(args.min_strategy)
+        len(paired_advantage.items) >= int(args.min_advantage)
+        and len(paired_strategy.items) >= int(args.min_strategy)
         and all(count > 0 for count in scenario_counts)
     )
 
@@ -362,21 +439,22 @@ def main() -> int:
         "bootstrap_checkpoint": first_checkpoint,
         "paired_iteration": 2,
         "paired_roots": int(paired_roots),
-        "global_root_start": int(args.bootstrap_roots),
+        "global_root_start": int(global_root_start),
         "global_root_end": int(global_root),
         "scenario_counts_paired_phase": scenario_counts,
         "all_scenarios_exercised_paired_phase": all(count > 0 for count in scenario_counts),
+        "paired_phase_traversal_counts": totals,
         "advantage": paired_advantage.state_summary(),
         "strategy": paired_strategy.state_summary(),
         "minimum_advantage": int(args.min_advantage),
         "minimum_strategy": int(args.min_strategy),
         "coverage_pass": coverage_pass,
-        "candidate_inference_used": false,
+        "candidate_inference_used": False,
         "behavior_observation_wire": "SPNNIV1",
         "paired_secondary_wire": "SPNNIV2",
-        "v2_serialization_consumes_rng": false,
+        "v2_serialization_consumes_rng": False,
         "frozen_behavior_semantic_id": freeze["behavior_semantic_id"],
-        "ready_for_tables": false,
+        "ready_for_tables": False,
     }
     (args.out_dir / "report.json").write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
