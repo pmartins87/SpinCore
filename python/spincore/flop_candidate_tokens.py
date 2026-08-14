@@ -42,6 +42,8 @@ def exact_key_texts() -> tuple[str, ...]:
 def candidate_token_table(candidate: str) -> dict[str, int]:
     candidate = str(candidate).upper()
     keys = exact_key_texts()
+    if candidate in {"NONE", "NO_FLOP_TOKEN"}:
+        return {key: 0 for key in keys}
     if candidate == "H1":
         raw = _decode_tokens(_H1_B64, H1_TOKEN_BYTES_SHA256, 184)
         return {key: int(token) for key, token in zip(keys, raw)}
