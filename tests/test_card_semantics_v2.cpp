@@ -45,6 +45,18 @@ SPIN_TEST(card_semantics_v2_detects_open_ended_draw) {
     REQUIRE(sem.straight_draw_missing_rank_count >= 2);
 }
 
+SPIN_TEST(card_semantics_v2_detects_wheel_edge_2345_as_open_ended) {
+    // A or 6 completes 2345. The previous detector started at low=3 and
+    // incorrectly labelled this as a double-gutshot instead of an OESD.
+    auto flop = board3(c(2,0), c(3,1), c(9,2));
+    auto sem = derive_private_hand_semantics_v2({c(4,2), c(5,3)}, flop, 3);
+    REQUIRE(sem.straight_draw);
+    REQUIRE(sem.straight_draw_missing_rank_count == 2);
+    REQUIRE(sem.open_ended_straight_draw);
+    REQUIRE(!sem.gutshot);
+    REQUIRE(!sem.double_gutshot);
+}
+
 SPIN_TEST(board_semantics_v2_tracks_turn_texture_delta) {
     std::array<Card,5> board{c(12,1), c(11,1), c(2,3), c(14,1), Card{}};
     auto sem = derive_board_semantics_v2(board, 4);
