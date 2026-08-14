@@ -19,6 +19,8 @@ from spincore.solver import Episode, SolverLibrary
 
 SCHEMA = "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1"
 TOLERANCE = 1e-12
+ACCEPTED_EPSILON_SCALE = 1.75
+ACCEPTED_EPSILON_CAP = 0.50
 
 
 class FixedSix(torch.nn.Module):
@@ -40,6 +42,12 @@ def episode() -> Episode:
 
 
 def oracle(rows, solver: SolverLibrary):
+    # The accepted class stores epsilon parameters in module globals. Its source
+    # defaults are not the selected candidate. R7_3_CANDIDATE_SEMANTIC_FREEZE
+    # selected size4_uncertainty_s175: scale=1.75, cap=0.50. Bind those exact
+    # frozen parameters before invoking the historical implementation.
+    accepted.EPSILON_SCALE = ACCEPTED_EPSILON_SCALE
+    accepted.EPSILON_CAP = ACCEPTED_EPSILON_CAP
     state = solver.create(episode(), 123456)
     try:
         observation = state.neural_bytes()
@@ -73,8 +81,8 @@ def run_fixture(name: str, rows, solver: SolverLibrary) -> dict:
         widened,
         legal,
         action_count=10,
-        epsilon_scale=1.75,
-        epsilon_cap=0.5,
+        epsilon_scale=ACCEPTED_EPSILON_SCALE,
+        epsilon_cap=ACCEPTED_EPSILON_CAP,
     )
     policy_differences = [
         abs(float(new_policy[action]) - float(old_policy[action])) for action in range(6)
@@ -146,6 +154,12 @@ def main() -> int:
     payload = {
         "schema": SCHEMA,
         "tolerance": TOLERANCE,
+        "accepted_candidate_label": "size4_uncertainty_s175",
+        "accepted_parameters": {
+            "epsilon_scale": ACCEPTED_EPSILON_SCALE,
+            "epsilon_cap": ACCEPTED_EPSILON_CAP,
+        },
+        "accepted_semantic_freeze": "validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json",
         "accepted_source": "tools/run_r7_3_policy_mixture_uncertainty_damping.py",
         "accepted_source_sha256": sha256(ROOT / "tools" / "run_r7_3_policy_mixture_uncertainty_damping.py"),
         "generalized_source": "python/spincore/r7_5_action_uncertainty.py",
