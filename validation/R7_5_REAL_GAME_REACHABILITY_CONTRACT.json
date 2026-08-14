@@ -1,0 +1,48 @@
+{
+  "schema": "SPINCORE_R7_5_REAL_GAME_REACHABILITY_CONTRACT_V1",
+  "date": "2026-08-14",
+  "status": "PRE_OUTPUT_SEMANTIC_CONTRACT",
+  "principle": "Every sampled or runtime observation must be derivable from one legally reachable authoritative poker state plus its ordered public action trajectory. Derived semantic labels may summarize exact facts but may not create or contradict state.",
+  "required_invariants": {
+    "legal_hand_start": true,
+    "legal_seat_dealer_blind_assignment": true,
+    "unique_cards_compatible_with_street": true,
+    "folded_player_never_acts_again": true,
+    "allin_player_never_takes_later_voluntary_action": true,
+    "current_actor_is_exact_next_legal_actor": true,
+    "ordered_public_history_reaches_exact_current_contributions": true,
+    "pot_reconciles_with_history_and_contributions": true,
+    "amount_to_call_from_exact_state": true,
+    "min_and_max_raise_from_exact_betting_engine": true,
+    "legal_action_mask_from_exact_engine": true,
+    "live_folded_allin_counts_agree_with_player_status": true,
+    "position_and_ip_oop_agree_with_dealer_and_live_lineup": true,
+    "preflop_lineage_derived_from_ordered_public_events": true,
+    "initiative_and_postflop_line_derived_from_ordered_public_events": true,
+    "hand_draw_board_semantics_deterministic_from_actual_cards": true,
+    "derived_features_cannot_contradict_authoritative_state": true,
+    "snapshot_only_reconstruction_for_path_dependent_semantics_forbidden": true
+  },
+  "required_observability": {
+    "state_vs_strategy_fault_isolation": true,
+    "authoritative_state_snapshot": true,
+    "ordered_action_history_available_for_diagnosis": true,
+    "legal_action_set_logged_or_reconstructible": true,
+    "source_and_execution_provenance_preserved": true
+  },
+  "heritage_sources": {
+    "source_manifest": "validation/R7_5_LEGACY_HERITAGE_SOURCE_MANIFEST_20260814.json",
+    "heritage_audit": "validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md",
+    "crusher_semantic_audit": "validation/R7_5_CRUSHER_FRAMEWORK_FULL_SEMANTIC_AUDIT_20260813.md"
+  },
+  "forbidden_shortcuts": [
+    "fabricate a feature combination because individual feature values are valid",
+    "infer path-dependent action history from a late table snapshot when the ordered trajectory is unavailable",
+    "let a folded or all-in player take an impossible voluntary action",
+    "copy historical hard-coded actions or learned outputs as target truth",
+    "silently substitute another scenario's odds, range, stack geometry or action lineage",
+    "treat a derived bucket as more authoritative than exact cards/chips/positions/history"
+  ],
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
