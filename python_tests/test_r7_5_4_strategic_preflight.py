@@ -54,6 +54,29 @@ def _complete_tree(root: Path) -> None:
         },
     )
     _write(
+        v / preflight.REACHABILITY_AUDIT,
+        {
+            "schema": preflight.REACHABILITY_AUDIT_SCHEMA,
+            "reachability_gate_pass": True,
+            "claims": {
+                key: True for key in preflight.REQUIRED_REACHABILITY_CLAIMS
+            },
+            "totals": {
+                "trajectories": 60,
+                "decisions": 263,
+                "v1_legal_mask_checks": 263,
+                "v2_legal_mask_checks": 263,
+                "legacy_illegal_rejections": 263,
+                "universal_illegal_rejections": 202,
+                "history_monotonic_checks": 263,
+                "terminal_chip_conservation_checks": 60,
+                "terminal_icm_conservation_checks": 60,
+            },
+            "production_training_authorized": False,
+            "ready_for_tables": False,
+        },
+    )
+    _write(
         v / "R7_5_3_REPRESENTATION_ABLATION_RESULT.json",
         {
             "schema": preflight.REP_SCHEMA,
@@ -94,6 +117,7 @@ def _complete_tree(root: Path) -> None:
 def test_preflight_allows_only_initial_160_when_all_durable_dependencies_pass(tmp_path: Path) -> None:
     _complete_tree(tmp_path)
     result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["schema"] == "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V3"
     assert result["ready_to_start"] is True
     assert result["selected_representation"] == "C4_V2_H3_RECLUSTERED_184"
     assert result["production_training_authorized"] is False
@@ -141,6 +165,26 @@ def test_preflight_fails_closed_when_reachability_invariant_is_false(tmp_path: P
     assert result["ready_to_start"] is False
     assert result["checks"]["reachable_state_contract"]["pass"] is False
     assert "folded_player_never_acts_again" in result["checks"]["reachable_state_contract"]["detail"]
+
+
+def test_preflight_fails_closed_when_reachability_audit_is_missing(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    (tmp_path / "validation" / preflight.REACHABILITY_AUDIT).unlink()
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["reachability_audit_available"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_reachability_claim_is_false(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    path = tmp_path / "validation" / preflight.REACHABILITY_AUDIT
+    payload = json.loads(path.read_text())
+    payload["claims"]["observations_only_from_engine_reached_states"] = False
+    _write(path, payload)
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["reachability_audit_gate"]["pass"] is False
+    assert "observations_only_from_engine_reached_states" in result["checks"]["reachability_audit_gate"]["detail"]
 
 
 def test_preflight_fails_closed_when_heritage_archive_is_not_byte_equivalent(tmp_path: Path) -> None:
