@@ -80,6 +80,56 @@ def representation_wire(selected_representation: str) -> str:
     return "SPNNIV1" if selected_representation == "C0_V1_FROZEN_CONTROL" else "SPNNIV2"
 
 
+def _action_config(selected_representation: str):
+    if representation_wire(selected_representation) == "SPNNIV1":
+        return ActionNetworkConfigV1()
+    return SemanticNetworkConfigV2(actions=10)
+
+
+def make_advantage_action_model(
+    selected_representation: str,
+    *,
+    device: str = "cpu",
+    seed: int | None = None,
+):
+    """Create only the ten-action Advantage model without consuming global RNG.
+
+    R7.3/R7.4 candidate execution initializes networks in an isolated torch RNG
+    scope. R7.5.4 preserves that contract: a reset may deterministically replace
+    the Advantage network, but must not advance the live/global torch stream used
+    by any later stochastic work.
+    """
+    wire = representation_wire(selected_representation)
+    cfg = _action_config(selected_representation)
+    with torch.random.fork_rng(devices=[]):
+        if seed is not None:
+            torch.manual_seed(int(seed))
+        if wire == "SPNNIV1":
+            model = AdvantageActionNetV1(cfg)
+        else:
+            model = AdvantageNetV2(cfg)
+    return cfg, model.to(device)
+
+
+def make_policy_action_model(
+    selected_representation: str,
+    *,
+    device: str = "cpu",
+    seed: int | None = None,
+):
+    """Create only the ten-action AveragePolicy model without RNG leakage."""
+    wire = representation_wire(selected_representation)
+    cfg = _action_config(selected_representation)
+    with torch.random.fork_rng(devices=[]):
+        if seed is not None:
+            torch.manual_seed(int(seed))
+        if wire == "SPNNIV1":
+            model = AveragePolicyActionNetV1(cfg)
+        else:
+            model = AveragePolicyNetV2(cfg)
+    return cfg, model.to(device)
+
+
 def make_action_models(
     selected_representation: str,
     *,
@@ -87,23 +137,19 @@ def make_action_models(
     advantage_seed: int | None = None,
     policy_seed: int | None = None,
 ):
-    wire = representation_wire(selected_representation)
-    if advantage_seed is not None:
-        torch.manual_seed(int(advantage_seed))
-    if wire == "SPNNIV1":
-        cfg = ActionNetworkConfigV1()
-        advantage = AdvantageActionNetV1(cfg).to(device)
-    else:
-        cfg = SemanticNetworkConfigV2(actions=10)
-        advantage = AdvantageNetV2(cfg).to(device)
-
-    if policy_seed is not None:
-        torch.manual_seed(int(policy_seed))
-    if wire == "SPNNIV1":
-        policy = AveragePolicyActionNetV1(cfg).to(device)
-    else:
-        policy = AveragePolicyNetV2(cfg).to(device)
-    return cfg, advantage, policy
+    advantage_cfg, advantage = make_advantage_action_model(
+        selected_representation,
+        device=device,
+        seed=advantage_seed,
+    )
+    policy_cfg, policy = make_policy_action_model(
+        selected_representation,
+        device=device,
+        seed=policy_seed,
+    )
+    if advantage_cfg.to_dict() != policy_cfg.to_dict():
+        raise RuntimeError("R7.5.4 Advantage/Policy action config drift")
+    return advantage_cfg, advantage, policy
 
 
 def collate_action_observations(
