@@ -1,0 +1,69 @@
+name: SpinCore R7.5.3C hybrid property preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_5_3c_property_preflight.yml'
+      - 'python/spincore_nn/hybrid_v3.py'
+      - 'tools/r7_5_3c_hybrid_property_tests.py'
+      - 'validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-r7-5-3c-property-preflight
+  cancel-in-progress: false
+
+jobs:
+  property_preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable push SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Validate precommit identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json').read_text())
+          assert p['schema'] == 'SPINCORE_R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT_V1'
+          assert p['status'] == 'PRECOMMITTED_BEFORE_3C_RESULTS'
+          assert p['ready_for_tables'] is False
+          assert p['blocks_r8_production_representation_freeze'] is True
+          PY
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+          python - <<'PY'
+          import platform, numpy, torch
+          assert platform.python_version() == '3.11.15'
+          assert torch.__version__ == '2.13.0+cpu'
+          assert numpy.__version__ == '2.3.5'
+          PY
+
+      - name: Run hybrid metamorphic/property tests
+        env:
+          PYTHONPATH: python
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r7_5_3c_hybrid_property_tests.py
