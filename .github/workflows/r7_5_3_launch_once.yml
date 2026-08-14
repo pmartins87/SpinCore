@@ -1,0 +1,29 @@
+name: Launch R7.5.3 ablation once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3_launch_once.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse launch after durable result exists
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Dispatch frozen official workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -f validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json
+          gh workflow run r7_5_3_paired_representation_ablation.yml --ref main
+          echo 'Official R7.5.3 workflow_dispatch submitted.'
