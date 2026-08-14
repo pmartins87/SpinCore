@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <iostream>
 #include <set>
-#include <span>
 #include <stdexcept>
 
 using namespace spincore;
@@ -48,7 +47,7 @@ int main() {
                     hand[3] = deck[static_cast<std::size_t>(d)];
                     for (int e = d + 1; e < 52; ++e) {
                         hand[4] = deck[static_cast<std::size_t>(e)];
-                        const auto rank = evaluate_five(std::span<const Card, 5>(hand));
+                        const auto rank = evaluate_five(hand);
                         const auto category = static_cast<std::size_t>(rank.category);
                         if (category >= counts.size()) {
                             throw std::runtime_error("evaluator emitted unknown category");
