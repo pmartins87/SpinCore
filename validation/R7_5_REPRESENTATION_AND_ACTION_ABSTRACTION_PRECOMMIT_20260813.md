@@ -20,9 +20,9 @@ The production representation therefore must be selected empirically between tho
 
 ## 2. Legacy evidence audited
 
-User-supplied legacy package: `Tentativas anteriores SpinGo`.
+User-supplied legacy package: `Tentativas anteriores de SpinGo.zip`.
 
-Audited source hashes:
+Audited source hashes include:
 
 ```text
 deepSpin/env/poker_env.cpp
@@ -37,11 +37,17 @@ hardcoded/user_hardcoded.cpp
 hardcoded/user_hardcoded_helper.cpp
   sha256 65cd5f0a6babf4a065ad3350f14af8c071b36015e576b14b55ab0c374197113e
 
+hardcoded/Crusher Framework 5.txt
+  sha256 7ec68e2efc9790bfc02f47da690faa1856ab2be47a8d10bd178a2963fa78ce08
+
 solver v2/user_solver_v2.cpp
   sha256 d8df5d3776a0de4a81500ffe872128f15697903c25b36aceeb8f722dd2c6aca7
 
 solver v2/classes_184_resumo.csv
   sha256 3d3d01a30cf5748ce26348563b8d3ba16928fec1b4f33b60f48af0ad494e3ecc
+
+solver v2/184Flops.json
+  sha256 7fb7aebee3b24b5bf6904915194f21835cb06773d7474b3ff8649153337afff8
 ```
 
 ### 2.1 DeepSpin evidence
@@ -78,7 +84,7 @@ The current V1 action abstraction has six slots and postflop exposes approximate
 
 **Conclusion:** V1 remains the required control/baseline for R7.5. It is not automatically the production representation.
 
-### 2.3 Solver V2 — 184-flop abstraction
+### 2.3 Solver V2 — recovered 184-flop abstraction
 
 `classes_184_resumo.csv` contains exactly 184 representatives. Their `quantidade_flops` values sum to all 22,100 physical three-card Hold'em flops.
 
@@ -117,13 +123,67 @@ This corrects the ambiguous verbal form `DEEP > 15`: in the recovered code, exac
 
 The useful part is the **184-flop structural compression**. The unsafe part is to copy the entire old canonicalization pipeline. Solver V2 remapped hero hands and future turn/river cards to canonical analogues using a heuristic three-axis hand-strength signature and hand-written similarity scores. It also reconstructed the starting flop pot with fixed synthetic values (LIMP=2, SRP=4, ISO=6, 3BET=10 BB). Those are information-losing approximations and are not accepted as SpinCore production semantics.
 
-The full `184Flops.json` mapping referenced by `user_solver_v2.cpp` is not present in the supplied legacy package and was not found in the accessible file library during this audit. Therefore the 184 scheme is a **primary candidate, not yet an accepted bucketization**. Full within-bucket homogeneity cannot be certified until the mapping is recovered or regenerated deterministically.
+The previously missing `184Flops.json` has now been recovered. Physical audit proves:
 
-### 2.4 Hard-coded bot evidence
+```text
+JSON rows / physical flops mapped        22,100 PASS
+missing/extra physical flops                  0 PASS
+unique representative texts                 184 PASS
+exact suit-isomorphic flop classes         1,755
+exact classes split by suit spelling          40 FAIL
+maximum legacy buckets for one exact class      2
+suit-permutation invariance                 false
+```
 
-The hard-coded source contains a much richer action-history vocabulary than either current SpinCore V1 or a simple pot-type label. It explicitly tracks state concepts including c-bet, donk, probe, float, delayed lines, check-raise, small/big c-bets, called/raised continuations and street-to-street initiative transitions.
+This means the raw historical mapping is **not eligible unchanged**: a pure global renaming of suits can change its assigned bucket even though absolute suit names are strategically irrelevant.
 
-This source is useful as a **semantic requirements catalogue**, not as strategic truth. Its action choices, hand lists and thresholds must not be copied into the learned policy merely because they existed in the old bot.
+Detailed evidence is frozen in:
+
+```text
+validation/R7_5_LEGACY_CRUSHER_AND_184_AUDIT_20260813.md
+validation/R7_5_LEGACY_184_MAPPING_AUDIT.json
+```
+
+Deterministic suit-invariant descendants are precommitted separately in:
+
+```text
+validation/R7_5_184_DESCENDANT_CANDIDATES_PRECOMMIT_20260813.md
+```
+
+No repair candidate is selected by this finding alone.
+
+### 2.4 Crusher Framework 5 — explicit postflop ontology
+
+The newly supplied `Crusher Framework 5.txt` is a high-value semantic requirements source. It explicitly declares **32 POSTFLOP DEFEND situations** and **13 POSTFLOP ATTACK situations**.
+
+The DEFEND catalogue distinguishes:
+
+```text
+street-specific normal c-bets on flop/turn/river
+high and over c-bets
+normal/high/over donk bets
+normal/high/over float bets
+normal/high/over generic bets
+normal/over raises
+CALL vs RAISE responses
+```
+
+The ATTACK catalogue distinguishes:
+
+```text
+flop/turn/river c-bet
+flop/turn/river float bet
+flop/turn/river donk bet
+turn/river probe bet
+turn delayed bets: delayed c-bet and delayed float
+river delayed bet
+```
+
+The source also routes those concepts using initiative, relative position, prior-street actions and current raise depth.
+
+Critical decomposition: the 32 DEFEND headings are **not** 32 distinct environment states. For example, `CALL VS HIGH DONK` and `RAISE VS HIGH DONK` observe the same poker state; CALL and RAISE are policy outputs. SpinCore therefore decomposes the catalogue into compact orthogonal state facts instead of copying 32 response-labelled one-hots.
+
+Crusher's individual hand rules, thresholds and old OpenHoldem memory-symbol implementation are reference evidence only. They are not strategic truth.
 
 ## 3. Architecture decision frozen by this precommit
 
@@ -148,11 +208,13 @@ The 53-type proposal remains useful as an interpretable diagnostic taxonomy, but
 
 It may be retained as auxiliary diagnostic features, but R7.5 will not select `53-only` as the production representation.
 
-### 3.3 The 184-flop scheme is the leading candidate, not a foregone conclusion
+### 3.3 Raw historical 184 is rejected; suit-invariant descendants remain leading candidates
 
-R7.5 will benchmark a recovered/regenerated 184 mapping against the current V1 baseline and at least one more precise relational/canonical candidate. The winner is chosen by frozen evidence, not by historical preference.
+The recovered 184 mapping has high reference value but fails suit-permutation invariance. `RAW_LEGACY_184` therefore cannot win production selection.
 
-No production training may assume that `184` is correct before its audit and comparative pilot pass.
+R7.5 will benchmark deterministic suit-invariant descendants, a newly reclustered 184 candidate if generated under a frozen protocol, the exact 1,755 suit-isomorphic reference, and the current V1 control. The winner is chosen by frozen evidence, not historical preference.
+
+No production training may assume that `184` is correct before comparative pilot gates pass.
 
 ### 3.4 Do not make absolute physical card identity the dominant production channel by default
 
@@ -184,9 +246,10 @@ The network should not need millions of samples to rediscover what a gutshot or 
 
 ### 4.2 Board
 
-Primary candidate:
+Primary candidates:
 
-- audited flop structural bucket (184 candidate);
+- audited suit-invariant structural flop bucket descendants of the historical 184 scheme;
+- exact 1,755 suit-isomorphic flop class as the lossless structural reference;
 - independent suit texture (rainbow / two-tone / monotone);
 - pairedness/trips and rank of paired structure;
 - connectivity/dynamicity features;
@@ -267,6 +330,7 @@ c-bet
 donk bet
 probe bet
 float bet
+delayed float bet
 delayed c-bet
 double-delayed c-bet
 check-raise
@@ -276,6 +340,19 @@ bet-raise / raise-reraise contexts
 These labels describe **what happened**. They do not hard-code what the bot should do.
 
 A 30% c-bet and a 50% c-bet must be distinguishable. A 50% c-bet and a 50% donk must also be distinguishable.
+
+The first compositional ontology scaffold is now implemented and regression-proven in:
+
+```text
+include/spincore/postflop_ontology.hpp
+src/postflop_ontology.cpp
+tests/test_postflop_ontology.cpp
+main regression 31761845283 PASS
+```
+
+It preserves opening-line identity even when the current faced action is a raise, tracks raise depth and keeps exact `pot`/`to_call`. It is a semantic scaffold, not yet NeuralInputV2 completion.
+
+Legacy Crusher size thresholds are not frozen as production thresholds.
 
 ## 5. Action abstraction candidates
 
@@ -324,6 +401,19 @@ Required artifacts:
 
 No bucket mapping with missing/duplicate physical flops is eligible.
 
+Current status:
+
+```text
+historical 184 mapping recovered        YES
+22,100 physical coverage                PASS
+184 representatives                     PASS
+historical suit invariance              FAIL
+historical map eligible unchanged       NO
+deterministic H1/H2 descendants         PRECOMMITTED
+reclustered H3                          PENDING
+strategic within-bucket comparison      PENDING
+```
+
 ### R7.5.2 — NeuralInputV2 implementation + semantic regression suite
 
 Must prove, before learning-quality claims:
@@ -336,6 +426,8 @@ Must prove, before learning-quality claims:
 - 30% vs 50% faced sizing is distinguishable;
 - exact game/traversal utility is unchanged by encoder selection.
 
+Current status: postflop ontology scaffold **PASS regression**; NeuralInputV2 integration remains pending.
+
 ### R7.5.3 — frozen representation ablation
 
 Before candidate results are run, persist:
@@ -347,7 +439,7 @@ Before candidate results are run, persist:
 - held-out state set;
 - acceptance metrics and tie-break rules.
 
-Required controls include current V1 and the 184-based V2 candidate. A 53-only representation may be tested only as a negative/control candidate; it is not eligible for production selection under this precommit.
+Required controls include current V1, suit-invariant 184 descendants and the exact 1,755-class reference. A 53-only representation may be tested only as a negative/control candidate; it is not eligible for production selection under this precommit.
 
 Metrics must include at least:
 
@@ -400,8 +492,10 @@ This prevents spending the Ryzen production budget on an encoder/action abstract
 R7.5 must not:
 
 - use the 53 flop classes merely because they were proposed by the user;
-- use 184 merely because an older project used 184;
+- use raw historical 184 merely because an older project used 184;
+- repair the historical 184 mapping through post-hoc performance-driven reassignment;
 - copy hard-coded strategy decisions as neural targets and call them learned strategy;
+- encode CALL-vs/RAISE-vs Crusher headings as different environment states when only the candidate response differs;
 - discard exact chips/pot/SPR in favor of SHORT/MID/DEEP alone;
 - infer c-bet/donk/probe from a single generic aggressor bit when exact history can determine them;
 - preserve absolute suit identities when a suit-isomorphic representation can preserve strategy-equivalent information more efficiently;
@@ -416,16 +510,16 @@ The leading production direction is now:
 ```text
 exact authoritative poker state
     -> compact poker-semantic NeuralInputV2
-       + audited flop abstraction (184 is leading candidate)
+       + suit-invariant flop abstraction selected against exact 1,755 reference
        + objective made-hand/draw/texture features
        + exact stack/pot/SPR facts with auxiliary buckets
        + explicit preflop lineage
        + actor-aware, sizing-aware action history
-       + derived cbet/donk/probe/float/delayed semantics
+       + compositional cbet/donk/probe/float/delayed/raise semantics
     -> small empirically selected action abstraction
     -> Deep CFR
 ```
 
 This is deliberately neither “give the network every physical card and hope” nor “compress the game into a few human buckets and erase information.”
 
-R7.5 remains **IN PROGRESS** until the physical mapping audit and frozen ablations are completed.
+R7.5 remains **IN PROGRESS** until the corrected mapping candidates, NeuralInputV2 and frozen ablations are completed.
