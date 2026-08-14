@@ -18,6 +18,8 @@ from spincore.r7_5_action_stage_contract import (
 from spincore_nn.action_models import collate_action_observations
 
 DEFAULT_EVALUATION_BATCH_SIZE = 256
+DEFAULT_EXPECTED_ROOT_LEVEL = 160
+ALLOWED_EVALUATION_ROOT_LEVELS = (160, 320, 640)
 
 
 @dataclass
@@ -80,18 +82,35 @@ class FinalizedActionPolicy:
         return self.batch_probabilities([observation], [legal], batch_size=1)[0]
 
 
+def _validated_root_level(value: int) -> int:
+    root_level = int(value)
+    if root_level not in ALLOWED_EVALUATION_ROOT_LEVELS:
+        raise ValueError(
+            f"unsupported finalized-policy root level {root_level}; "
+            f"expected one of {ALLOWED_EVALUATION_ROOT_LEVELS}"
+        )
+    return root_level
+
+
 def load_finalized_action_policy(
     checkpoint_path: str | Path,
     *,
     repo_root: str | Path,
     expected_execution_sha: str,
+    expected_root_level: int = DEFAULT_EXPECTED_ROOT_LEVEL,
     expected_candidate_id: str | None = None,
     expected_domain: str | None = None,
     expected_training_seed: int | None = None,
 ) -> FinalizedActionPolicy:
-    """Load one final R7.5.4 policy without perturbing caller Torch RNG."""
+    """Load one final R7.5.4 policy without perturbing caller Torch RNG.
+
+    The historical/default binding remains the 160-root pruning artifact. Higher
+    root levels must be requested explicitly by the evaluator that owns the
+    corresponding immutable execution SHA.
+    """
     if not str(expected_execution_sha).strip():
         raise ValueError("expected immutable execution SHA is required")
+    required_roots = _validated_root_level(expected_root_level)
     torch_rng = torch.get_rng_state().clone()
     try:
         bundle, progress, action_spec, extra = load_action_checkpoint(
@@ -124,12 +143,15 @@ def load_finalized_action_policy(
         raise ValueError("final report training-seed identity mismatch")
     if final.get("selected_representation") != SELECTED_REPRESENTATION:
         raise ValueError("final report representation mismatch")
-    if int(final.get("roots", -1)) != 160:
-        raise ValueError("finalized policy is not the R7.5.4A-160 artifact")
+    if int(final.get("roots", -1)) != required_roots:
+        raise ValueError(
+            f"finalized policy root level mismatch: expected {required_roots}, "
+            f"got {final.get('roots')!r}"
+        )
     if int(final.get("average_policy_optimizer_steps", -1)) != POLICY_STEPS:
         raise ValueError("final report AveragePolicy step count mismatch")
     if bool(final.get("strategic_selection_permitted_at_160")):
-        raise ValueError("160-root artifact illegally permits final strategic selection")
+        raise ValueError("R7.5.4 artifact illegally permits strategic selection at 160 roots")
     if bool(final.get("production_training_authorized")) or bool(final.get("ready_for_tables")):
         raise ValueError("R7.5.4A checkpoint illegally authorizes production/table use")
 
