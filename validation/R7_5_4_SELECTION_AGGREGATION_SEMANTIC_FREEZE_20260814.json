@@ -1,0 +1,62 @@
+{
+  "schema": "SPINCORE_R7_5_4_SELECTION_AGGREGATION_SEMANTIC_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_ANY_R7_5_4_STRATEGIC_ACTION_TRAINING_OUTPUT",
+  "inherits": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json",
+    "validation/R7_5_4_REFEREE_EVALUATION_SEMANTIC_FREEZE_20260814.json"
+  ],
+  "purpose": "Resolve implementation ambiguities in the already-frozen selection cascade without changing candidates, thresholds, seeds, material-effect floor, root levels, or metric directions.",
+  "authoritative_seed_source": "R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json",
+  "dense_reference": {
+    "eligible_to_win": false,
+    "required_at_every_executed_root_level": true,
+    "referee_learning_gate_rule": "PF_DENSE_REFERENCE must satisfy the same frozen Advantage and Policy fit gates in both domains for the level's omission/crossplay evidence to be strategically usable. If not, the level is BLOCKED rather than scoring candidates against an uncertified referee."
+  },
+  "learning_gate_rule": {
+    "candidate_pass": "all per-domain/per-training-seed final Advantage NRMSE and Policy TV gates pass AND both-domain cross-seed mean/p95 TV gates pass",
+    "failure": "candidate is ineligible at that level",
+    "thresholds_unchanged": {"advantage_nrmse_max":0.75,"policy_tv_max":0.12,"cross_seed_mean_tv_max":0.15,"cross_seed_p95_tv_max":0.35}
+  },
+  "domain_pooling": {
+    "omission": "Within each domain, pool all equal-count held-out state samples across all frozen training_seed × paired_evaluation_seed cells. The empirical mean is visitation-weighted by the frozen dense-referee state generator because every retained decision state has equal sample weight.",
+    "crossplay": "Within each domain, pool all paired hand scores across all frozen training_seed × paired_evaluation_seed × candidate-seat cells. Every required seat cell has its frozen equal hand count and no cell may be dropped.",
+    "paired_alignment": "Candidate arrays must preserve the exact canonical cell/sample order so pairwise differences are elementwise on identical held-out states or identical common-random-number hands."
+  },
+  "worst_domain_pairwise_rule": {
+    "omission": "For each challenger, its worst domain is the domain with the larger absolute pooled mean omission (ties lexical domain id). The current best is the survivor with the lowest max-domain mean omission. Compare challenger minus current-best on the challenger's worst domain using paired raw state samples. Challenger is materially worse only if paired mean difference >0.001 ICM and paired 95% CI lower bound >0.",
+    "crossplay": "For each challenger, its worst domain is the domain with the smaller pooled mean paired crossplay score (ties lexical domain id). The current best is the survivor with the highest min-domain mean crossplay. Compare current-best minus challenger on the challenger's worst domain using paired raw hand scores. Challenger is materially worse only if paired mean difference >0.001 ICM and paired 95% CI lower bound >0.",
+    "bootstrap_replicates": 2000,
+    "confidence": 0.95,
+    "material_effect_floor_icm": 0.001
+  },
+  "cost_equivalence": {
+    "nodes_per_root": "lower is better; keep every survivor <= current_best * 1.10. If current_best is exactly zero, only exact zero is equivalent.",
+    "seconds_per_root": "tree_seconds_per_root from the cost-telemetry freeze; lower is better; keep every survivor <= current_best * 1.10. If current_best is exactly zero, only exact zero is equivalent.",
+    "effective_unique_aggressive_branches_per_decision": "lower is better; no additional equivalence band was precommitted, so retain exact minimum values only after earlier ranks remain equivalent."
+  },
+  "root_level_escalation_clarification": {
+    "160": "Apply learning gates and ranks 2-6 only. This level is prune-only and cannot use rank-7 conservative fallback to eliminate otherwise equivalent survivors. Advance every rank-1-through-6 survivor to 320, plus mandatory PF0 control and PF_DENSE referee execution artifacts.",
+    "320": "Apply learning gates and ranks 2-6. If exactly one eligible survivor from the prior survivor set remains, select it. If more than one remains equivalent, advance all such survivors to 640, plus mandatory PF0 control and PF_DENSE referee execution artifacts. Do not use rank-7 fallback at 320 because the original escalation rule explicitly requires unresolved candidates to advance to 640.",
+    "640": "Apply learning gates and ranks 2-6. If multiple eligible survivors remain, apply rank-7 deterministic conservative fallback: PF0_CONTROL_33_75_AI if it is still an eligible survivor; otherwise lexical candidate id.",
+    "mandatory_control_reentry": "A candidate pruned at a lower level that is rerun solely because it is a mandatory control/referee does not regain winner eligibility. Its higher-level artifact is diagnostic/control evidence only unless it was also in the prior eligible survivor set."
+  },
+  "failure_and_blocking": {
+    "missing_required_cell": "BLOCKED",
+    "dense_referee_gate_failure": "BLOCKED",
+    "pairwise_sample_identity_or_length_mismatch": "BLOCKED",
+    "nonfinite_metric": "BLOCKED",
+    "no_eligible_candidate_after_learning_gates": "FAIL",
+    "threshold_relaxation_allowed": false
+  },
+  "strategic_output_seen_before_freeze": false,
+  "selection_direction_changed": false,
+  "threshold_changed": false,
+  "material_effect_floor_changed": false,
+  "candidate_set_changed": false,
+  "root_level_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
