@@ -19,6 +19,40 @@ def _write(path: Path, payload: dict) -> None:
 
 def _complete_tree(root: Path) -> None:
     v = root / "validation"
+    v.mkdir(parents=True, exist_ok=True)
+    (v / preflight.HERITAGE_AUDIT).write_text("full heritage audit\n", encoding="utf-8")
+    _write(
+        v / preflight.HERITAGE_MANIFEST,
+        {
+            "schema": preflight.HERITAGE_SCHEMA,
+            "ready_for_tables": False,
+            "prior_attempt_archive": {
+                "readable_sources": [
+                    {"source": f"source_{i}", "full_read_status": "text_full_read"}
+                    for i in range(17)
+                ],
+                "archive_comparison": {
+                    "shared_entries": 27,
+                    "shared_byte_identical": 27,
+                    "only_in_superset": [
+                        "hardcoded/Crusher Framework 5.txt",
+                        "solver v2/184Flops.json",
+                    ],
+                },
+            },
+        },
+    )
+    _write(
+        v / preflight.REACHABILITY_CONTRACT,
+        {
+            "schema": preflight.REACHABILITY_SCHEMA,
+            "required_invariants": {
+                key: True for key in preflight.REQUIRED_REACHABILITY_INVARIANTS
+            },
+            "production_training_authorized": False,
+            "ready_for_tables": False,
+        },
+    )
     _write(
         v / "R7_5_3_REPRESENTATION_ABLATION_RESULT.json",
         {
@@ -87,3 +121,34 @@ def test_preflight_fails_closed_on_ready_for_tables_contamination(tmp_path: Path
     result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
     assert result["ready_to_start"] is False
     assert result["checks"]["structural_not_table_authority"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_full_heritage_manifest_is_missing(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    (tmp_path / "validation" / preflight.HERITAGE_MANIFEST).unlink()
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["heritage_manifest_available"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_reachability_invariant_is_false(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    path = tmp_path / "validation" / preflight.REACHABILITY_CONTRACT
+    payload = json.loads(path.read_text())
+    payload["required_invariants"]["folded_player_never_acts_again"] = False
+    _write(path, payload)
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["reachable_state_contract"]["pass"] is False
+    assert "folded_player_never_acts_again" in result["checks"]["reachable_state_contract"]["detail"]
+
+
+def test_preflight_fails_closed_when_heritage_archive_is_not_byte_equivalent(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    path = tmp_path / "validation" / preflight.HERITAGE_MANIFEST
+    payload = json.loads(path.read_text())
+    payload["prior_attempt_archive"]["archive_comparison"]["shared_byte_identical"] = 26
+    _write(path, payload)
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["heritage_archive_equivalence"]["pass"] is False
