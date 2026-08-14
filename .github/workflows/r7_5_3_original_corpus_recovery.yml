@@ -1,0 +1,464 @@
+name: SpinCore R7.5.3 original-corpus recovery
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3_original_corpus_recovery.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3-original-corpus-recovery
+  cancel-in-progress: false
+
+env:
+  SOURCE_RUN_ID: '31767822186'
+  SOURCE_EXECUTION_SHA: '66923cf50ece3aa9ac5632a11bcd865eb154f3e4'
+  AUDIT_CORRECTION_BLOB: 'f8cfa8fbe44acaaa5dbab29a13178b5be69ecd50'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      recovery_sha: ${{ steps.freeze.outputs.recovery_sha }}
+    steps:
+      - name: Checkout recovery main SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Freeze and validate recovery contract
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "main"
+          recovery_sha="$(git rev-parse HEAD)"
+          test "$recovery_sha" = "${GITHUB_SHA}"
+          test "$(git rev-parse HEAD:tools/r7_5_audit_paired_corpus.py)" = "${AUDIT_CORRECTION_BLOB}"
+          test ! -e validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pre=json.loads(Path('validation/R7_5_3_REPRESENTATION_ABLATION_PRECOMMIT.json').read_text())
+          agg=json.loads(Path('validation/R7_5_3_AGGREGATION_IMPLEMENTATION_FREEZE.json').read_text())
+          assert pre['schema']=='SPINCORE_R7_5_3_REPRESENTATION_ABLATION_PRECOMMIT_V1'
+          assert agg['schema']=='SPINCORE_R7_5_3_AGGREGATION_IMPLEMENTATION_FREEZE_V1'
+          assert pre['seed_derivation']['corpus_seeds']==[1202035427,2078778133]
+          assert pre['seed_derivation']['fit_initialization_seeds']==[2102028507,1745216084,971790437]
+          assert pre['seed_derivation']['split_seed']==1925930899
+          assert pre['candidate_fit']['advantage_optimizer_steps']==4096
+          assert pre['candidate_fit']['policy_optimizer_steps']==8192
+          assert pre['production_training_authorized'] is False
+          assert pre['ready_for_tables'] is False
+          PY
+          echo "recovery_sha=$recovery_sha" >> "$GITHUB_OUTPUT"
+          echo "Recovery code SHA: $recovery_sha"
+          echo "Scientific source SHA: ${SOURCE_EXECUTION_SHA}"
+          echo "Original corpus run: ${SOURCE_RUN_ID}"
+
+  corpus_audit:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout recovery SHA with corrected auditor
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.recovery_sha }}
+          fetch-depth: 1
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+
+      - name: Download four original immutable corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3-corpus-*
+          path: corpora
+          merge-multiple: false
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: 31767822186
+
+      - name: Audit original corpora with validation-only correction
+        shell: bash
+        env:
+          RECOVERY_SHA: ${{ needs.gate.outputs.recovery_sha }}
+        run: |
+          set -euo pipefail
+          mapfile -t dirs < <(find corpora -mindepth 1 -maxdepth 1 -type d | sort)
+          test "${#dirs[@]}" -eq 4
+
+          corrected_auditor="$GITHUB_WORKSPACE/tools/r7_5_audit_paired_corpus.py"
+          test "$(git rev-parse HEAD:tools/r7_5_audit_paired_corpus.py)" = "${AUDIT_CORRECTION_BLOB}"
+
+          git fetch --no-tags --depth=1 origin "${SOURCE_EXECUTION_SHA}"
+          wt="$RUNNER_TEMP/r7_5_3_source"
+          git worktree add --detach "$wt" "${SOURCE_EXECUTION_SHA}"
+          cp "$corrected_auditor" "$wt/tools/r7_5_audit_paired_corpus.py"
+
+          args=()
+          for d in "${dirs[@]}"; do args+=(--corpus-dir "$GITHUB_WORKSPACE/$d"); done
+          mkdir -p evidence
+          PYTHONPATH="$wt/python:$wt/tools" python "$wt/tools/r7_5_audit_paired_corpus.py" \
+            "${args[@]}" \
+            --out "$GITHUB_WORKSPACE/evidence/R7_5_3_PAIRED_CORPUS_AUDIT.json"
+
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          audit=json.loads(Path('evidence/R7_5_3_PAIRED_CORPUS_AUDIT.json').read_text())
+          assert audit['schema']=='SPINCORE_R7_5_3_PAIRED_CORPUS_AUDIT_V1'
+          assert audit['coverage_pass'] is True
+          assert audit['candidate_inference_used'] is False
+          assert audit['identity_digest_order']=='BOTTOM_HASH_RETENTION_KEY_CANONICAL_ORDER'
+          assert audit['strategic_gate_changed'] is False
+          assert audit['production_training_authorized'] is False
+          assert audit['ready_for_tables'] is False
+          manifest={
+            'schema':'SPINCORE_R7_5_3_CORPUS_AUDIT_RECOVERY_MANIFEST_V1',
+            'source_corpus_run_id':int(os.environ['SOURCE_RUN_ID']),
+            'source_execution_sha':os.environ['SOURCE_EXECUTION_SHA'],
+            'recovery_execution_sha':os.environ['RECOVERY_SHA'],
+            'audit_correction_blob':os.environ['AUDIT_CORRECTION_BLOB'],
+            'audit_only_overlay':True,
+            'corpus_regenerated':False,
+            'strategic_gate_changed':False,
+            'production_training_authorized':False,
+            'ready_for_tables':False,
+          }
+          Path('evidence/R7_5_3_CORPUS_AUDIT_RECOVERY_MANIFEST.json').write_text(
+            json.dumps(manifest,indent=2,sort_keys=True)+'\n'
+          )
+          PY
+
+      - name: Upload corrected audit of original corpora
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3-recovery-corpus-audit-${{ needs.gate.outputs.recovery_sha }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  fit:
+    needs: [gate, corpus_audit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        fit_seed: [2102028507, 1745216084, 971790437]
+    steps:
+      - name: Checkout exact original scientific SHA
+        uses: actions/checkout@v4
+        with:
+          ref: 66923cf50ece3aa9ac5632a11bcd865eb154f3e4
+
+      - name: Assert exact scientific checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_EXECUTION_SHA}"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+          python - <<'PY'
+          import platform,numpy,torch
+          assert platform.python_version()=='3.11.15'
+          assert torch.__version__=='2.13.0+cpu'
+          assert numpy.__version__=='2.3.5'
+          PY
+
+      - name: Download original domain corpora only
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3-corpus-${{ matrix.domain }}-*
+          path: corpora
+          merge-multiple: false
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: 31767822186
+
+      - name: Fit all six candidates with original frozen implementation
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_EXECUTION_SHA}"
+          mapfile -t advantages < <(find corpora -name advantage_pairs.pt -type f | sort)
+          mapfile -t strategies < <(find corpora -name strategy_pairs.pt -type f | sort)
+          test "${#advantages[@]}" -eq 2
+          test "${#strategies[@]}" -eq 2
+          adv_args=(); strategy_args=()
+          for f in "${advantages[@]}"; do adv_args+=(--advantage "$f"); done
+          for f in "${strategies[@]}"; do strategy_args+=(--strategy "$f"); done
+          candidates=(
+            C0_V1_FROZEN_CONTROL
+            C1_V2_NO_FLOP_TOKEN
+            C2_V2_H1_CANONICAL_184
+            C3_V2_H2_MIN_CHANGE_181
+            C4_V2_H3_RECLUSTERED_184
+            C5_V2_H4_EXACT_1755
+          )
+          mkdir -p fit_outputs
+          for candidate in "${candidates[@]}"; do
+            python tools/run_with_heartbeat.py \
+              --label "r7.5-recovery-fit-${{ matrix.domain }}-${{ matrix.fit_seed }}-${candidate}" \
+              --interval-seconds 300 -- \
+              python tools/r7_5_fit_representation_candidate.py \
+                --candidate "$candidate" \
+                --domain '${{ matrix.domain }}' \
+                --fit-seed '${{ matrix.fit_seed }}' \
+                --split-seed 1925930899 \
+                "${adv_args[@]}" \
+                "${strategy_args[@]}" \
+                --out "fit_outputs/${candidate}.pt" \
+                --device cpu \
+                --learning-rate 0.001 \
+                --batch-size 256 \
+                --advantage-steps 4096 \
+                --policy-steps 8192 \
+                --min-tag-samples 128
+          done
+          test "$(find fit_outputs -maxdepth 1 -name '*.pt' | wc -l)" -eq 6
+
+      - name: Upload original-SHA fit outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3-recovery-fit-${{ matrix.domain }}-${{ matrix.fit_seed }}
+          path: fit_outputs
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, corpus_audit, fit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      aggregate_rc: ${{ steps.aggregate.outputs.aggregate_rc }}
+    steps:
+      - name: Checkout exact original scientific SHA
+        uses: actions/checkout@v4
+        with:
+          ref: 66923cf50ece3aa9ac5632a11bcd865eb154f3e4
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+
+      - name: Download all recovery fit outputs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3-recovery-fit-*
+          path: fits
+
+      - name: Download corrected original-corpus audit
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3-recovery-corpus-audit-${{ needs.gate.outputs.recovery_sha }}
+          path: evidence
+
+      - name: Aggregate with original frozen selection order
+        id: aggregate
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${SOURCE_EXECUTION_SHA}"
+          mapfile -t fit_files < <(find fits -name '*.pt' -type f | sort)
+          test "${#fit_files[@]}" -eq 36
+          fit_args=()
+          for f in "${fit_files[@]}"; do fit_args+=(--fit "$f"); done
+          set +e
+          python tools/r7_5_aggregate_representation_ablation.py \
+            "${fit_args[@]}" \
+            --precommit validation/R7_5_3_REPRESENTATION_ABLATION_PRECOMMIT.json \
+            --aggregation-freeze validation/R7_5_3_AGGREGATION_IMPLEMENTATION_FREEZE.json \
+            --out evidence/R7_5_3_REPRESENTATION_ABLATION_RESULT.json
+          rc=$?
+          set -e
+          test -f evidence/R7_5_3_REPRESENTATION_ABLATION_RESULT.json
+          echo "aggregate_rc=$rc" >> "$GITHUB_OUTPUT"
+
+      - name: Write split-execution provenance manifests
+        shell: bash
+        env:
+          RECOVERY_SHA: ${{ needs.gate.outputs.recovery_sha }}
+          AGGREGATE_RC: ${{ steps.aggregate.outputs.aggregate_rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os,platform
+          from pathlib import Path
+          import numpy,torch
+          result=json.loads(Path('evidence/R7_5_3_REPRESENTATION_ABLATION_RESULT.json').read_text())
+          audit=json.loads(Path('evidence/R7_5_3_PAIRED_CORPUS_AUDIT.json').read_text())
+          audit_recovery=json.loads(Path('evidence/R7_5_3_CORPUS_AUDIT_RECOVERY_MANIFEST.json').read_text())
+          common={
+            'execution_sha':os.environ['SOURCE_EXECUTION_SHA'],
+            'source_execution_sha':os.environ['SOURCE_EXECUTION_SHA'],
+            'source_corpus_run_id':int(os.environ['SOURCE_RUN_ID']),
+            'recovery_execution_sha':os.environ['RECOVERY_SHA'],
+            'recovery_workflow_run_id':int(os.environ['GITHUB_RUN_ID']),
+            'recovery_workflow_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'audit_correction_blob':os.environ['AUDIT_CORRECTION_BLOB'],
+            'audit_only_overlay':True,
+            'corpus_regenerated':False,
+            'fits_and_aggregation_used_source_sha_only':True,
+            'aggregate_rc':int(os.environ['AGGREGATE_RC']),
+            'python':platform.python_version(),
+            'torch':torch.__version__,
+            'numpy':numpy.__version__,
+            'corpus_coverage_pass':bool(audit['coverage_pass']),
+            'representation_ablation_pass':bool(result['r7_5_3_representation_ablation_pass']),
+            'selected_candidate':result['selected_candidate'],
+            'strategic_gate_changed':False,
+            'production_training_authorized':False,
+            'ready_for_tables':False,
+          }
+          assert common['python']=='3.11.15'
+          assert common['torch']=='2.13.0+cpu'
+          assert common['numpy']=='2.3.5'
+          assert audit_recovery['source_execution_sha']==common['source_execution_sha']
+          assert audit_recovery['source_corpus_run_id']==common['source_corpus_run_id']
+          execution=dict(common)
+          execution['schema']='SPINCORE_R7_5_3_EXECUTION_MANIFEST_V1'
+          recovery=dict(common)
+          recovery['schema']='SPINCORE_R7_5_3_ORIGINAL_CORPUS_RECOVERY_MANIFEST_V1'
+          Path('evidence/R7_5_3_EXECUTION_MANIFEST.json').write_text(json.dumps(execution,indent=2,sort_keys=True)+'\n')
+          Path('evidence/R7_5_3_ORIGINAL_CORPUS_RECOVERY_MANIFEST.json').write_text(json.dumps(recovery,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Upload complete recovered R7.5.3 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3-recovered-evidence-${{ needs.gate.outputs.recovery_sha }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: [gate, aggregate]
+    runs-on: ubuntu-latest
+    outputs:
+      representation_pass: ${{ steps.read.outputs.representation_pass }}
+      selected_candidate: ${{ steps.read.outputs.selected_candidate }}
+    steps:
+      - name: Checkout current main before evidence download
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download recovered evidence after checkout
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3-recovered-evidence-${{ needs.gate.outputs.recovery_sha }}
+          path: computed
+
+      - name: Revalidate provenance and read final result
+        id: read
+        shell: bash
+        env:
+          RECOVERY_SHA: ${{ needs.gate.outputs.recovery_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/r7_5_3_outputs
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path('computed/R7_5_3_REPRESENTATION_ABLATION_RESULT.json').read_text())
+          a=json.loads(Path('computed/R7_5_3_PAIRED_CORPUS_AUDIT.json').read_text())
+          m=json.loads(Path('computed/R7_5_3_ORIGINAL_CORPUS_RECOVERY_MANIFEST.json').read_text())
+          assert m['source_execution_sha']==os.environ['SOURCE_EXECUTION_SHA']
+          assert m['source_corpus_run_id']==int(os.environ['SOURCE_RUN_ID'])
+          assert m['recovery_execution_sha']==os.environ['RECOVERY_SHA']
+          assert m['audit_correction_blob']==os.environ['AUDIT_CORRECTION_BLOB']
+          assert m['audit_only_overlay'] is True
+          assert m['corpus_regenerated'] is False
+          assert m['fits_and_aggregation_used_source_sha_only'] is True
+          assert m['strategic_gate_changed'] is False
+          assert a['coverage_pass'] is True
+          assert r['production_training_authorized'] is False
+          assert r['ready_for_tables'] is False
+          print('representation_pass=' + ('true' if r['r7_5_3_representation_ablation_pass'] else 'false'))
+          print('selected_candidate=' + str(r['selected_candidate'] or 'NONE'))
+          PY
+          cat /tmp/r7_5_3_outputs >> "$GITHUB_OUTPUT"
+
+      - name: Persist result and complete split-execution provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(
+            R7_5_3_REPRESENTATION_ABLATION_RESULT.json
+            R7_5_3_PAIRED_CORPUS_AUDIT.json
+            R7_5_3_CORPUS_AUDIT_RECOVERY_MANIFEST.json
+            R7_5_3_EXECUTION_MANIFEST.json
+            R7_5_3_ORIGINAL_CORPUS_RECOVERY_MANIFEST.json
+          )
+          for name in "${files[@]}"; do
+            src="computed/$name"
+            dst="validation/$name"
+            test -f "$src"
+            if test -e "$dst" && ! cmp -s "$src" "$dst"; then
+              echo "Refusing to overwrite divergent durable evidence: $dst" >&2
+              exit 1
+            fi
+            cp "$src" "$dst"
+          done
+          git config user.name 'SpinCore Evidence Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -f "${files[@]/#/validation/}"
+          if ! git diff --cached --quiet; then
+            git commit -m "validation: persist recovered R7.5.3 original-corpus evidence (${SOURCE_EXECUTION_SHA})"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+  enforce:
+    needs: persist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce unchanged R7.5.3 strategic gate after persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "R7.5.3 recovered selected candidate: ${{ needs.persist.outputs.selected_candidate }}"
+          test '${{ needs.persist.outputs.representation_pass }}' = 'true'
+          echo 'R7.5.3 representation ablation PASS from original immutable corpora. This authorizes R7.5.4 only; READY FOR TABLES remains false.'
