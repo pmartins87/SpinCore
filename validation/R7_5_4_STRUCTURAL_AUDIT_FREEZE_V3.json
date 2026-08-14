@@ -1,0 +1,28 @@
+{
+  "schema": "SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V3",
+  "date": "2026-08-13",
+  "status": "AUTHORITATIVE_FROZEN_BEFORE_STRUCTURAL_AUDIT_OUTPUT",
+  "supersedes": "validation/R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2.json",
+  "inherits_all_except_trajectory_count": true,
+  "authoritative_action_precommit": "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json",
+  "evaluation_seeds": [1817694185,1617273629],
+  "trajectories_per_scenario_seed": 96,
+  "coverage_reason": "HU has 6 scenarios x 2 evaluation seeds x 96 trajectories = 1152 trajectories. Therefore every preflop-only PR candidate is guaranteed >=1000 audited states even if every trajectory terminates after its first decision. The former 64 setting guaranteed only 768 and could fail the frozen coverage floor for non-strategic reasons.",
+  "deck_seed_formula": "(evaluation_seed * 1000003 + scenario_index * 10007 + trajectory_index * 97 + 0x754A) mod 2^64",
+  "path_rng_formula": "evaluation_seed XOR (scenario_index * 0x9E3779B1) XOR (trajectory_index * 0x45D9F3B)",
+  "unchanged": [
+    "scenario matrices",
+    "evaluation seeds",
+    "dense universal coverage path",
+    "audit every candidate primitive at every applicable visited state",
+    "control exact-action equivalence requirements",
+    "zero failure invariants",
+    "minimum 1000 candidate states per domain",
+    "diagnostics-only status"
+  ],
+  "structural_audit_output_observed_before_correction": false,
+  "strategic_gate_changed": false,
+  "candidate_set_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
