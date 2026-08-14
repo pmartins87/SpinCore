@@ -1,0 +1,65 @@
+name: SpinCore R7.5.3C engine integrity audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_5_3c_engine_integrity_audit.yml'
+      - 'CMakeLists.txt'
+      - 'src/card.cpp'
+      - 'src/hand_evaluator.cpp'
+      - 'src/betting_engine.cpp'
+      - 'src/hand_engine.cpp'
+      - 'src/game_topology.cpp'
+      - 'src/ruleset_contract.cpp'
+      - 'tools/r7_5_3c_evaluator_exhaustive_audit.cpp'
+      - 'tools/r7_5_3c_engine_property_audit.cpp'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-r7-5-3c-engine-integrity
+  cancel-in-progress: false
+
+jobs:
+  evaluator_census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout immutable push SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Build exhaustive evaluator audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target spincore_r7_5_3c_evaluator_exhaustive_audit -j2
+      - name: Enumerate all five-card hands
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./build/spincore_r7_5_3c_evaluator_exhaustive_audit
+
+  engine_fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout immutable push SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Build deterministic engine property audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target spincore_r7_5_3c_engine_property_audit -j2
+      - name: Fuzz legal HU and 3H hands
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./build/spincore_r7_5_3c_engine_property_audit
