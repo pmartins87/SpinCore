@@ -1,0 +1,164 @@
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V1"
+REP_SCHEMA = "SPINCORE_R7_5_3_REPRESENTATION_ABLATION_RESULT_V1"
+STRUCT_SCHEMA = "SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V3"
+UNCERTAINTY_SCHEMA = "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1"
+TRAINING_FREEZE_SCHEMA = "SPINCORE_R7_5_4_TRAINING_IMPLEMENTATION_FREEZE_V1"
+PRECOMMIT_V1_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V1"
+PRECOMMIT_V2_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2"
+PRECOMMIT_V3_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3"
+
+REPRESENTATIONS = {
+    "C0_V1_FROZEN_CONTROL",
+    "C1_V2_NO_FLOP_TOKEN",
+    "C2_V2_H1_CANONICAL_184",
+    "C3_V2_H2_MIN_CHANGE_181",
+    "C4_V2_H3_RECLUSTERED_184",
+    "C5_V2_H4_EXACT_1755",
+}
+
+
+def _read(path: Path) -> dict:
+    if not path.exists():
+        raise FileNotFoundError(path)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
+    root = Path(repo_root)
+    validation = root / "validation"
+    checks: dict[str, dict] = {}
+
+    def check(name: str, condition: bool, detail: str) -> None:
+        checks[name] = {"pass": bool(condition), "detail": str(detail)}
+
+    try:
+        rep = _read(validation / "R7_5_3_REPRESENTATION_ABLATION_RESULT.json")
+        check("representation_schema", rep.get("schema") == REP_SCHEMA, str(rep.get("schema")))
+        check(
+            "representation_gate",
+            bool(rep.get("r7_5_3_representation_ablation_pass")),
+            f"selected={rep.get('selected_candidate')}",
+        )
+        selected_representation = rep.get("selected_candidate")
+        check(
+            "representation_selected",
+            selected_representation in REPRESENTATIONS,
+            str(selected_representation),
+        )
+        check(
+            "representation_not_table_authority",
+            not bool(rep.get("ready_for_tables")) and not bool(rep.get("production_training_authorized")),
+            "R7.5.3 must authorize representation only",
+        )
+    except Exception as exc:
+        selected_representation = None
+        check("representation_result_available", False, repr(exc))
+
+    try:
+        structural = _read(validation / "R7_5_4_ACTION_STRUCTURAL_AUDIT.json")
+        check("structural_schema", structural.get("schema") == STRUCT_SCHEMA, str(structural.get("schema")))
+        check("structural_gate", bool(structural.get("structural_gate_pass")), "durable structural evidence")
+        check(
+            "structural_not_table_authority",
+            not bool(structural.get("ready_for_tables")) and not bool(structural.get("production_training_authorized")),
+            "structural audit is mechanism-only",
+        )
+    except Exception as exc:
+        check("structural_evidence_available", False, repr(exc))
+
+    try:
+        uncertainty = _read(validation / "R7_5_4_UNCERTAINTY_EQUIVALENCE.json")
+        check("uncertainty_schema", uncertainty.get("schema") == UNCERTAINTY_SCHEMA, str(uncertainty.get("schema")))
+        check(
+            "uncertainty_equivalence",
+            bool(uncertainty.get("uncertainty_equivalence_pass"))
+            and float(uncertainty.get("maximum_abs_difference", 1.0)) <= 1e-12,
+            f"max_diff={uncertainty.get('maximum_abs_difference')}",
+        )
+        check(
+            "uncertainty_not_table_authority",
+            not bool(uncertainty.get("ready_for_tables"))
+            and not bool(uncertainty.get("production_training_authorized")),
+            "uncertainty audit is mechanism-only",
+        )
+    except Exception as exc:
+        check("uncertainty_evidence_available", False, repr(exc))
+
+    try:
+        v1 = _read(validation / "R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json")
+        v2 = _read(validation / "R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json")
+        v3 = _read(validation / "R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json")
+        freeze = _read(validation / "R7_5_4_TRAINING_IMPLEMENTATION_FREEZE.json")
+        check("precommit_v1", v1.get("schema") == PRECOMMIT_V1_SCHEMA, str(v1.get("schema")))
+        check("precommit_v2", v2.get("schema") == PRECOMMIT_V2_SCHEMA, str(v2.get("schema")))
+        check("precommit_v3", v3.get("schema") == PRECOMMIT_V3_SCHEMA, str(v3.get("schema")))
+        check("training_freeze", freeze.get("schema") == TRAINING_FREEZE_SCHEMA, str(freeze.get("schema")))
+        check(
+            "no_precommit_table_authority",
+            all(not bool(document.get("ready_for_tables")) for document in (v1, v2, v3, freeze)),
+            "all pre-output contracts preserve READY FOR TABLES=false",
+        )
+    except Exception as exc:
+        check("precommit_chain_available", False, repr(exc))
+
+    check("phase", phase in {"R7_5_4A_POSTFLOP", "R7_5_4B_PREFLOP"}, phase)
+    check("root_level", int(root_level) in {160, 320, 640}, str(root_level))
+
+    if phase == "R7_5_4A_POSTFLOP":
+        # 160 is the only authorized first strategic launch. Higher levels must
+        # be authorized by durable survivor evidence from the immediately prior
+        # level and are deliberately rejected by this initial preflight.
+        check(
+            "initial_postflop_level",
+            int(root_level) == 160,
+            "R7.5.4A starts at the frozen 160-root pruning level",
+        )
+    elif phase == "R7_5_4B_PREFLOP":
+        try:
+            postflop = _read(validation / "R7_5_4A_POSTFLOP_SELECTION.json")
+            check(
+                "postflop_selection_available",
+                bool(postflop.get("selection_pass")) and postflop.get("selected_candidate"),
+                str(postflop.get("selected_candidate")),
+            )
+        except Exception as exc:
+            check("postflop_selection_available", False, repr(exc))
+
+    passed = bool(checks) and all(row["pass"] for row in checks.values())
+    return {
+        "schema": SCHEMA,
+        "phase": phase,
+        "root_level": int(root_level),
+        "selected_representation": selected_representation,
+        "checks": checks,
+        "ready_to_start": passed,
+        "production_training_authorized": False,
+        "ready_for_tables": False,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Fail-closed preflight for strategic R7.5.4 action training")
+    parser.add_argument("--repo-root", type=Path, default=Path("."))
+    parser.add_argument("--phase", choices=["R7_5_4A_POSTFLOP", "R7_5_4B_PREFLOP"], required=True)
+    parser.add_argument("--root-level", type=int, choices=[160, 320, 640], required=True)
+    parser.add_argument("--out", type=Path)
+    args = parser.parse_args()
+
+    payload = evaluate(args.repo_root, phase=args.phase, root_level=args.root_level)
+    text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(text, encoding="utf-8")
+    print(text, end="")
+    return 0 if payload["ready_to_start"] else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
