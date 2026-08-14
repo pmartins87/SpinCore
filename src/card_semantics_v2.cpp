@@ -359,8 +359,9 @@ PrivateHandSemanticsV2 derive_private_hand_semantics_v2(
         out.straight_draw_missing_rank_count = static_cast<std::uint8_t>(missing_count);
         out.straight_draw = missing_count > 0;
 
-        // Four consecutive ranks with two legal end completions: 3-6 through T-K.
-        for (int low = 3; low <= 10 && !out.open_ended_straight_draw; ++low) {
+        // Four consecutive ranks with two legal end completions. 2-5 is a
+        // legitimate wheel-edge OESD (A or 6); T-K completes with 9 or A.
+        for (int low = 2; low <= 10 && !out.open_ended_straight_draw; ++low) {
             bool all_present = true;
             bool hero_contributes = false;
             for (int rank = low; rank <= low + 3; ++rank) {
