@@ -145,8 +145,21 @@ def expected_candidate_crossplay_samples(domain: str) -> int:
         raise ValueError(f"unsupported evaluation domain {domain!r}") from exc
 
 
-def validate_dense_cell_cache(cache: DenseCellCache, *, exact_counts: bool = True) -> None:
-    if cache.schema != DENSE_CACHE_SCHEMA or cache.execution_sha != EXPECTED_EXECUTION_SHA:
+def _required_execution_sha(expected_execution_sha: str | None) -> str:
+    value = EXPECTED_EXECUTION_SHA if expected_execution_sha is None else str(expected_execution_sha)
+    if len(value) != 40 or any(ch not in "0123456789abcdef" for ch in value):
+        raise ValueError("expected evaluator execution SHA must be a lowercase 40-hex git SHA")
+    return value
+
+
+def validate_dense_cell_cache(
+    cache: DenseCellCache,
+    *,
+    exact_counts: bool = True,
+    expected_execution_sha: str | None = None,
+) -> None:
+    required_sha = _required_execution_sha(expected_execution_sha)
+    if cache.schema != DENSE_CACHE_SCHEMA or cache.execution_sha != required_sha:
         raise ValueError("dense evaluation cache schema/execution mismatch")
     if cache.domain not in CROSSPLAY_HANDS:
         raise ValueError("dense evaluation cache domain mismatch")
@@ -169,8 +182,10 @@ def validate_candidate_cell_evidence(
     evidence: CandidateCellEvidence,
     *,
     exact_counts: bool = True,
+    expected_execution_sha: str | None = None,
 ) -> None:
-    if evidence.schema != CANDIDATE_CELL_SCHEMA or evidence.execution_sha != EXPECTED_EXECUTION_SHA:
+    required_sha = _required_execution_sha(expected_execution_sha)
+    if evidence.schema != CANDIDATE_CELL_SCHEMA or evidence.execution_sha != required_sha:
         raise ValueError("candidate evaluation evidence schema/execution mismatch")
     if evidence.candidate_id == "PF_DENSE_REFERENCE":
         raise ValueError("dense self-reference is not a candidate cell artifact")
@@ -207,16 +222,35 @@ def _load_pickle(path: str | Path):
         return pickle.load(handle)
 
 
-def save_dense_cell_cache(path: str | Path, cache: DenseCellCache, *, exact_counts: bool = True) -> None:
-    validate_dense_cell_cache(cache, exact_counts=exact_counts)
+def save_dense_cell_cache(
+    path: str | Path,
+    cache: DenseCellCache,
+    *,
+    exact_counts: bool = True,
+    expected_execution_sha: str | None = None,
+) -> None:
+    validate_dense_cell_cache(
+        cache,
+        exact_counts=exact_counts,
+        expected_execution_sha=expected_execution_sha,
+    )
     _atomic_pickle(path, cache)
 
 
-def load_dense_cell_cache(path: str | Path, *, exact_counts: bool = True) -> DenseCellCache:
+def load_dense_cell_cache(
+    path: str | Path,
+    *,
+    exact_counts: bool = True,
+    expected_execution_sha: str | None = None,
+) -> DenseCellCache:
     value = _load_pickle(path)
     if not isinstance(value, DenseCellCache):
         raise ValueError("dense evaluation artifact has wrong type")
-    validate_dense_cell_cache(value, exact_counts=exact_counts)
+    validate_dense_cell_cache(
+        value,
+        exact_counts=exact_counts,
+        expected_execution_sha=expected_execution_sha,
+    )
     return value
 
 
@@ -225,8 +259,13 @@ def save_candidate_cell_evidence(
     evidence: CandidateCellEvidence,
     *,
     exact_counts: bool = True,
+    expected_execution_sha: str | None = None,
 ) -> None:
-    validate_candidate_cell_evidence(evidence, exact_counts=exact_counts)
+    validate_candidate_cell_evidence(
+        evidence,
+        exact_counts=exact_counts,
+        expected_execution_sha=expected_execution_sha,
+    )
     _atomic_pickle(path, evidence)
 
 
@@ -234,11 +273,16 @@ def load_candidate_cell_evidence(
     path: str | Path,
     *,
     exact_counts: bool = True,
+    expected_execution_sha: str | None = None,
 ) -> CandidateCellEvidence:
     value = _load_pickle(path)
     if not isinstance(value, CandidateCellEvidence):
         raise ValueError("candidate evaluation artifact has wrong type")
-    validate_candidate_cell_evidence(value, exact_counts=exact_counts)
+    validate_candidate_cell_evidence(
+        value,
+        exact_counts=exact_counts,
+        expected_execution_sha=expected_execution_sha,
+    )
     return value
 
 
