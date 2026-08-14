@@ -89,6 +89,8 @@ jobs:
           rc=int(Path('evidence/audit_rc.txt').read_text().strip())
           assert p['schema']=='SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1'
           assert p['tolerance']==1e-12
+          assert p['accepted_candidate_label']=='size4_uncertainty_s175'
+          assert p['accepted_parameters']=={'epsilon_scale':1.75,'epsilon_cap':0.5}
           assert p['production_training_authorized'] is False
           assert p['ready_for_tables'] is False
           semantic=bool(p['uncertainty_equivalence_pass'])
@@ -157,7 +159,7 @@ jobs:
           cp computed/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json validation/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json
           git config user.name 'SpinCore Evidence Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add validation/R7_5_4_UNCERTAINTY_EQUIVALENCE.json validation/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json
+          git add -f validation/R7_5_4_UNCERTAINTY_EQUIVALENCE.json validation/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json
           if ! git diff --cached --quiet; then
             git commit -m "validation: persist R7.5.4 uncertainty equivalence (${EXECUTION_SHA})"
             git pull --rebase origin main
