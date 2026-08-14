@@ -1,0 +1,183 @@
+{
+  "schema": "SPINCORE_R7_5_LEGACY_HERITAGE_INTEGRATION_LEDGER_V1",
+  "date": "2026-08-14",
+  "source_manifest": "validation/R7_5_LEGACY_HERITAGE_SOURCE_MANIFEST_20260814.json",
+  "heritage_audit": "validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md",
+  "policy": "Every human-readable source in the authoritative prior-attempt archive must have an explicit best-of disposition. Objective mechanics and engineering are preserved or independently re-proved; useful semantics become exact-state-derived features/tests; historical strategy is never imported as target truth merely because it existed.",
+  "entries": [
+    {
+      "source": "deepspin/__init__.py",
+      "reviewed_full": true,
+      "best_of": ["package/API intent and module boundary of the neural DeepSpin attempt"],
+      "preserve": ["clear separation between environment, traversal, networks, buffers and trainer"],
+      "destination": "architecture provenance only; current SpinCore package boundaries supersede it",
+      "status": "SUPERSEDED_STRUCTURE_RETAINED_AS_PROVENANCE",
+      "current_evidence": ["validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"],
+      "never_inherit_as_truth": ["module presence as evidence of strategic correctness"]
+    },
+    {
+      "source": "deepspin/buffers.py",
+      "reviewed_full": true,
+      "best_of": ["deterministic reservoir storage", "state_dict/save/load semantics", "bounded-memory sampling"],
+      "preserve": ["deterministic memory state and exact checkpoint restoration"],
+      "destination": "R7.5+ Deep CFR memory/checkpoint infrastructure",
+      "status": "INCORPORATED_AND_RECERTIFIED",
+      "current_evidence": ["python/spincore/r7_5_action_checkpoint.py", "python_tests/test_r7_5_action_checkpoint.py"],
+      "never_inherit_as_truth": ["old buffer contents or old learned samples"]
+    },
+    {
+      "source": "deepspin/env/poker_env.cpp",
+      "reviewed_full": true,
+      "best_of": ["explicit ALIVE/FOLDED/ALLIN state", "legal betting transitions", "exact stack/pot/current-bet accounting", "per-street ordered history", "HU dead-seat/dealer correction", "single-source observation construction", "hand/draw/board/context primitives"],
+      "preserve": ["observations must be derived from a legally reached authoritative state", "legal-action mask must come from the engine", "path-dependent context must come from ordered events"],
+      "destination": "core solver state, NeuralInput V1/V2 and R7.5 reachability certification",
+      "status": "INCORPORATED_AND_RECERTIFIED",
+      "current_evidence": ["python/spincore/solver.py", "validation/R7_5_REAL_GAME_REACHABILITY_CONTRACT.json", "validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json"],
+      "never_inherit_as_truth": ["old learned policy", "old observation layout as immutable production truth"]
+    },
+    {
+      "source": "deepspin/env/poker_env.h",
+      "reviewed_full": true,
+      "best_of": ["explicit environment/state API contract", "history and status fields exposed at the engine boundary"],
+      "preserve": ["typed separation of authoritative state from learning code"],
+      "destination": "current C++ solver/C ABI state boundary",
+      "status": "SUPERSEDED_BY_CURRENT_EXACT_API",
+      "current_evidence": ["python/spincore/solver.py", "validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json"],
+      "never_inherit_as_truth": ["obsolete ABI/layout details"]
+    },
+    {
+      "source": "deepspin/env/setup.py",
+      "reviewed_full": true,
+      "best_of": ["reproducible native-extension build intent"],
+      "preserve": ["build/runtime provenance must be explicit and testable"],
+      "destination": "CI CMake/build manifests and immutable workflow execution",
+      "status": "SUPERSEDED_BY_STRONGER_BUILD_PROVENANCE",
+      "current_evidence": [".github/workflows/main_regression.yml", "validation/R7_5_REAL_GAME_REACHABILITY_EXECUTION_MANIFEST.json"],
+      "never_inherit_as_truth": ["old Python/Windows build artifact as production binary"]
+    },
+    {
+      "source": "deepspin/networks.py",
+      "reviewed_full": true,
+      "best_of": ["legal-mask-aware advantage loss", "legal-mask-aware policy softmax/cross-entropy", "separate advantage and average-policy models"],
+      "preserve": ["illegal actions must be excluded from both inference and loss", "advantage and policy roles remain distinct"],
+      "destination": "R7.5 representation models and R7.5.4 ten-action heads",
+      "status": "INCORPORATED_AND_RECERTIFIED",
+      "current_evidence": ["python/spincore_nn/action_models.py", "python_tests/test_r7_5_action_models.py", "python_tests/test_r7_5_action_training.py"],
+      "never_inherit_as_truth": ["old weights", "old network width as strategic optimum"]
+    },
+    {
+      "source": "deepspin/rollout_workers.py",
+      "reviewed_full": true,
+      "best_of": ["explicit worker task objects", "worker-side legal masks", "controlled thread setup", "weight-version loading discipline"],
+      "preserve": ["distributed work must carry explicit episode/task provenance", "worker outputs must remain legal-mask constrained"],
+      "destination": "R7/R8 workflow and worker provenance/parallel training",
+      "status": "PRINCIPLE_INCORPORATED_CURRENT_WORKER_IMPLEMENTATION_SUPERSEDES_SOURCE",
+      "current_evidence": ["validation/R7_5_3_EXECUTION_MANIFEST.json (when recovery completes)", ".github/workflows/r7_5_3_original_corpus_recovery.yml"],
+      "never_inherit_as_truth": ["old rollout result", "old worker scheduling as a strategic parameter"]
+    },
+    {
+      "source": "deepspin/scenario.py",
+      "reviewed_full": true,
+      "best_of": ["isolated scenario RNG", "explicit stack/blind/dealer episode sampling", "HU/3H scenario separation"],
+      "preserve": ["scenario generation must be reproducible and legal", "sampling RNG must not be silently coupled to model initialization"],
+      "destination": "frozen R7/R8 seeds, exact Episode construction and scenario gates",
+      "status": "INCORPORATED_AND_RECERTIFIED",
+      "current_evidence": ["validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json", "validation/R7_5_3_REPRESENTATION_ABLATION_PRECOMMIT.json"],
+      "never_inherit_as_truth": ["old stack distribution if not part of current frozen profile"]
+    },
+    {
+      "source": "deepspin/trainer.py",
+      "reviewed_full": true,
+      "best_of": ["atomic checkpoint write", "Python/NumPy/Torch/scenario RNG restoration", "iteration-level training lifecycle"],
+      "preserve": ["stop/restore/continue must reproduce uninterrupted execution", "checkpoint must contain all stochastic state"],
+      "destination": "R7.5.4 ten-action checkpoint/resume and R8 production training",
+      "status": "INCORPORATED_AND_RECERTIFIED",
+      "current_evidence": ["python/spincore/r7_5_action_checkpoint.py", "python_tests/test_r7_5_action_checkpoint.py"],
+      "never_inherit_as_truth": ["old checkpoint weights or old stopping outcome"]
+    },
+    {
+      "source": "deepspin/traversal.py",
+      "reviewed_full": true,
+      "best_of": ["EpisodeSpec", "replay-to-node", "regret matching over legal actions", "external-sampling traversal"],
+      "preserve": ["traversal must move through legal game states", "replay identity must be tied to exact episode/action path"],
+      "destination": "current partial-exact CFR traversal and paired/reachability audits",
+      "status": "INCORPORATED_BY_STRONGER_CURRENT_TRAVERSAL",
+      "current_evidence": ["python/spincore/r7_5_action_cfr.py", "validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json"],
+      "never_inherit_as_truth": ["old sampling estimator if it conflicts with frozen recovered estimator"]
+    },
+    {
+      "source": "deepspin/user_deepspin.cpp",
+      "reviewed_full": true,
+      "best_of": ["train/runtime feature-parity intent", "explicit player statuses", "card validation", "legal masking before inference", "observation-slice diagnostic logging", "separate model-action to OpenHoldem translation"],
+      "preserve": ["runtime state must be validated before strategic inference", "state-reading faults must be separable from strategy faults"],
+      "destination": "R10 OpenHoldem runtime parity and R12 operational diagnostics",
+      "status": "PLANNED_RUNTIME_INTEGRATION_WITH_CURRENT_EXACT_STATE",
+      "current_evidence": ["validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md", "validation/R7_5_REAL_GAME_REACHABILITY_CONTRACT.json"],
+      "never_inherit_as_truth": ["snapshot-guessed path-dependent history", "placeholder action-context symbols", "preflop nominal-action aliasing"]
+    },
+    {
+      "source": "hardcoded/Crusher Framework 5.txt",
+      "reviewed_full": true,
+      "best_of": ["preflop lineage vocabulary", "initiative/c-bet/donk/probe/float/delayed-line semantics", "faced-sizing and raise geometry", "lineup/IP-OOP/live-player semantics", "effective stack/pot/SPR", "made-hand/kicker/nutness/draw/backdoor vocabulary", "board transition vocabulary", "pot-odds vocabulary", "Min/33/40/50/66/75/100/Max sizing catalogue", "future exploit vocabulary"],
+      "preserve": ["objective concepts only when deterministically derivable from exact state/history", "candidate action sizes are empirical research candidates, not assumed optimal"],
+      "destination": "R7.5 representation features, R7.5.4 action abstraction, R11 exploitation vocabulary",
+      "status": "FULL_SEMANTIC_AUDIT_INCORPORATED",
+      "current_evidence": ["validation/R7_5_CRUSHER_FRAMEWORK_FULL_SEMANTIC_AUDIT_20260813.md", "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json"],
+      "never_inherit_as_truth": ["historical action charts", "handlist decisions", "outs/implied-odds heuristics", "exploit substitutions", "threshold actions"]
+    },
+    {
+      "source": "hardcoded/user_hardcoded.cpp",
+      "reviewed_full": true,
+      "best_of": ["overpair/top-pair/lower-pair relations", "kicker quality", "nutness", "flush/straight contribution", "OESD/gutshot/double-gutshot/backdoor detection", "board pairing/overcard/undercard transitions", "street-completion logic", "line-dependent semantic checks"],
+      "preserve": ["use as semantic coverage/oracle checklist for objective card-state facts"],
+      "destination": "R7.5 semantic feature tests/corpus coverage; later runtime diagnostics",
+      "status": "SEMANTIC_CHECKLIST_INCORPORATED_NOT_POLICY_SUPERVISOR",
+      "current_evidence": ["validation/R7_5_CRUSHER_FRAMEWORK_FULL_SEMANTIC_AUDIT_20260813.md", "tools/r7_5_audit_paired_corpus.py"],
+      "never_inherit_as_truth": ["final betting decisions", "hard-coded range/action branches"]
+    },
+    {
+      "source": "hardcoded/user_hardcoded_helper.cpp",
+      "reviewed_full": true,
+      "best_of": ["human-readable raw state snapshot", "PT4-like interpreted snapshot", "state-vs-strategy fault isolation", "logging of seats/position/board/bets/stacks/cards/pot/call/effective stack/legal/history"],
+      "preserve": ["diagnostics must first prove what state the bot believed before blaming strategy"],
+      "destination": "R10 runtime parity and R12 table-readiness diagnostics",
+      "status": "PLANNED_EXPLICIT_RUNTIME_DIAGNOSTIC_GATE",
+      "current_evidence": ["validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"],
+      "never_inherit_as_truth": ["OpenHoldem-symbol interpretation without validation against authoritative state"]
+    },
+    {
+      "source": "solver v2/184Flops.json",
+      "reviewed_full": true,
+      "best_of": ["complete 22,100 physical-flop to 184-representative historical mapping"],
+      "preserve": ["use as regression/reference corpus for canonicalization and coverage"],
+      "destination": "R7.5 flop-abstraction candidate validation and canonicalization regression",
+      "status": "REFERENCE_DATA_FULLY_PARSED_AND_COMPARED",
+      "current_evidence": ["validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md", "validation/R7_5_3_REPRESENTATION_ABLATION_PRECOMMIT.json"],
+      "never_inherit_as_truth": ["184 classes as mandatory production abstraction"]
+    },
+    {
+      "source": "solver v2/classes_184_resumo.csv",
+      "reviewed_full": true,
+      "best_of": ["184 representative labels", "class population counts summing to 22,100"],
+      "preserve": ["cross-check JSON mapping completeness and provide interpretable historical class labels"],
+      "destination": "R7.5 canonicalization audit/reference only",
+      "status": "REFERENCE_DATA_FULLY_PARSED_AND_RECONCILED",
+      "current_evidence": ["validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"],
+      "never_inherit_as_truth": ["historical label taxonomy as a fixed neural target"]
+    },
+    {
+      "source": "solver v2/user_solver_v2.cpp",
+      "reviewed_full": true,
+      "best_of": ["real hand/board extraction", "representative-flop lookup", "canonical hand/street-card mapping", "pot/start-of-street/stack reconstruction", "last-action/villain-action inference", "solver process lifecycle", "binary range/GTO loading", "path/bet-size lookup", "hand/draw evaluation", "fallback diagnostics"],
+      "preserve": ["canonicalization test cases", "solver-process observability", "safe failure rather than silent strategic substitution", "exact hand/board/path validation"],
+      "destination": "R7.5 canonicalization regression plus R10 solver/runtime integration diagnostics",
+      "status": "REFERENCE_AND_PLANNED_RUNTIME_DIAGNOSTIC_HERITAGE",
+      "current_evidence": ["validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md", "validation/R7_5_REAL_GAME_REACHABILITY_CONTRACT.json"],
+      "never_inherit_as_truth": ["old GTO/range files", "old fallback betting action", "inferred path when exact trajectory exists"]
+    }
+  ],
+  "completeness_rule": "Set(entries.source) must exactly equal Set(source_manifest.prior_attempt_archive.readable_sources[*].source).",
+  "strategic_output": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
