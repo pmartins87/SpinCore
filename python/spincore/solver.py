@@ -35,6 +35,7 @@ class SolverLibrary:
         L.spincore_solver_state_legal_mask.argtypes=[C.c_void_p];L.spincore_solver_state_legal_mask.restype=C.c_uint32
         L.spincore_solver_state_apply_abstract.argtypes=[C.c_void_p,C.c_int32];L.spincore_solver_state_apply_abstract.restype=C.c_int32
         L.spincore_solver_state_neural_input.argtypes=[C.c_void_p,C.POINTER(C.c_uint8),C.c_size_t];L.spincore_solver_state_neural_input.restype=C.c_size_t
+        L.spincore_solver_state_neural_input_v2.argtypes=[C.c_void_p,C.POINTER(C.c_uint8),C.c_size_t];L.spincore_solver_state_neural_input_v2.restype=C.c_size_t
         L.spincore_solver_state_terminal_chip_delta.argtypes=[C.c_void_p,C.POINTER(C.c_int32)];L.spincore_solver_state_terminal_chip_delta.restype=C.c_int32
         L.spincore_solver_state_terminal_icm_delta.argtypes=[C.c_void_p,C.POINTER(C.c_double),C.POINTER(C.c_double)];L.spincore_solver_state_terminal_icm_delta.restype=C.c_int32
         L.spincore_solver_frontier_create_until_actor.argtypes=[C.c_void_p,C.c_int32,C.c_size_t,C.c_size_t];L.spincore_solver_frontier_create_until_actor.restype=C.c_void_p
@@ -82,12 +83,14 @@ class SolverState:
         c=self.clone()
         try:return c.apply(a)
         except Exception:c.close();raise
-    def neural_bytes(self)->bytes:
-        p=self._p();n=int(self.owner.lib.spincore_solver_state_neural_input(p,None,0));
-        if n<=0:raise RuntimeError(self.owner.error() or 'no neural input')
-        b=(C.c_uint8*n)();got=int(self.owner.lib.spincore_solver_state_neural_input(p,b,n));
-        if got!=n:raise RuntimeError(self.owner.error() or 'neural size mismatch')
+    def _neural_payload(self,fn_name:str)->bytes:
+        p=self._p();fn=getattr(self.owner.lib,fn_name);n=int(fn(p,None,0));
+        if n<=0:raise RuntimeError(self.owner.error() or f'no {fn_name} payload')
+        b=(C.c_uint8*n)();got=int(fn(p,b,n));
+        if got!=n:raise RuntimeError(self.owner.error() or f'{fn_name} size mismatch')
         return bytes(b)
+    def neural_bytes(self)->bytes:return self._neural_payload('spincore_solver_state_neural_input')
+    def neural_bytes_v2(self)->bytes:return self._neural_payload('spincore_solver_state_neural_input_v2')
     def terminal_chip_delta(self):
         o=(C.c_int32*3)();
         if self.owner.lib.spincore_solver_state_terminal_chip_delta(self._p(),o)!=0:raise RuntimeError(self.owner.error())
