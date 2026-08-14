@@ -26,8 +26,8 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.4 final gate — **PASS; READY TO ADVANCE TO R8 ENGINEERING**
 - R7.5 Strategic representation & action abstraction — **IN PROGRESS**
   - R7.5.0 legacy evidence + architecture precommit — **PASS AS DESIGN PRECOMMIT ONLY**
-  - R7.5.1 recover/regenerate + audit flop mappings — **PENDING**
-  - R7.5.2 NeuralInputV2 + semantic regression — **PENDING**
+  - R7.5.1 recover/regenerate + audit flop mappings — **LEGACY 184 RECOVERED; 22,100 COVERAGE PASS; HISTORICAL SUIT-INVARIANCE FAIL; CORRECTED/NEW CANDIDATE PENDING**
+  - R7.5.2 NeuralInputV2 + semantic regression — **POSTFLOP ONTOLOGY SCAFFOLD REGRESSION PASS; V2 ENCODER INTEGRATION PENDING**
   - R7.5.3 frozen representation ablation — **PENDING**
   - R7.5.4 frozen action-abstraction ablation — **PENDING**
   - R7.5.5 production representation/action freeze — **PENDING**
@@ -114,10 +114,12 @@ R7.4 authorizes further engineering only. It does not prove that the current neu
 
 ## R7.5 — strategic representation & action abstraction
 
-Legacy Spin & Go attempts were audited before production training. The canonical precommit is:
+Legacy Spin & Go attempts were audited before production training. Canonical evidence now includes:
 
 ```text
 validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
+validation/R7_5_LEGACY_CRUSHER_AND_184_AUDIT_20260813.md
+validation/R7_5_LEGACY_184_MAPPING_AUDIT.json
 ```
 
 Key frozen decisions:
@@ -127,17 +129,68 @@ Key frozen decisions:
 - lossy compression is allowed only at neural-observation boundary;
 - current NeuralInputV1 is a control, not a production freeze;
 - 53-flop taxonomy is too coarse as the sole primary flop abstraction;
-- historical 184-flop mapping is the leading candidate but is NOT accepted without audit;
+- recovered historical 184 mapping has reference value but is NOT eligible unchanged;
+- a suit-invariant 184 descendant or new candidate must be audited before selection;
 - absolute physical card identity must not remain the dominant input channel by default;
 - exact stack/pot/SPR facts stay available even when auxiliary buckets are used;
 - actor-aware and sizing-aware action history is required;
-- c-bet, donk, probe, float, delayed c-bet and related initiative semantics must be reconstructible;
+- c-bet, donk, probe, float, delayed and double-delayed semantics must be reconstructible;
 - richer postflop action sets must justify every extra branch by strategic gain vs Ryzen cost.
 ```
 
-The legacy 184 summary covers all 22,100 physical flops with 184 representatives, but the referenced historical `184Flops.json` mapping is not currently present in the supplied legacy package/file library. R7.5.1 must recover it or regenerate an equivalent deterministically before the 184 candidate can be certified.
+### Recovered 184 mapping
 
-R7.5.3 will freeze the exact candidates, seeds, budgets, held-out states, numerical acceptance thresholds and tie-break rules **before** candidate outputs are inspected. R7.5.4 then selects the action abstraction under the same anti-post-hoc discipline.
+The missing historical `184Flops.json` was recovered from the updated legacy package.
+
+```text
+physical flops mapped                         22,100 PASS
+unique representative texts                     184 PASS
+exact suit-isomorphic reference classes        1,755
+exact classes split by legacy suit spelling       40 FAIL
+historical suit-permutation invariance           false
+historical map eligible unchanged                 NO
+```
+
+The failure is structural: global suit renaming can change the historical bucket even though absolute suit names are strategically irrelevant. SpinCore will not hide this with arbitrary post-hoc reassignment. Corrected and newly generated suit-invariant candidates will be compared under a precommitted R7.5.3 design.
+
+### Crusher ontology extraction
+
+`Crusher Framework 5.txt` confirms a rich legacy vocabulary with exactly 32 POSTFLOP DEFEND headings and 13 POSTFLOP ATTACK headings. The useful information is the state ontology, not the old strategy rules.
+
+The 32 DEFEND headings are intentionally decomposed rather than copied as 32 one-hot input states. For example `CALL VS HIGH DONK` and `RAISE VS HIGH DONK` describe the same observed state; CALL/RAISE are candidate policy outputs.
+
+The regression-proven C++ scaffold now represents compositional public semantics:
+
+```text
+include/spincore/postflop_ontology.hpp
+src/postflop_ontology.cpp
+tests/test_postflop_ontology.cpp
+regression run 31761845283 = PASS
+
+opening/facing line:
+  CBET
+  DONK_BET
+  PROBE_BET
+  FLOAT_BET
+  DELAYED_FLOAT_BET
+  DELAYED_CBET
+  DOUBLE_DELAYED_CBET
+  GENERIC_BET
+  RAISE
+
+plus:
+  lineage aggressor
+  lineage street
+  skipped streets since aggression
+  opening line preserved when facing a raise
+  raise depth
+  exact pot
+  exact amount to call
+```
+
+Legacy Crusher size boundaries remain reference evidence only. Production sizing thresholds are not frozen; exact continuous geometry remains available.
+
+R7.5.3 will freeze the exact representation candidates, seeds, budgets, held-out states, numerical acceptance thresholds and tie-break rules **before** candidate outputs are inspected. R7.5.4 then selects the action abstraction under the same anti-post-hoc discipline.
 
 Only R7.5.5 may freeze the production encoder/action abstraction.
 
