@@ -1,0 +1,190 @@
+name: SpinCore R7.5.4 action structural audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-5-4-action-structural-audit
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout dispatch SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze immutable execution SHA
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_NAME}" = "main"
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Validate authoritative pre-output contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          v1=json.loads(Path('validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json').read_text())
+          v2=json.loads(Path('validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json').read_text())
+          v3=json.loads(Path('validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json').read_text())
+          freeze=json.loads(Path('validation/R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2.json').read_text())
+          assert v1['schema']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V1'
+          assert v2['schema']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2'
+          assert v3['schema']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3'
+          assert freeze['schema']=='SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2'
+          assert v3['seed_derivation']['paired_evaluation_seeds']==[1817694185,1617273629]
+          assert freeze['evaluation_seeds']==[1817694185,1617273629]
+          assert v2['corrections']['PF0_CONTROL_33_75_AI_exact_legacy_equivalence_required'] is True
+          assert v1['production_training_authorized'] is False
+          assert v3['production_training_authorized'] is False
+          assert freeze['production_training_authorized'] is False
+          assert not Path('validation/R7_5_4_ACTION_STRUCTURAL_AUDIT.json').exists(), 'structural evidence already durable'
+          PY
+
+  audit:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      audit_rc: ${{ steps.run.outputs.audit_rc }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Build exact structural auditor
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+
+      - name: Run frozen 2,688-trajectory structural audit
+        id: run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          set +e
+          build/spincore_r7_5_action_structural_audit --out evidence/R7_5_4_ACTION_STRUCTURAL_AUDIT.json
+          rc=$?
+          set -e
+          test -f evidence/R7_5_4_ACTION_STRUCTURAL_AUDIT.json
+          echo "audit_rc=$rc" >> "$GITHUB_OUTPUT"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('evidence/R7_5_4_ACTION_STRUCTURAL_AUDIT.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V2'
+          assert p['freeze_schema']=='SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2'
+          assert p['authoritative_action_precommit']=='SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3'
+          assert p['evaluation_seeds']==[1817694185,1617273629]
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          PY
+
+      - name: Write immutable execution manifest
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.gate.outputs.execution_sha }}
+          AUDIT_RC: ${{ steps.run.outputs.audit_rc }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          evidence=json.loads(Path('evidence/R7_5_4_ACTION_STRUCTURAL_AUDIT.json').read_text())
+          payload={
+            'schema':'SPINCORE_R7_5_4_ACTION_STRUCTURAL_EXECUTION_MANIFEST_V1',
+            'execution_sha':os.environ['EXECUTION_SHA'],
+            'workflow_run_id':int(os.environ['GITHUB_RUN_ID']),
+            'workflow_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'audit_rc':int(os.environ['AUDIT_RC']),
+            'structural_gate_pass':bool(evidence['structural_gate_pass']),
+            'production_training_authorized':False,
+            'ready_for_tables':False,
+          }
+          Path('evidence/R7_5_4_ACTION_STRUCTURAL_EXECUTION_MANIFEST.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Upload structural evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4-action-structural-${{ needs.gate.outputs.execution_sha }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: [gate, audit]
+    runs-on: ubuntu-latest
+    outputs:
+      structural_pass: ${{ steps.read.outputs.structural_pass }}
+    steps:
+      - name: Download immutable evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4-action-structural-${{ needs.gate.outputs.execution_sha }}
+          path: computed
+
+      - name: Read gate before persistence
+        id: read
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > /tmp/r754_struct
+          import json
+          from pathlib import Path
+          p=json.loads(Path('computed/R7_5_4_ACTION_STRUCTURAL_AUDIT.json').read_text())
+          print('structural_pass=' + ('true' if p['structural_gate_pass'] else 'false'))
+          assert p['ready_for_tables'] is False
+          PY
+          cat /tmp/r754_struct >> "$GITHUB_OUTPUT"
+
+      - name: Checkout current main only for evidence persistence
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Persist structural evidence
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.gate.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          cp computed/R7_5_4_ACTION_STRUCTURAL_AUDIT.json validation/R7_5_4_ACTION_STRUCTURAL_AUDIT.json
+          cp computed/R7_5_4_ACTION_STRUCTURAL_EXECUTION_MANIFEST.json validation/R7_5_4_ACTION_STRUCTURAL_EXECUTION_MANIFEST.json
+          git config user.name 'SpinCore Evidence Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add validation/R7_5_4_ACTION_STRUCTURAL_AUDIT.json validation/R7_5_4_ACTION_STRUCTURAL_EXECUTION_MANIFEST.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "validation: persist R7.5.4 structural action audit ($EXECUTION_SHA)"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+  enforce:
+    needs: persist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce structural gate only after durable persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test '${{ needs.persist.outputs.structural_pass }}' = 'true'
+          echo 'R7.5.4 structural audit PASS. Strategic action training remains blocked on R7.5.3 representation selection.'
