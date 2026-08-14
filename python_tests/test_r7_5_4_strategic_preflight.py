@@ -104,7 +104,38 @@ def _complete_tree(root: Path) -> None:
         {
             "schema": preflight.REP_SCHEMA,
             "r7_5_3_representation_ablation_pass": True,
-            "selected_candidate": "C4_V2_H3_RECLUSTERED_184",
+            "selected_candidate": "C0_V1_FROZEN_CONTROL",
+            "production_training_authorized": False,
+            "ready_for_tables": False,
+        },
+    )
+    _write(
+        v / preflight.TRAINABILITY_CONTRACT,
+        {
+            "schema": preflight.TRAINABILITY_SCHEMA,
+            "hard_cap": {"wall_clock_days": 90.0},
+            "planning_reserve": {
+                "multiplier": 1.20,
+                "implied_nominal_budget_days": 75.0,
+            },
+            "representation_state_at_freeze": {
+                "selected_candidate": "C0_V1_FROZEN_CONTROL",
+                "serialized_observation_bytes": 126,
+                "model_parameter_count": 152438,
+            },
+            "physical_measurement_contract": {
+                "timing_cost_basis": "MATURE_OR_WORST_CASE_CERTIFIED_V1",
+                "non_iteration_scope": "ALL_FROZEN_NON_ITERATION_TRAINING_AND_FINAL_FREEZE_WORK_V1",
+            },
+            "projection_contract": {
+                "schema": preflight.TRAINABILITY_PROJECTION_SCHEMA,
+                "required_domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+                "all_selected_profiles_required": True,
+                "all_required_algorithm_seed_streams_required": True,
+                "all_frozen_iterations_required": True,
+                "all_non_iteration_training_and_freeze_work_required": True,
+            },
+            "current_trainability_status": "NOT_MEASURED_PHYSICALLY / NOT_PASS",
             "production_training_authorized": False,
             "ready_for_tables": False,
         },
@@ -140,15 +171,48 @@ def _complete_tree(root: Path) -> None:
 def test_preflight_allows_only_initial_160_when_all_durable_dependencies_pass(tmp_path: Path) -> None:
     _complete_tree(tmp_path)
     result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
-    assert result["schema"] == "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V4"
+    assert result["schema"] == "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V5"
     assert result["ready_to_start"] is True
-    assert result["selected_representation"] == "C4_V2_H3_RECLUSTERED_184"
+    assert result["selected_representation"] == "C0_V1_FROZEN_CONTROL"
+    assert result["physical_trainability_pass_required_now"] is False
+    assert result["physical_trainability_gate_required_before_r8_official_training"] is True
     assert result["production_training_authorized"] is False
     assert result["ready_for_tables"] is False
 
     higher = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=320)
     assert higher["ready_to_start"] is False
     assert higher["checks"]["initial_postflop_level"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_trainability_contract_is_missing(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    (tmp_path / "validation" / preflight.TRAINABILITY_CONTRACT).unlink()
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["trainability_contract_available"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_trainability_budget_drifts(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    path = tmp_path / "validation" / preflight.TRAINABILITY_CONTRACT
+    payload = json.loads(path.read_text())
+    payload["hard_cap"]["wall_clock_days"] = 120.0
+    _write(path, payload)
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["trainability_budget_frozen"]["pass"] is False
+
+
+def test_preflight_rejects_premature_physical_trainability_pass_contamination(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    path = tmp_path / "validation" / preflight.TRAINABILITY_CONTRACT
+    payload = json.loads(path.read_text())
+    payload["current_trainability_status"] = "PASS"
+    payload["production_training_authorized"] = True
+    _write(path, payload)
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["trainability_pre_physical_status"]["pass"] is False
 
 
 def test_preflight_fails_closed_when_uncertainty_evidence_is_missing(tmp_path: Path) -> None:
