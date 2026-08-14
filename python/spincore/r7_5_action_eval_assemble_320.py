@@ -211,12 +211,14 @@ def assemble_selection_evidence_320(
                 seed_reports,
                 candidate_id=candidate_id,
                 domain=domain,
+                expected_root_level=ROOT_LEVEL_320,
             )
             domain_learning[domain] = learning_eligibility(
                 seed_reports,
                 candidate_id=candidate_id,
                 domain=domain,
                 cross_seed_report=report,
+                expected_root_level=ROOT_LEVEL_320,
             )
             if candidate_id == REFEREE:
                 omission, crossplay = _dense_zero_samples(domain, exact_counts=exact_counts)
