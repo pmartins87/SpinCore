@@ -10,6 +10,14 @@ class Episode:
     total_chips:int; game_is_hu:bool; blind_index:int; small_blind:int; big_blind:int
     stacks:tuple[int,int,int]; dealer_id:int; dead_players:tuple[int,...]=()
 
+@dataclass(frozen=True,order=True)
+class ResolvedExactAction:
+    action_type:int
+    amount_to:int
+    def __post_init__(self):
+        if self.action_type<0 or self.action_type>5:raise ValueError('exact action type must be 0..5')
+        if self.amount_to<0:raise ValueError('exact action amount_to must be nonnegative')
+
 class _ScenarioV2(C.Structure):
     _fields_=[('total_chips',C.c_int32),('game_is_hu',C.c_int32),('blind_index',C.c_int32),('small_blind',C.c_int32),('big_blind',C.c_int32),('stack_0',C.c_int32),('stack_1',C.c_int32),('stack_2',C.c_int32),('dead_player_0',C.c_int32),('dead_player_1',C.c_int32),('dead_player_count',C.c_int32),('dealer_id',C.c_int32)]
 
@@ -36,6 +44,7 @@ class SolverLibrary:
         L.spincore_solver_state_apply_abstract.argtypes=[C.c_void_p,C.c_int32];L.spincore_solver_state_apply_abstract.restype=C.c_int32
         L.spincore_solver_state_universal_legal_mask.argtypes=[C.c_void_p,C.c_uint32];L.spincore_solver_state_universal_legal_mask.restype=C.c_uint32
         L.spincore_solver_state_apply_universal.argtypes=[C.c_void_p,C.c_uint32,C.c_int32];L.spincore_solver_state_apply_universal.restype=C.c_int32
+        L.spincore_solver_state_resolve_universal_exact.argtypes=[C.c_void_p,C.c_uint32,C.c_int32,C.POINTER(C.c_int32),C.POINTER(C.c_int32)];L.spincore_solver_state_resolve_universal_exact.restype=C.c_int32
         L.spincore_solver_state_neural_input.argtypes=[C.c_void_p,C.POINTER(C.c_uint8),C.c_size_t];L.spincore_solver_state_neural_input.restype=C.c_size_t
         L.spincore_solver_state_neural_input_v2.argtypes=[C.c_void_p,C.POINTER(C.c_uint8),C.c_size_t];L.spincore_solver_state_neural_input_v2.restype=C.c_size_t
         L.spincore_solver_state_terminal_chip_delta.argtypes=[C.c_void_p,C.POINTER(C.c_int32)];L.spincore_solver_state_terminal_chip_delta.restype=C.c_int32
@@ -85,14 +94,27 @@ class SolverState:
         c=self.clone()
         try:return c.apply(a)
         except Exception:c.close();raise
-    def universal_legal_actions(self,active_mask:int):
+    @staticmethod
+    def _validated_universal_mask(active_mask:int)->int:
         mask=int(active_mask)
         if mask<0 or mask>0x3ff:raise ValueError('universal active mask must use only slots 0..9')
+        return mask
+    def universal_legal_actions(self,active_mask:int):
+        mask=self._validated_universal_mask(active_mask)
         m=int(self.owner.lib.spincore_solver_state_universal_legal_mask(self._p(),C.c_uint32(mask)))
         return tuple(i for i in range(10) if m&(1<<i))
+    def resolve_universal_exact(self,active_mask:int,a:int)->ResolvedExactAction:
+        mask=self._validated_universal_mask(active_mask);action=int(a)
+        if action<0 or action>9:raise ValueError('bad universal action')
+        out_type=C.c_int32();out_amount=C.c_int32()
+        rc=self.owner.lib.spincore_solver_state_resolve_universal_exact(self._p(),C.c_uint32(mask),action,C.byref(out_type),C.byref(out_amount))
+        if rc!=0:raise RuntimeError(self.owner.error() or 'universal exact resolution failed')
+        return ResolvedExactAction(int(out_type.value),int(out_amount.value))
+    def universal_resolved_actions(self,active_mask:int)->tuple[tuple[int,ResolvedExactAction],...]:
+        mask=self._validated_universal_mask(active_mask)
+        return tuple((slot,self.resolve_universal_exact(mask,slot)) for slot in self.universal_legal_actions(mask))
     def apply_universal(self,active_mask:int,a:int):
-        mask=int(active_mask);action=int(a)
-        if mask<0 or mask>0x3ff:raise ValueError('universal active mask must use only slots 0..9')
+        mask=self._validated_universal_mask(active_mask);action=int(a)
         if action<0 or action>9:raise ValueError('bad universal action')
         if self.owner.lib.spincore_solver_state_apply_universal(self._p(),C.c_uint32(mask),action)!=0:raise RuntimeError(self.owner.error() or 'universal apply failed')
         return self
