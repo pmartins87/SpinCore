@@ -21,7 +21,7 @@ DOMAIN = "TRUE_HEADS_UP"
 SEED = 1737995611
 
 
-def _fake_final_checkpoint(path: Path) -> None:
+def _fake_final_checkpoint(path: Path, *, roots: int = 160) -> None:
     spec = postflop_candidate_specs(ROOT)[CANDIDATE]
     bundle = make_action_bundle(
         SEED,
@@ -38,7 +38,7 @@ def _fake_final_checkpoint(path: Path) -> None:
         "domain": DOMAIN,
         "training_seed": SEED,
         "selected_representation": "C0_V1_FROZEN_CONTROL",
-        "roots": 160,
+        "roots": int(roots),
         "average_policy_optimizer_steps": POLICY_STEPS,
         "strategic_selection_permitted_at_160": False,
         "production_training_authorized": False,
@@ -50,7 +50,7 @@ def _fake_final_checkpoint(path: Path) -> None:
         ActionProgress(
             iteration=5,
             phase="post_policy_fit",
-            root_index=32,
+            root_index=max(1, int(roots) // 5),
             advantage_optimizer_step=5 * 4096,
             policy_optimizer_step=POLICY_STEPS,
         ),
@@ -130,3 +130,53 @@ def test_final_policy_loader_rejects_provenance_drift(tmp_path: Path) -> None:
             expected_execution_sha=EXECUTION_SHA,
             expected_training_seed=645939859,
         )
+
+
+def test_final_policy_root_level_default_remains_160_and_320_is_explicit(tmp_path: Path) -> None:
+    checkpoint160 = tmp_path / "final160.pt"
+    checkpoint320 = tmp_path / "final320.pt"
+    _fake_final_checkpoint(checkpoint160, roots=160)
+    _fake_final_checkpoint(checkpoint320, roots=320)
+
+    loaded160 = load_finalized_action_policy(
+        checkpoint160,
+        repo_root=ROOT,
+        expected_execution_sha=EXECUTION_SHA,
+    )
+    assert loaded160.final_report["roots"] == 160
+
+    with pytest.raises(ValueError, match="root level mismatch"):
+        load_finalized_action_policy(
+            checkpoint320,
+            repo_root=ROOT,
+            expected_execution_sha=EXECUTION_SHA,
+        )
+
+    loaded320 = load_finalized_action_policy(
+        checkpoint320,
+        repo_root=ROOT,
+        expected_execution_sha=EXECUTION_SHA,
+        expected_root_level=320,
+    )
+    assert loaded320.final_report["roots"] == 320
+
+    with pytest.raises(ValueError, match="root level mismatch"):
+        load_finalized_action_policy(
+            checkpoint160,
+            repo_root=ROOT,
+            expected_execution_sha=EXECUTION_SHA,
+            expected_root_level=320,
+        )
+
+
+def test_final_policy_loader_rejects_nonfrozen_root_levels(tmp_path: Path) -> None:
+    checkpoint = tmp_path / "final.pt"
+    _fake_final_checkpoint(checkpoint, roots=160)
+    for invalid in (0, 80, 161, 1280):
+        with pytest.raises(ValueError, match="unsupported finalized-policy root level"):
+            load_finalized_action_policy(
+                checkpoint,
+                repo_root=ROOT,
+                expected_execution_sha=EXECUTION_SHA,
+                expected_root_level=invalid,
+            )
