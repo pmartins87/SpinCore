@@ -113,12 +113,13 @@ def fit_independent_action_advantage_member(
 ) -> tuple[object, dict]:
     """Fit one ensemble member without touching the caller's Python/Torch RNG streams.
 
-    Model construction is already isolated by make_advantage_action_model. Batch
-    selection uses a private random.Random. The helper intentionally has no access
-    to the live CFR bundle RNG, so side members cannot perturb later chance/action
-    sampling or the primary model's batch sequence.
+    Model construction is isolated by make_advantage_action_model. Batch selection
+    uses a private random.Random. Materialize the immutable memory view exactly
+    once: repeated list conversion inside 4096 optimizer steps is semantically
+    redundant and can become a major avoidable CPU/memory cost at 100k samples.
     """
-    if not memory_items:
+    items = list(memory_items)
+    if not items:
         raise ValueError("cannot fit an action advantage member from empty memory")
     if steps < 0 or batch_size <= 0:
         raise ValueError("invalid action member fit shape")
@@ -133,9 +134,9 @@ def fit_independent_action_advantage_member(
     optimizer = torch.optim.Adam(model.parameters(), lr=float(learning_rate))
     rng = random.Random(int(batch_seed))
     losses: list[float] = []
+    count = min(int(batch_size), len(items))
     for _ in range(int(steps)):
-        count = min(int(batch_size), len(memory_items))
-        samples = rng.sample(list(memory_items), count)
+        samples = rng.sample(items, count)
         batch, target, weights = _batch(selected_representation, samples, device=device)
         losses.append(train_step(model, optimizer, batch, target, weights, "advantage"))
     return model, {
@@ -147,6 +148,7 @@ def fit_independent_action_advantage_member(
         "mean_loss": float(sum(losses) / len(losses)) if losses else math.nan,
         "final_loss": float(losses[-1]) if losses else math.nan,
         "caller_rng_isolation": True,
+        "memory_materializations": 1,
     }
 
 
