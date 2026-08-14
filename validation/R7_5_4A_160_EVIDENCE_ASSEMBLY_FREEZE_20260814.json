@@ -1,0 +1,50 @@
+{
+  "schema": "SPINCORE_R7_5_4A_160_EVIDENCE_ASSEMBLY_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_FINALIZED_R7_5_4A_POLICY_OUTPUTS",
+  "training_execution_sha": "457996944f76e9f1fa0475691df978f450259641",
+  "root_level": 160,
+  "selected_representation": "C0_V1_FROZEN_CONTROL",
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "cost_pooling": {
+    "seed_count_per_candidate_domain": 3,
+    "required_training_seeds": [1737995611, 645939859, 1311335590],
+    "nodes_per_root": "maximum across the three final seed reports in the domain",
+    "tree_seconds_per_root": "maximum across the three final seed reports in the domain",
+    "effective_unique_aggressive_branches_per_decision": "maximum across the three final seed reports in the domain",
+    "peak_rss_bytes": "maximum across the three seed reports; diagnostic only",
+    "full_training_seconds_per_root": "maximum across the three seed reports; trainability diagnostic only, not the strategic cost-rank metric",
+    "reason": "One cheap seed must never hide a materially more expensive seed. Strategic cost uses tree-only timing; the separate 90-day trainability gate uses complete checkpoint-to-checkpoint/final-work timing on the physical Ryzen."
+  },
+  "cross_seed_stability": {
+    "states_per_frozen_training_seed": 1024,
+    "total_common_states_per_domain": 3072,
+    "paired_evaluation_seeds": [1817694185, 1617273629],
+    "states_per_training_seed_per_evaluation_seed": 512,
+    "state_generator_action_spec": "PF_DENSE_REFERENCE",
+    "state_generator_policy": "UNIFORM_OVER_STATE_LOCAL_DEDUPLICATED_PF_DENSE_ACTIONS",
+    "policy_independence": "The corpus is generated without consulting any of the three trained policies being compared. Frozen training-seed integers are used only as deterministic corpus RNG namespaces.",
+    "comparison": "For each common state, evaluate the same candidate action specification under all three finalized AveragePolicies and compute the three pairwise total-variation distances.",
+    "mean_tv_max": 0.15,
+    "p95_tv_max": 0.35,
+    "p95_definition": "nearest-rank: sorted_values[ceil(0.95*N)-1]",
+    "gate_role": "hard eligibility gate, never a relative strategic ranking metric"
+  },
+  "omission_weighting": {
+    "heldout_states_per_domain_training_seed_evaluation_seed": 2048,
+    "state_source": "PF_DENSE_REFERENCE traversal under the frozen referee AveragePolicy",
+    "weighting": "Each sampled decision visit has unit empirical weight. Therefore the arithmetic mean over sampled visits is the precommitted visitation-frequency-weighted mean; no post-hoc street/SPR/candidate reweighting is allowed.",
+    "positive_loss": "max(0, dense_best_Q - candidate_best_exact_available_Q)",
+    "percentiles": "nearest-rank on the per-state positive-loss sample",
+    "required_secondary_views": ["p50", "p95", "max", "fraction_zero_loss", "by_street", "by_spr", "by_semantic_sentinel"]
+  },
+  "assembly_rules": [
+    "Every candidate/domain requires exactly the three frozen final seed reports.",
+    "Every final seed report must be R7.5.4A-160, C0, iteration-5 post-policy-fit, and must not authorize production or table use.",
+    "All three per-seed advantage/policy fit gates and the candidate/domain cross-seed gate must pass for strategic eligibility.",
+    "PF_DENSE_REFERENCE remains diagnostic/referee and cannot win; incomplete or invalid PF_DENSE evidence blocks strategic pruning.",
+    "R7.5.4A-160 may prune only. It cannot make the final production sizing selection.",
+    "No result under this freeze can set production_training_authorized or ready_for_tables true."
+  ]
+}
