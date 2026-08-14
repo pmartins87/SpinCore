@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import random
@@ -27,6 +28,21 @@ CANDIDATES = {
     "C4_V2_H3_RECLUSTERED_184": "H3",
     "C5_V2_H4_EXACT_1755": "H4",
 }
+EXPECTED_PARAMETER_COUNT = {
+    "C0_V1_FROZEN_CONTROL": 152438,
+    "C1_V2_NO_FLOP_TOKEN": 153350,
+    "C2_V2_H1_CANONICAL_184": 153350,
+    "C3_V2_H2_MIN_CHANGE_181": 153350,
+    "C4_V2_H3_RECLUSTERED_184": 153350,
+    "C5_V2_H4_EXACT_1755": 153350,
+}
+
+
+def _ordered_identity_sha256(samples: list[PairedSample]) -> str:
+    digest = hashlib.sha256()
+    for sample in samples:
+        digest.update(immutable_sample_identity(sample))
+    return digest.hexdigest()
 
 
 def _load_samples(paths: list[Path], expected_kind: str, domain: str) -> list[PairedSample]:
@@ -49,12 +65,16 @@ def _load_samples(paths: list[Path], expected_kind: str, domain: str) -> list[Pa
             )
             if sample.kind != expected_kind or sample.domain != domain:
                 raise ValueError("paired corpus kind/domain mismatch")
+            v1 = decode_spnniv1(sample.observation_v1)
+            v2 = decode_spnniv2(sample.observation_v2)
+            if tuple(v1.legal) != sample.legal or tuple(v2.legal) != sample.legal:
+                raise ValueError("paired corpus legal mask differs from serialized observation")
             out.append(sample)
-    # Remove byte-identical duplicate paired samples deterministically.
-    unique: dict[bytes, PairedSample] = {}
-    for sample in out:
-        unique.setdefault(immutable_sample_identity(sample), sample)
-    return [unique[key] for key in sorted(unique)]
+
+    # The frozen precommit says MERGE, not deduplicate. Preserve exact empirical
+    # multiplicity and merely impose a cross-process stable order for fitting.
+    out.sort(key=immutable_sample_identity)
+    return out
 
 
 def _batch(samples: list[PairedSample], candidate: str, device: str):
@@ -83,6 +103,7 @@ def _models(candidate: str, device: str, fit_seed: int):
     else:
         cfg = SemanticNetworkConfigV2()
         advantage = AdvantageNetV2(cfg).to(device)
+
     torch.manual_seed(int(fit_seed) ^ 0x5A17C0DE)
     if CANDIDATES[candidate] is None:
         policy = AveragePolicyNet(cfg).to(device)
@@ -118,8 +139,10 @@ def _train_fixed(
         "steps": int(steps),
         "elapsed_seconds": float(elapsed),
         "seconds_per_step": float(elapsed / max(1, int(steps))),
-        "last_loss": float(losses[-1]),
-        "mean_last_100_loss": float(sum(losses[-100:]) / min(100, len(losses))),
+        "last_loss": float(losses[-1]) if losses else math.nan,
+        "mean_last_100_loss": (
+            float(sum(losses[-100:]) / min(100, len(losses))) if losses else math.nan
+        ),
     }
 
 
@@ -253,10 +276,17 @@ def main() -> int:
     strategy = _load_samples(args.strategy, "strategy", args.domain)
     adv_train, adv_heldout = split_items(advantage, split_seed=int(args.split_seed))
     pol_train, pol_heldout = split_items(strategy, split_seed=int(args.split_seed))
-    if not adv_heldout or not pol_heldout:
-        raise RuntimeError("deterministic heldout split is empty")
+    if not adv_train or not pol_train or not adv_heldout or not pol_heldout:
+        raise RuntimeError("deterministic train/heldout split contains an empty partition")
 
     cfg, adv_model, pol_model = _models(args.candidate, args.device, int(args.fit_seed))
+    parameter_count = sum(parameter.numel() for parameter in adv_model.parameters())
+    expected_parameters = EXPECTED_PARAMETER_COUNT[args.candidate]
+    if int(parameter_count) != int(expected_parameters):
+        raise RuntimeError(
+            f"candidate parameter count drifted: expected {expected_parameters}, got {parameter_count}"
+        )
+
     adv_progress = _train_fixed(
         model=adv_model,
         samples=adv_train,
@@ -288,8 +318,8 @@ def main() -> int:
     )
     policy_audit = _evaluate_policy(pol_model, pol_heldout, args.candidate, args.device)
     predictions = policy_audit.pop("heldout_predictions")
+    policy_identities = [immutable_sample_identity(sample) for sample in pol_heldout]
 
-    parameter_count = sum(parameter.numel() for parameter in adv_model.parameters())
     report = {
         "schema": SCHEMA,
         "candidate": args.candidate,
@@ -305,7 +335,25 @@ def main() -> int:
             "strategy_train": len(pol_train),
             "strategy_heldout": len(pol_heldout),
         },
+        "corpus": {
+            "advantage_ordered_identity_sha256": _ordered_identity_sha256(advantage),
+            "strategy_ordered_identity_sha256": _ordered_identity_sha256(strategy),
+            "advantage_train_identity_sha256": _ordered_identity_sha256(adv_train),
+            "advantage_heldout_identity_sha256": _ordered_identity_sha256(adv_heldout),
+            "strategy_train_identity_sha256": _ordered_identity_sha256(pol_train),
+            "strategy_heldout_identity_sha256": _ordered_identity_sha256(pol_heldout),
+        },
+        "fit_contract": {
+            "optimizer": "Adam",
+            "learning_rate": float(args.learning_rate),
+            "batch_size": int(args.batch_size),
+            "advantage_steps": int(args.advantage_steps),
+            "policy_steps": int(args.policy_steps),
+            "early_stopping": False,
+            "sample_multiplicity_preserved": True,
+        },
         "parameter_count": int(parameter_count),
+        "expected_parameter_count": int(expected_parameters),
         "config": cfg.to_dict(),
         "advantage_fit": adv_progress,
         "policy_fit": pol_progress,
@@ -318,7 +366,7 @@ def main() -> int:
             "policy_pass": policy_audit["weighted_mean_tv"] <= 0.12,
         },
         "peak_rss_kib": int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),
-        "ready_for_tables": false
+        "ready_for_tables": False,
     }
     report["absolute_gates"]["fit_pass"] = bool(
         report["absolute_gates"]["advantage_pass"]
@@ -332,7 +380,7 @@ def main() -> int:
             "report": report,
             "advantage_state": adv_model.state_dict(),
             "policy_state": pol_model.state_dict(),
-            "policy_heldout_identity": [immutable_sample_identity(x) for x in pol_heldout],
+            "policy_heldout_identity": policy_identities,
             "policy_heldout_predictions": predictions,
         },
         args.out,
@@ -342,7 +390,10 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps(report, indent=2, sort_keys=True), flush=True)
-    return 0 if report["absolute_gates"]["fit_pass"] else 2
+
+    # A strategic gate failure is evidence for the aggregator, not an
+    # infrastructure failure of this job. Exceptions above still fail hard.
+    return 0
 
 
 if __name__ == "__main__":
