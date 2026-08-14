@@ -7,9 +7,11 @@ on:
       - '.github/workflows/r7_5_3c_property_preflight.yml'
       - 'python/spincore_nn/hybrid_v3.py'
       - 'python/spincore_nn/hybrid_v3_pruned.py'
+      - 'python/spincore_nn/stack_geometry_v3.py'
       - 'tools/r7_5_3c_hybrid_property_tests.py'
       - 'tools/r7_5_3c_hybrid_property_tests_pruned.py'
       - 'tools/r7_5_3c_deep_cfr_toy_tests.py'
+      - 'tools/r7_5_3c_stack_geometry_tests.py'
       - 'validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json'
   workflow_dispatch:
 
@@ -70,6 +72,14 @@ jobs:
         run: |
           set -euo pipefail
           python tools/r7_5_3c_hybrid_property_tests_pruned.py
+
+      - name: Run pairwise HU/3H stack-geometry checks
+        env:
+          PYTHONPATH: python
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/r7_5_3c_stack_geometry_tests.py
 
       - name: Run analytic Deep CFR toy-tree checks
         env:
