@@ -20,4 +20,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          echo 'R7.5.3B infrastructure retry 2 after pre-output gate-field correction.'
           gh workflow run r7_5_3b_card_symmetry.yml --repo "$GITHUB_REPOSITORY" --ref main
