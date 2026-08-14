@@ -59,16 +59,23 @@ LargePot      75% of pot-after-call raise increment, clamped to legal raise rang
 AllIn         exact all-in
 ```
 
-For a fractional aggressive action, current code computes conceptually:
+For a fractional aggressive action, **physical source audit of `src/spin_traversal_state.cpp`** proves the current control computes:
 
 ```text
-call_target    = current street contribution + amount_to_call
-pot_after_call = current total pot + amount actually called
-raw_raise_to   = call_target + ceil(pot_after_call * fraction)
-exact_raise_to = clamp(raw_raise_to, minimum legal raise-to, maximum legal raise-to)
+call_target       = current street contribution + amount_to_call
+pot_after_call    = current total pot + amount actually called
+rounded_increment = llround(pot_after_call * fraction)
+raw_raise_to      = call_target + max(1, rounded_increment)
+exact_raise_to    = clamp(raw_raise_to, minimum legal raise-to, maximum legal raise-to)
 ```
 
-The exact betting engine then validates/applies the resulting exact action.
+If the clamped target reaches the maximum legal raise-to, the exact action is emitted as `AllIn`.
+
+This `llround` rule is authoritative. An earlier draft of this audit incorrectly wrote `ceil`; that transcription error was found **before any R7.5.4 candidate output existed** and is formally frozen in:
+
+```text
+validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json
+```
 
 Therefore the present control is correctly described as:
 
@@ -160,7 +167,7 @@ Every R7.5.4 candidate will use the same universal output vocabulary and model o
 
 Candidate action abstractions are **masks over this common 10-slot vocabulary**. This keeps output dimensionality/model capacity identical across candidates.
 
-`ALL_IN` is exact. `MIN_RAISE` is exact minimum legal raise-to. Percentage primitives use the same pot-after-call formula as the current SpinCore control and are clamped by the exact betting engine.
+`ALL_IN` is exact. `MIN_RAISE` is exact minimum legal raise-to. Percentage primitives use the exact same `llround` pot-after-call formula as the current SpinCore control and are clamped by the exact betting engine.
 
 ## 7. Exact-action deduplication is mandatory
 
@@ -240,7 +247,7 @@ PR4_MIN_50_75_100_AI
     MIN / 50 / 75 / 100 / AI
 ```
 
-Percentage semantics remain pot-after-call raise increments, not hard-coded BB constants. This automatically adapts to open, isolation, 3-bet, HU and multiway pot geometry while retaining the exact realized size in public history.
+Percentage semantics remain pot-after-call raise increments, not hard-coded BB constants. They use the exact same `llround` realization rule as the current postflop control. This automatically adapts to open, isolation, 3-bet, HU and multiway pot geometry while retaining the exact realized size in public history.
 
 This is deliberately smaller than importing every historical Crusher preflop branch.
 
