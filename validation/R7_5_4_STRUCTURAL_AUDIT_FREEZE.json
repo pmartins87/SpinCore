@@ -1,0 +1,47 @@
+{
+  "schema": "SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V1",
+  "date": "2026-08-13",
+  "status": "FROZEN_BEFORE_STRUCTURAL_AUDIT_OUTPUT",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "parent_precommit_v1": "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+  "authoritative_correction": "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+  "scenario_contract": {
+    "TRUE_HEADS_UP": {
+      "stack_profiles": [[0,750,750],[0,500,1000],[0,1000,500]],
+      "dealer_ids": [1,2],
+      "scenario_count": 6
+    },
+    "THREE_HANDED": {
+      "stack_profiles": [[500,500,500],[250,500,750],[250,750,500],[500,250,750],[750,250,500]],
+      "dealer_ids": [0,1,2],
+      "scenario_count": 15
+    }
+  },
+  "evaluation_seeds": [1412935182,816404962],
+  "trajectories_per_scenario_seed": 64,
+  "deck_seed_formula": "(evaluation_seed * 1000003 + scenario_index * 10007 + trajectory_index * 97 + 0x754A) mod 2^64",
+  "path_rng_formula": "evaluation_seed XOR (scenario_index * 0x9E3779B1) XOR (trajectory_index * 0x45D9F3B)",
+  "path_action_policy": "At every nonterminal state, resolve the full universal dense mask FOLD,CHECK_CALL,MIN,33,40,50,66,75,100,ALL_IN after exact alias suppression and choose one effective exact action uniformly with the frozen path RNG. The path policy is coverage-only and is not strategic evidence.",
+  "audit_at_each_visited_state": "Before choosing the continuation action, resolve every active nominal primitive of every precommitted PF and PR candidate individually, resolve each candidate mask with deduplication, validate every effective exact action by applying it to a state clone, and record structural diagnostics.",
+  "candidate_scope": {
+    "postflop_candidates": ["PF0_CONTROL_33_75_AI","PF1_33_50_75_AI","PF2_33_50_75_100_AI","PF3_COMPACT_33_66_100_AI","PF4_CRUSHER_COMPACT_40_66_100_AI","PF_DENSE_REFERENCE"],
+    "preflop_candidates": ["PR0_CONTROL_MIN_AI","PR1_MIN_75_AI","PR2_MIN_50_75_AI","PR3_MIN_75_100_AI","PR4_MIN_50_75_100_AI"]
+  },
+  "control_equivalence": {
+    "preflop": "Universal MIN_RAISE must exactly equal frozen AbstractActionSlot::ContextRaise whenever both are legal.",
+    "postflop": "Universal POT_33/POT_75 must exactly equal frozen SmallPot/LargePot whenever both are legal.",
+    "fold_checkcall_allin": "Universal FOLD/CHECK_CALL/ALL_IN must exactly equal frozen same-semantic slots whenever both are legal.",
+    "required_difference_count": 0
+  },
+  "required_invariants": {
+    "exact_action_application_failures": 0,
+    "duplicate_exact_actions_after_dedup": 0,
+    "control_equivalence_difference_count": 0,
+    "nonterminal_trajectory_stalls": 0,
+    "terminal_settlement_failures": 0,
+    "candidate_state_count_minimum_each_domain": 1000
+  },
+  "diagnostics_only_not_selection": true,
+  "action_outputs_observed_before_freeze": false
+}
