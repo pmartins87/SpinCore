@@ -110,6 +110,41 @@ SPIN_TEST(neural_v2_distinguishes_one_third_and_one_half_pot_bets) {
     REQUIRE(serialize_neural_input_v2(a) != serialize_neural_input_v2(b));
 }
 
+SPIN_TEST(neural_history_capacity_can_truncate_a_fully_legal_hu_minraise_chain) {
+    // With the frozen 1500-chip / 10-20 test geometry, the two live HU stacks
+    // are 750 chips. A legal chain of minimum full raises can therefore exceed
+    // the 32-event neural-history capacity well before either player is all-in.
+    HandEngine hand(schu(1), 424242);
+    std::size_t voluntary_raises = 0;
+    while (hand.betting().history().size() <= 32U) {
+        REQUIRE(!hand.terminal());
+        REQUIRE(hand.betting().street() == Street::Preflop);
+        const int actor = hand.betting().actor();
+        REQUIRE(actor >= 0);
+        const auto legal = hand.betting().legal_actions(actor);
+        REQUIRE(legal.raise);
+        // Stay away from an all-in boundary: this test is about ordinary legal
+        // full min-raises, not a special all-in corner case.
+        REQUIRE(legal.min_raise_to < legal.max_raise_to);
+        hand.apply(actor, {ExactActionType::RaiseTo, legal.min_raise_to});
+        ++voluntary_raises;
+        REQUIRE(voluntary_raises < 64U);
+    }
+
+    REQUIRE(hand.betting().history().size() > 32U);
+    REQUIRE(hand.betting().actor() >= 0);
+    const int current_actor = hand.betting().actor();
+    const auto infoset = build_current_actor_infoset(hand, current_actor);
+    const auto v1 = encode_neural_input_v1(infoset);
+    const auto v2 = encode_neural_input_v2(hand, current_actor);
+    REQUIRE(v1.history_len == 32U);
+    REQUIRE(v2.history_len == 32U);
+    REQUIRE(infoset.public_events.size() > static_cast<std::size_t>(v2.history_len));
+    // Because both encoders keep the most recent events, the forced blinds have
+    // necessarily fallen out of the recurrent sequence by this point.
+    REQUIRE(v2.history[0].categorical[3] == 0U);
+}
+
 SPIN_TEST(neural_v2_encoding_is_side_effect_free_for_terminal_settlement) {
     HandEngine control(schu(1), 998877);
     HandEngine observed(schu(1), 998877);
