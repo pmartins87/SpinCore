@@ -1,0 +1,115 @@
+{
+  "schema": "SPINCORE_R7_5_3B_CARD_SYMMETRY_PRECOMMIT_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_CARD_SYMMETRY_COMPARATIVE_OUTPUTS",
+  "purpose": "Isolate whether the frozen V1 representation should quotient only true lossless card symmetries before R8, without adding poker semantics, changing the six-slot action abstraction, changing targets, or changing the neural architecture.",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "candidates": [
+    {
+      "id": "S0_V1_FROZEN_CONTROL",
+      "wire": "SPNNIV1",
+      "parameter_count": 152438,
+      "serialized_observation_bytes": 126,
+      "card_transform": "NONE"
+    },
+    {
+      "id": "S1_V1_CARD_SYMMETRY_CANON",
+      "wire": "SPNNIV1",
+      "parameter_count": 152438,
+      "serialized_observation_bytes": 126,
+      "card_transform": "GLOBAL_SUIT_QUOTIENT_PLUS_UNORDERED_HOLE_AND_FLOP"
+    }
+  ],
+  "s1_exact_semantics": {
+    "fixed_role_layout": ["HERO_1", "HERO_2", "FLOP_1", "FLOP_2", "FLOP_3", "TURN", "RIVER"],
+    "quotient": [
+      "permutation of the two private cards",
+      "permutation of the three simultaneously revealed flop cards",
+      "one global permutation of the four suit labels applied jointly to every visible private and public card"
+    ],
+    "forbidden_quotient": [
+      "private card versus public card role",
+      "flop versus turn versus river street identity",
+      "turn versus river order",
+      "rank identity",
+      "suit-equality relationships across private and public cards"
+    ],
+    "implementation_definition": "Enumerate all 24 global suit permutations; within each, sort only the two private slots and the three flop slots; preserve turn and river slots; choose the lexicographically smallest seven-token tuple.",
+    "new_semantic_features": false,
+    "model_architecture_change": false,
+    "action_abstraction_change": false
+  },
+  "required_invariance_tests": [
+    "private-card order invariant",
+    "all six flop permutations invariant",
+    "all 24 global suit permutations invariant",
+    "turn/river swap remains distinguishable",
+    "private/public role swap remains distinguishable",
+    "global suit-equality relationships preserved",
+    "preflop padding preserved",
+    "invalid visibility and duplicate-card inputs fail closed"
+  ],
+  "paired_corpus_source": {
+    "workflow_run_id": 31767822186,
+    "head_sha": "66923cf50ece3aa9ac5632a11bcd865eb154f3e4",
+    "reuse_reason": "The original R7.5.3 corpus already contains the frozen SPNNIV1 observation, identical target, legal mask, weight, iteration and SPNNIV2 semantic tags needed for sentinels. Regeneration would add traversal noise and would not improve this isolated representation test.",
+    "artifacts": [
+      {"name": "r7-5-3-corpus-TRUE_HEADS_UP-1202035427", "id": 9207236750, "sha256": "949903092ed3d882cff860be40c8944e8813bdbfda7ce8f8d75177a16aa3556c"},
+      {"name": "r7-5-3-corpus-TRUE_HEADS_UP-2078778133", "id": 9207248279, "sha256": "3beb09274d9ab6f2b5725eba66aa4c3503ce9b09c962eac5d9dc478747cf7190"},
+      {"name": "r7-5-3-corpus-THREE_HANDED-1202035427", "id": 9208819247, "sha256": "19c7aa8cde6c5a179f3eeac4a7ee6ccee3963e8b8f8af4ae7bcd1de575f851ff"},
+      {"name": "r7-5-3-corpus-THREE_HANDED-2078778133", "id": 9208627985, "sha256": "2310dd3d71d5abdac51b557246b3b8ef229b13ce56f38dcc8681cb3ef79b06df"}
+    ]
+  },
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "fit_initialization_seeds": [2102028507, 1745216084, 971790437],
+  "split_seed": 1925930899,
+  "fit_contract": {
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "advantage_optimizer_steps": 4096,
+    "policy_optimizer_steps": 8192,
+    "early_stopping": false,
+    "split_is_computed_from_original_immutable_sample_identity_before_any_S1_transformation": true,
+    "same_source_row_order_and_batch_rng_for_same_fit_seed_across_S0_and_S1": true
+  },
+  "unchanged_absolute_gates": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "policy_weighted_mean_tv_max": 0.12,
+    "cross_fit_mean_tv_max": 0.15,
+    "cross_fit_p95_tv_max": 0.35,
+    "scope": "Every fit seed and both domains must pass the same absolute gates used by R7.5.3."
+  },
+  "noninferiority_bands_reused_from_R7_5_3": {
+    "worst_domain_mean_advantage_weighted_nrmse_absolute": 0.015,
+    "worst_domain_mean_policy_weighted_mean_tv_absolute": 0.01,
+    "worst_domain_mean_sentinel_macro_nrmse_absolute": 0.02,
+    "worst_domain_cross_fit_p95_tv_absolute": 0.02,
+    "model_inference_seconds_per_sample_relative": 0.05
+  },
+  "frozen_selection_rule": [
+    "If neither candidate passes all unchanged absolute gates, R7.5.3B is BLOCKED.",
+    "If only one candidate passes all unchanged absolute gates, that candidate wins.",
+    "If both pass, S1 may replace S0 only if S1 is no worse than S0 plus every precommitted noninferiority band in every corresponding worst-domain selection metric.",
+    "If S1 satisfies all noninferiority bands, prefer S1 because it exactly removes known nuisance symmetries while retaining the same network, parameter count, observation width, roles, ranks and street timeline.",
+    "If S1 violates any noninferiority band, retain S0; no band may be relaxed after outputs are visible."
+  ],
+  "runtime_note": "The neural model and serialized width are identical. Python corpus canonicalization time is reported diagnostically but is not a production-runtime proxy. If S1 wins, exact C++ encoder integration plus an end-to-end encoder/runtime benchmark is mandatory before S1 can be frozen for production.",
+  "action_gate_dependency": {
+    "active_R7_5_4A_160_run_head_sha": "457996944f76e9f1fa0475691df978f450259641",
+    "active_160_must_not_be_modified_or_reinterpreted": true,
+    "if_S0_wins": "Existing R7.5.4A 160 evidence remains representation-consistent and may authorize fresh 320 under its own frozen rules.",
+    "if_S1_wins": "Existing R7.5.4A evidence is representation-conditioned and cannot authorize production sizing. Integrate/certify S1 first, then rerun the relevant sizing evidence fresh under S1.",
+    "R7_5_4A_320_must_fail_closed_until_R7_5_3B_result_exists": true
+  },
+  "forbidden_posthoc_changes": [
+    "changing candidates after outputs",
+    "changing fit seeds or split after outputs",
+    "changing absolute gates or noninferiority bands after outputs",
+    "adding semantic poker features to S1",
+    "changing action abstraction inside R7.5.3B",
+    "using transformed bytes to decide the train/heldout split",
+    "claiming S1 production-ready before C++ integration/runtime certification if S1 wins"
+  ]
+}
