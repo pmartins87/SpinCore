@@ -131,7 +131,7 @@ SPIN_TEST(neural_history_capacity_can_truncate_a_fully_legal_hu_minraise_chain) 
         REQUIRE(voluntary_raises < 64U);
     }
 
-    REQUIRE(hand.betting().history().size() > 32U);
+    REQUIRE(hand.betting().history().size() == 33U);
     REQUIRE(hand.betting().actor() >= 0);
     const int current_actor = hand.betting().actor();
     const auto infoset = build_current_actor_infoset(hand, current_actor);
@@ -139,10 +139,18 @@ SPIN_TEST(neural_history_capacity_can_truncate_a_fully_legal_hu_minraise_chain) 
     const auto v2 = encode_neural_input_v2(hand, current_actor);
     REQUIRE(v1.history_len == 32U);
     REQUIRE(v2.history_len == 32U);
-    REQUIRE(infoset.public_events.size() > static_cast<std::size_t>(v2.history_len));
-    // Because both encoders keep the most recent events, the forced blinds have
-    // necessarily fallen out of the recurrent sequence by this point.
-    REQUIRE(v2.history[0].categorical[3] == 0U);
+    REQUIRE(infoset.public_events.size() == 33U);
+
+    // The full history contains exactly two forced blind postings followed by
+    // 31 voluntary raises. Keeping the most recent 32 events must therefore
+    // discard exactly the first blind while retaining the second blind.
+    std::size_t encoded_forced = 0;
+    for (std::size_t index = 0; index < static_cast<std::size_t>(v2.history_len); ++index) {
+        encoded_forced += v2.history[index].categorical[3] != 0U ? 1U : 0U;
+    }
+    REQUIRE(encoded_forced == 1U);
+    REQUIRE(v2.history[0].categorical[3] == 1U);
+    REQUIRE(v2.history[1].categorical[3] == 0U);
 }
 
 SPIN_TEST(neural_v2_encoding_is_side_effect_free_for_terminal_settlement) {
