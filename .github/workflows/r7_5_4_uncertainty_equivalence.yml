@@ -1,0 +1,176 @@
+name: SpinCore R7.5.4 uncertainty equivalence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_4_uncertainty_equivalence.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spincore-r7-5-4-uncertainty-equivalence
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+      equivalence_pass: ${{ steps.read.outputs.equivalence_pass }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze execution SHA
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+
+      - name: Build exact solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+
+      - name: Execute accepted-oracle equivalence audit
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          set +e
+          python tools/r7_5_action_uncertainty_equivalence_audit.py \
+            --lib build/libspincore_solver_c.so \
+            --out evidence/R7_5_4_UNCERTAINTY_EQUIVALENCE.json
+          rc=$?
+          set -e
+          test -f evidence/R7_5_4_UNCERTAINTY_EQUIVALENCE.json
+          echo "$rc" > evidence/audit_rc.txt
+
+      - name: Read semantic result and write manifest
+        id: read
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ steps.freeze.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/uncertainty_outputs
+          import json, os, platform
+          from pathlib import Path
+          import numpy, torch
+          p=json.loads(Path('evidence/R7_5_4_UNCERTAINTY_EQUIVALENCE.json').read_text())
+          rc=int(Path('evidence/audit_rc.txt').read_text().strip())
+          assert p['schema']=='SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1'
+          assert p['tolerance']==1e-12
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          semantic=bool(p['uncertainty_equivalence_pass'])
+          assert (rc==0) == semantic
+          print('equivalence_pass=' + ('true' if semantic else 'false'))
+          manifest={
+            'schema':'SPINCORE_R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST_V1',
+            'execution_sha':os.environ['EXECUTION_SHA'],
+            'workflow_run_id':int(os.environ['GITHUB_RUN_ID']),
+            'workflow_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'python':platform.python_version(),
+            'torch':torch.__version__,
+            'numpy':numpy.__version__,
+            'audit_rc':rc,
+            'uncertainty_equivalence_pass':semantic,
+            'production_training_authorized':False,
+            'ready_for_tables':False,
+          }
+          assert manifest['python']=='3.11.15'
+          assert manifest['torch']=='2.13.0+cpu'
+          assert manifest['numpy']=='2.3.5'
+          Path('evidence/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+          PY
+          cat /tmp/uncertainty_outputs >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4-uncertainty-${{ steps.freeze.outputs.execution_sha }}
+          path: evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current main before artifact download
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download immutable audit evidence after checkout
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4-uncertainty-${{ needs.audit.outputs.execution_sha }}
+          path: computed
+
+      - name: Revalidate provenance and persist
+        shell: bash
+        env:
+          EXECUTION_SHA: ${{ needs.audit.outputs.execution_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=json.loads(Path('computed/R7_5_4_UNCERTAINTY_EQUIVALENCE.json').read_text())
+          m=json.loads(Path('computed/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json').read_text())
+          assert m['execution_sha']==os.environ['EXECUTION_SHA']
+          assert m['uncertainty_equivalence_pass']==p['uncertainty_equivalence_pass']
+          assert p['production_training_authorized'] is False and p['ready_for_tables'] is False
+          assert m['production_training_authorized'] is False and m['ready_for_tables'] is False
+          PY
+          cp computed/R7_5_4_UNCERTAINTY_EQUIVALENCE.json validation/R7_5_4_UNCERTAINTY_EQUIVALENCE.json
+          cp computed/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json validation/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json
+          git config user.name 'SpinCore Evidence Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add validation/R7_5_4_UNCERTAINTY_EQUIVALENCE.json validation/R7_5_4_UNCERTAINTY_EXECUTION_MANIFEST.json
+          if ! git diff --cached --quiet; then
+            git commit -m "validation: persist R7.5.4 uncertainty equivalence (${EXECUTION_SHA})"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+  enforce:
+    needs: [audit, persist]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce exact accepted-oracle equivalence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test '${{ needs.audit.outputs.equivalence_pass }}' = 'true'
+          echo 'R7.5.4 uncertainty equivalence PASS. This is mechanism evidence only; strategic action training remains gated on durable R7.5.3 selection.'
