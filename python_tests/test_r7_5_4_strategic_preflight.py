@@ -21,16 +21,17 @@ def _complete_tree(root: Path) -> None:
     v = root / "validation"
     v.mkdir(parents=True, exist_ok=True)
     (v / preflight.HERITAGE_AUDIT).write_text("full heritage audit\n", encoding="utf-8")
+    readable_sources = [
+        {"source": f"source_{i}", "full_read_status": "text_full_read"}
+        for i in range(17)
+    ]
     _write(
         v / preflight.HERITAGE_MANIFEST,
         {
             "schema": preflight.HERITAGE_SCHEMA,
             "ready_for_tables": False,
             "prior_attempt_archive": {
-                "readable_sources": [
-                    {"source": f"source_{i}", "full_read_status": "text_full_read"}
-                    for i in range(17)
-                ],
+                "readable_sources": readable_sources,
                 "archive_comparison": {
                     "shared_entries": 27,
                     "shared_byte_identical": 27,
@@ -40,6 +41,28 @@ def _complete_tree(root: Path) -> None:
                     ],
                 },
             },
+        },
+    )
+    _write(
+        v / preflight.HERITAGE_LEDGER,
+        {
+            "schema": preflight.HERITAGE_LEDGER_SCHEMA,
+            "entries": [
+                {
+                    "source": row["source"],
+                    "reviewed_full": True,
+                    "best_of": ["best useful detail"],
+                    "preserve": ["preserve objective lesson"],
+                    "destination": "current or future roadmap destination",
+                    "status": "TEST_FIXTURE_DISPOSITION",
+                    "current_evidence": ["test evidence"],
+                    "never_inherit_as_truth": ["old strategy output"],
+                }
+                for row in readable_sources
+            ],
+            "strategic_output": False,
+            "production_training_authorized": False,
+            "ready_for_tables": False,
         },
     )
     _write(
@@ -117,7 +140,7 @@ def _complete_tree(root: Path) -> None:
 def test_preflight_allows_only_initial_160_when_all_durable_dependencies_pass(tmp_path: Path) -> None:
     _complete_tree(tmp_path)
     result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
-    assert result["schema"] == "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V3"
+    assert result["schema"] == "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V4"
     assert result["ready_to_start"] is True
     assert result["selected_representation"] == "C4_V2_H3_RECLUSTERED_184"
     assert result["production_training_authorized"] is False
@@ -153,6 +176,26 @@ def test_preflight_fails_closed_when_full_heritage_manifest_is_missing(tmp_path:
     result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
     assert result["ready_to_start"] is False
     assert result["checks"]["heritage_manifest_available"]["pass"] is False
+    assert result["checks"]["heritage_ledger_complete"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_heritage_ledger_is_missing(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    (tmp_path / "validation" / preflight.HERITAGE_LEDGER).unlink()
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["heritage_ledger_available"]["pass"] is False
+
+
+def test_preflight_fails_closed_when_heritage_ledger_omits_one_readable_source(tmp_path: Path) -> None:
+    _complete_tree(tmp_path)
+    path = tmp_path / "validation" / preflight.HERITAGE_LEDGER
+    payload = json.loads(path.read_text())
+    payload["entries"].pop()
+    _write(path, payload)
+    result = preflight.evaluate(tmp_path, phase="R7_5_4A_POSTFLOP", root_level=160)
+    assert result["ready_to_start"] is False
+    assert result["checks"]["heritage_ledger_complete"]["pass"] is False
 
 
 def test_preflight_fails_closed_when_reachability_invariant_is_false(tmp_path: Path) -> None:
