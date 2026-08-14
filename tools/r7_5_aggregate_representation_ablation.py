@@ -38,7 +38,7 @@ def _load_fit(path: Path) -> dict:
     }
 
 
-def _cross_fit(entries: list[dict], expected_seeds: list[int]) -> dict[str, float]:
+def _cross_fit(entries: list[dict], expected_seeds: list[int]) -> dict:
     by_seed = {int(entry["report"]["fit_seed"]): entry for entry in entries}
     if set(by_seed) != set(expected_seeds):
         raise ValueError("fit-seed set differs from frozen precommit")
@@ -88,6 +88,36 @@ def _mean(values) -> float:
     return float(sum(values) / len(values))
 
 
+def _validate_report_gate_contract(report: dict, gates: dict) -> tuple[bool, bool]:
+    recorded = dict(report.get("absolute_gates") or {})
+    if float(recorded.get("advantage_weighted_nrmse_max", math.nan)) != float(
+        gates["advantage_weighted_nrmse_max"]
+    ):
+        raise ValueError("fit worker advantage gate threshold differs from frozen precommit")
+    if float(recorded.get("policy_weighted_mean_tv_max", math.nan)) != float(
+        gates["policy_weighted_mean_tv_max"]
+    ):
+        raise ValueError("fit worker policy gate threshold differs from frozen precommit")
+
+    advantage_value = float(report["heldout_advantage"]["weighted_nrmse"])
+    policy_value = float(report["heldout_policy"]["weighted_mean_tv"])
+    advantage_pass = bool(
+        _finite(advantage_value)
+        and advantage_value <= float(gates["advantage_weighted_nrmse_max"])
+    )
+    policy_pass = bool(
+        _finite(policy_value)
+        and policy_value <= float(gates["policy_weighted_mean_tv_max"])
+    )
+    if bool(recorded.get("advantage_pass")) != advantage_pass:
+        raise ValueError("fit worker advantage-pass boolean disagrees with numeric frozen gate")
+    if bool(recorded.get("policy_pass")) != policy_pass:
+        raise ValueError("fit worker policy-pass boolean disagrees with numeric frozen gate")
+    if bool(recorded.get("fit_pass")) != bool(advantage_pass and policy_pass):
+        raise ValueError("fit worker fit-pass boolean disagrees with recomputed gate")
+    return advantage_pass, policy_pass
+
+
 def _candidate_summary(
     *,
     candidate: dict,
@@ -95,7 +125,6 @@ def _candidate_summary(
     fit_seeds: list[int],
     grouped: dict[tuple[str, str], list[dict]],
     gates: dict,
-    aggregation_freeze: dict,
 ) -> dict:
     candidate_id = str(candidate["id"])
     domain_rows = {}
@@ -121,18 +150,21 @@ def _candidate_summary(
                 raise ValueError(f"corpus/split drift across fit seeds for {candidate_id}/{domain}")
             if int(report["parameter_count"]) != expected_parameter_count:
                 raise ValueError(f"parameter-count drift for {candidate_id}/{domain}")
-            if not bool(report["absolute_gates"]["advantage_pass"]):
+            advantage_pass, policy_pass = _validate_report_gate_contract(report, gates)
+            if not advantage_pass:
                 absolute_failures.append(
                     f"{domain}/fit_seed={report['fit_seed']}/advantage_nrmse"
                 )
-            if not bool(report["absolute_gates"]["policy_pass"]):
+            if not policy_pass:
                 absolute_failures.append(
                     f"{domain}/fit_seed={report['fit_seed']}/policy_tv"
                 )
 
         cross = _cross_fit(ordered, fit_seeds)
         cross_pass = bool(
-            float(cross["mean_tv"]) <= float(gates["cross_fit_mean_tv_max"])
+            _finite(cross["mean_tv"])
+            and _finite(cross["p95_tv"])
+            and float(cross["mean_tv"]) <= float(gates["cross_fit_mean_tv_max"])
             and float(cross["p95_tv"]) <= float(gates["cross_fit_p95_tv_max"])
         )
         if not cross_pass:
@@ -151,9 +183,10 @@ def _candidate_summary(
             heldout_count = int(report["counts"]["strategy_heldout"])
             if heldout_count <= 0:
                 raise ValueError("empty policy heldout count")
-            inference_seconds_per_sample.append(
-                float(report["heldout_policy"]["inference_seconds"]) / heldout_count
-            )
+            seconds_per_sample = float(report["heldout_policy"]["inference_seconds"]) / heldout_count
+            if not _finite(seconds_per_sample) or seconds_per_sample <= 0.0:
+                raise ValueError("invalid policy inference timing")
+            inference_seconds_per_sample.append(seconds_per_sample)
             fit_rows.append(
                 {
                     "fit_seed": int(report["fit_seed"]),
@@ -165,7 +198,7 @@ def _candidate_summary(
                     ),
                     "sentinel_macro_weighted_nrmse": sentinel_metric,
                     "eligible_sentinel_count": sentinel_count,
-                    "policy_inference_seconds_per_sample": inference_seconds_per_sample[-1],
+                    "policy_inference_seconds_per_sample": seconds_per_sample,
                     "fit_gate_pass": bool(report["absolute_gates"]["fit_pass"]),
                     "peak_rss_kib": int(report["peak_rss_kib"]),
                 }
@@ -396,9 +429,19 @@ def main() -> int:
             fit_seeds=fit_seeds,
             grouped=grouped,
             gates=gates,
-            aggregation_freeze=aggregation_freeze,
         )
         summaries[summary["candidate"]] = summary
+
+    # Exactly paired means exactly paired across candidates, not merely across
+    # the three initialization seeds of one candidate.
+    for domain in domains:
+        first = summaries[candidate_ids[0]]["domains"][domain]
+        reference_corpus = first["corpus"]
+        reference_counts = first["counts"]
+        for candidate_id in candidate_ids[1:]:
+            row = summaries[candidate_id]["domains"][domain]
+            if row["corpus"] != reference_corpus or row["counts"] != reference_counts:
+                raise ValueError(f"cross-candidate corpus/split drift in {domain}")
 
     winner, selection_trace = apply_frozen_selection(summaries)
     passed = winner is not None
@@ -412,6 +455,7 @@ def main() -> int:
         "fit_seed_count": len(fit_seeds),
         "fit_output_count": len(seen_keys),
         "unchanged_absolute_gates": gates,
+        "cross_candidate_exact_pairing_verified": True,
         "candidates": summaries,
         "selection_trace": selection_trace,
         "selected_candidate": winner,
