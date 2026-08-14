@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V4"
+SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V5"
 REP_SCHEMA = "SPINCORE_R7_5_3_REPRESENTATION_ABLATION_RESULT_V1"
 STRUCT_SCHEMA = "SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V3"
 UNCERTAINTY_SCHEMA = "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1"
@@ -16,12 +16,15 @@ HERITAGE_SCHEMA = "SPINCORE_LEGACY_HERITAGE_SOURCE_MANIFEST_V1"
 HERITAGE_LEDGER_SCHEMA = "SPINCORE_R7_5_LEGACY_HERITAGE_INTEGRATION_LEDGER_V1"
 REACHABILITY_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_CONTRACT_V1"
 REACHABILITY_AUDIT_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_AUDIT_V1"
+TRAINABILITY_SCHEMA = "SPINCORE_R8_TRAINABILITY_TIME_BUDGET_CONTRACT_V2"
+TRAINABILITY_PROJECTION_SCHEMA = "SPINCORE_R8_PRODUCTION_TRAINABILITY_V2"
 
 HERITAGE_AUDIT = "R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"
 HERITAGE_MANIFEST = "R7_5_LEGACY_HERITAGE_SOURCE_MANIFEST_20260814.json"
 HERITAGE_LEDGER = "R7_5_LEGACY_HERITAGE_INTEGRATION_LEDGER_20260814.json"
 REACHABILITY_CONTRACT = "R7_5_REAL_GAME_REACHABILITY_CONTRACT.json"
 REACHABILITY_AUDIT = "R7_5_REAL_GAME_REACHABILITY_AUDIT.json"
+TRAINABILITY_CONTRACT = "R8_TRAINABILITY_TIME_BUDGET_CONTRACT_20260814.json"
 
 REPRESENTATIONS = {
     "C0_V1_FROZEN_CONTROL",
@@ -80,7 +83,6 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
 
     readable_source_names: set[str] = set()
 
-    # Full prior-attempt heritage is a hard dependency, not conversational context.
     try:
         heritage = _read(validation / HERITAGE_MANIFEST)
         archive = heritage.get("prior_attempt_archive") or {}
@@ -122,9 +124,6 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
         str(heritage_audit_path),
     )
 
-    # Per-file disposition is required in addition to full reading. This makes
-    # "use the best of every prior-attempt file" a machine-checkable contract:
-    # no readable source may silently disappear between source audit and design.
     try:
         ledger = _read(validation / HERITAGE_LEDGER)
         entries = ledger.get("entries") or []
@@ -231,6 +230,55 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
         selected_representation = None
         check("representation_result_available", False, repr(exc))
 
+    # Trainability is precommitted before action-sizing outputs.  R7.5.4 does not
+    # require the future physical R8 PASS yet, because the exact R8.0 profile and
+    # Ryzen R8.2 calibration are still prerequisites.  It *does* require the hard
+    # 90-day contract to exist unchanged and to remain explicitly NOT MEASURED / NOT PASS.
+    try:
+        trainability = _read(validation / TRAINABILITY_CONTRACT)
+        hard_cap = trainability.get("hard_cap") or {}
+        reserve = trainability.get("planning_reserve") or {}
+        projection = trainability.get("projection_contract") or {}
+        rep_state = trainability.get("representation_state_at_freeze") or {}
+        physical = trainability.get("physical_measurement_contract") or {}
+        check(
+            "trainability_contract_schema",
+            trainability.get("schema") == TRAINABILITY_SCHEMA,
+            str(trainability.get("schema")),
+        )
+        check(
+            "trainability_budget_frozen",
+            float(hard_cap.get("wall_clock_days", -1.0)) == 90.0
+            and float(reserve.get("multiplier", -1.0)) == 1.20
+            and float(reserve.get("implied_nominal_budget_days", -1.0)) == 75.0
+            and projection.get("schema") == TRAINABILITY_PROJECTION_SCHEMA
+            and projection.get("required_domains") == ["TRUE_HEADS_UP", "THREE_HANDED"]
+            and bool(projection.get("all_selected_profiles_required"))
+            and bool(projection.get("all_required_algorithm_seed_streams_required"))
+            and bool(projection.get("all_frozen_iterations_required"))
+            and bool(projection.get("all_non_iteration_training_and_freeze_work_required"))
+            and physical.get("timing_cost_basis") == "MATURE_OR_WORST_CASE_CERTIFIED_V1"
+            and physical.get("non_iteration_scope") == "ALL_FROZEN_NON_ITERATION_TRAINING_AND_FINAL_FREEZE_WORK_V1",
+            f"cap={hard_cap.get('wall_clock_days')} reserve={reserve.get('multiplier')} projection={projection.get('schema')}",
+        )
+        check(
+            "trainability_bound_to_representation",
+            selected_representation is not None
+            and rep_state.get("selected_candidate") == selected_representation
+            and int(rep_state.get("serialized_observation_bytes", -1)) == 126
+            and int(rep_state.get("model_parameter_count", -1)) == 152438,
+            f"preflight_selected={selected_representation} contract_selected={rep_state.get('selected_candidate')}",
+        )
+        check(
+            "trainability_pre_physical_status",
+            trainability.get("current_trainability_status") == "NOT_MEASURED_PHYSICALLY / NOT_PASS"
+            and not bool(trainability.get("production_training_authorized"))
+            and not bool(trainability.get("ready_for_tables")),
+            str(trainability.get("current_trainability_status")),
+        )
+    except Exception as exc:
+        check("trainability_contract_available", False, repr(exc))
+
     try:
         structural = _read(validation / "R7_5_4_ACTION_STRUCTURAL_AUDIT.json")
         check("structural_schema", structural.get("schema") == STRUCT_SCHEMA, str(structural.get("schema")))
@@ -307,6 +355,8 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
         "selected_representation": selected_representation,
         "checks": checks,
         "ready_to_start": passed,
+        "physical_trainability_pass_required_now": False,
+        "physical_trainability_gate_required_before_r8_official_training": True,
         "production_training_authorized": False,
         "ready_for_tables": False,
     }
