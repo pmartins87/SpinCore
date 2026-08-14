@@ -1,0 +1,30 @@
+{
+  "schema": "SPINCORE_R7_5_4_STRUCTURAL_AUDIT_FREEZE_V2",
+  "date": "2026-08-13",
+  "status": "AUTHORITATIVE_FROZEN_BEFORE_STRUCTURAL_AUDIT_OUTPUT",
+  "supersedes": "validation/R7_5_4_STRUCTURAL_AUDIT_FREEZE.json",
+  "inherits_all_except_evaluation_seed_binding": true,
+  "authoritative_action_precommit_chain": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json"
+  ],
+  "evaluation_seeds": [1817694185,1617273629],
+  "deck_seed_formula": "(evaluation_seed * 1000003 + scenario_index * 10007 + trajectory_index * 97 + 0x754A) mod 2^64",
+  "path_rng_formula": "evaluation_seed XOR (scenario_index * 0x9E3779B1) XOR (trajectory_index * 0x45D9F3B)",
+  "trajectories_per_scenario_seed": 64,
+  "unchanged_from_v1": [
+    "6 HU scenarios",
+    "15 THREE_HANDED scenarios",
+    "dense universal coverage path",
+    "audit every candidate primitive at every applicable visited state",
+    "control exact-action equivalence requirements",
+    "zero failure invariants",
+    "minimum 1000 candidate states per domain",
+    "diagnostics-only status"
+  ],
+  "old_evaluation_seeds_must_not_be_used": [1412935182,816404962],
+  "structural_audit_output_observed_before_correction": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
