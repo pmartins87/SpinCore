@@ -2,10 +2,10 @@
   "project": "SpinCore",
   "version": "1.12.1-recovery.31",
   "recovery_generation": 2,
-  "physical_state": "R7_4_FINAL_PASS_R7_5_LEGACY_184_RECOVERED_SUIT_INVARIANCE_FAIL_ONTOLOGY_SCAFFOLD_PASS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
+  "physical_state": "R7_4_FINAL_PASS_R7_5_LEGACY_184_RECOVERED_SUIT_INVARIANCE_FAIL_DESCENDANTS_TESTED_ONTOLOGY_SCAFFOLD_PASS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.5",
-  "current_gate_status": "R7_5_1_LEGACY_184_COVERAGE_PASS_SUIT_INVARIANCE_FAIL_R7_5_2_POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS",
+  "current_gate_status": "R7_5_1_LEGACY_184_COVERAGE_PASS_RAW_SUIT_INVARIANCE_FAIL_H1_H2_DESCENDANTS_REGRESSION_PASS_R7_5_2_POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS",
   "ready_for_tables": false,
   "roadmap": {
     "R0_R6": "PASS_REBUILT",
@@ -141,6 +141,7 @@
     "precommit": "validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md",
     "legacy_audit": "validation/R7_5_LEGACY_CRUSHER_AND_184_AUDIT_20260813.md",
     "legacy_184_evidence": "validation/R7_5_LEGACY_184_MAPPING_AUDIT.json",
+    "legacy_184_descendant_precommit": "validation/R7_5_184_DESCENDANT_CANDIDATES_PRECOMMIT_20260813.md",
     "r7_5_0_design_precommit_pass": true,
     "legacy_findings": {
       "deepspin_obs_dims": 292,
@@ -169,6 +170,34 @@
       "exact_suit_isomorphic_flop_classes": 1755,
       "user_53_control_classes": 53
     },
+    "flop184_descendants": {
+      "module": "python/spincore/flop184_descendants.py",
+      "test": "python_tests/test_r7_5_flop184_descendants.py",
+      "audit_cli": "tools/r7_5_legacy184_descendant_audit.py",
+      "regression_run": 31762072612,
+      "regression_pass": true,
+      "H0_raw_legacy_184": {
+        "eligible_to_win": false,
+        "suit_permutation_invariance_pass": false
+      },
+      "H1_canonical_input": {
+        "exact_classes": 1755,
+        "active_representatives": 184,
+        "physical_assignments_changed": 240,
+        "physical_assignments_changed_fraction": 0.01085972850678733,
+        "suit_permutation_invariance_pass": true
+      },
+      "H2_majority_min_change": {
+        "exact_classes": 1755,
+        "active_representatives": 181,
+        "physical_assignments_changed": 200,
+        "physical_assignments_changed_fraction": 0.00904977375565611,
+        "suit_permutation_invariance_pass": true,
+        "representatives_lost": ["4s5sKd", "5s9sQd", "7sQsAd"]
+      },
+      "H3_reclustered_184": "PRECOMMITTED_NOT_GENERATED",
+      "H4_exact_iso_1755": "LOSSLESS_STRUCTURAL_REFERENCE"
+    },
     "postflop_ontology": {
       "header": "include/spincore/postflop_ontology.hpp",
       "implementation": "src/postflop_ontology.cpp",
@@ -190,11 +219,11 @@
       "legacy_sizing_thresholds_frozen": false,
       "exact_to_call_and_pot_preserved": true
     },
-    "primary_candidate": "SUIT_INVARIANT_184_DESCENDANT_PLUS_SEMANTIC_V2_NOT_YET_ACCEPTED",
+    "primary_candidate": "SUIT_INVARIANT_184_DESCENDANTS_PLUS_SEMANTIC_V2_NOT_YET_ACCEPTED",
     "flop53_role": "DIAGNOSTIC_CONTROL_NOT_ELIGIBLE_AS_SOLE_PRIMARY_PRODUCTION_ABSTRACTION",
     "exact_game_state_remains_exact": true,
     "lossy_abstraction_only_at_neural_observation_boundary": true,
-    "r7_5_1": "LEGACY_184_RECOVERED_COVERAGE_PASS_SUIT_INVARIANCE_FAIL_CORRECTED_OR_NEW_CANDIDATE_PENDING",
+    "r7_5_1": "LEGACY_184_RECOVERED_RAW_FAIL_H1_H2_INVARIANT_DESCENDANTS_TESTED_H3_AND_STRATEGIC_COMPARISON_PENDING",
     "r7_5_2": "POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS_NEURALINPUTV2_INTEGRATION_PENDING",
     "r7_5_3": "PENDING",
     "r7_5_4": "PENDING",
@@ -246,6 +275,6 @@
     "finite_endpoint_defined": true,
     "only_r12_9_can_set_ready_for_tables_true": true
   },
-  "next_physical_step": "Precommit and audit suit-invariant descendants of the recovered legacy 184 map against the 1,755 exact flop reference, then integrate the regression-proven compositional postflop ontology into NeuralInputV2. Freeze R7.5.3 representation candidates and acceptance metrics before comparative learning results. Do not start official R8.3/R8.4 production training.",
+  "next_physical_step": "Integrate the regression-proven compositional postflop ontology and a suit-invariant flop candidate interface into NeuralInputV2, then freeze R7.5.3 candidates, seeds, budgets, held-out states, acceptance metrics and tie-breaks before comparative learning results. Do not start official R8.3/R8.4 production training.",
   "ready_for_tables": false
 }
