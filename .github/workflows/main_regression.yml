@@ -40,7 +40,10 @@ jobs:
           set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
-          python -m pip install pytest
+          # H3's deterministic structural reclustering is generated and frozen
+          # with this exact NumPy version; pin it rather than relying on a
+          # transitive dependency from torch.
+          python -m pip install numpy==2.3.5 pytest
 
       - name: Build C++ Release
         shell: bash
