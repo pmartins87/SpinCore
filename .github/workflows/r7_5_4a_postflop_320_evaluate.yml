@@ -1,0 +1,505 @@
+name: SpinCore R7.5.4A postflop 320 evaluation
+
+on:
+  workflow_run:
+    workflows: ["SpinCore R7.5.4A postflop 320"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: spincore-r7-5-4a-postflop-320-evaluation
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  TORCH_VERSION: '2.13.0+cpu'
+  NUMPY_VERSION: '2.3.5'
+
+jobs:
+  gate:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      training_run_id: ${{ steps.freeze.outputs.training_run_id }}
+      training_sha: ${{ steps.freeze.outputs.training_sha }}
+      evaluator_sha: ${{ steps.freeze.outputs.evaluator_sha }}
+      cross_matrix: ${{ steps.freeze.outputs.cross_matrix }}
+      candidate_matrix: ${{ steps.freeze.outputs.candidate_matrix }}
+    steps:
+      - name: Checkout immutable 320 execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Freeze evaluation provenance and dynamic matrices
+        id: freeze
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          test '${{ github.event.workflow_run.name }}' = 'SpinCore R7.5.4A postflop 320'
+          test '${{ github.event.workflow_run.conclusion }}' = 'success'
+          training_sha='${{ github.event.workflow_run.head_sha }}'
+          evaluator_sha="$(git rev-parse HEAD)"
+          test "$evaluator_sha" = "$training_sha"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          from spincore.r7_5_action_320_contract import REFEREE, execution_plan_from_160_result
+          from spincore.r7_5_action_stage_contract import PAIRED_EVALUATION_SEEDS, POSTFLOP_TRAINING_SEEDS
+
+          parent=json.loads(Path('validation/R7_5_4A_160_RESULT.json').read_text(encoding='utf-8'))
+          plan=execution_plan_from_160_result(parent)
+          cross=[]
+          candidate=[]
+          for item in plan.execution_candidates:
+              for domain in ('TRUE_HEADS_UP','THREE_HANDED'):
+                  cross.append({'candidate':item.candidate_id,'domain':domain})
+                  if item.candidate_id != REFEREE:
+                      for training_seed in POSTFLOP_TRAINING_SEEDS:
+                          for evaluation_seed in PAIRED_EVALUATION_SEEDS:
+                              candidate.append({
+                                  'candidate':item.candidate_id,
+                                  'domain':domain,
+                                  'training_seed':int(training_seed),
+                                  'evaluation_seed':int(evaluation_seed),
+                              })
+          if not cross or not candidate:
+              raise SystemExit('empty 320 evaluation matrix')
+          print('cross_matrix='+json.dumps({'include':cross},separators=(',',':')))
+          print('candidate_matrix='+json.dumps({'include':candidate},separators=(',',':')))
+          PY
+          echo "training_run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          echo "training_sha=$training_sha" >> "$GITHUB_OUTPUT"
+          echo "evaluator_sha=$evaluator_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen evaluator runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+
+      - name: Download immutable 320 training solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-solver-${{ steps.freeze.outputs.training_sha }}
+          path: build
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.freeze.outputs.training_run_id }}
+
+      - name: Certify 320 evaluator stack
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/r7_5_4a_320_dense_cache_worker.py \
+            tools/r7_5_4a_320_candidate_cell_worker.py \
+            tools/r7_5_4a_320_cross_seed_worker.py \
+            tools/r7_5_4a_320_aggregate.py
+          pytest -q \
+            python_tests/test_r7_5_action_320_contract.py \
+            python_tests/test_r7_5_action_eval_assemble_320.py \
+            python_tests/test_r7_5_final_policy.py \
+            python_tests/test_r7_5_eval_artifact_execution_sha.py \
+            python_tests/test_r7_5_crossplay_batching.py \
+            python_tests/test_r7_5_action_cross_seed.py
+
+  dense_cache:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        training_seed: [1737995611, 645939859, 1311335590]
+        evaluation_seed: [1817694185, 1617273629]
+    steps:
+      - name: Checkout immutable evaluator SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.evaluator_sha }}
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable 320 solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-solver-${{ needs.gate.outputs.training_sha }}
+          path: build
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Download finalized PF_DENSE checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-final-PF_DENSE_REFERENCE-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ needs.gate.outputs.training_sha }}
+          path: dense
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Build dense omission and crossplay cache
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py \
+            --label 'r7.5.4a-320-dense-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ matrix.evaluation_seed }}' \
+            --interval-seconds 300 -- \
+            python tools/r7_5_4a_320_dense_cache_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --dense-checkpoint dense/checkpoint.pt \
+              --domain '${{ matrix.domain }}' \
+              --training-seed '${{ matrix.training_seed }}' \
+              --evaluation-seed '${{ matrix.evaluation_seed }}' \
+              --execution-sha '${{ needs.gate.outputs.training_sha }}' \
+              --cache-out output/dense_cache.pkl.gz \
+              --report-out output/dense_report.json
+      - name: Upload durable 320 dense cell cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-320-dense-cache-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ matrix.evaluation_seed }}-${{ needs.gate.outputs.training_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  cross_seed:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: ${{ fromJSON(needs.gate.outputs.cross_matrix) }}
+    steps:
+      - name: Checkout immutable evaluator SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.evaluator_sha }}
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable 320 solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-solver-${{ needs.gate.outputs.training_sha }}
+          path: build
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Download finalized seed 1737995611
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-final-${{ matrix.candidate }}-${{ matrix.domain }}-1737995611-${{ needs.gate.outputs.training_sha }}
+          path: seed1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Download finalized seed 645939859
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-final-${{ matrix.candidate }}-${{ matrix.domain }}-645939859-${{ needs.gate.outputs.training_sha }}
+          path: seed2
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Download finalized seed 1311335590
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-final-${{ matrix.candidate }}-${{ matrix.domain }}-1311335590-${{ needs.gate.outputs.training_sha }}
+          path: seed3
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Audit three-seed policy stability at 320
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py \
+            --label 'r7.5.4a-320-cross-seed-${{ matrix.candidate }}-${{ matrix.domain }}' \
+            --interval-seconds 300 -- \
+            python tools/r7_5_4a_320_cross_seed_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --checkpoint seed1/checkpoint.pt \
+              --checkpoint seed2/checkpoint.pt \
+              --checkpoint seed3/checkpoint.pt \
+              --candidate '${{ matrix.candidate }}' \
+              --domain '${{ matrix.domain }}' \
+              --execution-sha '${{ needs.gate.outputs.training_sha }}' \
+              --report-out output/cross_seed_report.json
+      - name: Upload 320 cross-seed audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-320-cross-seed-${{ matrix.candidate }}-${{ matrix.domain }}-${{ needs.gate.outputs.training_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  candidate_cell:
+    needs: [gate, dense_cache]
+    if: ${{ needs.gate.result == 'success' && needs.dense_cache.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: ${{ fromJSON(needs.gate.outputs.candidate_matrix) }}
+    steps:
+      - name: Checkout immutable evaluator SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.evaluator_sha }}
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable 320 solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-solver-${{ needs.gate.outputs.training_sha }}
+          path: build
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Download dense cache for exact cell
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-dense-cache-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ matrix.evaluation_seed }}-${{ needs.gate.outputs.training_sha }}
+          path: cache
+      - name: Download finalized PF_DENSE checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-final-PF_DENSE_REFERENCE-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ needs.gate.outputs.training_sha }}
+          path: dense
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Download finalized candidate checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-final-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ needs.gate.outputs.training_sha }}
+          path: candidate
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.gate.outputs.training_run_id }}
+      - name: Score candidate against exact dense cache at 320
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py \
+            --label 'r7.5.4a-320-cell-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ matrix.evaluation_seed }}' \
+            --interval-seconds 300 -- \
+            python tools/r7_5_4a_320_candidate_cell_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --dense-checkpoint dense/checkpoint.pt \
+              --candidate-checkpoint candidate/checkpoint.pt \
+              --dense-cache cache/dense_cache.pkl.gz \
+              --candidate '${{ matrix.candidate }}' \
+              --domain '${{ matrix.domain }}' \
+              --training-seed '${{ matrix.training_seed }}' \
+              --evaluation-seed '${{ matrix.evaluation_seed }}' \
+              --execution-sha '${{ needs.gate.outputs.training_sha }}' \
+              --evidence-out output/evidence.pkl.gz \
+              --report-out output/candidate_report.json
+      - name: Upload durable 320 candidate cell evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-320-candidate-cell-${{ matrix.candidate }}-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ matrix.evaluation_seed }}-${{ needs.gate.outputs.training_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, candidate_cell, cross_seed]
+    if: ${{ always() && needs.gate.result == 'success' && needs.candidate_cell.result == 'success' && needs.cross_seed.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout immutable evaluator SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.evaluator_sha }}
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen aggregation runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download all 320 candidate cell evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-4a-320-candidate-cell-*
+          path: candidate-evidence
+          merge-multiple: false
+      - name: Download all 320 cross-seed reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-4a-320-cross-seed-*
+          path: cross-seed
+          merge-multiple: false
+      - name: Assemble 320 paired evidence and apply no-resurrection cascade
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/r7_5_4a_320_aggregate.py \
+            --parent-160-result validation/R7_5_4A_160_RESULT.json \
+            --candidate-evidence-dir candidate-evidence \
+            --cross-seed-dir cross-seed \
+            --training-execution-sha '${{ needs.gate.outputs.training_sha }}' \
+            --evaluator-sha '${{ needs.gate.outputs.evaluator_sha }}' \
+            --training-run-id '${{ needs.gate.outputs.training_run_id }}' \
+            --out output/result.json
+      - name: Upload durable 320 aggregate result
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-320-aggregate-result-${{ needs.gate.outputs.training_sha }}-${{ needs.gate.outputs.evaluator_sha }}
+          path: output/result.json
+          if-no-files-found: error
+          retention-days: 30
+
+  persist:
+    needs: [gate, aggregate]
+    if: ${{ needs.gate.result == 'success' && needs.aggregate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout latest main only for persistence
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download immutable 320 aggregate result
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-aggregate-result-${{ needs.gate.outputs.training_sha }}-${{ needs.gate.outputs.evaluator_sha }}
+          path: incoming
+      - name: Validate provenance and persist 320 result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(Path('incoming/result.json').read_text(encoding='utf-8'))
+          assert result['schema']=='SPINCORE_R7_5_4A_320_RESULT_V1'
+          assert result['root_level']==320
+          assert result['training_execution_sha']=='${{ needs.gate.outputs.training_sha }}'
+          assert result['evaluator_sha']=='${{ needs.gate.outputs.evaluator_sha }}'
+          assert result['production_training_authorized'] is False
+          assert result['ready_for_tables'] is False
+          selection=result['selection']
+          assert selection['status']=='PASS_LEVEL'
+          selected=selection.get('selected_candidate')
+          if selected is None:
+              assert selection.get('next_level')==640
+              assert result['r7_5_4a_postflop_selected'] is False
+          else:
+              assert selected in result['prior_eligible_survivors']
+              assert selection.get('next_level') is None
+              assert result['r7_5_4a_postflop_selected'] is True
+              assert result['r7_5_4a_postflop_selected_candidate']==selected
+          PY
+          cp incoming/result.json validation/R7_5_4A_320_RESULT.json
+          git config user.name 'SpinCore CI'
+          git config user.email 'spincore-ci@users.noreply.github.com'
+          git add validation/R7_5_4A_320_RESULT.json
+          if git diff --cached --quiet; then
+            echo 'R7.5.4A-320 result already persisted.'
+          else
+            git commit -m 'validation: persist R7.5.4A-320 action result'
+            git push origin HEAD:main
+          fi
+
+  enforce:
+    needs: [gate, aggregate, persist]
+    if: ${{ always() && needs.gate.result == 'success' && needs.aggregate.result == 'success' && needs.persist.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download persisted-source 320 aggregate artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-4a-320-aggregate-result-${{ needs.gate.outputs.training_sha }}-${{ needs.gate.outputs.evaluator_sha }}
+          path: result
+      - name: Enforce selection-or-fresh-640 semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          result=json.load(open('result/result.json'))
+          selection=result['selection']
+          assert selection['status']=='PASS_LEVEL', selection
+          assert result['ready_for_tables'] is False
+          assert result['production_training_authorized'] is False
+          selected=selection.get('selected_candidate')
+          if selected is None:
+              assert selection.get('next_level')==640
+              print('R7.5.4A-320 PASS_LEVEL: ambiguity remains; only fresh 640 escalation is permitted.')
+          else:
+              assert selected in result['prior_eligible_survivors']
+              assert selection.get('next_level') is None
+              print(f'R7.5.4A-320 PASS_LEVEL: selected {selected}; production training remains unauthorized until downstream freeze gates.')
+          PY
