@@ -31,6 +31,8 @@ EXPECTED_PARENT_TRAINING_SHA = "457996944f76e9f1fa0475691df978f450259641"
 EXPECTED_PARENT_EVALUATOR_SHA = "4752a951e53c6f195fb12676a417a0b690c8e4cf"
 RESULT_160_SCHEMA = "SPINCORE_R7_5_4A_160_RESULT_V1"
 PRECOMMIT_320_SCHEMA = "SPINCORE_R7_5_4A_320_RUNNER_PRECOMMIT_V1"
+CARD_SYMMETRY_RESULT_SCHEMA = "SPINCORE_R7_5_3B_CARD_SYMMETRY_RESULT_V1"
+CARD_SYMMETRY_REQUIRED_WINNER = "S0_V1_FROZEN_CONTROL"
 CONTROL = "PF0_CONTROL_33_75_AI"
 REFEREE = "PF_DENSE_REFERENCE"
 ELIGIBLE_POSTFLOP = {
@@ -146,7 +148,37 @@ def execution_plan_from_160_result(result: Mapping) -> ExecutionPlan320:
     return ExecutionPlan320(survivors=survivors, execution_candidates=tuple(execution))
 
 
+def validate_card_symmetry_parent_320(repo_root: str | Path) -> dict:
+    """Fail closed unless R7.5.3B retained the exact V1 representation.
+
+    Existing R7.5.4A evidence was generated under C0/V1. If the lossless card
+    symmetry candidate wins, that evidence is representation-conditioned and
+    cannot be escalated to 320 as though nothing changed.
+    """
+    path = Path(repo_root) / "validation" / "R7_5_3B_CARD_SYMMETRY_RESULT.json"
+    if not path.exists():
+        raise FileNotFoundError(
+            "R7.5.4A-320 is gated by R7.5.3B; durable card-symmetry result is not yet persisted"
+        )
+    result = json.loads(path.read_text(encoding="utf-8"))
+    if result.get("schema") != CARD_SYMMETRY_RESULT_SCHEMA:
+        raise ValueError("wrong durable R7.5.3B card-symmetry result schema")
+    if result.get("status") != "PASS":
+        raise ValueError("R7.5.4A-320 requires R7.5.3B PASS")
+    if bool(result.get("production_training_authorized")) or bool(result.get("ready_for_tables")):
+        raise ValueError("R7.5.3B result illegally authorizes production/table use")
+    if result.get("winner_id") != CARD_SYMMETRY_REQUIRED_WINNER:
+        raise ValueError(
+            "R7.5.3B changed the representation; existing R7.5.4A sizing evidence cannot escalate to 320"
+        )
+    decision = dict(result.get("representation_decision") or {})
+    if decision.get("existing_R7_5_4A_evidence_representation_consistent") is not True:
+        raise ValueError("R7.5.3B representation-consistency declaration mismatch")
+    return result
+
+
 def load_execution_plan_320(repo_root: str | Path) -> ExecutionPlan320:
+    validate_card_symmetry_parent_320(repo_root)
     path = Path(repo_root) / "validation" / "R7_5_4A_160_RESULT.json"
     if not path.exists():
         raise FileNotFoundError("durable R7.5.4A-160 result is not yet persisted")
