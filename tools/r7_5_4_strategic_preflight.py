@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V1"
+SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V2"
 REP_SCHEMA = "SPINCORE_R7_5_3_REPRESENTATION_ABLATION_RESULT_V1"
 STRUCT_SCHEMA = "SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V3"
 UNCERTAINTY_SCHEMA = "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1"
@@ -12,6 +12,12 @@ TRAINING_FREEZE_SCHEMA = "SPINCORE_R7_5_4_TRAINING_IMPLEMENTATION_FREEZE_V1"
 PRECOMMIT_V1_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V1"
 PRECOMMIT_V2_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2"
 PRECOMMIT_V3_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3"
+HERITAGE_SCHEMA = "SPINCORE_LEGACY_HERITAGE_SOURCE_MANIFEST_V1"
+REACHABILITY_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_CONTRACT_V1"
+
+HERITAGE_AUDIT = "R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"
+HERITAGE_MANIFEST = "R7_5_LEGACY_HERITAGE_SOURCE_MANIFEST_20260814.json"
+REACHABILITY_CONTRACT = "R7_5_REAL_GAME_REACHABILITY_CONTRACT.json"
 
 REPRESENTATIONS = {
     "C0_V1_FROZEN_CONTROL",
@@ -20,6 +26,27 @@ REPRESENTATIONS = {
     "C3_V2_H2_MIN_CHANGE_181",
     "C4_V2_H3_RECLUSTERED_184",
     "C5_V2_H4_EXACT_1755",
+}
+
+REQUIRED_REACHABILITY_INVARIANTS = {
+    "legal_hand_start",
+    "legal_seat_dealer_blind_assignment",
+    "unique_cards_compatible_with_street",
+    "folded_player_never_acts_again",
+    "allin_player_never_takes_later_voluntary_action",
+    "current_actor_is_exact_next_legal_actor",
+    "ordered_public_history_reaches_exact_current_contributions",
+    "pot_reconciles_with_history_and_contributions",
+    "amount_to_call_from_exact_state",
+    "min_and_max_raise_from_exact_betting_engine",
+    "legal_action_mask_from_exact_engine",
+    "live_folded_allin_counts_agree_with_player_status",
+    "position_and_ip_oop_agree_with_dealer_and_live_lineup",
+    "preflop_lineage_derived_from_ordered_public_events",
+    "initiative_and_postflop_line_derived_from_ordered_public_events",
+    "hand_draw_board_semantics_deterministic_from_actual_cards",
+    "derived_features_cannot_contradict_authoritative_state",
+    "snapshot_only_reconstruction_for_path_dependent_semantics_forbidden",
 }
 
 
@@ -36,6 +63,55 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
 
     def check(name: str, condition: bool, detail: str) -> None:
         checks[name] = {"pass": bool(condition), "detail": str(detail)}
+
+    # Full prior-attempt heritage is a hard dependency, not conversational context.
+    try:
+        heritage = _read(validation / HERITAGE_MANIFEST)
+        archive = heritage.get("prior_attempt_archive") or {}
+        comparison = archive.get("archive_comparison") or {}
+        readable = archive.get("readable_sources") or []
+        check("heritage_schema", heritage.get("schema") == HERITAGE_SCHEMA, str(heritage.get("schema")))
+        check(
+            "heritage_full_read_inventory",
+            len(readable) >= 17
+            and all(str(row.get("full_read_status", "")).endswith(("full_read", "full_parse", "ast_parse")) or "full_" in str(row.get("full_read_status", "")) for row in readable),
+            f"readable_sources={len(readable)}",
+        )
+        check(
+            "heritage_archive_equivalence",
+            int(comparison.get("shared_entries", -1)) == 27
+            and int(comparison.get("shared_byte_identical", -1)) == 27
+            and set(comparison.get("only_in_superset") or []) == {"hardcoded/Crusher Framework 5.txt", "solver v2/184Flops.json"},
+            json.dumps(comparison, sort_keys=True),
+        )
+        check(
+            "heritage_not_table_authority",
+            not bool(heritage.get("ready_for_tables")),
+            "heritage audit cannot authorize table use",
+        )
+    except Exception as exc:
+        check("heritage_manifest_available", False, repr(exc))
+
+    heritage_audit_path = validation / HERITAGE_AUDIT
+    check(
+        "heritage_audit_available",
+        heritage_audit_path.exists() and heritage_audit_path.stat().st_size > 0,
+        str(heritage_audit_path),
+    )
+
+    try:
+        reach = _read(validation / REACHABILITY_CONTRACT)
+        invariants = reach.get("required_invariants") or {}
+        check("reachability_schema", reach.get("schema") == REACHABILITY_SCHEMA, str(reach.get("schema")))
+        missing = sorted(k for k in REQUIRED_REACHABILITY_INVARIANTS if not bool(invariants.get(k)))
+        check("reachable_state_contract", not missing, f"missing_or_false={missing}")
+        check(
+            "reachability_not_table_authority",
+            not bool(reach.get("ready_for_tables")) and not bool(reach.get("production_training_authorized")),
+            "semantic contract is pre-output only",
+        )
+    except Exception as exc:
+        check("reachability_contract_available", False, repr(exc))
 
     try:
         rep = _read(validation / "R7_5_3_REPRESENTATION_ABLATION_RESULT.json")
@@ -111,9 +187,6 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
     check("root_level", int(root_level) in {160, 320, 640}, str(root_level))
 
     if phase == "R7_5_4A_POSTFLOP":
-        # 160 is the only authorized first strategic launch. Higher levels must
-        # be authorized by durable survivor evidence from the immediately prior
-        # level and are deliberately rejected by this initial preflight.
         check(
             "initial_postflop_level",
             int(root_level) == 160,
