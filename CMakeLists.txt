@@ -20,3 +20,8 @@ add_executable(spincore_tests
  tests/test_main.cpp tests/test_card.cpp tests/test_flop_canonicalization.cpp tests/test_hand_evaluator.cpp tests/test_hand_semantics.cpp tests/test_card_semantics_v2.cpp tests/test_ruleset_contract.cpp tests/test_scenario_sampler.cpp tests/test_game_topology.cpp tests/test_action_abstraction.cpp tests/test_betting_engine.cpp tests/test_preflop_ontology.cpp tests/test_postflop_ontology.cpp tests/test_hand_engine.cpp tests/test_hand_infoset_adapter.cpp tests/test_neural_encoder.cpp tests/test_neural_encoder_v2.cpp tests/test_tournament_value.cpp tests/test_spin_traversal_state.cpp tests/test_solver_frontier.cpp)
 target_link_libraries(spincore_tests PRIVATE spincore spincore_solver_c)
 add_test(NAME spincore_tests COMMAND spincore_tests)
+add_executable(spincore_v2_fresh_process_probe tests/v2_fresh_process_probe.cpp)
+target_link_libraries(spincore_v2_fresh_process_probe PRIVATE spincore)
+add_test(
+ NAME spincore_v2_fresh_process_equivalence
+ COMMAND ${CMAKE_COMMAND} -DPROBE=$<TARGET_FILE:spincore_v2_fresh_process_probe> -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_v2_fresh_process.cmake)
