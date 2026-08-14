@@ -15,6 +15,7 @@ concurrency:
 
 env:
   TRAINING_SHA: '457996944f76e9f1fa0475691df978f450259641'
+  EVALUATOR_SHA: '4752a951e53c6f195fb12676a417a0b690c8e4cf'
   PYTHON_VERSION: '3.11.15'
   TORCH_VERSION: '2.13.0+cpu'
   NUMPY_VERSION: '2.3.5'
@@ -29,10 +30,10 @@ jobs:
       training_sha: ${{ steps.freeze.outputs.training_sha }}
       evaluator_sha: ${{ steps.freeze.outputs.evaluator_sha }}
     steps:
-      - name: Checkout immutable evaluator SHA
+      - name: Checkout frozen evaluator SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ env.EVALUATOR_SHA }}
 
       - name: Freeze training and evaluator provenance
         id: freeze
@@ -44,7 +45,7 @@ jobs:
           training_sha='${{ github.event.workflow_run.head_sha }}'
           test "$training_sha" = "$TRAINING_SHA"
           evaluator_sha="$(git rev-parse HEAD)"
-          test "$evaluator_sha" = '${{ github.sha }}'
+          test "$evaluator_sha" = "$EVALUATOR_SHA"
           echo "training_run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
           echo "training_sha=$training_sha" >> "$GITHUB_OUTPUT"
           echo "evaluator_sha=$evaluator_sha" >> "$GITHUB_OUTPUT"

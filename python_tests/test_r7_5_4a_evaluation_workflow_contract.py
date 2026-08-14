@@ -5,16 +5,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "r7_5_4a_postflop_160_evaluate.yml"
 TRAINING_SHA = "457996944f76e9f1fa0475691df978f450259641"
+EVALUATOR_SHA = "4752a951e53c6f195fb12676a417a0b690c8e4cf"
 
 
-def test_r7_5_4a_160_evaluator_is_completion_triggered_and_sha_bound() -> None:
+def test_r7_5_4a_160_evaluator_is_completion_triggered_and_both_shas_are_immutable() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     assert 'workflows: ["SpinCore R7.5.4A postflop 160"]' in text
     assert "types: [completed]" in text
     assert "github.event.workflow_run.conclusion == 'success'" in text
     assert f"TRAINING_SHA: '{TRAINING_SHA}'" in text
+    assert f"EVALUATOR_SHA: '{EVALUATOR_SHA}'" in text
     assert "github.event.workflow_run.head_sha" in text
-    assert "Checkout immutable evaluator SHA" in text
+    assert "ref: ${{ env.EVALUATOR_SHA }}" in text
+    assert 'test "$evaluator_sha" = "$EVALUATOR_SHA"' in text
     assert "ref: ${{ needs.gate.outputs.evaluator_sha }}" in text
 
 
