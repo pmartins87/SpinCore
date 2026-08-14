@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from spincore.r7_5_action_contract import postflop_candidate_specs
-from spincore.r7_5_referee_omission import evaluate_heldout_omissions
+from spincore.r7_5_referee_omission import (
+    build_dense_omission_cache,
+    evaluate_heldout_omissions,
+    score_candidate_from_omission_cache,
+)
 from spincore.r7_5_referee_states import generate_heldout_referee_states
 from spincore.solver import SolverLibrary
 
@@ -53,6 +57,52 @@ def test_dense_referee_omission_against_itself_is_exactly_zero() -> None:
         )
 
 
+def test_cached_dense_q_path_is_exactly_equal_to_direct_path_for_all_candidates() -> None:
+    solver = SolverLibrary(LIB)
+    specs = postflop_candidate_specs(ROOT)
+    dense = specs["PF_DENSE_REFERENCE"]
+    descriptors = _descriptors(solver, dense, "TRUE_HEADS_UP", 6)
+    cache = build_dense_omission_cache(
+        solver=solver,
+        descriptors=descriptors,
+        dense_action_spec=dense,
+        dense_policy=_uniform,
+        exact_opponent_levels=1,
+    )
+    for candidate_id in (
+        "PF0_CONTROL_33_75_AI",
+        "PF1_33_50_75_AI",
+        "PF2_33_50_75_100_AI",
+        "PF3_COMPACT_33_66_100_AI",
+        "PF4_CRUSHER_COMPACT_40_66_100_AI",
+        "PF_DENSE_REFERENCE",
+    ):
+        cached = score_candidate_from_omission_cache(
+            solver=solver,
+            descriptors=descriptors,
+            references=cache,
+            dense_action_spec=dense,
+            candidate_action_spec=specs[candidate_id],
+        )
+        direct = evaluate_heldout_omissions(
+            solver=solver,
+            descriptors=descriptors,
+            dense_action_spec=dense,
+            candidate_action_spec=specs[candidate_id],
+            dense_policy=_uniform,
+            exact_opponent_levels=1,
+        )
+        assert cached == direct
+    dense_cached = score_candidate_from_omission_cache(
+        solver=solver,
+        descriptors=descriptors,
+        references=cache,
+        dense_action_spec=dense,
+        candidate_action_spec=dense,
+    )
+    assert all(row.omission == 0.0 for row in dense_cached)
+
+
 def test_compact_candidate_omission_is_nonnegative_and_deterministic() -> None:
     solver = SolverLibrary(LIB)
     specs = postflop_candidate_specs(ROOT)
@@ -77,8 +127,6 @@ def test_compact_candidate_omission_is_nonnegative_and_deterministic() -> None:
 
 
 def test_omission_credits_exact_action_alias_even_when_nominal_slot_differs() -> None:
-    # A shallow 3H state creates fractional aliases. Exact-action intersection,
-    # not slot-id intersection, is what determines candidate availability.
     solver = SolverLibrary(LIB)
     specs = postflop_candidate_specs(ROOT)
     dense = specs["PF_DENSE_REFERENCE"]
