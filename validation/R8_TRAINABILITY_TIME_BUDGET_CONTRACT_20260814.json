@@ -1,0 +1,93 @@
+{
+  "schema": "SPINCORE_R8_TRAINABILITY_TIME_BUDGET_CONTRACT_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_PHYSICAL_R8_2_CALIBRATION_AND_OFFICIAL_R8_TRAINING",
+  "user_operational_requirement": "Top-performance core policy training must remain practical; approximately three months is the maximum acceptable wall-clock horizon rather than an architecture whose convergence would require years or decades.",
+  "hard_cap": {
+    "wall_clock_days": 90.0,
+    "wall_clock_hours": 2160.0,
+    "wall_clock_seconds": 7776000.0,
+    "scope": "complete official core baseline training from the start of R8.3 through completed R8.4 and R8.5 frozen HU+3H production policy artifacts for every selected production profile and every required algorithm-seed stream",
+    "excluded_from_training_clock": [
+      "R9 strategic audit performed after model training is complete",
+      "R10 OpenHoldem runtime integration",
+      "R11 opponent-data accumulation / safe exploitation overlay",
+      "R12 operational homologation"
+    ]
+  },
+  "planning_reserve": {
+    "multiplier": 1.20,
+    "reserve_fraction": 0.20,
+    "implied_nominal_budget_days": 75.0,
+    "rule": "The 20% operational reserve is inside, not in addition to, the 90-day hard ceiling. A 75-day nominal conservative upper-bound projection consumes the entire 90-day budget after reserve."
+  },
+  "representation_state_at_freeze": {
+    "r7_5_3_result": "validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json",
+    "selected_candidate": "C0_V1_FROZEN_CONTROL",
+    "serialized_observation_bytes": 126,
+    "model_parameter_count": 152438,
+    "interpretation": "Richer V2 semantic representations were evaluated but did not satisfy the frozen promotion cascade. The compact V1 control remains selected; additional semantic richness must not be retained merely because it exists in legacy sources."
+  },
+  "physical_measurement_contract": {
+    "target": "intended production Ryzen host or another explicitly frozen production compute topology",
+    "r8_0_exact_profile_required": true,
+    "r8_2_selected_semantically_exact_concurrency_required": true,
+    "minimum_complete_iteration_timing_samples_per_stream": 3,
+    "timing_unit": "FULL_DURABLE_ITERATION_CHECKPOINT_TO_CHECKPOINT_V1",
+    "timing_unit_includes": [
+      "CFR traversal/chance/action work",
+      "reservoir insertion/replacement work",
+      "all neural Advantage/ensemble fitting required by that production iteration",
+      "policy fitting work attributable to the frozen plan",
+      "serialization and durable checkpoint/transaction overhead needed to advance the scheduler"
+    ],
+    "per_stream_runtime_estimator": "maximum observed complete-iteration seconds across the repeated valid measurements",
+    "why_max_not_mean": "The deadline is a feasibility ceiling; using the slowest observed complete iteration avoids an optimistic average-only projection."
+  },
+  "projection_contract": {
+    "implementation": "python/spincore/production_trainability.py",
+    "schema": "SPINCORE_R8_PRODUCTION_TRAINABILITY_V1",
+    "complete_workload_required": true,
+    "required_domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+    "all_selected_profiles_required": true,
+    "all_required_algorithm_seed_streams_required": true,
+    "all_frozen_iterations_required": true,
+    "scheduling_upper_bound": "LPT_STREAM_PINNED_CONSERVATIVE_UPPER_BOUND",
+    "rationale": "Each stream remains serial under the persistent live RNG contract. Treating the whole stream as pinned to one worker is at least as restrictive as the actual scheduler and therefore does not assume unsafe intra-stream parallelism or optimistic perfect packing.",
+    "pass_condition": "semantic_exact=true AND projected_with_reserve_days <= 90.0"
+  },
+  "forbidden_deadline_shortcuts": [
+    "reduce required algorithm seeds after seeing a runtime projection",
+    "reduce CFR roots/iterations or optimizer steps solely to fit the deadline",
+    "shrink the selected ensemble or uncertainty mechanism solely to fit the deadline",
+    "drop TRUE_HEADS_UP or THREE_HANDED coverage",
+    "drop a selected production profile from the projection",
+    "introduce root-level/intra-stream parallelism that changes persistent RNG semantics",
+    "use GitHub-hosted runner time as a substitute for the physical production calibration",
+    "use mean-only timing when a slower valid repeated complete-iteration timing exists",
+    "declare trainability PASS before R8.0 and physical R8.2 evidence exist"
+  ],
+  "allowed_engineering_optimizations": [
+    "C++/Python hotspot optimization proven semantically identical",
+    "more efficient batching/vectorization that preserves exact accepted outputs/state",
+    "memory/layout/process-reuse improvements with regression-proven semantic identity",
+    "thread tuning selected by exact semantic calibration",
+    "concurrency across genuinely independent production streams",
+    "a different or expanded production compute topology only after its identity and semantically exact calibration are frozen"
+  ],
+  "failure_rule": "If the selected strategic architecture cannot satisfy the 90-day gate, R8 official training remains BLOCKED. Do not silently relax scientific gates and do not silently choose a post-hoc runner-up. Optimize the implementation semantically, add valid independent compute, or design a new precommitted strategic abstraction study before observing its outputs.",
+  "r7_5_4_interaction": {
+    "tree_cost_metrics_remain_mandatory": [
+      "nodes_per_root",
+      "seconds_per_root",
+      "peak_rss",
+      "advantage_samples_per_root",
+      "strategy_samples_per_root",
+      "effective_unique_aggressive_branches_per_decision"
+    ],
+    "rule": "R7.5.4 may select a strategically justified action abstraction under its frozen cascade, but no larger action abstraction becomes R8-production-eligible until this absolute trainability gate is satisfied on the frozen production workload/hardware."
+  },
+  "current_trainability_status": "NOT_MEASURED_PHYSICALLY / NOT_PASS",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
