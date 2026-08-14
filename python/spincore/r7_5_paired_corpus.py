@@ -106,6 +106,10 @@ class BottomHashCorpus(Generic[T]):
             heapq.heapreplace(self._heap, item)
 
     @property
+    def kept(self) -> int:
+        return len(self._heap)
+
+    @property
     def items(self) -> list[T]:
         return [sample for _, _, _, sample in sorted(self._heap, key=lambda row: (row[1], row[2]))]
 
