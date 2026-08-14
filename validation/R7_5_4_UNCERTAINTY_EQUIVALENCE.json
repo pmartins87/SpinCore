@@ -1,0 +1,137 @@
+{
+  "accepted_candidate_label": "size4_uncertainty_s175",
+  "accepted_parameters": {
+    "epsilon_cap": 0.5,
+    "epsilon_scale": 1.75
+  },
+  "accepted_semantic_freeze": "validation/R7_3_CANDIDATE_SEMANTIC_FREEZE.json",
+  "accepted_source": "tools/run_r7_3_policy_mixture_uncertainty_damping.py",
+  "accepted_source_sha256": "ec04ee1f0f86a2d9ad77704910e78c83a54b69c1af38f282bf302eadcffe8bfd",
+  "fixtures": [
+    {
+      "boolean_statistics_equal": true,
+      "illegal_tail_max_abs": 0.0,
+      "legal": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "maximum_abs_difference": 1.1102230246251565e-16,
+      "name": "below_cap",
+      "new_policy_first_six": [
+        0.6170831357344356,
+        0.0355808157889096,
+        0.3173978430862105,
+        0.0,
+        0.0,
+        0.02993820539044439
+      ],
+      "new_policy_illegal_tail": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "new_stats": {
+        "cap_hit": false,
+        "disagreement": 0.04048582957253803,
+        "epsilon": 0.07085020175194155,
+        "raw_epsilon": 0.07085020175194155
+      },
+      "old_policy": [
+        0.6170831357344355,
+        0.03558081578890959,
+        0.31739784308621044,
+        0.0,
+        0.0,
+        0.029938205390444388
+      ],
+      "old_stats": {
+        "calls": 1,
+        "cap_hit_calls": 0,
+        "disagreement": 0.04048582957253803,
+        "epsilon": 0.07085020175194155,
+        "epsilon_ge_010_calls": 0,
+        "epsilon_ge_025_calls": 0,
+        "epsilon_max": 0.07085020175194155,
+        "raw_epsilon": 0.07085020175194155
+      },
+      "pass": true,
+      "policy_max_abs_difference": 1.1102230246251565e-16,
+      "stat_abs_differences": {
+        "disagreement": 0.0,
+        "epsilon": 0.0,
+        "epsilon_max": 0.0,
+        "raw_epsilon": 0.0
+      }
+    },
+    {
+      "boolean_statistics_equal": true,
+      "illegal_tail_max_abs": 0.0,
+      "legal": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "maximum_abs_difference": 0.0,
+      "name": "cap_hit",
+      "new_policy_first_six": [
+        0.25,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.25
+      ],
+      "new_policy_illegal_tail": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "new_stats": {
+        "cap_hit": true,
+        "disagreement": 0.75,
+        "epsilon": 0.5,
+        "raw_epsilon": 1.3125
+      },
+      "old_policy": [
+        0.25,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.25
+      ],
+      "old_stats": {
+        "calls": 1,
+        "cap_hit_calls": 1,
+        "disagreement": 0.75,
+        "epsilon": 0.5,
+        "epsilon_ge_010_calls": 1,
+        "epsilon_ge_025_calls": 1,
+        "epsilon_max": 0.5,
+        "raw_epsilon": 1.3125
+      },
+      "pass": true,
+      "policy_max_abs_difference": 0.0,
+      "stat_abs_differences": {
+        "disagreement": 0.0,
+        "epsilon": 0.0,
+        "epsilon_max": 0.0,
+        "raw_epsilon": 0.0
+      }
+    }
+  ],
+  "generalized_source": "python/spincore/r7_5_action_uncertainty.py",
+  "generalized_source_sha256": "3ac6411db450152c4fdc4983548f89783b3935208a29056e6622fd862f2f8808",
+  "maximum_abs_difference": 1.1102230246251565e-16,
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "schema": "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1",
+  "strategic_action_output": false,
+  "tolerance": 1e-12,
+  "uncertainty_equivalence_pass": true
+}
