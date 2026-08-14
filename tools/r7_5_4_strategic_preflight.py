@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V2"
+SCHEMA = "SPINCORE_R7_5_4_STRATEGIC_PREFLIGHT_V3"
 REP_SCHEMA = "SPINCORE_R7_5_3_REPRESENTATION_ABLATION_RESULT_V1"
 STRUCT_SCHEMA = "SPINCORE_R7_5_4_ACTION_STRUCTURAL_AUDIT_V3"
 UNCERTAINTY_SCHEMA = "SPINCORE_R7_5_4_UNCERTAINTY_EQUIVALENCE_AUDIT_V1"
@@ -14,10 +14,12 @@ PRECOMMIT_V2_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2"
 PRECOMMIT_V3_SCHEMA = "SPINCORE_R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3"
 HERITAGE_SCHEMA = "SPINCORE_LEGACY_HERITAGE_SOURCE_MANIFEST_V1"
 REACHABILITY_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_CONTRACT_V1"
+REACHABILITY_AUDIT_SCHEMA = "SPINCORE_R7_5_REAL_GAME_REACHABILITY_AUDIT_V1"
 
 HERITAGE_AUDIT = "R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md"
 HERITAGE_MANIFEST = "R7_5_LEGACY_HERITAGE_SOURCE_MANIFEST_20260814.json"
 REACHABILITY_CONTRACT = "R7_5_REAL_GAME_REACHABILITY_CONTRACT.json"
+REACHABILITY_AUDIT = "R7_5_REAL_GAME_REACHABILITY_AUDIT.json"
 
 REPRESENTATIONS = {
     "C0_V1_FROZEN_CONTROL",
@@ -49,6 +51,16 @@ REQUIRED_REACHABILITY_INVARIANTS = {
     "snapshot_only_reconstruction_for_path_dependent_semantics_forbidden",
 }
 
+REQUIRED_REACHABILITY_CLAIMS = {
+    "observations_only_from_engine_reached_states",
+    "spnniv1_legal_mask_matches_engine_on_audited_states",
+    "spnniv2_legal_mask_matches_engine_on_audited_states",
+    "illegal_actions_fail_closed_on_audited_states",
+    "terminal_chip_and_icm_conservation_on_audited_states",
+    "universal_action_path_traversed",
+    "legacy_action_path_traversed",
+}
+
 
 def _read(path: Path) -> dict:
     if not path.exists():
@@ -74,14 +86,19 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
         check(
             "heritage_full_read_inventory",
             len(readable) >= 17
-            and all(str(row.get("full_read_status", "")).endswith(("full_read", "full_parse", "ast_parse")) or "full_" in str(row.get("full_read_status", "")) for row in readable),
+            and all(
+                str(row.get("full_read_status", "")).endswith(("full_read", "full_parse", "ast_parse"))
+                or "full_" in str(row.get("full_read_status", ""))
+                for row in readable
+            ),
             f"readable_sources={len(readable)}",
         )
         check(
             "heritage_archive_equivalence",
             int(comparison.get("shared_entries", -1)) == 27
             and int(comparison.get("shared_byte_identical", -1)) == 27
-            and set(comparison.get("only_in_superset") or []) == {"hardcoded/Crusher Framework 5.txt", "solver v2/184Flops.json"},
+            and set(comparison.get("only_in_superset") or [])
+            == {"hardcoded/Crusher Framework 5.txt", "solver v2/184Flops.json"},
             json.dumps(comparison, sort_keys=True),
         )
         check(
@@ -113,6 +130,41 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
     except Exception as exc:
         check("reachability_contract_available", False, repr(exc))
 
+    # The written contract must be backed by a durable execution over engine-reached
+    # HU and 3H trajectories. This prevents a future manual launch from treating a
+    # semantic promise as if it were tested evidence.
+    try:
+        reach_audit = _read(validation / REACHABILITY_AUDIT)
+        totals = reach_audit.get("totals") or {}
+        claims = reach_audit.get("claims") or {}
+        check(
+            "reachability_audit_schema",
+            reach_audit.get("schema") == REACHABILITY_AUDIT_SCHEMA,
+            str(reach_audit.get("schema")),
+        )
+        missing_claims = sorted(k for k in REQUIRED_REACHABILITY_CLAIMS if not bool(claims.get(k)))
+        check(
+            "reachability_audit_gate",
+            bool(reach_audit.get("reachability_gate_pass"))
+            and int(totals.get("trajectories", 0)) == 60
+            and int(totals.get("v1_legal_mask_checks", 0)) > 0
+            and int(totals.get("v2_legal_mask_checks", 0)) > 0
+            and int(totals.get("legacy_illegal_rejections", 0)) > 0
+            and int(totals.get("universal_illegal_rejections", 0)) > 0
+            and int(totals.get("terminal_chip_conservation_checks", 0)) == 60
+            and int(totals.get("terminal_icm_conservation_checks", 0)) == 60
+            and not missing_claims,
+            f"totals={json.dumps(totals,sort_keys=True)} missing_claims={missing_claims}",
+        )
+        check(
+            "reachability_audit_not_table_authority",
+            not bool(reach_audit.get("ready_for_tables"))
+            and not bool(reach_audit.get("production_training_authorized")),
+            "reachability audit is mechanism evidence only",
+        )
+    except Exception as exc:
+        check("reachability_audit_available", False, repr(exc))
+
     try:
         rep = _read(validation / "R7_5_3_REPRESENTATION_ABLATION_RESULT.json")
         check("representation_schema", rep.get("schema") == REP_SCHEMA, str(rep.get("schema")))
@@ -142,7 +194,8 @@ def evaluate(repo_root: str | Path, *, phase: str, root_level: int) -> dict:
         check("structural_gate", bool(structural.get("structural_gate_pass")), "durable structural evidence")
         check(
             "structural_not_table_authority",
-            not bool(structural.get("ready_for_tables")) and not bool(structural.get("production_training_authorized")),
+            not bool(structural.get("ready_for_tables"))
+            and not bool(structural.get("production_training_authorized")),
             "structural audit is mechanism-only",
         )
     except Exception as exc:
