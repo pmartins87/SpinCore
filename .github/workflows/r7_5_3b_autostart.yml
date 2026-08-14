@@ -1,0 +1,23 @@
+name: SpinCore R7.5.3B one-shot launcher
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_5_3b_autostart.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch frozen R7.5.3B gate on main
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run r7_5_3b_card_symmetry.yml --repo "$GITHUB_REPOSITORY" --ref main
