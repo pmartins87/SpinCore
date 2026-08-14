@@ -1,0 +1,42 @@
+{
+  "schema": "SPINCORE_R7_5_4_COST_TELEMETRY_SEMANTIC_FREEZE_V1",
+  "date": "2026-08-14",
+  "status": "FROZEN_BEFORE_STRATEGIC_ACTION_TRAINING_OUTPUTS",
+  "inherits": [
+    "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+    "validation/R7_5_4_TRAINING_IMPLEMENTATION_FREEZE.json",
+    "validation/R8_TRAINABILITY_TIME_BUDGET_CONTRACT_20260814.json"
+  ],
+  "reason": "The action precommit requires seconds/root and branch-cost metrics but did not distinguish traversal-tree time from equal-step neural fitting time. This freeze resolves that implementation ambiguity before strategic action outputs.",
+  "tree_cost_metrics": {
+    "nodes_per_root": "total partial-exact advantage traversal nodes divided by completed training roots; unchanged counter semantics across candidates",
+    "tree_seconds_per_root": "wall-clock seconds spent in root collection/traversal only, divided by completed roots; excludes Advantage/Policy optimizer fitting and checkpoint serialization",
+    "seconds_per_root_selection_alias": "tree_seconds_per_root",
+    "peak_rss": "maximum resident-set size observed by the worker process, reported with platform unit normalization",
+    "advantage_samples_per_root": "new Advantage samples seen by the reservoir divided by completed roots",
+    "strategy_samples_per_root": "new Strategy samples seen by the reservoir divided by completed roots",
+    "effective_unique_aggressive_branches_per_decision": "sum of state-local deduplicated legal universal actions with slot>=2 over nonterminal advantage-traversal decision visits, divided by those visits",
+    "nominal_aggressive_branches_per_decision": "sum of active candidate aggressive primitives slot>=2 before state-local exact-action dedup over the same advantage-traversal decision visits",
+    "branch_telemetry_scope": "ADVANTAGE_TRAVERSAL_DECISION_VISITS_ONLY",
+    "strategy_traversal_branch_visits_included": false
+  },
+  "operational_cost_metrics": {
+    "full_training_seconds_per_root": "all worker wall-clock training time through final required AveragePolicy fit divided by completed roots; retained as operational diagnostic, not substituted for tree_seconds_per_root in R7.5.4 rank-5 tree-cost cascade",
+    "iteration_checkpoint_to_checkpoint_seconds": "full iteration wall-clock duration including traversal, four exact Advantage member fits and durable checkpoint write where measured by the production calibration harness",
+    "r8_90_day_source_of_truth": "validation/R8_TRAINABILITY_TIME_BUDGET_CONTRACT_20260814.json",
+    "rule": "R7.5.4 relative tree-cost selection cannot certify the absolute 90-day production budget. R8 uses mature/worst-case complete-iteration physical timings plus all frozen non-iteration training/freeze work."
+  },
+  "fairness": {
+    "same_measurement_code_all_candidates": true,
+    "same_thread_contract_all_candidates": true,
+    "same_root_budget_all_candidates_at_same_level": true,
+    "telemetry_must_not_change_policy_rng_or_child_creation": true,
+    "effective_branch_count_uses_authoritative_post_dedup_legal_set": true
+  },
+  "strategic_gate_changed": false,
+  "candidate_set_changed": false,
+  "root_budget_changed": false,
+  "material_effect_floor_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
