@@ -1,0 +1,157 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_EVALUATION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_PHASE2_STRATEGIC_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "inherits": [
+    "validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json",
+    "validation/R7_5_3C_PHASE2_MODEL_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_TRAINING_FREEZE_20260815.json"
+  ],
+  "representations": [
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+  ],
+  "training_seeds": [1342191342, 1801739323],
+  "evaluation_seeds": [2029384436, 1150634112],
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "action_candidate": "PF0_CONTROL_33_75_AI",
+  "state_generation": {
+    "candidate_independent": true,
+    "training_seed_independent": true,
+    "state_policy": "uniform over state-local deduplicated PF0 effective legal actions",
+    "scenario_cycle": "exact R7.4 domain scenario cycle; hand_index modulo scenario_count",
+    "deck_seed_key": ["SpinCore", "R7.5.3C", "PHASE2", "heldout", "domain", "evaluation_seed", "hand_index", "deck"],
+    "policy_uniform_key": ["SpinCore", "R7.5.3C", "PHASE2", "heldout", "domain", "evaluation_seed", "hand_index", "physical_seat", "seat_decision_ordinal"],
+    "candidate_or_training_seed_in_rng_key": false,
+    "heldout_states_per_domain_evaluation_seed": 2048,
+    "collection": "Start fresh exact hands and follow candidate-independent uniform PF0 using keyed uniforms until exactly 2048 nonterminal decision states are retained; truncate only the final hand prefix needed to hit 2048.",
+    "replay_descriptor": [
+      "domain",
+      "evaluation_seed",
+      "state_index",
+      "hand_index",
+      "scenario_index",
+      "deck_seed",
+      "ordered effective universal slot path from root to state",
+      "actor",
+      "SPNNIV3 bytes",
+      "PF0 active mask",
+      "state-local deduplicated PF0 legal slots"
+    ],
+    "replay_must_reproduce_byte_identical_SPINNIV3": true
+  },
+  "cross_seed_policy_stability": {
+    "states": "first 1024 heldout states for each domain/evaluation_seed, identical for both training-seed models",
+    "metric": "total variation distance between the two final AveragePolicy distributions of the same representation on identical SPNNIV3/legal-mask states",
+    "aggregate": "all two evaluation_seed cells per domain; report cell and pooled mean/p50/p95/max",
+    "gates": {"mean_tv_max": 0.15, "p95_tv_max": 0.35}
+  },
+  "local_deviation_proxy": {
+    "name": "ONE_STEP_SELF_CONTINUATION_DEVIATION_GAIN",
+    "states": "first 1024 heldout states per domain/evaluation_seed",
+    "utility": "ICM_EXACT_V1 payout delta for actor at heldout state",
+    "root_action_set": "all state-local deduplicated PF0 exact actions available at the heldout state",
+    "candidate_policy_value": "sum over root actions of candidate AveragePolicy probability times Q(candidate, root_action)",
+    "best_local_value": "max Q(candidate, root_action)",
+    "per_state_gain": "best_local_value - candidate_policy_value; nonnegative up to floating tolerance",
+    "continuation": {
+      "all_future_players_use": "same candidate final AveragePolicy being evaluated",
+      "target_player_future_nodes": "enumerate all effective PF0 actions and probability-weight by candidate AveragePolicy",
+      "opponent_nodes_first_exact_levels": 2,
+      "opponent_nodes_after_exact_levels": "sample one PF0 action from candidate AveragePolicy",
+      "chance": "already fixed by exact replayed hand/deck state",
+      "sample_writes": false,
+      "continuation_uniform_key": ["SpinCore", "R7.5.3C", "PHASE2", "localdev", "domain", "evaluation_seed", "state_index", "exact_action_type", "amount_to", "opponent_sample_ordinal"],
+      "candidate_id_in_uniform_key": false,
+      "common_random_numbers": true
+    },
+    "interpretation": "Lower is better. This is a candidate-native one-step deviation/convergence proxy, not exact exploitability.",
+    "bootstrap": {
+      "replicates": 2000,
+      "confidence_level": 0.95,
+      "unit": "paired heldout state",
+      "material_effect_floor_icm": 0.001,
+      "seed_key": ["SpinCore", "R7.5.3C", "PHASE2", "bootstrap", "localdev", "domain", "evaluation_seed", "lexically_ordered_representation_pair"]
+    }
+  },
+  "common_reference_crossplay": {
+    "reference": "candidate-independent uniform-over-effective-PF0 policy for every seat",
+    "candidate_test": "one physical seat uses candidate final AveragePolicy; all other seats use uniform PF0",
+    "same_exact_hand_and_common_policy_uniforms_vs_reference": true,
+    "candidate_id_in_rng_key": false,
+    "true_heads_up": {
+      "hands_per_evaluation_seed_per_candidate_seat": 20000,
+      "candidate_seats": "both live physical seats"
+    },
+    "three_handed": {
+      "hands_per_evaluation_seed_per_candidate_seat": 10000,
+      "candidate_seats": [0, 1, 2]
+    },
+    "score": "candidate-seat terminal ICM delta in candidate test minus same physical seat terminal ICM delta in all-uniform reference hand",
+    "selection_role": "diagnostic/sanity only; exploitation of a uniform opponent is not an equilibrium-quality winner criterion",
+    "bootstrap": {"replicates": 2000, "confidence_level": 0.95}
+  },
+  "pairwise_H2_H3_crossplay": {
+    "training_seed_pairs": "all 2x2 H2-training-seed x H3-training-seed combinations",
+    "evaluation_seeds": [2029384436, 1150634112],
+    "mirrored_seat_test": "For each physical candidate seat and exact hand, run H3 in that seat vs H2 on all other live seats, then H2 in the same seat vs H3 on all other live seats, using the same deck and keyed policy uniforms.",
+    "true_heads_up_hands_per_evaluation_seed_per_seat_seedpair": 20000,
+    "three_handed_hands_per_evaluation_seed_per_seat_seedpair": 10000,
+    "score_H3_perspective": "0.5 * [(H3-seat ICM delta vs H2 opponents) - (H2-seat ICM delta vs H3 opponents)]",
+    "candidate_id_in_rng_key": false,
+    "common_random_numbers": true,
+    "bootstrap": {
+      "replicates": 2000,
+      "confidence_level": 0.95,
+      "material_effect_floor_icm": 0.001,
+      "unit": "paired exact hand/mirrored seat tuple"
+    }
+  },
+  "fixed_sentinels": {
+    "states": "first 256 heldout states per domain/evaluation_seed",
+    "hard_checks": [
+      "finite logits and probabilities",
+      "zero probability on illegal actions after masking",
+      "probabilities sum to one within 1e-7",
+      "at least two distinct policy vectors to 1e-8 among multi-action sentinel states",
+      "SPNNIV3 replay byte identity"
+    ],
+    "no_hand_authored_expected_action": true,
+    "reason": "Sentinels detect collapse/integration errors without injecting human poker intuition into winner selection."
+  },
+  "training_quality_hard_gates": {
+    "every_iteration_ensemble_advantage_weighted_nrmse_max": 0.75,
+    "final_policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "all_domains_and_training_seeds_required": true,
+    "failed_cell_may_be_dropped": false
+  },
+  "selection_rule": {
+    "prerequisite": "Candidate must pass structural/resource admission, all training-quality gates, fixed sentinels and both domains.",
+    "primary_comparison": "paired H3-minus-H2 local-deviation gain difference; negative favors H3",
+    "secondary_comparison": "pairwise mirrored H3-vs-H2 crossplay score; positive favors H3",
+    "material_floor_icm": 0.001,
+    "clear_H3": "local-deviation 95% CI is materially below zero and pairwise crossplay is not materially H2-favoring, OR pairwise crossplay is materially H3-favoring and local-deviation is not materially H2-favoring",
+    "clear_H2": "local-deviation 95% CI is materially above zero and pairwise crossplay is not materially H3-favoring, OR pairwise crossplay is materially H2-favoring and local-deviation is not materially H3-favoring",
+    "conflict": "If one primary metric materially favors H2 and the other materially favors H3, Phase 2 is INCONCLUSIVE/BLOCKED for representation selection; do not average away the conflict.",
+    "one_candidate_fails_hard_gate": "The passing candidate may advance only if no pairwise strategic metric materially favors the failed candidate; otherwise BLOCKED for diagnosis.",
+    "both_pass_and_both_material_comparisons_inconclusive": "Select H2 as the smaller/faster Phase-2 representation tie-break, exactly following the precommit. H3 remains eligible for the separately precommitted H4 capacity-reinvestment experiment if its structural/resource/training gates passed.",
+    "common_reference_crossplay_selects_winner": false,
+    "proxy_called_exact_exploitability": false
+  },
+  "forbidden": [
+    "generate heldout states from H2 or H3 policy",
+    "put representation or training-seed identity into poker-state/deal/policy-uniform RNG keys",
+    "reuse training seeds as evaluation seeds",
+    "drop a bad domain/seed/evaluation cell",
+    "change heldout counts, crossplay hands, bootstrap replicates, material floor or winner logic after outputs",
+    "call local-deviation proxy exact exploitability",
+    "use V1-generated labels or V1 policy as ground-truth referee",
+    "select H3 merely because it is more semantically appealing",
+    "select H2 merely because it is faster if a strategic metric materially favors H3"
+  ],
+  "strategic_output_seen_before_freeze": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
