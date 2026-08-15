@@ -1,0 +1,61 @@
+{
+  "schema": "SPINCORE_R7_5_3C_STABILITY_REMEDIATION_DECISION_TREE_PRECOMMIT_V1",
+  "date": "2026-08-15",
+  "status": "FROZEN_WHILE_POLICY_REFIT_DECOMPOSITION_IS_RUNNING",
+  "purpose": "Precommit the interpretation and next-step routing for the already-running winner-independent policy-refit stability decomposition before its aggregate result is available. This file does not select H2 or H3 and does not change any frozen Phase2 gate.",
+  "running_diagnostic": {
+    "run_id": 31896651181,
+    "execution_sha": "7e4b07214032eed004f5ab214f428250e108a877",
+    "expected_refit_cells": 16,
+    "current_role": "ROOT_CAUSE_DIAGNOSTIC_ONLY"
+  },
+  "frozen_phase2_cross_seed_gates": {
+    "mean_tv_max": 0.15,
+    "p95_tv_max": 0.35,
+    "must_not_be_relaxed_post_hoc": true
+  },
+  "interpretation_axes": {
+    "learner_axis": "SAME_FROZEN_STRATEGY_MEMORY_DIFFERENT_FINAL_POLICY_LEARNER_SEED",
+    "upstream_axis": "DIFFERENT_FROZEN_STRATEGY_MEMORY_COMMON_FINAL_POLICY_LEARNER_SEED",
+    "threshold_usage": "The existing Phase2 0.15/0.35 values may be shown as reference thresholds in this diagnostic only. They are not a new H2/H3 selection gate."
+  },
+  "routing": [
+    {
+      "case": "LEARNER_SENSITIVITY_LARGE_UPSTREAM_SENSITIVITY_SMALL",
+      "meaning": "A material portion of the original cross-seed divergence is created during final AveragePolicy fitting even on identical frozen strategy memory.",
+      "next_required_work": "Freeze and run a winner-independent AveragePolicy stabilization experiment that isolates initialization, minibatch ordering and optimization convergence. Do not rerun H2-vs-H3 strategic selection until a stabilized training protocol is frozen and independently rerun.",
+      "forbidden_shortcut": "Do not choose whichever of H2/H3 happened to have lower diagnostic TV."
+    },
+    {
+      "case": "LEARNER_SENSITIVITY_SMALL_UPSTREAM_SENSITIVITY_LARGE",
+      "meaning": "The divergence is already present in the strategy memories generated before final AveragePolicy fitting.",
+      "next_required_work": "Freeze a winner-independent upstream randomness decomposition. At minimum separate deal/traversal sampling from model initialization/batch randomness and include exact same-seed determinism controls. Do not change the original Phase2 gates.",
+      "forbidden_shortcut": "Do not compensate by merely increasing final-policy optimizer steps."
+    },
+    {
+      "case": "BOTH_LEARNER_AND_UPSTREAM_SENSITIVITY_LARGE",
+      "meaning": "Both the upstream Deep-CFR path and the final AveragePolicy fit materially contribute to instability.",
+      "next_required_work": "Stabilize and validate the final AveragePolicy learner first because it can be isolated on immutable memories, then decompose and stabilize the upstream path. Afterwards rerun the full independent-seed Phase2 stability gate.",
+      "forbidden_shortcut": "Do not average the two problems away with an ensemble and call the original gate passed unless an ensemble production protocol is separately precommitted and fully rerun."
+    },
+    {
+      "case": "BOTH_DIAGNOSTIC_AXES_SMALL_BUT_ORIGINAL_CROSS_SEED_REMAINS_LARGE",
+      "meaning": "The simple decomposition does not reproduce the original instability source; an interaction, continuation-state, checkpoint, or training-sequence effect remains.",
+      "next_required_work": "Freeze a full-path exact-rerun/determinism audit and compare original checkpoints, memory identities, optimizer/RNG states and continuation sequence before proposing any training change.",
+      "forbidden_shortcut": "Do not declare the original blocker spurious."
+    }
+  ],
+  "path_to_h2_h3_decision": [
+    "Complete the current 16-cell decomposition and persist its aggregate result.",
+    "Follow exactly the matching root-cause routing branch above and freeze the remediation protocol before its outputs.",
+    "Demonstrate that the resulting full training pipeline is stable across independent training seeds under the unchanged Phase2 cross-seed gates in both TRUE_HEADS_UP and THREE_HANDED.",
+    "Only after hard-gate admission, reapply the already-frozen H2-vs-H3 strategic selection rule: local-deviation proxy primary, mirrored pairwise crossplay secondary, material floor 0.001 ICM, with no common-reference winner role.",
+    "If both candidates pass all hard gates and the strategic comparisons remain materially inconclusive, select H2 by the already-frozen smaller/faster tie-break."
+  ],
+  "representation_winner": null,
+  "h4_authorized": false,
+  "r7_5_4_spnniv3_action_sizing_revalidation_authorized": false,
+  "r8_authorized": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
