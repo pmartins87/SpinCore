@@ -1,0 +1,114 @@
+{
+  "schema": "SPINCORE_R7_5_4_SPNNIV3_ACTION_SIZING_TRANSFER_PRECOMMIT_V1",
+  "date": "2026-08-15",
+  "status": "FROZEN_BEFORE_PHASE2_STRATEGIC_AGGREGATE_OUTPUT",
+  "purpose": "Bind how the historical R7.5.4 action/sizing evidence may be transferred to the SPNNIV3 H2/H3 representation program before the H2-vs-H3 strategic winner is known.",
+  "phase2_strategic_aggregate_result_seen_before_freeze": false,
+  "phase2_winner_known_before_freeze": false,
+  "historical_provenance": {
+    "source_audit_commit": "24bdf99aab286eb0a7ba1997502370d206a0eb5a",
+    "source_audit_file": "validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md",
+    "historical_action_protocol": [
+      "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT.json",
+      "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V2.json",
+      "validation/R7_5_4_ACTION_ABSTRACTION_ABLATION_PRECOMMIT_V3.json",
+      "validation/R7_5_4_REFEREE_EVALUATION_SEMANTIC_FREEZE_20260814.json",
+      "validation/R7_5_4_SELECTION_AGGREGATION_SEMANTIC_FREEZE_20260814.json"
+    ],
+    "binding_finding": "Historical R7.5.4 strategic action-abstraction evidence was generated under the then-selected R7.5.3 neural representation and therefore is not, by itself, strategic sufficiency evidence for SPNNIV3 H2 or H3.",
+    "reusable_without_new_strategic_claim": [
+      "exact no-limit betting engine semantics",
+      "universal action primitive definitions",
+      "state-local exact-action deduplication rule",
+      "candidate identities",
+      "V2 llround sizing semantics",
+      "V3 seed derivation",
+      "learning-quality thresholds",
+      "referee/crossplay metric definitions",
+      "160/320/640 escalation and conservative selection semantics"
+    ]
+  },
+  "phase2_fixed_control": {
+    "preflop": ["MIN_RAISE", "ALL_IN"],
+    "postflop": ["POT_33", "POT_75", "ALL_IN"],
+    "meaning": "This is the fixed action abstraction under which H2-vs-H3 Phase2 representation selection is evaluated. Phase2 does not establish global action-abstraction optimality."
+  },
+  "winner_independent_transfer_rule": {
+    "provisional_representation": "Whichever of H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL or H3_HYBRID_EXACT_SEMANTIC_FINAL is selected by the already-frozen Phase2 representation protocol; BLOCKED remains BLOCKED.",
+    "no_protocol_choice_after_winner": true,
+    "structural_transfer_gate_required": true,
+    "strategic_action_revalidation_required": true,
+    "historical_action_result_may_not_be_relabelled_as_spnniv3_result": true
+  },
+  "structural_transfer_gate": {
+    "scope": [
+      "C++ exact legal action set -> universal resolver/dedup -> collector -> reservoir target -> neural action slot/mask -> AveragePolicy -> runtime action identity",
+      "exact raise-to and call-chip geometry parity",
+      "no duplicate exact action aliases after resolution",
+      "all-in and minimum-raise identity",
+      "C++/Python action-mask and action-slot parity",
+      "TRUE_HEADS_UP absent-seat geometry",
+      "THREE_HANDED geometry",
+      "structured histories beyond 32 events"
+    ],
+    "hard_requirements": {
+      "illegal_exact_action_count": 0,
+      "duplicate_exact_neural_action_count": 0,
+      "cxx_python_slot_or_mask_mismatch_count": 0,
+      "runtime_training_action_identity_mismatch_count": 0,
+      "nonfinite_action_geometry_count": 0
+    },
+    "meaning": "Passing this gate proves representation/action plumbing compatibility only; it does not prove 33/75/AI is strategically sufficient."
+  },
+  "strategic_revalidation": {
+    "inheritance_rule": "Re-run the historical R7.5.4A then R7.5.4B protocol under the provisional SPNNIV3 representation without changing candidate set, metric direction, thresholds, roots, seeds, bootstrap counts, dense-referee role, or selection cascade.",
+    "postflop_candidates": [
+      "PF0_CONTROL_33_75_AI",
+      "PF1_33_50_75_AI",
+      "PF2_33_50_75_100_AI",
+      "PF3_COMPACT_33_66_100_AI",
+      "PF4_CRUSHER_COMPACT_40_66_100_AI",
+      "PF_DENSE_REFERENCE"
+    ],
+    "dense_reference_eligible_to_win": false,
+    "preflop_candidates": [
+      "PR0_CONTROL_MIN_AI",
+      "PR1_MIN_75_AI",
+      "PR2_MIN_50_75_AI",
+      "PR3_MIN_75_100_AI",
+      "PR4_MIN_50_75_100_AI"
+    ],
+    "postflop_training_seeds": [1737995611, 645939859, 1311335590],
+    "preflop_training_seeds": [687339791, 1390820010, 700916856],
+    "paired_evaluation_seeds": [1817694185, 1617273629],
+    "root_levels": [160, 320, 640],
+    "hard_learning_thresholds": {
+      "advantage_nrmse_max": 0.75,
+      "policy_tv_max": 0.12,
+      "cross_seed_mean_tv_max": 0.15,
+      "cross_seed_p95_tv_max": 0.35
+    },
+    "material_effect_floor_icm": 0.001,
+    "paired_bootstrap_replicates": 2000,
+    "confidence": 0.95
+  },
+  "representation_action_interaction_rule": {
+    "if_final_action_selection_equals_phase2_control": "The Phase2 H2-vs-H3 representation comparison remains action-compatible, subject to all other admission gates.",
+    "if_postflop_or_preflop_selection_changes": "Reopen representation admission and repeat the frozen H2-vs-H3 strategic comparison under the newly selected action abstraction before any production representation freeze.",
+    "reason": "A representation winner measured under PF0/PR0 cannot be assumed invariant to a materially changed action space."
+  },
+  "forbidden_after_output_changes": [
+    "candidate additions or removals",
+    "seed replacement or seed shopping",
+    "threshold relaxation",
+    "root-budget changes",
+    "metric-direction changes",
+    "bootstrap-count changes",
+    "dense-referee promotion to winner eligibility",
+    "skipping required HU or 3H evidence",
+    "using the eventual H2/H3 winner to tailor the action protocol"
+  ],
+  "production_training_authorized": false,
+  "r8_authorized": false,
+  "ready_for_tables": false
+}
