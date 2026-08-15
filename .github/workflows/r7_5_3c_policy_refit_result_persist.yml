@@ -98,7 +98,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT_20260815.json validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_EVIDENCE_20260815.json
+          git add -f validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT_20260815.json validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_EVIDENCE_20260815.json
           git diff --cached --quiet && exit 0
           git commit -m 'R7.5.3C: persist policy-refit decomposition result'
           git push origin HEAD:main
