@@ -1,0 +1,107 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_EVALUATOR_IMPLEMENTATION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_PHASE2_EVALUATION_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "training_run": {
+    "run_id": 31865993350,
+    "execution_sha": "9b0ccc207135c3adaec76ea87de8ec21f7415957",
+    "required_final_cells": 8,
+    "must_complete_successfully_before_evaluation": true
+  },
+  "heldout_run": {
+    "run_id": 31866538984,
+    "execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+    "required_cells": 4,
+    "states_per_cell": 2048,
+    "must_use_existing_frozen_artifacts": true
+  },
+  "inherits": [
+    "validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json",
+    "validation/R7_5_3C_PHASE2_MODEL_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_TRAINING_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_RUNNER_IMPLEMENTATION_FREEZE_20260815.json",
+    "validation/R7_5_3C_HELDOUT_GENERATOR_IMPLEMENTATION_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_REFEREE_RNG_NAMESPACE_ADJUDICATION_20260815.json"
+  ],
+  "new_git_blob_freeze": {
+    "tools/r7_5_3c_phase2_extract_final_policies.py": "b2cc858fb1c23b7ea441caece08547515b79cbd1",
+    "tools/r7_5_3c_phase2_eval_worker.py": "293c530e1337ee0c67f6310d4b8285868fcdd106",
+    "tools/r7_5_3c_phase2_eval_aggregate.py": "891cd16e19e485965c1a45a3360470296c06fff2",
+    "validation/R7_5_3C_PHASE2_REFEREE_RNG_NAMESPACE_ADJUDICATION_20260815.json": "da2fba28b496acd099c4d3ff559671afbd1fb8ba",
+    "python/spincore/r7_5_representation_v3_phase2_eval_io.py": "feb80fa2d5462c8e3c23e072565ce3ffcc97dd66",
+    "python/spincore/r7_5_representation_v3_phase2_eval_strategic.py": "0b731a7a9f22b89fb3e1b208c1fb467abbfb9d06",
+    "tools/r7_5_3c_phase2_eval_matrix.py": "276089aa337e6c83d0e8fe347cfb029db9404784",
+    ".github/workflows/r7_5_3c_phase2_evaluation.yml": "fe16d70c5665e8f24be8b459f082453446b0137f"
+  },
+  "inherited_evaluator_blob_freeze": {
+    "python/spincore/r7_5_representation_v3_phase2_eval.py": "30624246d0c3846ecb31b90cdeb442e693265573",
+    "python/spincore/r7_5_representation_v3_final_policy.py": "c902e2cd804609b2ccd9cd3045e79747ca95a192",
+    "python/spincore/r7_5_representation_v3_local_deviation.py": "6e00a200c396fd7b5c22a6c02376c23b55a4ca69",
+    "python/spincore/r7_5_representation_v3_crossplay.py": "c9195ad99dd6de3ae25c922f534c25f5828d6c31",
+    "python/spincore/r7_5_representation_v3_referee_rng.py": "672f5686daa49385ef4ecf57ffc0713d8b2fee6e",
+    "python/spincore/r7_5_representation_v3_referee_states.py": "b399332f71ddc5ae9cbfa33e01c1b1a31ab28663",
+    "python/spincore/r7_5_representation_v3_referee_artifacts.py": "583c502342490db8ac451aec8c68d030c031f662",
+    "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
+    "python/spincore/r7_5_action_contract.py": "98b1969899ad7bf06e8c3521df798c474480f4cd",
+    "python/spincore/solver.py": "2487428b91e9f4f3a0468bfe04bdddcc9c9f1c37",
+    "python/spincore/solver_v3.py": "b7fe44b7e21236e3e95d6447208c3d500677d92e",
+    "python/spincore_nn/codec_v3.py": "a35f7710f4a79da581dee557f4a327e78e1f6a72"
+  },
+  "evaluation_matrix": {
+    "heldout_cells": 16,
+    "heldout_axes": "2 representations x 2 domains x 2 training seeds x 2 evaluation seeds",
+    "policy_and_local_deviation_states_per_cell": 1024,
+    "sentinel_states_per_cell": 256,
+    "common_reference_cells": 16,
+    "common_reference_hands_per_HU_seat": 20000,
+    "common_reference_hands_per_3H_seat": 10000,
+    "pairwise_cells": 16,
+    "pairwise_axes": "2 domains x 2 evaluation seeds x 2 H2 training seeds x 2 H3 training seeds",
+    "pairwise_hands_per_HU_seat_seedpair": 20000,
+    "pairwise_hands_per_3H_seat_seedpair": 10000,
+    "common_reference_reference_rollouts_reused_across_candidate_seats_per_cell": true
+  },
+  "aggregation_contract": {
+    "training_seed_policy_stability_on_identical_heldout_states": true,
+    "local_deviation_training_seed_values_averaged_per_state_before_bootstrap": true,
+    "pairwise_seedpair_values_averaged_per_exact_hand_and_seat_before_bootstrap": true,
+    "common_reference_training_seed_values_averaged_per_exact_hand_and_seat_before_bootstrap": true,
+    "bootstrap_replicates": 2000,
+    "bootstrap_confidence": 0.95,
+    "material_floor_icm": 0.001,
+    "domain_conflicts_must_block_instead_of_being_averaged_away": true,
+    "common_reference_selects_winner": false,
+    "local_deviation_called_exact_exploitability": false,
+    "winner_logic": "python/spincore/r7_5_representation_v3_phase2_eval.py:resolve_frozen_winner"
+  },
+  "rng_namespace": {
+    "canonical_prefix": "SpinCore|R7.5.3C|PHASE2|REFV1",
+    "logical_evaluation_freeze_keys_are_suffixes_under_prefix": true,
+    "candidate_identity_in_rng_key": false,
+    "representation_identity_in_rng_key": false,
+    "training_seed_identity_in_rng_key": false
+  },
+  "gate_requirements": [
+    "training run 31865993350 completes SUCCESS and its durable inventory has integrity_complete=true with 8/8 final cells",
+    "heldout run 31866538984 existing four corpora are used without regeneration",
+    "all frozen evaluator blobs match git hash-object at evaluator execution SHA",
+    "full C++ and Python regression passes at evaluator execution SHA",
+    "exact 16 heldout, 16 common-reference and 16 pairwise evaluation cells are present",
+    "all training hard gates are recomputed from final reports plus fixed sentinels and cross-seed policy stability",
+    "no bad seed/domain/cell is dropped",
+    "selection follows only the already-frozen H2/H3 rule"
+  ],
+  "forbidden": [
+    "adapt any gate, count, bootstrap setting, material floor or winner logic after Phase2 evaluation outputs",
+    "put representation or training-seed identity into referee RNG keys",
+    "regenerate heldout states from H2 or H3 policy",
+    "drop a failed seed/domain/evaluation cell",
+    "use common-reference crossplay as winner criterion",
+    "call the local-deviation proxy exact exploitability",
+    "authorize R8 production training or table use from evaluator completion alone"
+  ],
+  "phase2_evaluation_output_seen_before_freeze": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}

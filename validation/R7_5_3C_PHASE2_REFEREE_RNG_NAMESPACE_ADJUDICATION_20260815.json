@@ -1,0 +1,43 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_REFEREE_RNG_NAMESPACE_ADJUDICATION_V1",
+  "status": "ADJUDICATED_BEFORE_PHASE2_EVALUATION_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "evaluation_freeze": "validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json",
+  "heldout_generator_freeze": "validation/R7_5_3C_HELDOUT_GENERATOR_IMPLEMENTATION_FREEZE_20260815.json",
+  "finding": {
+    "type": "LITERAL_NAMESPACE_PREFIX_OMISSION_IN_PROTOCOL_PROSE",
+    "protocol_key_examples_begin_with": ["SpinCore", "R7.5.3C", "PHASE2"],
+    "frozen_referee_implementation_prefix": "SpinCore|R7.5.3C|PHASE2|REFV1",
+    "implementation_blob": "672f5686daa49385ef4ecf57ffc0713d8b2fee6e",
+    "effect": "The arrays written in the evaluation freeze are adjudicated as logical key suffixes under the already-frozen REFV1 namespace. The constant REFV1 component is not candidate identity, representation identity, training-seed identity, evaluation outcome, or any other adaptive field."
+  },
+  "why_no_reseed": [
+    "The referee RNG implementation was frozen before heldout corpus outputs.",
+    "All four heldout corpora were generated and byte-identically replayed under REFV1.",
+    "Changing the prefix now would silently replace the precommitted heldout deals and walks with different samples.",
+    "The constant REFV1 namespace is shared identically by H2 and H3 and contains neither representation nor training-seed identity."
+  ],
+  "binding_interpretation": {
+    "canonical_prefix": "SpinCore|R7.5.3C|PHASE2|REFV1",
+    "heldout_suffix": ["heldout", "domain", "evaluation_seed", "hand_index", "deck_or_actor_fields"],
+    "local_deviation_suffix": ["localdev", "domain", "evaluation_seed", "state_index", "exact_action_type", "amount_to", "opponent_sample_ordinal"],
+    "crossplay_suffix_scopes": ["commonref", "pairwise"],
+    "candidate_identity_in_rng_key": false,
+    "representation_identity_in_rng_key": false,
+    "training_seed_identity_in_rng_key": false,
+    "evaluation_seed_identity_in_rng_key": true,
+    "common_random_numbers_preserved": true
+  },
+  "forbidden": [
+    "remove or rename REFV1 for the current frozen Phase2 evaluation",
+    "regenerate heldout corpora because of this prose discrepancy",
+    "add H2/H3 identity or training-seed identity to referee RNG keys",
+    "change heldout counts, crossplay hand counts, bootstrap replicates, material floor, hard gates, or winner logic",
+    "use this adjudication to authorize production or table use"
+  ],
+  "phase2_evaluation_output_seen_before_adjudication": false,
+  "training_outputs_may_exist_but_were_not_used_to_choose_this_namespace": true,
+  "selection_rule_changed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}

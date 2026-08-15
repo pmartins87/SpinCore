@@ -1,0 +1,211 @@
+name: SpinCore R7.5.3C Phase 2 strategic evaluation
+on:
+  push:
+    paths: ['.github/workflows/r7_5_3c_phase2_evaluation.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: spincore-r7-5-3c-phase2-strategic-evaluation
+  cancel-in-progress: false
+env:
+  TRAINING_RUN_ID: '31865993350'
+  TRAINING_SHA: '9b0ccc207135c3adaec76ea87de8ec21f7415957'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.sha }}'}
+      - id: freeze
+        env: {PYTHONPATH: '${{ github.workspace }}/python:${{ github.workspace }}/tools'}
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"; test "$execution_sha" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          f=json.loads(Path('validation/R7_5_3C_PHASE2_EVALUATOR_IMPLEMENTATION_FREEZE_20260815.json').read_text())
+          a=json.loads(Path('validation/R7_5_3C_PHASE2_REFEREE_RNG_NAMESPACE_ADJUDICATION_20260815.json').read_text())
+          e=json.loads(Path('validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json').read_text())
+          h=json.loads(Path('validation/R7_5_3C_HELDOUT_GENERATOR_IMPLEMENTATION_FREEZE_20260815.json').read_text())
+          r=json.loads(Path('validation/R7_5_3C_PHASE2_RUNNER_IMPLEMENTATION_FREEZE_20260815.json').read_text())
+          assert f['status']=='FROZEN_BEFORE_PHASE2_EVALUATION_OUTPUTS' and f['phase2_evaluation_output_seen_before_freeze'] is False
+          assert f['training_run']['run_id']==31865993350 and f['training_run']['execution_sha']=='9b0ccc207135c3adaec76ea87de8ec21f7415957'
+          assert f['heldout_run']['run_id']==31866538984 and f['heldout_run']['execution_sha']=='dfe5f83742495a457e92b29f97db5d3b631bca22'
+          assert a['status']=='ADJUDICATED_BEFORE_PHASE2_EVALUATION_OUTPUTS'
+          assert a['binding_interpretation']['canonical_prefix']=='SpinCore|R7.5.3C|PHASE2|REFV1'
+          assert not a['binding_interpretation']['representation_identity_in_rng_key'] and not a['binding_interpretation']['training_seed_identity_in_rng_key']
+          assert e['strategic_output_seen_before_freeze'] is False and h['heldout_corpus_output_seen_before_freeze'] is False and r['strategic_output_seen_before_freeze'] is False
+          for table in ('new_git_blob_freeze','inherited_evaluator_blob_freeze'):
+              for path, expected in f[table].items():
+                  actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+                  assert actual==expected, (path,actual,expected)
+          for path in h['authoritative_engine_blobs_inherited_from_training_runner_freeze']:
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==r['git_blob_freeze'][path], path
+          assert not f['production_training_authorized'] and not f['ready_for_tables']
+          PY
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11.15'}
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          PYTHONPATH="$PWD/python:$PWD/tools" python -m compileall -q python tools python_tests
+          PYTHONPATH="$PWD/python:$PWD/tools" pytest -q python_tests
+      - name: Wait for frozen training run
+        env: {GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 300); do
+            row="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$TRAINING_RUN_ID" --jq '[.head_sha,.status,(.conclusion//"")]|@tsv')"
+            read -r sha status conclusion <<<"$row"; test "$sha" = "$TRAINING_SHA"
+            echo "training status=$status conclusion=$conclusion"
+            if [ "$status" = completed ]; then test "$conclusion" = success; break; fi
+            [ "$i" -lt 300 ] || exit 2; sleep 60
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-p2-training-inventory-${{ env.TRAINING_SHA }}
+          path: training_inventory
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.TRAINING_RUN_ID }}
+      - name: Validate 8-cell training inventory
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=json.loads(next(Path('training_inventory').rglob('R7_5_3C_PHASE2_TRAINING_INVENTORY.json')).read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_PHASE2_TRAINING_INVENTORY_V1' and p['execution_sha']==os.environ['TRAINING_SHA']
+          assert p['expected_cells']==8 and p['observed_cells']==8 and p['integrity_complete'] is True
+          # training_quality_pass is evidence, not an infrastructure prerequisite.
+          print(json.dumps({'training_quality_pass':p.get('training_quality_pass'),'failures':p.get('training_quality_failures')},indent=2))
+          PY
+      - id: matrix
+        env: {PYTHONPATH: '${{ github.workspace }}/python:${{ github.workspace }}/tools'}
+        run: echo "matrix=$(python tools/r7_5_3c_phase2_eval_matrix.py)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-evaluator-solver-${{ steps.freeze.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  extract_policies:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.gate.outputs.execution_sha }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11.15'}
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-p2-final-*-${{ env.TRAINING_SHA }}
+          path: final_checkpoints
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.TRAINING_RUN_ID }}
+      - env: {PYTHONPATH: '${{ github.workspace }}/python:${{ github.workspace }}/tools'}
+        run: python tools/r7_5_3c_phase2_extract_final_policies.py --input-root final_checkpoints --output-root light_policies --training-execution-sha "$TRAINING_SHA"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-light-policies-${{ needs.gate.outputs.execution_sha }}
+          path: light_policies
+          if-no-files-found: error
+          retention-days: 30
+
+  evaluate:
+    needs: [gate, extract_policies]
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.gate.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.gate.outputs.execution_sha }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11.15'}
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with: {name: 'r7-5-3c-p2-evaluator-solver-${{ needs.gate.outputs.execution_sha }}', path: build}
+      - uses: actions/download-artifact@v4
+        with: {name: 'r7-5-3c-p2-light-policies-${{ needs.gate.outputs.execution_sha }}', path: policies}
+      - if: matrix.mode == 'heldout'
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-heldout-${{ matrix.domain }}-${{ matrix.evaluation_seed }}-${{ env.HELDOUT_SHA }}
+          path: heldout_corpus
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail; chmod +x build/libspincore_solver_c.so || true; mkdir -p output
+          base=(--repo-root . --solver build/libspincore_solver_c.so --domain '${{ matrix.domain }}' --evaluation-seed '${{ matrix.evaluation_seed }}' --training-execution-sha "$TRAINING_SHA" --evaluator-execution-sha '${{ needs.gate.outputs.execution_sha }}' --out output/cell.json.gz)
+          if [ '${{ matrix.mode }}' = pairwise ]; then
+            h2="policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__${{ matrix.domain }}__${{ matrix.h2_training_seed }}.pt"
+            h3="policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__${{ matrix.domain }}__${{ matrix.h3_training_seed }}.pt"
+            extra=(--h2-training-seed '${{ matrix.h2_training_seed }}' --h3-training-seed '${{ matrix.h3_training_seed }}' --h2-policy "$h2" --h3-policy "$h3")
+          else
+            policy="policies/${{ matrix.representation }}__${{ matrix.domain }}__${{ matrix.training_seed }}.pt"
+            extra=(--representation '${{ matrix.representation }}' --training-seed '${{ matrix.training_seed }}' --policy "$policy")
+            if [ '${{ matrix.mode }}' = heldout ]; then extra+=(--heldout-file heldout_corpus/states.json.gz --heldout-execution-sha "$HELDOUT_SHA"); fi
+          fi
+          python tools/run_with_heartbeat.py --label 'r7.5.3c-p2-${{ matrix.key }}' --interval-seconds 300 -- python tools/r7_5_3c_phase2_eval_worker.py --mode '${{ matrix.mode }}' "${base[@]}" "${extra[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-eval-${{ matrix.key }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/cell.json.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, evaluate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.gate.outputs.execution_sha }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11.15'}
+      - run: python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'r7-5-3c-p2-eval-*-${{ needs.gate.outputs.execution_sha }}', path: cells}
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-p2-training-inventory-${{ env.TRAINING_SHA }}
+          path: training_inventory
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.TRAINING_RUN_ID }}
+      - env: {PYTHONPATH: '${{ github.workspace }}/python:${{ github.workspace }}/tools'}
+        run: |
+          inventory="$(find training_inventory -name R7_5_3C_PHASE2_TRAINING_INVENTORY.json -type f -print -quit)"; test -n "$inventory"; mkdir -p output
+          python tools/r7_5_3c_phase2_eval_aggregate.py --input-root cells --training-inventory "$inventory" --training-execution-sha "$TRAINING_SHA" --heldout-execution-sha "$HELDOUT_SHA" --evaluator-execution-sha '${{ needs.gate.outputs.execution_sha }}' --out output/R7_5_3C_PHASE2_EVALUATION_RESULT.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-strategic-result-${{ needs.gate.outputs.execution_sha }}
+          path: output/R7_5_3C_PHASE2_EVALUATION_RESULT.json
+          if-no-files-found: error
+          retention-days: 30
