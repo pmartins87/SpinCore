@@ -1,0 +1,70 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_V2",
+  "date": "2026-08-15",
+  "status": "FROZEN_AFTER_RECOVERY_INFRA_FAILURE_BEFORE_ANY_PHASE2_STRATEGIC_AGGREGATE_OUTPUT",
+  "inherits": "validation/R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_20260815.json",
+  "purpose": "Correct only the recovery-only immutable-input identity audit after recovery attempt 1 failed before the frozen strategic aggregator executed.",
+  "strategic_aggregate_result_seen_before_v2_freeze": false,
+  "h2_h3_winner_known_before_v2_freeze": false,
+  "failed_recovery_attempt": {
+    "run_id": 31894519578,
+    "execution_sha": "12a77f188d54a62585e68144b48abf0b9270a17d",
+    "job_id": 95035643673,
+    "conclusion": "failure",
+    "successful_steps_before_failure": [
+      "recovery adjudication and frozen evaluator blob verification",
+      "original evaluator topology verification",
+      "torch and numpy installation",
+      "download of all 48 original immutable strategic cell artifacts",
+      "download of immutable 8-cell training inventory"
+    ],
+    "failed_step": "Audit downloaded immutable inputs",
+    "observed_failure": "AssertionError: (48, 32)",
+    "failure_before_frozen_aggregator_execution": true,
+    "strategic_result_artifact_emitted": false,
+    "root_cause": "The V1 recovery-only audit guessed that mode/domain/evaluation_seed/representation/training_seed/h2_training_seed/h3_training_seed were all discriminating top-level payload fields. Across the frozen payload schemas this guessed tuple produced only 32 distinct values for 48 valid artifacts. This was an audit-schema assumption, not evidence of duplicated or missing frozen matrix cells."
+  },
+  "independent_evidence_before_v2_freeze": {
+    "original_evaluate_jobs_success": 48,
+    "original_evaluate_jobs_expected": 48,
+    "original_cell_artifacts_present": 48,
+    "original_cell_artifact_names_unique": 48,
+    "original_strategic_aggregate_artifact_present": false,
+    "frozen_matrix_generator_blob": "276089aa337e6c83d0e8fe347cfb029db9404784",
+    "frozen_matrix_generator_contract": "matrix()['include'] contains exactly 48 rows with 48 unique row['key'] values and these keys are exactly the matrix.key strings used in the original artifact names."
+  },
+  "change_scope": {
+    "strategic_worker_cells_rerun": false,
+    "strategic_worker_payloads_changed": false,
+    "training_policies_changed": false,
+    "heldout_corpora_changed": false,
+    "rng_or_seeds_changed": false,
+    "metric_definitions_changed": false,
+    "thresholds_changed": false,
+    "bootstrap_counts_changed": false,
+    "candidate_set_changed": false,
+    "selection_rule_changed": false,
+    "frozen_aggregator_changed": false,
+    "frozen_aggregator_blob": "891cd16e19e485965c1a45a3360470296c06fff2",
+    "only_v2_change": "Replace the invalid payload-field uniqueness heuristic with an exact set comparison between the 48 downloaded artifact directory names and the 48 artifact names mechanically derived from the already-frozen matrix generator row['key'] values."
+  },
+  "retry_input_identity_rule": {
+    "cell_files_required": 48,
+    "artifact_parent_directory_names_required_unique": 48,
+    "expected_name_source": "tools/r7_5_3c_phase2_eval_matrix.py at frozen blob 276089aa337e6c83d0e8fe347cfb029db9404784",
+    "expected_artifact_name_formula": "'r7-5-3c-p2-eval-' + row['key'] + '-' + original_evaluator_execution_sha",
+    "observed_name_set_must_equal_expected_name_set": true,
+    "strategic_payload_may_be_opened_by_recovery_identity_audit": false,
+    "training_inventory_exact_8_cell_integrity_still_required": true
+  },
+  "recovery_workflow": ".github/workflows/r7_5_3c_phase2_aggregate_recovery.yml",
+  "recovery_workflow_git_blob": "f22326223171b786341125d287d6a36786c25a9c",
+  "anti_posthoc": {
+    "spnniv3_action_sizing_transfer_precommit_already_frozen": "validation/R7_5_4_SPNNIV3_ACTION_SIZING_TRANSFER_PRECOMMIT_20260815.json",
+    "no_h2_h3_strategic_metric_seen": true,
+    "no_h2_h3_winner_seen": true
+  },
+  "production_training_authorized": false,
+  "r8_authorized": false,
+  "ready_for_tables": false
+}

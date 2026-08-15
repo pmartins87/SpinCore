@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/r7_5_3c_phase2_aggregate_recovery.yml'
-      - 'validation/R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_20260815.json'
+      - 'validation/R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_V2_20260815.json'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,8 @@ env:
   ORIGINAL_EVALUATOR_RUN_ID: '31887392458'
   ORIGINAL_EVALUATOR_SHA: 'e887564834df01b1d024fede9b89e678528f9ecf'
   ORIGINAL_AGGREGATE_JOB_ID: '95030848472'
+  FAILED_RECOVERY_RUN_ID: '31894519578'
+  FAILED_RECOVERY_JOB_ID: '95035643673'
   TRAINING_RUN_ID: '31865993350'
   TRAINING_SHA: '9b0ccc207135c3adaec76ea87de8ec21f7415957'
   HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
@@ -34,7 +36,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - name: Verify recovery adjudication and frozen evaluator blobs
+      - name: Verify recovery adjudications and frozen evaluator blobs
         shell: bash
         run: |
           set -euo pipefail
@@ -42,26 +44,32 @@ jobs:
           python - <<'PY'
           import json, subprocess
           from pathlib import Path
-          p=json.loads(Path('validation/R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_20260815.json').read_text())
-          assert p['schema']=='SPINCORE_R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_V1'
-          assert p['status']=='FROZEN_BEFORE_ANY_PHASE2_STRATEGIC_AGGREGATE_OUTPUT'
-          assert p['strategic_aggregate_result_seen_before_freeze'] is False
-          assert p['h2_h3_winner_known_before_freeze'] is False
-          assert p['original_evaluator']['run_id']==31887392458
-          assert p['original_evaluator']['execution_sha']=='e887564834df01b1d024fede9b89e678528f9ecf'
-          assert p['original_evaluator']['aggregate_job_id']==95030848472
-          assert p['recovery_contract']['rerun_strategic_worker_cells'] is False
-          assert p['recovery_contract']['expected_worker_cell_artifacts']==48
-          assert p['recovery_contract']['aggregator_logic_may_change'] is False
-          actual=subprocess.check_output(['git','hash-object','tools/r7_5_3c_phase2_eval_aggregate.py'],text=True).strip()
-          assert actual=='891cd16e19e485965c1a45a3360470296c06fff2',(actual,p['frozen_aggregator_blob'])
+          v1=json.loads(Path('validation/R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_20260815.json').read_text())
+          v2=json.loads(Path('validation/R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_V2_20260815.json').read_text())
+          assert v1['schema']=='SPINCORE_R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_V1'
+          assert v1['status']=='FROZEN_BEFORE_ANY_PHASE2_STRATEGIC_AGGREGATE_OUTPUT'
+          assert v1['strategic_aggregate_result_seen_before_freeze'] is False
+          assert v1['h2_h3_winner_known_before_freeze'] is False
+          assert v2['schema']=='SPINCORE_R7_5_3C_PHASE2_AGGREGATE_RECOVERY_ADJUDICATION_V2'
+          assert v2['status']=='FROZEN_AFTER_RECOVERY_INFRA_FAILURE_BEFORE_ANY_PHASE2_STRATEGIC_AGGREGATE_OUTPUT'
+          assert v2['strategic_aggregate_result_seen_before_v2_freeze'] is False
+          assert v2['h2_h3_winner_known_before_v2_freeze'] is False
+          assert v2['failed_recovery_attempt']['run_id']==31894519578
+          assert v2['failed_recovery_attempt']['job_id']==95035643673
+          assert v2['failed_recovery_attempt']['failure_before_frozen_aggregator_execution'] is True
+          assert v2['change_scope']['strategic_worker_cells_rerun'] is False
+          assert v2['change_scope']['frozen_aggregator_changed'] is False
+          actual_workflow=subprocess.check_output(['git','hash-object','.github/workflows/r7_5_3c_phase2_aggregate_recovery.yml'],text=True).strip()
+          assert actual_workflow==v2['recovery_workflow_git_blob'],(actual_workflow,v2['recovery_workflow_git_blob'])
+          actual_agg=subprocess.check_output(['git','hash-object','tools/r7_5_3c_phase2_eval_aggregate.py'],text=True).strip()
+          assert actual_agg=='891cd16e19e485965c1a45a3360470296c06fff2'
           f=json.loads(Path('validation/R7_5_3C_PHASE2_EVALUATOR_IMPLEMENTATION_FREEZE_20260815.json').read_text())
           for table in ('new_git_blob_freeze','inherited_evaluator_blob_freeze'):
               for path, expected in f[table].items():
                   got=subprocess.check_output(['git','hash-object',path],text=True).strip()
                   assert got==expected,(path,got,expected)
-          assert p['production_training_authorized'] is False
-          assert p['ready_for_tables'] is False
+          assert v2['production_training_authorized'] is False
+          assert v2['ready_for_tables'] is False
           PY
 
       - name: Verify original run topology before reading any cell
@@ -90,7 +98,7 @@ jobs:
           agg=[x for x in j if x['name']=='aggregate']
           assert len(agg)==1 and agg[0]['id']==int(os.environ['ORIGINAL_AGGREGATE_JOB_ID'])
           assert agg[0]['conclusion']=='failure',agg
-          print('verified 48/48 immutable strategic workers; aggregate alone failed')
+          print('verified 48/48 immutable strategic workers; original aggregate alone failed')
           PY
 
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ORIGINAL_EVALUATOR_RUN_ID/artifacts?per_page=100" > artifacts.json
@@ -100,10 +108,11 @@ jobs:
           suffix='-'+os.environ['ORIGINAL_EVALUATOR_SHA']
           cells=[x for x in a if x['name'].startswith('r7-5-3c-p2-eval-') and x['name'].endswith(suffix)]
           assert len(cells)==48,len(cells)
+          assert len({x['name'] for x in cells})==48
           strategic=[x for x in a if x['name']==f"r7-5-3c-p2-strategic-result-{os.environ['ORIGINAL_EVALUATOR_SHA']}"]
           assert not strategic, strategic
           assert all(not x.get('expired',False) for x in cells)
-          print('verified 48 immutable cell artifacts and no original aggregate result')
+          print('verified 48 uniquely named immutable cell artifacts and no original aggregate result')
           PY
 
       - name: Set up Python
@@ -134,29 +143,36 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ env.TRAINING_RUN_ID }}
 
-      - name: Audit downloaded immutable inputs
+      - name: Audit downloaded immutable inputs against frozen matrix keys
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import gzip, json
+          import json, os
           from pathlib import Path
+          from r7_5_3c_phase2_eval_matrix import matrix
+
           cells=list(Path('cells').rglob('cell.json.gz'))
           assert len(cells)==48,len(cells)
-          keys=[]
-          for p in cells:
-              with gzip.open(p,'rt') as f:
-                  d=json.load(f)
-              keys.append((d.get('mode'),d.get('domain'),d.get('evaluation_seed'),
-                           d.get('representation'),d.get('training_seed'),
-                           d.get('h2_training_seed'),d.get('h3_training_seed')))
-          assert len(set(keys))==48,(len(keys),len(set(keys)))
+          observed={p.parent.name for p in cells}
+          assert len(observed)==48,len(observed)
+
+          rows=matrix()['include']
+          assert len(rows)==48 and len({r['key'] for r in rows})==48
+          expected={f"r7-5-3c-p2-eval-{r['key']}-{os.environ['ORIGINAL_EVALUATOR_SHA']}" for r in rows}
+          assert observed==expected, {
+              'missing': sorted(expected-observed),
+              'unexpected': sorted(observed-expected),
+          }
+
           inv=list(Path('training_inventory').rglob('R7_5_3C_PHASE2_TRAINING_INVENTORY.json'))
           assert len(inv)==1,inv
           q=json.loads(inv[0].read_text())
-          assert q['execution_sha']=='9b0ccc207135c3adaec76ea87de8ec21f7415957'
+          assert q['execution_sha']==os.environ['TRAINING_SHA']
           assert q['expected_cells']==8 and q['observed_cells']==8 and q['integrity_complete'] is True
-          print('download audit: 48 unique cell payloads + exact 8-cell training inventory')
+          print('download audit: exact frozen 48-cell matrix artifact-name set + exact 8-cell training inventory')
           PY
 
       - name: Run unchanged frozen aggregator
@@ -186,16 +202,22 @@ jobs:
           p=Path('output/R7_5_3C_PHASE2_EVALUATION_RESULT.json')
           raw=p.read_bytes()
           lineage={
-            'schema':'SPINCORE_R7_5_3C_PHASE2_AGGREGATE_RECOVERY_LINEAGE_V1',
+            'schema':'SPINCORE_R7_5_3C_PHASE2_AGGREGATE_RECOVERY_LINEAGE_V2',
             'recovery_execution_sha':os.environ['GITHUB_SHA'],
             'original_evaluator_run_id':31887392458,
             'original_evaluator_execution_sha':'e887564834df01b1d024fede9b89e678528f9ecf',
             'original_aggregate_job_id':95030848472,
+            'failed_recovery_run_id':31894519578,
+            'failed_recovery_job_id':95035643673,
             'frozen_aggregator_blob':'891cd16e19e485965c1a45a3360470296c06fff2',
             'strategic_result_sha256':hashlib.sha256(raw).hexdigest(),
             'worker_cells_recomputed':0,
             'worker_cell_artifacts_reused':48,
-            'recovery_change':'aggregate environment now installs frozen torch dependency; strategic algorithm unchanged',
+            'recovery_changes':[
+              'aggregate environment installs frozen torch dependency',
+              'recovery-only input identity audit compares artifact directory names to exact frozen 48-cell matrix keys'
+            ],
+            'strategic_algorithm_changed':False,
             'production_training_authorized':False,
             'ready_for_tables':False
           }
