@@ -1,0 +1,58 @@
+{
+  "schema": "SPINCORE_R7_5_3C_HELDOUT_GENERATOR_IMPLEMENTATION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_HELDOUT_CORPUS_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "evaluation_freeze": "validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json",
+  "training_runner_freeze": "validation/R7_5_3C_PHASE2_RUNNER_IMPLEMENTATION_FREEZE_20260815.json",
+  "corpora": {
+    "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+    "evaluation_seeds": [2029384436, 1150634112],
+    "states_per_cell": 2048,
+    "cells": 4,
+    "action_candidate": "PF0_CONTROL_33_75_AI",
+    "candidate_independent": true,
+    "training_seed_independent": true,
+    "full_replay_of_all_2048_states_required": true,
+    "SPNNIV3_byte_identity_required": true
+  },
+  "new_git_blob_freeze": {
+    "tools/r7_5_3c_generate_heldout_v3.py": "e5caa56647c2ee4572016bdc9ed9b57b88c14a77",
+    "python/spincore/r7_5_representation_v3_referee_rng.py": "672f5686daa49385ef4ecf57ffc0713d8b2fee6e",
+    "python/spincore/r7_5_representation_v3_referee_states.py": "b399332f71ddc5ae9cbfa33e01c1b1a31ab28663",
+    "python/spincore/r7_5_representation_v3_referee_artifacts.py": "583c502342490db8ac451aec8c68d030c031f662",
+    "python/spincore/r7_5_action_scenarios.py": "e3728399ad7db655671e7c5f39c8d681f11f7d54",
+    "python/spincore/r7_5_action_contract.py": "98b1969899ad7bf06e8c3521df798c474480f4cd",
+    "python/spincore/solver.py": "2487428b91e9f4f3a0468bfe04bdddcc9c9f1c37",
+    "python/spincore/solver_v3.py": "b7fe44b7e21236e3e95d6447208c3d500677d92e",
+    "python/spincore_nn/codec_v3.py": "a35f7710f4a79da581dee557f4a327e78e1f6a72"
+  },
+  "authoritative_engine_blobs_inherited_from_training_runner_freeze": [
+    "include/spincore/neural_encoder_v3.hpp",
+    "src/neural_encoder_v3.cpp",
+    "src/action_abstraction_v2.cpp",
+    "src/solver_c_api.cpp"
+  ],
+  "gate_requirements": [
+    "heldout workflow execution SHA equals trigger SHA",
+    "all new_git_blob_freeze values match git hash-object on execution SHA",
+    "all inherited authoritative engine blobs match the pre-training runner freeze",
+    "evaluation freeze remains strategic_output_seen_before_freeze=false",
+    "full C++ and Python regression passes on heldout execution SHA",
+    "all four corpus cells are generated",
+    "every state in every corpus replays to byte-identical SPNNIV3",
+    "artifact state payload hash and compressed artifact SHA256 are recorded"
+  ],
+  "forbidden": [
+    "include representation or training-seed identity in deal or walk RNG keys",
+    "generate heldout states from H2 or H3 policy",
+    "change the 2048-state count after corpus output",
+    "reuse a training seed as evaluation seed",
+    "drop a domain/evaluation-seed cell",
+    "generate on moving main",
+    "authorize production or tables"
+  ],
+  "heldout_corpus_output_seen_before_freeze": false,
+  "strategic_model_output_used_to_design_generator": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
