@@ -1,0 +1,106 @@
+{
+  "schema": "SPINCORE_R7_5_3C_UPSTREAM_RNG_FACTORIAL_FREEZE_V1",
+  "date": "2026-08-15",
+  "status": "FROZEN_BEFORE_UPSTREAM_RNG_FACTORIAL_OUTPUT",
+  "purpose": "Winner-independent diagnosis of the dominant upstream strategy-memory instability observed after the policy-refit decomposition.",
+  "trigger_evidence": {
+    "policy_refit_source_run_id": 31896651181,
+    "policy_refit_recovery_run_id": 31901724211,
+    "policy_refit_result_sha256": "48ffe2a5078c54d54f501d75516df5e015f8f91aa332d15366037801767e862e",
+    "baseline_original_cross_seed_mean_of_mean_tv": 0.2456630229261441,
+    "baseline_original_cross_seed_mean_of_p95_tv": 0.6307145144609116,
+    "same_memory_different_final_learner_mean_of_mean_tv": 0.10724195716765207,
+    "same_memory_different_final_learner_mean_of_p95_tv": 0.28236398336398516,
+    "different_memory_common_final_learner_mean_of_mean_tv": 0.2429767994000996,
+    "different_memory_common_final_learner_mean_of_p95_tv": 0.6236112896588146,
+    "adjudication": "UPSTREAM_STRATEGY_MEMORY_GENERATION_IS_PRIMARY_OBSERVED_SOURCE; final AveragePolicy learner randomness remains nonzero but is secondary."
+  },
+  "factorial": {
+    "representations": [
+      "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+    ],
+    "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+    "sampling_seeds": [1342191342, 1801739323],
+    "learning_memory_seeds": [1342191342, 1801739323],
+    "cells": 16,
+    "phase2_budget_per_cell": {
+      "iterations": 3,
+      "roots_per_iteration": 64,
+      "exact_opponent_levels": 2,
+      "advantage_steps_per_member_per_iteration": 4096,
+      "ensemble_members": 4,
+      "reservoir_capacity": 100000,
+      "batch_size": 256,
+      "learning_rate": 0.001
+    },
+    "sampling_factor_controls": [
+      "exact deck seed schedule",
+      "collector stochastic opponent-action draws after the two exact opponent levels",
+      "collector own-reach strategy-action draws"
+    ],
+    "learning_memory_factor_controls": [
+      "advantage bundle initialization namespace",
+      "per-iteration primary advantage reset seeds",
+      "side-ensemble initialization and batch seeds",
+      "advantage optimizer minibatch RNG",
+      "advantage reservoir replacement RNG",
+      "strategy reservoir replacement RNG"
+    ],
+    "decoupling_note": "Production Phase2 couples collector sampling and optimizer minibatch draws through one batch_rng. This diagnostic intentionally separates those namespaces so the two causal families can be contrasted. The diagnostic is not itself a production-training change.",
+    "collector_rng_initialization": "random.Random(sampling_seed XOR 0xC0FFEE), persisted exactly across staged iterations without optimizer draws advancing it",
+    "deck_seed_function": "unchanged production deck_seed function with sampling_seed substituted for the original coupled training_seed",
+    "learning_runtime_identity": "existing Phase2 checkpoint training_seed field carries learning_memory_seed so all existing advantage/reset/ensemble/reservoir semantics remain intact"
+  },
+  "fixed_final_policy_readout": {
+    "reason": "Do not reintroduce final AveragePolicy learner randomness while measuring upstream strategy-memory differences.",
+    "learner_seed": 1538612375,
+    "learner_seed_derivation": "first four big-endian SHA256 bytes of 'SpinCore|R7.5.3C|UPSTREAM-FACTORIAL|FINAL-POLICY-LEARNER', masked to 31 bits",
+    "policy_steps": 16384,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "same_learner_seed_for_all_16_cells": true,
+    "source_strategy_memory_is_not_mutated": true
+  },
+  "evaluation": {
+    "heldout_run_id": 31866538984,
+    "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+    "evaluation_seeds": [2029384436, 1150634112],
+    "states_per_metric": 1024,
+    "metric": "total variation distance between fixed-final-learner AveragePolicy distributions on identical frozen heldout SPNNIV3 states/legal slots",
+    "contrasts": {
+      "same_sampling_different_learning_memory_seed": "isolates learning/reservoir family while deck/traversal sampling is fixed",
+      "different_sampling_same_learning_memory_seed": "isolates deck/traversal sampling family while learning/reservoir randomness is fixed"
+    },
+    "frozen_phase2_cross_seed_thresholds_reference_only": {
+      "mean_tv_max": 0.15,
+      "p95_tv_max": 0.35,
+      "these_are_new_selection_gates": false
+    },
+    "interpretation": "The larger controlled contrast identifies the more important upstream instability family. No result from this diagnostic may select H2 or H3. If learning/reservoir dominates, split initialization/reset/ensemble from reservoir/minibatch randomness next. If deck/traversal dominates, test controlled/common deal-traversal schedules and/or increased root support before rerunning admission."
+  },
+  "code_blobs": {
+    "tools/r7_5_3c_upstream_rng_factorial_stage_worker.py": "3e009c772d7b645b1cb53898e516904074d178d9",
+    "tools/r7_5_3c_upstream_rng_factorial_final_worker.py": "89f9a406a926fa5d4b026a4f358c753ec15889d5",
+    "tools/r7_5_3c_upstream_rng_factorial_aggregate.py": "d86885e53c5187c8d309d0e8a7450de50466a923"
+  },
+  "inherited_code_blobs": {
+    "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1",
+    "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
+    "python/spincore/r7_5_representation_v3.py": "e69ba053471765315655ecb4723bf0f807cdd9f7",
+    "python/spincore/r7_5_action_cfr.py": "93176165a03c3cc3b5b751bf3365931071302c4a",
+    "python/spincore/r7_5_representation_v3_phase2_eval.py": "30624246d0c3846ecb31b90cdeb442e693265573",
+    "python/spincore/r7_5_representation_v3_referee_artifacts.py": "583c502342490db8ac451aec8c68d030c031f662"
+  },
+  "governance": {
+    "diagnostic_output_seen_before_freeze": false,
+    "diagnostic_only": true,
+    "may_select_h2_or_h3": false,
+    "may_change_phase2_cross_seed_thresholds": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
