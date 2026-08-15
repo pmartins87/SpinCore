@@ -1,0 +1,29 @@
+{
+  "schema": "SPINCORE_R7_5_3C_CROSS_SEED_PARITY_AUDIT_EVIDENCE_V1",
+  "date": "2026-08-15",
+  "status": "PASS",
+  "run_id": 31896188243,
+  "job_id": 95039811465,
+  "execution_sha": "e4eb646ad0f04d38123aeb0e9f4ac44e39af5e21",
+  "artifact_id": 9249859542,
+  "artifact_name": "r7-5-3c-cross-seed-parity-audit-e4eb646ad0f04d38123aeb0e9f4ac44e39af5e21",
+  "artifact_zip_digest": "sha256:ca5b462fdebb466c9134a1861a609eb5d70d3ea343263b91ec0aacebf5ad8a63",
+  "result_path": "validation/R7_5_3C_CROSS_SEED_PARITY_AUDIT_RESULT_20260815.json",
+  "result_sha256": "9a007dcebc6b3acbdfbb8095a723aa93cd81b50405c76396a44ebbb055f4322e",
+  "result_git_blob": "a35bb4d1dd38642c6b422bf4c0300f3b6e35f0e3",
+  "verified_counts": {
+    "heldout_worker_cells": 16,
+    "light_final_average_policies": 8,
+    "heldout_corpora": 4,
+    "cross_seed_rows": 8,
+    "heldout_states_per_row": 1024,
+    "universal_action_width": 10
+  },
+  "max_abs_worker_policy_vs_independent_recompute": 2.7994575357848106e-7,
+  "conclusion": "Cross-seed AvgPolicy TV failures reproduce after independently reloading final AveragePolicy artifacts on the exact same hashed heldout observations and legal slots. This audit found no seed-specific state, legal-mask, universal action-slot, final-policy artifact identity, or worker serialization mismatch.",
+  "implication": "The Phase2 BLOCKED result is not explained by an evaluator alignment bug covered by this audit. The remaining root-cause investigation must target training stability/randomness without relaxing the frozen cross-seed thresholds.",
+  "representation_winner": null,
+  "changes_frozen_thresholds": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}

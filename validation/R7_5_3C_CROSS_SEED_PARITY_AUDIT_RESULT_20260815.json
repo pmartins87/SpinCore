@@ -1,0 +1,266 @@
+{
+  "changes_frozen_thresholds": false,
+  "conclusion": "The observed cross-seed TV failures reproduce from independently reloaded final AveragePolicy artifacts on the exact same hashed heldout observations/legal slots. No seed-specific state, legal-mask, action-slot, policy-artifact identity, or worker serialization mismatch was found by this audit.",
+  "cross_seed_rows_verified": 8,
+  "evaluator_execution_sha": "e887564834df01b1d024fede9b89e678528f9ecf",
+  "heldout_cells_verified": 16,
+  "heldout_corpora_verified": 4,
+  "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+  "light_policies_verified": 8,
+  "max_abs_worker_policy_vs_independent_recompute": 2.7994575357848106e-07,
+  "numerical_tolerances": {
+    "cross_seed_metric_recompute_abs": 5e-06,
+    "policy_recompute_max_abs": 1e-06,
+    "stored_metric_vs_blocker_evidence_abs": 1e-12
+  },
+  "production_training_authorized": false,
+  "purpose": "Independent parity audit of the frozen Phase2 cross-seed policy-stability implementation and artifacts; diagnostic only, never selects a representation.",
+  "ready_for_tables": false,
+  "representation_winner": null,
+  "rows": [
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9700257474841315,
+        "mean": 0.2565324894048132,
+        "mean_tv_max": 0.15,
+        "p50": 0.1940554062736331,
+        "p95": 0.6279997914326061,
+        "p95_tv_max": 0.35
+      },
+      "domain": "TRUE_HEADS_UP",
+      "evaluation_seed": 2029384436,
+      "heldout_first1024_payload_sha256": "88a961ae606bf31c489cf92561b7c557ed1ce21931bd2fdb0feed686cd475419",
+      "legal_slots_first1024_sha256": "6d930186e8370ace2304017f91b2bb8ca643c40e33a2827e68992d3aa7af5c0e",
+      "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__TRUE_HEADS_UP__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 5.0153565855914906e-08,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__TRUE_HEADS_UP__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 4.4378406727219044e-08,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9600371025975308,
+        "mean": 0.23926190887175783,
+        "mean_tv_max": 0.15,
+        "p50": 0.19393798100853854,
+        "p95": 0.6087107979620523,
+        "p95_tv_max": 0.35
+      },
+      "domain": "TRUE_HEADS_UP",
+      "evaluation_seed": 1150634112,
+      "heldout_first1024_payload_sha256": "4a4db62a701b5942f5d84a53066a66c5cd863bba7323874a7ba3ebce17eab88d",
+      "legal_slots_first1024_sha256": "872a3e7878e9a2bf7330257c677ae0214fac30ae5cb2741d91b83077844a4094",
+      "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__TRUE_HEADS_UP__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 2.432139215025053e-07,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__TRUE_HEADS_UP__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 6.38988960632858e-08,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9486438308636105,
+        "mean": 0.24008238515916497,
+        "mean_tv_max": 0.15,
+        "p50": 0.19406587237445944,
+        "p95": 0.6128355116378829,
+        "p95_tv_max": 0.35
+      },
+      "domain": "THREE_HANDED",
+      "evaluation_seed": 2029384436,
+      "heldout_first1024_payload_sha256": "a4dc332f5c8891cacc52cde9a25d70bdf6ceb6a3811b4f52cfa9249cfaea93a5",
+      "legal_slots_first1024_sha256": "8e6837375839e4e4bcf78ba260f7a59e500952fa146a3066bde912818cfa7029",
+      "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__THREE_HANDED__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 1.7881393699070713e-07,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__THREE_HANDED__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 6.148123871119182e-08,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9685021049839933,
+        "mean": 0.25438857798779924,
+        "mean_tv_max": 0.15,
+        "p50": 0.20453717999517895,
+        "p95": 0.6554928152227244,
+        "p95_tv_max": 0.35
+      },
+      "domain": "THREE_HANDED",
+      "evaluation_seed": 1150634112,
+      "heldout_first1024_payload_sha256": "a3d17cf8c0e5e5f980579ee3fac8fb33107423c0b39c562bd8e835d3b2629f81",
+      "legal_slots_first1024_sha256": "ae3589919a3eb0924a09e05a2af526b77ac199c4c13a929e17fdcaff5f484c1a",
+      "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__THREE_HANDED__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 7.989574513089792e-08,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__THREE_HANDED__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 7.836827026208582e-08,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9749264585287469,
+        "mean": 0.2554394010264401,
+        "mean_tv_max": 0.15,
+        "p50": 0.19819588852026654,
+        "p95": 0.6626772373442055,
+        "p95_tv_max": 0.35
+      },
+      "domain": "TRUE_HEADS_UP",
+      "evaluation_seed": 2029384436,
+      "heldout_first1024_payload_sha256": "88a961ae606bf31c489cf92561b7c557ed1ce21931bd2fdb0feed686cd475419",
+      "legal_slots_first1024_sha256": "6d930186e8370ace2304017f91b2bb8ca643c40e33a2827e68992d3aa7af5c0e",
+      "representation": "H3_HYBRID_EXACT_SEMANTIC_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__TRUE_HEADS_UP__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 7.00927872410162e-08,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__TRUE_HEADS_UP__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 1.4571711404176568e-07,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9663691928595886,
+        "mean": 0.238490034426227,
+        "mean_tv_max": 0.15,
+        "p50": 0.1869772824081494,
+        "p95": 0.6020988589045898,
+        "p95_tv_max": 0.35
+      },
+      "domain": "TRUE_HEADS_UP",
+      "evaluation_seed": 1150634112,
+      "heldout_first1024_payload_sha256": "4a4db62a701b5942f5d84a53066a66c5cd863bba7323874a7ba3ebce17eab88d",
+      "legal_slots_first1024_sha256": "872a3e7878e9a2bf7330257c677ae0214fac30ae5cb2741d91b83077844a4094",
+      "representation": "H3_HYBRID_EXACT_SEMANTIC_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__TRUE_HEADS_UP__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 7.579142236036063e-08,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__TRUE_HEADS_UP__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 7.058497863976498e-08,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9762630644269855,
+        "mean": 0.23429120554313637,
+        "mean_tv_max": 0.15,
+        "p50": 0.17923540695761975,
+        "p95": 0.615324364056428,
+        "p95_tv_max": 0.35
+      },
+      "domain": "THREE_HANDED",
+      "evaluation_seed": 2029384436,
+      "heldout_first1024_payload_sha256": "a4dc332f5c8891cacc52cde9a25d70bdf6ceb6a3811b4f52cfa9249cfaea93a5",
+      "legal_slots_first1024_sha256": "8e6837375839e4e4bcf78ba260f7a59e500952fa146a3066bde912818cfa7029",
+      "representation": "H3_HYBRID_EXACT_SEMANTIC_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__THREE_HANDED__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 2.7994575357848106e-07,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__THREE_HANDED__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 0.0,
+          "training_seed": 1801739323
+        }
+      ]
+    },
+    {
+      "action_width": 10,
+      "cross_seed_policy_stability": {
+        "count": 1024,
+        "gate_pass": false,
+        "max": 0.9250866732296898,
+        "mean": 0.24681818098981406,
+        "mean_tv_max": 0.15,
+        "p50": 0.1853977566943242,
+        "p95": 0.6605767391268038,
+        "p95_tv_max": 0.35
+      },
+      "domain": "THREE_HANDED",
+      "evaluation_seed": 1150634112,
+      "heldout_first1024_payload_sha256": "a3d17cf8c0e5e5f980579ee3fac8fb33107423c0b39c562bd8e835d3b2629f81",
+      "legal_slots_first1024_sha256": "ae3589919a3eb0924a09e05a2af526b77ac199c4c13a929e17fdcaff5f484c1a",
+      "representation": "H3_HYBRID_EXACT_SEMANTIC_FINAL",
+      "seed_details": [
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__THREE_HANDED__1342191342.pt",
+          "max_abs_worker_vs_recomputed": 1.0378022263779485e-07,
+          "training_seed": 1342191342
+        },
+        {
+          "artifact_path": "policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__THREE_HANDED__1801739323.pt",
+          "max_abs_worker_vs_recomputed": 7.929024792296957e-08,
+          "training_seed": 1801739323
+        }
+      ]
+    }
+  ],
+  "schema": "SPINCORE_R7_5_3C_CROSS_SEED_PARITY_AUDIT_RESULT_V1",
+  "status": "PASS",
+  "training_execution_sha": "9b0ccc207135c3adaec76ea87de8ec21f7415957",
+  "universal_action_width": 10
+}
