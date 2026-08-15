@@ -1,0 +1,59 @@
+{
+  "schema": "SPINCORE_R7_5_3C_CROSS_SEED_PARITY_AUDIT_ADJUDICATION_V2",
+  "date": "2026-08-15",
+  "status": "FROZEN_AFTER_ATTEMPT1_NUMERIC_FAILURE_BEFORE_ANY_ATTEMPT2_OUTPUT",
+  "inherits": "validation/R7_5_3C_CROSS_SEED_PARITY_AUDIT_FREEZE_20260815.json",
+  "attempt1": {
+    "run_id": 31896022326,
+    "execution_sha": "db90c0dee5aa5c9f4edd1e743ec0a69bc8052c89",
+    "job_id": 95039349086,
+    "conclusion": "failure",
+    "freeze_verification_pass": true,
+    "downloaded_original_heldout_worker_cells": 16,
+    "downloaded_original_light_policy_artifact_id": 9248395890,
+    "downloaded_frozen_heldout_corpora": true,
+    "failure_step": "Run independent parity audit",
+    "failure_before_result_artifact_upload": true,
+    "result_artifact_emitted": false,
+    "observed_failure": {
+      "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "domain": "TRUE_HEADS_UP",
+      "training_seed": 1342191342,
+      "evaluation_seed": 1150634112,
+      "worker_vs_recomputed_max_abs_probability": 2.432139215025053e-7,
+      "attempt1_tolerance": 1e-7
+    },
+    "adjudication": "The failure is a cross-job floating-point recomputation tolerance miss. It is not a strategic gate result and is roughly six orders of magnitude below the observed cross-seed policy-TV means near 0.24-0.26."
+  },
+  "checker_edit_before_this_adjudication_commit": {
+    "commit_sha": "4b97d6e87a498b70fdcacfb830e4fb4079effc65",
+    "checker_path": "tools/r7_5_3c_cross_seed_parity_audit.py",
+    "checker_git_blob": "3889e4a985d202a6ef728fea6829b312979a92f9",
+    "reason": "Split the single 1e-7 tolerance into role-specific numerical-equivalence tolerances before any attempt2 execution.",
+    "attempt2_output_seen_before_edit": false,
+    "attempt2_output_seen_before_this_freeze": false
+  },
+  "attempt2_numerical_contract": {
+    "worker_vs_recomputed_policy_max_abs_tolerance": 1e-6,
+    "stored_vs_recomputed_cross_seed_metric_abs_tolerance": 5e-6,
+    "stored_cross_seed_metric_vs_persisted_blocker_evidence_abs_tolerance": 1e-12,
+    "frozen_strategic_cross_seed_mean_tv_gate": 0.15,
+    "frozen_strategic_cross_seed_p95_tv_gate": 0.35,
+    "strategic_gate_changed": false,
+    "selection_rule_changed": false,
+    "training_or_heldout_artifact_changed": false,
+    "policy_artifact_changed": false,
+    "representation_candidates_changed": false
+  },
+  "scope": {
+    "diagnostic_only": true,
+    "may_select_representation": false,
+    "may_relax_phase2_gate": false,
+    "may_authorize_h4": false,
+    "may_authorize_action_sizing_revalidation": false,
+    "may_authorize_r8": false
+  },
+  "retry_rule": "Run the same immutable 16 heldout cells, 8 light final AveragePolicy artifacts and 4 heldout corpora through the edited checker. If any semantic identity mismatch or tolerance breach remains, keep Phase2 BLOCKED. If parity passes, keep Phase2 BLOCKED and proceed only to a separately frozen training-randomness decomposition diagnostic.",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
