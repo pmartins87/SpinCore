@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import replace
-
-from spincore_nn.codec import DecodedInput
+from spincore_nn.codec_v3 import DecodedInputV3
 from spincore_nn.stack_geometry_v3 import derive_pairwise_stack_geometry_v3
 
 
@@ -13,22 +11,28 @@ def state(
     stacks: tuple[float, float, float],
     totals: tuple[float, float, float],
     statuses: tuple[int, int, int],
-) -> DecodedInput:
+) -> DecodedInputV3:
+    live = 2 if domain == 1 else 3
+    dealer_rel = 0
+    sb_rel = 0 if domain == 1 else 1
+    bb_rel = 1 if domain == 1 else 2
     numeric = (
         pot, 0.0, 0.0,
         *stacks,
         0.0, 0.0, 0.0,
         *totals,
-        0.5, 1.0, 0.0, 2.0 if domain == 1 else 3.0,
+        0.5, 0.0, 2.0, 30.0,
     )
-    categorical = (domain, 1, 0, 2 if domain == 1 else 3, *statuses, 3)
-    return DecodedInput(
-        cards=(49, 46, 41, 30, 1, 0, 0),
+    return DecodedInputV3(
+        categorical=(
+            domain, 0, dealer_rel, sb_rel, bb_rel, live, 0,
+            *statuses,
+        ),
+        rank_tokens=(14, 13, 0, 0, 0, 0, 0),
+        same_suit=(0,) * 21,
         numeric=tuple(float(x) for x in numeric),
-        categorical=tuple(int(x) for x in categorical),
-        legal=(1, 1, 0, 1, 1, 1),
-        history=(0,) * 32,
-        history_len=0,
+        primitive_legal=(1, 1, 1, 1, 1, 1),
+        history=(),
     )
 
 
@@ -106,17 +110,35 @@ def test_true_hu_dead_seat_is_explicitly_absent() -> None:
     assert g.effective_total_cap_bb == (11.0, 0.0)
 
 
+def test_true_hu_real_allin_opponent_is_not_mistaken_for_absent() -> None:
+    item = state(
+        domain=1,
+        pot=22.0,
+        stacks=(8.0, 0.0, 0.0),
+        totals=(7.0, 15.0, 0.0),
+        statuses=(0, 2, 2),
+    )
+    g = derive_pairwise_stack_geometry_v3(item)
+    assert g.opponent_present == (1, 0)
+    assert g.opponent_contesting == (1, 0)
+    assert g.opponent_actionable == (0, 0)
+    assert g.effective_remaining_bb == (0.0, 0.0)
+    assert g.effective_total_cap_bb == (15.0, 0.0)
+    assert g.commitment_gap_bb == (8.0, 0.0)
+
+
 def main() -> int:
     tests = [
         test_three_way_keeps_both_effective_stacks,
         test_three_way_does_not_sort_away_position,
         test_folded_and_allin_are_not_conflated,
         test_true_hu_dead_seat_is_explicitly_absent,
+        test_true_hu_real_allin_opponent_is_not_mistaken_for_absent,
     ]
     for test in tests:
         test()
         print("PASS", test.__name__)
-    print("R7.5.3C pairwise stack geometry tests PASS")
+    print("R7.5.3C pairwise SPNNIV3 stack geometry tests PASS")
     return 0
 
 
