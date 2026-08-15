@@ -1,0 +1,76 @@
+{
+  "schema": "SPINCORE_R7_5_3D_V1_V2_CONVERGENCE_PRECOMMIT_V1",
+  "status": "FROZEN_BEFORE_R7_5_3D_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "purpose": "Test whether the historical V2 loss on the immutable V1-generated paired corpus is consistent with fixed-update undertraining, and measure update/time efficiency without changing any historical selection or selecting a production representation.",
+  "selection_authority": "DIAGNOSTIC_ONLY",
+  "production_representation_authority": false,
+  "historical_r7_5_3_result_reopened": false,
+  "paired_corpus_run_id": 31767822186,
+  "paired_corpus_origin": "immutable R7.5.3 paired corpus generated under frozen V1 continuation behavior",
+  "targets_are_candidate_native": false,
+  "split_seed": 1925930899,
+  "fit_seeds": [247244420, 1953786788, 2029202803],
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "candidates": {
+    "C0_V1_FROZEN_CONTROL": {
+      "budgets": [{"label": "1x", "advantage_steps": 4096, "policy_steps": 8192}],
+      "role": "historical fixed-budget control"
+    },
+    "C1_V2_NO_FLOP_TOKEN": {
+      "budgets": [
+        {"label": "0.5x", "advantage_steps": 2048, "policy_steps": 4096},
+        {"label": "1x", "advantage_steps": 4096, "policy_steps": 8192},
+        {"label": "2x", "advantage_steps": 8192, "policy_steps": 16384}
+      ],
+      "role": "clean V2 representation comparison without a learned flop-token abstraction"
+    }
+  },
+  "fit_contract": {
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "gradient_clip": 10.0,
+    "early_stopping": false,
+    "each_budget_starts_from_scratch": true,
+    "same_initialization_seed_per_candidate_domain_budget_seed": true,
+    "same_sample_order_rng_rule_as_historical_worker": true,
+    "min_tag_samples": 128,
+    "device": "cpu",
+    "torch_threads": 2
+  },
+  "reported_metrics": [
+    "heldout advantage weighted NRMSE",
+    "heldout policy weighted mean TV",
+    "advantage seconds per optimizer step",
+    "policy seconds per optimizer step",
+    "last-100 training loss",
+    "peak RSS KiB",
+    "parameter count"
+  ],
+  "equivalence_bands_against_V1_1x": {
+    "advantage_weighted_nrmse_absolute": 0.015,
+    "policy_weighted_mean_tv_absolute": 0.010
+  },
+  "diagnostic_classification": {
+    "UNDERTRAINING_SUPPORTED": "For both domains, V2@2x mean across the three frozen fit seeds is within the frozen V1@1x equivalence band on both heldout metrics, and V2@2x strictly improves over V2@1x in at least three of the four domain-metric cells.",
+    "GAP_PERSISTS_AT_2X": "At least one domain-metric cell remains outside the frozen V1@1x equivalence band at V2@2x. This does not prove V2 is intrinsically inferior; it only rejects recovery within the precommitted 2x update envelope on V1-generated targets.",
+    "INCONCLUSIVE": "Any other result."
+  },
+  "wall_clock_analysis": {
+    "role": "efficiency diagnostic only",
+    "method": "Report measured seconds-per-step and total fit time. Do not retrospectively choose a different step budget to equalize wall time.",
+    "selection_authority": false
+  },
+  "forbidden": [
+    "retroactively change the R7.5.3 winner",
+    "call V1-generated targets ground truth for strategic quality",
+    "promote V2 or V1 to production from this diagnostic",
+    "add budgets or candidates after seeing outputs",
+    "change fit seeds, split seed, optimizer, learning rate, batch size or equivalence bands after outputs",
+    "interpret GAP_PERSISTS_AT_2X as proof of intrinsic architectural inferiority"
+  ],
+  "strategic_output_seen_before_freeze": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
