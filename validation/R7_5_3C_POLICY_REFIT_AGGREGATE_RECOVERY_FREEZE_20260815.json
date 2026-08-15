@@ -1,0 +1,37 @@
+{
+  "schema": "SPINCORE_R7_5_3C_POLICY_REFIT_AGGREGATE_RECOVERY_FREEZE_V1",
+  "date": "2026-08-15",
+  "status": "FROZEN_BEFORE_RECOVERY_OUTPUT",
+  "purpose": "Mechanical recovery of the failed policy-refit decomposition aggregate without recomputing any of the 16 successful diagnostic refits and without changing the frozen diagnostic algorithm.",
+  "source": {
+    "run_id": 31896651181,
+    "execution_sha": "7e4b07214032eed004f5ab214f428250e108a877",
+    "successful_refit_cells": 16,
+    "aggregate_job_id": 95052240264,
+    "aggregate_failure": "ModuleNotFoundError: No module named 'torch'",
+    "failure_stage": "aggregate runtime import before metric computation",
+    "diagnostic_result_produced": false
+  },
+  "recovery_contract": {
+    "reuse_exact_16_refit_artifacts": true,
+    "refit_cells_recomputed": 0,
+    "cfr_recomputed": false,
+    "heldout_regenerated": false,
+    "aggregator_algorithm_changed": false,
+    "only_runtime_correction": "Install the same frozen CPU PyTorch runtime required by imported SPNNIV3 modules before invoking the immutable aggregator.",
+    "torch_version": "2.13.0+cpu",
+    "numpy_version": "2.3.5",
+    "aggregate_tool_blob": "f0c3efafd15eabe5eba2472da7cfb85ac92abd67",
+    "original_diagnostic_freeze_blob": "d59f61912b0da3b194d781aebea3976921486cdb"
+  },
+  "governance": {
+    "mechanical_recovery_only": true,
+    "may_select_h2_or_h3": false,
+    "may_relax_phase2_cross_seed_thresholds": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}

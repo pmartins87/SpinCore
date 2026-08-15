@@ -1,0 +1,82 @@
+name: SpinCore R7.5.3C policy-refit aggregate recovery
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_policy_refit_aggregate_recovery.yml'
+      - 'validation/R7_5_3C_POLICY_REFIT_AGGREGATE_RECOVERY_FREEZE_20260815.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SOURCE_RUN_ID: '31896651181'
+  SOURCE_EXECUTION_SHA: '7e4b07214032eed004f5ab214f428250e108a877'
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Verify frozen mechanical-recovery contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object tools/r7_5_3c_policy_refit_decomposition_aggregate.py)" = "f0c3efafd15eabe5eba2472da7cfb85ac92abd67"
+          test "$(git hash-object validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_FREEZE_20260815.json)" = "d59f61912b0da3b194d781aebea3976921486cdb"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_POLICY_REFIT_AGGREGATE_RECOVERY_FREEZE_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_POLICY_REFIT_AGGREGATE_RECOVERY_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_RECOVERY_OUTPUT'
+          assert p['source']['run_id']==31896651181
+          assert p['source']['successful_refit_cells']==16
+          assert p['source']['diagnostic_result_produced'] is False
+          r=p['recovery_contract']
+          assert r['reuse_exact_16_refit_artifacts'] and r['refit_cells_recomputed']==0
+          assert not r['cfr_recomputed'] and not r['heldout_regenerated'] and not r['aggregator_algorithm_changed']
+          g=p['governance']
+          assert g['mechanical_recovery_only'] and not g['may_select_h2_or_h3']
+          assert not g['may_relax_phase2_cross_seed_thresholds'] and not g['may_authorize_h4']
+          assert not g['may_authorize_r7_5_4_spnniv3_action_sizing_revalidation'] and not g['may_authorize_r8']
+          assert not g['production_training_authorized'] and not g['ready_for_tables']
+          PY
+      - name: Install frozen metric runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download exact 16 successful refit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-policy-refit-*-${{ env.SOURCE_EXECUTION_SHA }}
+          path: cells
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+      - name: Aggregate immutable decomposition
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          test "$(find cells -name cell.json.gz | wc -l)" -eq 16
+          mkdir -p output
+          python tools/r7_5_3c_policy_refit_decomposition_aggregate.py \
+            --cells-root cells \
+            --blocker-evidence validation/R7_5_3C_PHASE2_BLOCKER_EVIDENCE_20260815.json \
+            --out output/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json
+          sha256sum output/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json | tee output/RESULT_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-policy-refit-decomposition-recovery-${{ github.sha }}
+          path: output/
+          if-no-files-found: error
+          retention-days: 30
