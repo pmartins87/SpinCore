@@ -1,0 +1,102 @@
+name: SpinCore R7.5.3C cross-seed parity audit
+on:
+  push:
+    paths: ['.github/workflows/r7_5_3c_cross_seed_parity_audit.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+concurrency:
+  group: spincore-r7-5-3c-cross-seed-parity-audit
+  cancel-in-progress: false
+env:
+  TRAINING_RUN_ID: '31865993350'
+  TRAINING_SHA: '9b0ccc207135c3adaec76ea87de8ec21f7415957'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+  EVALUATOR_RUN_ID: '31887392458'
+  EVALUATOR_SHA: 'e887564834df01b1d024fede9b89e678528f9ecf'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ github.sha }}'}
+      - name: Verify pre-output parity-audit freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_CROSS_SEED_PARITY_AUDIT_FREEZE_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_CROSS_SEED_PARITY_AUDIT_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_PARITY_AUDIT_OUTPUT'
+          assert p['parity_audit_output_seen_before_freeze'] is False
+          assert p['representation_winner_known_from_this_audit_before_freeze'] is False
+          assert p['source_evidence']['training_run_id']==31865993350
+          assert p['source_evidence']['heldout_run_id']==31866538984
+          assert p['source_evidence']['original_evaluator_run_id']==31887392458
+          paths={p['checker']['path']:p['checker']['git_blob'], **p['frozen_inherited_blobs']}
+          for path, expected in paths.items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==expected,(path,actual,expected)
+          assert p['audit_contract']['may_change_thresholds'] is False
+          assert p['audit_contract']['may_select_representation'] is False
+          assert not p['production_training_authorized'] and not p['ready_for_tables']
+          PY
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11.15'}
+      - name: Install frozen runtime dependencies
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download original heldout worker cells
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-p2-eval-heldout-*-${{ env.EVALUATOR_SHA }}
+          path: cells
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.EVALUATOR_RUN_ID }}
+      - name: Download original extracted final AveragePolicy artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-p2-light-policies-${{ env.EVALUATOR_SHA }}
+          path: policies
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.EVALUATOR_RUN_ID }}
+      - name: Download frozen heldout corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-heldout-*-${{ env.HELDOUT_SHA }}
+          path: heldout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Run independent parity audit
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/r7_5_3c_cross_seed_parity_audit.py \
+            --repo-root . \
+            --cells-root cells \
+            --policies-root policies \
+            --heldout-root heldout \
+            --training-sha "$TRAINING_SHA" \
+            --evaluator-sha "$EVALUATOR_SHA" \
+            --heldout-sha "$HELDOUT_SHA" \
+            --blocker-evidence validation/R7_5_3C_PHASE2_BLOCKER_EVIDENCE_20260815.json \
+            --out output/R7_5_3C_CROSS_SEED_PARITY_AUDIT_RESULT.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-cross-seed-parity-audit-${{ github.sha }}
+          path: output/R7_5_3C_CROSS_SEED_PARITY_AUDIT_RESULT.json
+          if-no-files-found: error
+          retention-days: 30
