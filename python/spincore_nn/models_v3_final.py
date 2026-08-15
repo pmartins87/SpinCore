@@ -234,15 +234,26 @@ class V3UniversalNet(nn.Module):
         return torch.softmax(logits, dim=-1)
 
 
+def _make_final_v3(
+    *,
+    with_semantics: bool,
+    device: str,
+    seed: int | None,
+):
+    # Match the established R7.3/R7.4/R7.5 isolation contract: deterministic
+    # network initialization must not advance or reset the caller's live/global
+    # torch RNG stream.
+    with torch.random.fork_rng(devices=[]):
+        if seed is not None:
+            torch.manual_seed(int(seed))
+        cfg = V3NetworkConfig()
+        model = V3UniversalNet(cfg, with_semantics=with_semantics)
+    return cfg, model.to(device)
+
+
 def make_h2_final_v3(*, device: str = "cpu", seed: int | None = None):
-    if seed is not None:
-        torch.manual_seed(int(seed))
-    cfg = V3NetworkConfig()
-    return cfg, V3UniversalNet(cfg, with_semantics=False).to(device)
+    return _make_final_v3(with_semantics=False, device=device, seed=seed)
 
 
 def make_h3_final_v3(*, device: str = "cpu", seed: int | None = None):
-    if seed is not None:
-        torch.manual_seed(int(seed))
-    cfg = V3NetworkConfig()
-    return cfg, V3UniversalNet(cfg, with_semantics=True).to(device)
+    return _make_final_v3(with_semantics=True, device=device, seed=seed)
