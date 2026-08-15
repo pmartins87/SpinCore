@@ -1,0 +1,55 @@
+{
+  "schema": "SPINCORE_R7_5_3D_V1_V2_CONVERGENCE_EVIDENCE_V1",
+  "created_utc": "2026-08-15",
+  "workflow_run_id": 31883536121,
+  "execution_sha": "854d44da3e5db9bf2aba9269874e8cacf7087dde",
+  "result_artifact_id": 9247201535,
+  "artifact_digest": "sha256:7011850c85c71dc5420d2525c222594c5914e5f2d0acfd009eb1a99fb0a0eaa4",
+  "result_file_sha256": "51fd6ccb9f32b5357fd75b7aea8fcb19c0bc8c5c19cde4bf17e45d694c839fdd",
+  "classification": "GAP_PERSISTS_AT_2X",
+  "classification_scope": "V1-generated target convergence only; no production representation authority",
+  "domains": {
+    "TRUE_HEADS_UP": {
+      "V1_1x_advantage_nrmse": 0.5040799673779958,
+      "V1_1x_policy_tv": 0.07529900034342146,
+      "V2_1x_advantage_nrmse": 0.5280235728155382,
+      "V2_1x_policy_tv": 0.10089548766723182,
+      "V2_2x_advantage_nrmse": 0.5048930236718011,
+      "V2_2x_policy_tv": 0.09836009690148995,
+      "V2_1x_to_2x_advantage_improvement": 0.02313054914373713,
+      "V2_1x_to_2x_policy_improvement": 0.00253539076574187,
+      "V2_2x_advantage_within_V1_equivalence_band": true,
+      "V2_2x_policy_within_V1_equivalence_band": false,
+      "V2_advantage_update_time_ratio_vs_V1_at_1x": 2.1228320589134224,
+      "V2_policy_update_time_ratio_vs_V1_at_1x": 2.099589855551494
+    },
+    "THREE_HANDED": {
+      "V1_1x_advantage_nrmse": 0.6167306514399734,
+      "V1_1x_policy_tv": 0.05702472299198914,
+      "V2_1x_advantage_nrmse": 0.6861297572482007,
+      "V2_1x_policy_tv": 0.0731701739065621,
+      "V2_2x_advantage_nrmse": 0.6771683312780917,
+      "V2_2x_policy_tv": 0.06946476207224166,
+      "V2_1x_to_2x_advantage_improvement": 0.00896142597010898,
+      "V2_1x_to_2x_policy_improvement": 0.00370541183432044,
+      "V2_2x_advantage_within_V1_equivalence_band": false,
+      "V2_2x_policy_within_V1_equivalence_band": false,
+      "V2_advantage_update_time_ratio_vs_V1_at_1x": 1.977590842017663,
+      "V2_policy_update_time_ratio_vs_V1_at_1x": 2.2125506420290746
+    }
+  },
+  "parameter_counts": {
+    "C0_V1_FROZEN_CONTROL": 152438,
+    "C1_V2_NO_FLOP_TOKEN": 153350
+  },
+  "interpretation": {
+    "old_V2_deficit_explained_only_by_too_few_optimizer_updates": false,
+    "optimizer_budget_mattered_for_HU_advantage": true,
+    "strategic_superiority_claim_allowed": false,
+    "reason": "The doubled V2 budget closes the HU advantage-NRMSE gap but not HU policy TV, and neither 3H metric enters the frozen V1 equivalence band. Historical corpus and targets were generated under V1 continuation behavior, so this remains a V1-imitation convergence diagnostic rather than a strategic-quality referee."
+  },
+  "selection_authority": "DIAGNOSTIC_ONLY",
+  "historical_r7_5_3_result_reopened": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
