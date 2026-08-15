@@ -1,0 +1,104 @@
+name: SpinCore R7.5.3C persist policy-refit decomposition
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_policy_refit_result_persist.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  RECOVERY_RUN_ID: '31901724211'
+  RECOVERY_ARTIFACT_NAME: 'r7-5-3c-policy-refit-decomposition-recovery-bc33c0a7462f68e9bbd7177394d4615ca9c85916'
+  EXPECTED_RESULT_SHA256: '48ffe2a5078c54d54f501d75516df5e015f8f91aa332d15366037801767e862e'
+
+jobs:
+  persist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Download recovered immutable result
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.RECOVERY_ARTIFACT_NAME }}
+          path: recovered
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.RECOVERY_RUN_ID }}
+      - name: Verify exact result and build durable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum recovered/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_RESULT_SHA256"
+          cp recovered/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT_20260815.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          result=json.loads(Path('recovered/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json').read_text())
+          assert result['schema']=='SPINCORE_R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT_V1'
+          assert result['status']=='DIAGNOSTIC_COMPLETE'
+          assert result['representation_winner'] is None
+          s=result['summary']
+          learner=s['final_policy_learner_sensitivity']
+          upstream=s['upstream_strategy_memory_sensitivity']
+          evidence={
+            'schema':'SPINCORE_R7_5_3C_POLICY_REFIT_DECOMPOSITION_EVIDENCE_V1',
+            'date':'2026-08-15',
+            'status':'DIAGNOSTIC_COMPLETE_PERSISTED',
+            'lineage':{
+              'source_refit_run_id':31896651181,
+              'source_refit_execution_sha':'7e4b07214032eed004f5ab214f428250e108a877',
+              'successful_refit_cells_reused':16,
+              'refit_cells_recomputed_in_recovery':0,
+              'aggregate_recovery_run_id':31901724211,
+              'aggregate_recovery_execution_sha':'bc33c0a7462f68e9bbd7177394d4615ca9c85916',
+              'aggregate_recovery_artifact_id':9251265976,
+              'aggregate_recovery_artifact_name':os.environ['RECOVERY_ARTIFACT_NAME'],
+              'result_sha256':os.environ['EXPECTED_RESULT_SHA256'],
+            },
+            'summary':{
+              'baseline_original_cross_seed_mean_of_mean_tv':sum(x['metric']['mean'] for x in result['baseline_original_cross_seed'])/len(result['baseline_original_cross_seed']),
+              'baseline_original_cross_seed_mean_of_p95_tv':sum(x['metric']['p95'] for x in result['baseline_original_cross_seed'])/len(result['baseline_original_cross_seed']),
+              'same_memory_different_final_learner_mean_of_mean_tv':learner['mean_of_mean_tv'],
+              'same_memory_different_final_learner_mean_of_p95_tv':learner['mean_of_p95_tv'],
+              'different_memory_common_final_learner_mean_of_mean_tv':upstream['mean_of_mean_tv'],
+              'different_memory_common_final_learner_mean_of_p95_tv':upstream['mean_of_p95_tv'],
+            },
+            'adjudication':{
+              'primary_observed_source':'UPSTREAM_STRATEGY_MEMORY_GENERATION',
+              'basis':'Different frozen strategy memories under a common final-policy learner retain TV essentially at the original cross-seed failure scale, while same-memory/different-final-learner TV is materially smaller.',
+              'final_policy_learner_is_zero_contribution':False,
+              'diagnostic_selects_h2_or_h3':False,
+              'representation_winner':None,
+              'next_required_work':'Winner-independent upstream RNG-factor decomposition before any H2/H3 admission rerun.',
+            },
+            'governance':{
+              'phase2_cross_seed_thresholds_changed':False,
+              'production_training_authorized':False,
+              'ready_for_tables':False,
+              'h4_authorized':False,
+              'r7_5_4_spnniv3_action_sizing_revalidation_authorized':False,
+              'r8_authorized':False,
+            }
+          }
+          Path('validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_EVIDENCE_20260815.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(evidence['summary'],indent=2))
+          PY
+      - name: Commit exact durable evidence to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT_20260815.json validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_EVIDENCE_20260815.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'R7.5.3C: persist policy-refit decomposition result'
+          git push origin HEAD:main
