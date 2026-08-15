@@ -1,0 +1,71 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_FREEZE_V1",
+  "created_utc": "2026-08-15",
+  "status": "FROZEN_BEFORE_RESOURCE_RESULTS",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "purpose": "Non-selecting mechanical/resource screen of H2/H3 final SPNNIV3 candidates on authoritative C++ solver states before the already-precommitted candidate-specific Phase 2 strategic run.",
+  "selection_authority": false,
+  "representations": [
+    "H0_V1_RESOURCE_CONTROL",
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+  ],
+  "action_abstraction": "PF0_CONTROL_33_75_AI",
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "state_collection": {
+    "authoritative_source": "C++ SolverState",
+    "scenario_source": "python/spincore/r7_5_action_scenarios.py::action_scenario_cycle",
+    "observations_per_domain": 256,
+    "root_seed_derivation": "low 64 bits of SHA256('R7.5.3C:RESOURCE:' + domain + ':' + root_index)",
+    "walk_seed_derivation": "low 64 bits of SHA256('R7.5.3C:RESOURCE:WALK:' + domain + ':' + root_index)",
+    "walk_policy": "At each nonterminal state record the observation, then sample uniformly from state-local deduplicated PF0 legal actions after removing FOLD when another action exists and removing ALL_IN when another non-fold action exists. Stop at terminal or 64 decisions.",
+    "minimum_coverage": {
+      "each_domain": 256,
+      "preflop_states": 1,
+      "flop_states": 1,
+      "turn_states": 1,
+      "river_states": 1
+    }
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "torch_threads": 2,
+    "device": "cpu"
+  },
+  "measurements": [
+    "parameter_count",
+    "parameter_count_ratio_vs_H0",
+    "serialized_observation_bytes distribution",
+    "history_length distribution",
+    "preprocess/collation seconds per sample",
+    "model-only batch1 seconds per sample",
+    "online preprocess+model batch1 seconds per sample",
+    "model-only batch64 seconds per sample",
+    "peak RSS",
+    "finite output audit"
+  ],
+  "timing_protocol": {
+    "warmup_passes": 16,
+    "batch1_timed_passes": 128,
+    "batch64_timed_passes": 32,
+    "state_order": "fixed collection order; no timing-dependent reshuffle",
+    "notes": "CI absolute wall time is not treated as Ryzen wall time. Relative ratios and gross feasibility are diagnostic only."
+  },
+  "hard_fail_conditions": [
+    "structural main regression not green on the execution SHA",
+    "unable to collect the frozen state count/street coverage",
+    "nonfinite model output",
+    "malformed or inconsistent SPNNIV3 payload",
+    "H2 or H3 parameter count exceeds 500000 parameters per model",
+    "exception or OOM during the frozen benchmark"
+  ],
+  "non_fail_observations": [
+    "H2/H3 being slower than H0 on GitHub CI does not by itself reject them",
+    "offline V1-target imitation is not re-evaluated here",
+    "no strategic or convergence conclusion may be drawn from this preflight"
+  ],
+  "next_gate_if_pass": "Freeze exact H2/H3 model schema/hash/parameter evidence, then execute the already-precommitted R7.5.3C Phase 2 candidate-specific end-to-end schedule without changing its seeds, roots, iterations or action abstraction."
+}
