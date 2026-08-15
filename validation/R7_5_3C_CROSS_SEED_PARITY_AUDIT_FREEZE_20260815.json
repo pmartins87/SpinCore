@@ -1,0 +1,58 @@
+{
+  "schema": "SPINCORE_R7_5_3C_CROSS_SEED_PARITY_AUDIT_FREEZE_V1",
+  "date": "2026-08-15",
+  "status": "FROZEN_BEFORE_PARITY_AUDIT_OUTPUT",
+  "purpose": "Independently verify that the frozen Phase2 cross-seed AvgPolicy TV failures are not caused by state, legal-mask, action-slot, final-policy artifact identity, or worker serialization mismatch.",
+  "parity_audit_output_seen_before_freeze": false,
+  "representation_winner_known_from_this_audit_before_freeze": false,
+  "source_evidence": {
+    "training_run_id": 31865993350,
+    "training_execution_sha": "9b0ccc207135c3adaec76ea87de8ec21f7415957",
+    "heldout_run_id": 31866538984,
+    "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+    "original_evaluator_run_id": 31887392458,
+    "original_evaluator_execution_sha": "e887564834df01b1d024fede9b89e678528f9ecf",
+    "recovered_aggregate_run_id": 31894682444,
+    "recovered_strategic_result_sha256": "c209dd1c10f3eb3595cc141112f69661a49804cbba20d355b7b3b321d46b9238",
+    "blocker_evidence_path": "validation/R7_5_3C_PHASE2_BLOCKER_EVIDENCE_20260815.json",
+    "blocker_evidence_git_blob": "e34e64060ec46ba2100645cc1be6e0db3680a0f7"
+  },
+  "checker": {
+    "path": "tools/r7_5_3c_cross_seed_parity_audit.py",
+    "git_blob": "0d4425ee640c9c4efea7f7c553e3d080d05d4d7f",
+    "sha256": "f0a3c517986f7882ecc827f539c2f2ca290a34e097b7d3eff9c9c0187a744ddb"
+  },
+  "frozen_inherited_blobs": {
+    "tools/r7_5_3c_phase2_eval_worker.py": "293c530e1337ee0c67f6310d4b8285868fcdd106",
+    "python/spincore/r7_5_representation_v3_phase2_eval_io.py": "feb80fa2d5462c8e3c23e072565ce3ffcc97dd66",
+    "python/spincore/r7_5_representation_v3_final_policy.py": "c902e2cd804609b2ccd9cd3045e79747ca95a192",
+    "python/spincore/r7_5_representation_v3_referee_artifacts.py": "583c502342490db8ac451aec8c68d030c031f662",
+    "python/spincore/r7_5_action_cfr.py": "93176165a03c3cc3b5b751bf3365931071302c4a",
+    "tools/r7_5_3c_phase2_eval_matrix.py": "276089aa337e6c83d0e8fe347cfb029db9404784"
+  },
+  "audit_contract": {
+    "heldout_worker_cells_required": 16,
+    "light_final_average_policies_required": 8,
+    "heldout_corpora_required": 4,
+    "heldout_states_per_cross_seed_row": 1024,
+    "cross_seed_rows_required": 8,
+    "expected_universal_action_width": 10,
+    "recompute_each_stored_policy_row_from_reloaded_final_average_policy": true,
+    "worker_vs_recompute_max_abs_tolerance": 1e-7,
+    "heldout_payload_hash_verified": true,
+    "legal_slot_sequence_hash_recorded": true,
+    "recompute_frozen_cross_seed_tv_metrics": true,
+    "compare_to_persisted_blocker_evidence": true,
+    "may_change_thresholds": false,
+    "may_select_representation": false,
+    "may_authorize_h4": false,
+    "may_authorize_action_sizing_revalidation": false,
+    "may_authorize_r8": false
+  },
+  "decision_after_audit": {
+    "if_mismatch_found": "Keep Phase2 BLOCKED and fix only the mechanical mismatch under a new pre-output adjudication before any strategic recomputation.",
+    "if_parity_passes": "Keep Phase2 BLOCKED and proceed to a separately frozen winner-independent training-randomness decomposition experiment."
+  },
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
