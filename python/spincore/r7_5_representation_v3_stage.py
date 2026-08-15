@@ -36,7 +36,6 @@ from spincore.r7_5_representation_v3_stage_contract import (
     CROSS_SEED_MEAN_TV_MAX,
     CROSS_SEED_OBSERVATIONS,
     CROSS_SEED_P95_TV_MAX,
-    DOMAINS,
     ENSEMBLE_SIZE,
     EPSILON_CAP,
     EPSILON_SCALE,
@@ -47,7 +46,6 @@ from spincore.r7_5_representation_v3_stage_contract import (
     PAYOUT,
     POLICY_STEPS,
     POLICY_TV_MAX,
-    REPRESENTATIONS,
     RESERVOIR_CAPACITY,
     ROOTS_PER_ITERATION,
     deck_seed,
@@ -115,26 +113,22 @@ def _mean_positive_regret_proxy(memory_items, *, sample_size: int, seed: int) ->
     indices = stratified_audit_indices(len(memory_items), int(sample_size), int(seed))
     if not indices:
         return {"samples": 0, "weighted_mean_positive_action_advantage": math.inf}
-    numerator = 0.0
-    denominator = 0.0
-    positive_actions = 0
-    legal_actions = 0
+    numerator = denominator = 0.0
+    positive_actions = legal_actions = 0
     for index in indices:
         sample = memory_items[index]
-        weight = max(0.0, float(sample.weight))
-        legal_values = [
+        values = [
             float(sample.target[action])
             for action, enabled in enumerate(sample.legal)
             if int(enabled)
         ]
-        if not legal_values:
+        if not values:
             continue
-        positive = [max(0.0, value) for value in legal_values]
-        per_sample = sum(positive) / len(positive)
-        numerator += weight * per_sample
+        weight = max(0.0, float(sample.weight))
+        numerator += weight * (sum(max(0.0, value) for value in values) / len(values))
         denominator += weight
-        positive_actions += sum(1 for value in legal_values if value > 0.0)
-        legal_actions += len(legal_values)
+        positive_actions += sum(value > 0.0 for value in values)
+        legal_actions += len(values)
     return {
         "samples": len(indices),
         "weighted_mean_positive_action_advantage": (
@@ -149,24 +143,20 @@ def _mean_positive_regret_proxy(memory_items, *, sample_size: int, seed: int) ->
 def _ensemble_rows(models, *, training_seed: int, iteration: int) -> list[dict]:
     if len(models) != ENSEMBLE_SIZE:
         raise ValueError("cannot checkpoint incomplete V3 four-member ensemble")
-    rows = [
-        {
-            "member": 0,
-            "role": "PRIMARY_AUTHORITATIVE_COUPLED_RNG",
-            "init_seed": primary_reset_seed(training_seed, iteration),
-        }
-    ]
+    rows = [{
+        "member": 0,
+        "role": "PRIMARY_AUTHORITATIVE_COUPLED_RNG",
+        "init_seed": primary_reset_seed(training_seed, iteration),
+    }]
     for member in (1, 2, 3):
         init_seed, batch_seed = side_member_seeds(training_seed, iteration, member)
-        rows.append(
-            {
-                "member": member,
-                "role": "SIDE_MEMBER_DOES_NOT_PERTURB_PRIMARY_RNG",
-                "init_seed": int(init_seed),
-                "batch_seed": int(batch_seed),
-                "state_dict": models[member].state_dict(),
-            }
-        )
+        rows.append({
+            "member": member,
+            "role": "SIDE_MEMBER_DOES_NOT_PERTURB_PRIMARY_RNG",
+            "init_seed": int(init_seed),
+            "batch_seed": int(batch_seed),
+            "state_dict": models[member].state_dict(),
+        })
     return rows
 
 
@@ -298,10 +288,8 @@ def load_phase2_v3_runtime(
     if state.get("schema") != STAGE_STATE_SCHEMA:
         raise ValueError("wrong Phase 2 staged state schema")
     identity = (
-        state.get("representation"),
-        state.get("domain"),
-        int(state.get("training_seed", -1)),
-        state.get("action_candidate"),
+        state.get("representation"), state.get("domain"),
+        int(state.get("training_seed", -1)), state.get("action_candidate"),
     )
     if identity != (representation, domain, int(training_seed), ACTION_CANDIDATE):
         raise ValueError("Phase 2 staged identity mismatch")
@@ -321,10 +309,8 @@ def load_phase2_v3_runtime(
         epsilon_cap=config.epsilon_cap,
     )
     rows = list(extra.get("behavior_ensemble") or [])
-    if len(rows) != ENSEMBLE_SIZE:
-        raise ValueError("Phase 2 checkpoint missing four-member ensemble")
-    if int(rows[0].get("member", -1)) != 0:
-        raise ValueError("Phase 2 checkpoint primary ensemble member mismatch")
+    if len(rows) != ENSEMBLE_SIZE or int(rows[0].get("member", -1)) != 0:
+        raise ValueError("Phase 2 checkpoint ensemble identity mismatch")
     models = [bundle.advantage]
     iteration = int(state["completed_iteration"])
     for member in (1, 2, 3):
@@ -393,15 +379,13 @@ def run_one_phase2_v3_iteration(
         seed=int(state["training_seed"]) ^ (int(target_iteration) * 0x45D9F3B),
     )
     models = [bundle.advantage]
-    member_reports = [
-        {
-            "member": 0,
-            "role": "PRIMARY_AUTHORITATIVE_COUPLED_RNG",
-            "init_seed": int(reset_seed),
-            "optimizer_steps": config.advantage_steps,
-            "final_weighted_nrmse": float(primary_nrmse),
-        }
-    ]
+    member_reports = [{
+        "member": 0,
+        "role": "PRIMARY_AUTHORITATIVE_COUPLED_RNG",
+        "init_seed": int(reset_seed),
+        "optimizer_steps": config.advantage_steps,
+        "final_weighted_nrmse": float(primary_nrmse),
+    }]
     for member in (1, 2, 3):
         init_seed, batch_seed = side_member_seeds(
             int(state["training_seed"]), int(target_iteration), member
@@ -423,15 +407,13 @@ def run_one_phase2_v3_iteration(
             sample_size=config.audit_size,
             seed=int(state["training_seed"]) ^ (int(target_iteration) * 0x13579B) ^ (member * 0x2468AC),
         )
-        member_reports.append(
-            {
-                **fit_report,
-                "member": member,
-                "role": "SIDE_MEMBER_DOES_NOT_PERTURB_PRIMARY_RNG",
-                "final_weighted_nrmse": float(nrmse),
-                "fit_seconds": float(time.perf_counter() - member_started),
-            }
-        )
+        member_reports.append({
+            **fit_report,
+            "member": member,
+            "role": "SIDE_MEMBER_DOES_NOT_PERTURB_PRIMARY_RNG",
+            "final_weighted_nrmse": float(nrmse),
+            "fit_seconds": float(time.perf_counter() - member_started),
+        })
         models.append(model)
     behavior.models = models
     ensemble_nrmse = ensemble_v3_advantage_nrmse(
@@ -442,12 +424,12 @@ def run_one_phase2_v3_iteration(
         seed=int(state["training_seed"]) ^ (int(target_iteration) * 0x5EEDBEEF),
     )
     fit_seconds = time.perf_counter() - fit_started
-
     regret_proxy = _mean_positive_regret_proxy(
         bundle.adv_mem.items,
         sample_size=config.audit_size,
         seed=int(state["training_seed"]) ^ (int(target_iteration) * 0x27D4EB2D),
     )
+
     roots_added = int(bundle.counters["roots"]) - roots_before
     if roots_added != config.roots_per_iteration:
         raise RuntimeError("Phase 2 root accounting drift")
@@ -487,26 +469,6 @@ def finalize_phase2_v3_seed(
     *,
     bundle,
     behavior,
-    state: dict,
-    config: Phase2V3StageConfig,
-) -> dict:
-    if int(state["completed_iteration"]) != config.total_iterations:
-        raise ValueError("cannot finalize Phase 2 before all iterations")
-    started = time.perf_counter()
-    losses = []
-    # Use the same bundle/session-independent training method already frozen;
-    # collator/model live in the bundle and minibatch RNG is persistent.
-    from spincore.r7_5_representation_v3 import RepresentationV3DeepCFRSession
-    # The caller already owns the session, but final policy fit needs only bundle
-    # state. It is supplied in `extra_session` by wrapper in practice; keeping the
-    # actual fitting in a separate helper would duplicate the training loop.
-    raise RuntimeError("finalize_phase2_v3_seed must be called through finalize_phase2_v3_seed_with_session")
-
-
-def finalize_phase2_v3_seed_with_session(
-    *,
-    bundle,
-    behavior,
     session,
     state: dict,
     config: Phase2V3StageConfig,
@@ -530,7 +492,7 @@ def finalize_phase2_v3_seed_with_session(
         sample_size=config.audit_size,
         seed=int(state["training_seed"]) ^ 0x71A5BEEF,
     )
-    report = {
+    return {
         "schema": FINAL_REPORT_SCHEMA,
         "representation": str(state["representation"]),
         "domain": str(state["domain"]),
@@ -559,4 +521,3 @@ def finalize_phase2_v3_seed_with_session(
         "production_training_authorized": False,
         "ready_for_tables": False,
     }
-    return report
