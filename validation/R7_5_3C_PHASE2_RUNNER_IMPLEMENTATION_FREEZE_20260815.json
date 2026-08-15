@@ -1,0 +1,82 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_RUNNER_IMPLEMENTATION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_PHASE2_STRATEGIC_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "prelaunch_regression": {
+    "workflow_run_id": 31865737507,
+    "head_sha": "b9e0c6a4ce8601eb6e5219820262459b27f9be44",
+    "conclusion": "success",
+    "includes_full_stage_smoke": true,
+    "includes_checkpoint_resume_equivalence": true,
+    "includes_four_member_stage_checkpoint_roundtrip": true
+  },
+  "inherits": [
+    "validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json",
+    "validation/R7_5_3C_PHASE2_MODEL_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_TRAINING_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json",
+    "validation/R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_EVIDENCE_20260815.json"
+  ],
+  "git_blob_freeze": {
+    "tools/r7_5_3c_phase2_domain_worker.py": "9ef81454ee92cbdfb0f06efd716510b5d12b7da4",
+    "python/spincore/r7_5_representation_v3.py": "e69ba053471765315655ecb4723bf0f807cdd9f7",
+    "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1",
+    "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
+    "python/spincore/r7_5_representation_v3_checkpoint.py": "09eafd4717bf0f66cdf453a71d9893156c5ce098",
+    "python/spincore/r7_5_representation_v3_fit.py": "80725a3f5be43fef8d0f23491ef525280cb6b1c8",
+    "python/spincore/r7_5_representation_v3_uncertainty.py": "c6a740d04aed1b5785f0ccd502d35e10a8b91a85",
+    "python/spincore/r7_5_action_cfr.py": "93176165a03c3cc3b5b751bf3365931071302c4a",
+    "python/spincore/r7_5_action_contract.py": "98b1969899ad7bf06e8c3521df798c474480f4cd",
+    "include/spincore/neural_encoder_v3.hpp": "c3f1076319d3f149212452d70ddb2114ca646a1d",
+    "src/neural_encoder_v3.cpp": "023c35a044d59b35c6eca35de6ee0e8eeb4eb60e",
+    "src/action_abstraction_v2.cpp": "59ebecba2849bf551463dfca5c00d97434e3ac29",
+    "src/solver_c_api.cpp": "8fd9d7aaa397848232e69b24fbb6c5953574ff2a",
+    "validation/R7_5_3C_PHASE2_TRAINING_FREEZE_20260815.json": "2500a5ec7e409bcee84505f0d0027dfff29cca5b",
+    "validation/R7_5_3C_PHASE2_MODEL_FREEZE_20260815.json": "311c11086b11f93012e27fcdd568051287ce39b5",
+    "validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json": "6d4bdfbaee4cac2907a3d647bd5ca8e812ee74da"
+  },
+  "execution_contract": {
+    "representations": [
+      "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+    ],
+    "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+    "training_seeds": [1342191342, 1801739323],
+    "matrix_cells": 8,
+    "iterations": 3,
+    "roots_per_iteration": 64,
+    "exact_opponent_levels": 2,
+    "action_candidate": "PF0_CONTROL_33_75_AI",
+    "immutable_execution_sha_required": true,
+    "all_compute_stages_checkout_same_execution_sha": true,
+    "checkpoint_after_each_iteration": true,
+    "iteration_3_includes_exact_final_average_policy_fit": true,
+    "runtime": {
+      "python": "3.11.15",
+      "torch": "2.13.0+cpu",
+      "numpy": "2.3.5",
+      "torch_threads": 2
+    }
+  },
+  "gate_requirements": [
+    "execution SHA equals workflow-trigger SHA",
+    "git hash-object for every frozen blob equals git_blob_freeze",
+    "full C++ and Python regression passes on execution SHA",
+    "phase2 stage contract validates both representations, both domains and both training seeds",
+    "live model parameter counts/config/source hashes/fingerprints equal model freeze",
+    "evaluation freeze remains strategic_output_seen_before_freeze=false",
+    "production_training_authorized remains false",
+    "ready_for_tables remains false"
+  ],
+  "forbidden": [
+    "checkout moving main after gate",
+    "edit a frozen runner/model/engine file and inherit this freeze",
+    "change seeds/roots/iterations/optimizer steps/action candidate after launch",
+    "drop a failed matrix cell",
+    "interpret workflow completion as representation selection",
+    "authorize R8 or tables from Phase 2 training alone"
+  ],
+  "strategic_output_seen_before_freeze": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
