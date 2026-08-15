@@ -1,0 +1,61 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_MODEL_FREEZE_V1",
+  "status": "FROZEN_AFTER_RESOURCE_PASS_BEFORE_PHASE2_STRATEGIC_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "resource_evidence": "validation/R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_EVIDENCE_20260815.json",
+  "resource_execution_sha": "0d7f079899be21e9dbfcf707bf9cc7c84ba6561a",
+  "resource_workflow_run_id": 31865059816,
+  "carrier": "SPNNIV3",
+  "action_abstraction": "PF0_CONTROL_33_75_AI",
+  "production_candidates": {
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL": {
+      "parameter_count": 190958,
+      "architecture_fingerprint_sha256": "1362caf9f893cee88bfb2f3f26e8054c4932e112b27e0a5dc112a08a727a9f97",
+      "config": {
+        "body_hidden": 320,
+        "card_hidden": 128,
+        "current_hidden": 96,
+        "head_hidden": 128,
+        "history_event_hidden": 32,
+        "history_gru_hidden": 80,
+        "rank_emb": 16,
+        "semantic_hidden": 96
+      },
+      "objective_semantics_enabled": false
+    },
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL": {
+      "parameter_count": 228110,
+      "architecture_fingerprint_sha256": "3568865e93366a793c3ecddb5ceeaad9de73540ca6985a20653c925b2a7576cf",
+      "config": {
+        "body_hidden": 320,
+        "card_hidden": 128,
+        "current_hidden": 96,
+        "head_hidden": 128,
+        "history_event_hidden": 32,
+        "history_gru_hidden": 80,
+        "rank_emb": 16,
+        "semantic_hidden": 96
+      },
+      "objective_semantics_enabled": true
+    }
+  },
+  "shared_source_sha256": {
+    "python/spincore/r7_5_representation_v3.py": "ff362f5cdf585ad019b92e348e11cac069a370d0539933e685dd0f9aa491e301",
+    "python/spincore/solver_v3.py": "2708445fb6ca44f8f74c45cc4ae4c7f65e655dd9e85c58ef660ae0ff0b022ec3",
+    "python/spincore_nn/card_orbit_v3.py": "398e69cd97d1d7b7e064778baa11506f7d36aa83b83e90bf63ad96b3f55572cf",
+    "python/spincore_nn/codec_v3.py": "45f472c74d94b4364d9e48915c90c9d4f0dd0743c8116acaed5f990e3747821e",
+    "python/spincore_nn/models_v3_final.py": "7965772d3f7e1d3ae436e2ce13789d417e7e35995046558db434829485444a06",
+    "python/spincore_nn/semantics_v3.py": "3622fba14c86c84415ca563dbb4c48ffee07e08795b3285d6b9a7d12fa711710"
+  },
+  "admission": {
+    "full_structural_regression": "PASS",
+    "resource_preflight": "PASS",
+    "both_HU_and_3H": true,
+    "finite_outputs": true,
+    "parameter_cap_500k": "PASS",
+    "phase2_strategic_training_allowed": true,
+    "r8_production_training_allowed": false,
+    "ready_for_tables": false
+  },
+  "mutation_rule": "Any change to carrier, card orbit, semantic derivation, network structure or source hashes creates a new candidate identity and invalidates direct inheritance of this freeze."
+}
