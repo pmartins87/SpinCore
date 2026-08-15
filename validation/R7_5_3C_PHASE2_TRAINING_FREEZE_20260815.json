@@ -1,0 +1,113 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_TRAINING_FREEZE_V1",
+  "status": "FROZEN_BEFORE_PHASE2_STRATEGIC_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "inherits": [
+    "validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json",
+    "validation/R7_5_3C_PHASE2_STRUCTURAL_ADMISSION_FREEZE.json",
+    "validation/R7_5_3C_PHASE2_MODEL_FREEZE_20260815.json",
+    "validation/R7_5_4_TRAINING_IMPLEMENTATION_FREEZE.json"
+  ],
+  "representations": [
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+  ],
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "training_seeds": [1342191342, 1801739323],
+  "evaluation_seeds": [2029384436, 1150634112],
+  "action_candidate": "PF0_CONTROL_33_75_AI",
+  "carrier": "SPNNIV3",
+  "cfr_execution": {
+    "iterations": 3,
+    "roots_per_iteration": 64,
+    "roots_per_seed": 192,
+    "exact_opponent_levels": 2,
+    "terminal_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
+    "payout": [0.5, 0.3, 0.2],
+    "scenario_cycle": "exact R7.4 TRUE_HEADS_UP / THREE_HANDED scenario cycles",
+    "scenario_index": "global_root modulo domain scenario_count",
+    "deck_formula": "training_seed*1000003 + global_root*97 + iteration, modulo 2^64",
+    "global_root_continuous_across_iterations": true,
+    "shared_scenario_schedule_across_H2_H3": true,
+    "shared_root_and_deck_seed_schedule_across_H2_H3": true,
+    "candidate_generates_own_behavior_and_targets": true,
+    "strategy_memory_is_candidate_native": true
+  },
+  "behavior": {
+    "iteration_1": "uniform over state-local deduplicated PF0 effective legal actions",
+    "iterations_2_to_3": "accepted R7.3/R7.5.4 uncertainty-damped four-member Advantage ensemble generalized only to SPNNIV3 model inference",
+    "ensemble_size": 4,
+    "epsilon_scale": 1.75,
+    "epsilon_cap": 0.5,
+    "regret_matching": "per member over state-local deduplicated ten-action legal mask",
+    "mean_policy": "arithmetic mean of four member regret-matching policies",
+    "disagreement": "mean total-variation distance of each member policy from ensemble mean",
+    "epsilon": "min(0.5, 1.75*disagreement)",
+    "final_behavior": "(1-epsilon)*ensemble_mean + epsilon*uniform_legal"
+  },
+  "advantage_fit": {
+    "network_reset_each_iteration": true,
+    "ensemble_members": 4,
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "optimizer_steps_per_member_per_iteration": 4096,
+    "optimizer_steps_are_exact": true,
+    "early_stopping": false,
+    "reservoir_capacity": 100000,
+    "primary_reset_seed_formula": "(training_seed XOR (iteration * 0x9E3779B1)) & 0x7fffffff",
+    "side_member_init_seed_formula": "training_seed XOR 0x0E115EED XOR (iteration*0x9E3779B1) XOR (member*0x045D9F3B), masked to 31 bits",
+    "side_member_batch_seed_formula": "training_seed XOR 0xBA7C8A11 XOR (iteration*0x85EBCA77) XOR (member*0xC2B2AE3D), masked to 64 bits",
+    "primary_member_rng": "one persistent bundle.batch_rng in execution order",
+    "side_member_rng": "independent Python RNG per frozen batch_seed; never perturbs primary",
+    "global_torch_rng_dependency": false
+  },
+  "average_policy_fit": {
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "optimizer_steps": 16384,
+    "optimizer_steps_are_exact": true,
+    "early_stopping": false,
+    "fit_after_iteration": 3,
+    "reservoir": "candidate-native strategy reservoir accumulated across all three iterations"
+  },
+  "diagnostics": {
+    "advantage_audit_sample_size": 2048,
+    "advantage_weighted_nrmse_max": 0.75,
+    "policy_audit_sample_size": 2048,
+    "policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_observations_per_training_seed": 1024,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "threshold_change_after_output_allowed": false
+  },
+  "runtime": {
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "device": "cpu",
+    "torch_threads": 2
+  },
+  "checkpoint_contract": {
+    "schema": "SPINCORE_R7_5_3C_REPRESENTATION_V3_CHECKPOINT_V1",
+    "durable_boundary": "after every completed CFR iteration and after final AveragePolicy fit",
+    "must_preserve": [
+      "Advantage primary state_dict",
+      "AveragePolicy state_dict",
+      "both optimizer states",
+      "Advantage and Strategy reservoirs including items/seen/internal RNG",
+      "persistent primary minibatch RNG",
+      "four-member current ensemble identities/states",
+      "behavior telemetry",
+      "counters and global_root",
+      "execution SHA and architecture fingerprint"
+    ],
+    "global_torch_rng": "audit-only; load must not restore or depend on it",
+    "resume_equivalence_required_before_launch": true
+  },
+  "fairness_rule": "H2 and H3 receive identical chance schedules, CFR roots, optimizer-step counts, ensemble algebra, learning rates and evaluation seeds. H3 is allowed its larger frozen network/semantic preprocessing because representation capacity itself is the treatment under test.",
+  "mutation_rule": "Any training hyperparameter, seed formula, ensemble coefficient, root count, iteration count or action candidate change after strategic outputs requires a new explicitly versioned experiment and cannot overwrite Phase 2.",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
