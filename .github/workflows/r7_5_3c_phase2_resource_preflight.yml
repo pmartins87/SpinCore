@@ -1,0 +1,227 @@
+name: SpinCore R7.5.3C Phase 2 resource preflight
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_phase2_resource_preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-r7-5-3c-phase2-resource-preflight
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  TORCH_VERSION: '2.13.0+cpu'
+  NUMPY_VERSION: '2.3.5'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Freeze execution SHA and contracts
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          resource=json.loads(Path('validation/R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_FREEZE.json').read_text())
+          phase2=json.loads(Path('validation/R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT.json').read_text())
+          admission=json.loads(Path('validation/R7_5_3C_PHASE2_STRUCTURAL_ADMISSION_FREEZE.json').read_text())
+          assert resource['schema']=='SPINCORE_R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_FREEZE_V1'
+          assert resource['status']=='FROZEN_BEFORE_RESOURCE_RESULTS'
+          assert resource['selection_authority'] is False
+          assert resource['state_collection']['observations_per_domain']==256
+          assert phase2['schema']=='SPINCORE_R7_5_3C_HYBRID_REPRESENTATION_PRECOMMIT_V1'
+          assert phase2['phase_2_candidate_specific_end_to_end']['iterations']==3
+          assert phase2['phase_2_candidate_specific_end_to_end']['roots_per_iteration']==64
+          assert phase2['phase_2_candidate_specific_end_to_end']['exact_opponent_levels']==2
+          assert admission['ready_for_tables'] is False
+          assert resource['ready_for_tables'] is False
+          assert resource['production_training_authorized'] is False
+          PY
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+          python - <<'PY'
+          import platform, torch, numpy
+          assert platform.python_version() == '3.11.15'
+          assert torch.__version__ == '2.13.0+cpu'
+          assert numpy.__version__ == '2.3.5'
+          PY
+
+      - name: Build C++ Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+
+      - name: Full structural regression on execution SHA
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          ctest --test-dir build --output-on-failure
+          python -m compileall -q python tools python_tests
+          pytest -q python_tests
+
+      - name: Upload immutable solver library
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-resource-solver-${{ steps.freeze.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  benchmark:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        representation:
+          - H0_V1_RESOURCE_CONTROL
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL
+          - H3_HYBRID_EXACT_SEMANTIC_FINAL
+        domain:
+          - TRUE_HEADS_UP
+          - THREE_HANDED
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+          python - <<'PY'
+          import platform, torch, numpy
+          assert platform.python_version() == '3.11.15'
+          assert torch.__version__ == '2.13.0+cpu'
+          assert numpy.__version__ == '2.3.5'
+          PY
+
+      - name: Download immutable solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-resource-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build
+
+      - name: Run frozen non-selecting resource benchmark
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py \
+            --label 'r7.5.3c-resource-${{ matrix.representation }}-${{ matrix.domain }}' \
+            --interval-seconds 120 -- \
+            python tools/r7_5_3c_phase2_resource_preflight.py \
+              --repo-root . \
+              --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' \
+              --domain '${{ matrix.domain }}' \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+              --out output/report.json
+
+      - name: Upload resource report
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-resource-${{ matrix.representation }}-${{ matrix.domain }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/report.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, benchmark]
+    if: ${{ always() && needs.gate.result == 'success' && needs.benchmark.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Download all resource reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-resource-*-${{ needs.gate.outputs.execution_sha }}
+          path: reports
+
+      - name: Aggregate without strategic selection authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/r7_5_3c_phase2_resource_aggregate.py \
+            --reports-dir reports \
+            --execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            --out output/R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_RESULT.json
+          python - <<'PY'
+          import json
+          p=json.load(open('output/R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_RESULT.json'))
+          assert p['resource_preflight_pass'] is True
+          assert p['selection_authority'] is False
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          PY
+
+      - name: Upload aggregate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-phase2-resource-aggregate-${{ needs.gate.outputs.execution_sha }}
+          path: output/R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_RESULT.json
+          if-no-files-found: error
+          retention-days: 30
