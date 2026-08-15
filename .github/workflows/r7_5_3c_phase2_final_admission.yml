@@ -1,0 +1,224 @@
+name: SpinCore R7.5.3C Phase 2 final admission gate
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_phase2_final_admission.yml'
+      - 'validation/R7_5_3C_PHASE2_FINAL_ADMISSION_FREEZE_20260815.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-phase2-final-admission
+  cancel-in-progress: false
+
+env:
+  TRAINING_RUN_ID: '31865993350'
+  TRAINING_SHA: '9b0ccc207135c3adaec76ea87de8ec21f7415957'
+  EVALUATOR_RUN_ID: '31887392458'
+  EVALUATOR_SHA: 'e887564834df01b1d024fede9b89e678528f9ecf'
+  RAW_GUARD_RUN_ID: '31887615716'
+  RAW_GUARD_SHA: 'e9b994259f098d7d6159b7992ab96d57ad56cf5b'
+  REGRESSION_RUN_ID: '31887615723'
+
+jobs:
+  admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout immutable admission SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify pre-output admission freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_PHASE2_FINAL_ADMISSION_FREEZE_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_PHASE2_FINAL_ADMISSION_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_PHASE2_STRATEGIC_OUTPUTS'
+          assert p['strategic_result_artifacts_seen_before_freeze']==0
+          assert p['raw_guard_result_artifacts_seen_before_freeze']==0
+          assert p['training_run']['run_id']==31865993350
+          assert p['training_run']['execution_sha']=='9b0ccc207135c3adaec76ea87de8ec21f7415957'
+          assert p['strategic_evaluator']['run_id']==31887392458
+          assert p['strategic_evaluator']['execution_sha']=='e887564834df01b1d024fede9b89e678528f9ecf'
+          assert p['raw_logit_guard']['run_id']==31887615716
+          assert p['raw_logit_guard']['execution_sha']=='e9b994259f098d7d6159b7992ab96d57ad56cf5b'
+          assert p['decision_rule']['raw_logit_guard_is_mandatory_prerequisite'] is True
+          assert p['decision_rule']['strategic_result_cannot_authorize_selection_alone'] is True
+          actual=subprocess.check_output(['git','hash-object','.github/workflows/r7_5_3c_phase2_final_admission.yml'],text=True).strip()
+          assert actual==p['workflow_git_blob'],(actual,p['workflow_git_blob'])
+          assert p['production_training_authorized'] is False
+          assert p['ready_for_tables'] is False
+          PY
+
+      - name: Wait for immutable upstream runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for spec in \
+            "$TRAINING_RUN_ID:$TRAINING_SHA:training" \
+            "$EVALUATOR_RUN_ID:$EVALUATOR_SHA:strategic" \
+            "$RAW_GUARD_RUN_ID:$RAW_GUARD_SHA:raw_guard" \
+            "$REGRESSION_RUN_ID:$RAW_GUARD_SHA:regression"
+          do
+            IFS=: read -r run expected_sha label <<<"$spec"
+            for i in $(seq 1 300); do
+              row="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq '[.head_sha,.status,(.conclusion//"")]|@tsv')"
+              IFS=$'\t' read -r sha status conclusion <<<"$row"
+              test "$sha" = "$expected_sha"
+              echo "$label status=$status conclusion=$conclusion"
+              if [ "$status" = completed ]; then break; fi
+              [ "$i" -lt 300 ] || exit 2
+              sleep 60
+            done
+          done
+
+      - name: Materialize final admission decision
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upstream output
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+
+          repo=os.environ['GITHUB_REPOSITORY']
+          def run_meta(run_id):
+              raw=subprocess.check_output(['gh','api',f'repos/{repo}/actions/runs/{run_id}'],text=True)
+              return json.loads(raw)
+
+          training=run_meta(os.environ['TRAINING_RUN_ID'])
+          strategic=run_meta(os.environ['EVALUATOR_RUN_ID'])
+          raw_guard=run_meta(os.environ['RAW_GUARD_RUN_ID'])
+          regression=run_meta(os.environ['REGRESSION_RUN_ID'])
+
+          failures=[]
+          expected={
+              'training': os.environ['TRAINING_SHA'],
+              'strategic': os.environ['EVALUATOR_SHA'],
+              'raw_guard': os.environ['RAW_GUARD_SHA'],
+              'regression': os.environ['RAW_GUARD_SHA'],
+          }
+          metas={'training':training,'strategic':strategic,'raw_guard':raw_guard,'regression':regression}
+          for name,meta in metas.items():
+              if meta.get('head_sha') != expected[name]:
+                  failures.append({'type':'UPSTREAM_SHA_MISMATCH','upstream':name})
+              if meta.get('status') != 'completed':
+                  failures.append({'type':'UPSTREAM_NOT_COMPLETED','upstream':name,'status':meta.get('status')})
+              if meta.get('conclusion') != 'success':
+                  failures.append({'type':'UPSTREAM_RUN_NOT_SUCCESS','upstream':name,'conclusion':meta.get('conclusion')})
+
+          strategic_payload=None
+          raw_payload=None
+          inventory_payload=None
+          if not any(f['upstream']=='strategic' for f in failures if 'upstream' in f):
+              subprocess.run([
+                  'gh','run','download',os.environ['EVALUATOR_RUN_ID'],
+                  '--repo',repo,
+                  '-n',f"r7-5-3c-p2-strategic-result-{os.environ['EVALUATOR_SHA']}",
+                  '-D','upstream/strategic'
+              ],check=True)
+              p=next(Path('upstream/strategic').rglob('R7_5_3C_PHASE2_EVALUATION_RESULT.json'))
+              strategic_payload=json.loads(p.read_text())
+          if not any(f['upstream']=='raw_guard' for f in failures if 'upstream' in f):
+              subprocess.run([
+                  'gh','run','download',os.environ['RAW_GUARD_RUN_ID'],
+                  '--repo',repo,
+                  '-n',f"r7-5-3c-p2-raw-logit-result-{os.environ['RAW_GUARD_SHA']}",
+                  '-D','upstream/raw_guard'
+              ],check=True)
+              p=next(Path('upstream/raw_guard').rglob('R7_5_3C_PHASE2_RAW_LOGIT_GUARD_RESULT.json'))
+              raw_payload=json.loads(p.read_text())
+          if not any(f['upstream']=='training' for f in failures if 'upstream' in f):
+              subprocess.run([
+                  'gh','run','download',os.environ['TRAINING_RUN_ID'],
+                  '--repo',repo,
+                  '-n',f"r7-5-3c-p2-training-inventory-{os.environ['TRAINING_SHA']}",
+                  '-D','upstream/training'
+              ],check=True)
+              p=next(Path('upstream/training').rglob('R7_5_3C_PHASE2_TRAINING_INVENTORY.json'))
+              inventory_payload=json.loads(p.read_text())
+
+          if inventory_payload is not None:
+              if inventory_payload.get('schema')!='SPINCORE_R7_5_3C_PHASE2_TRAINING_INVENTORY_V1':
+                  failures.append({'type':'TRAINING_INVENTORY_SCHEMA'})
+              if inventory_payload.get('execution_sha')!=os.environ['TRAINING_SHA']:
+                  failures.append({'type':'TRAINING_INVENTORY_SHA'})
+              if inventory_payload.get('expected_cells')!=8 or inventory_payload.get('observed_cells')!=8 or inventory_payload.get('integrity_complete') is not True:
+                  failures.append({'type':'TRAINING_INVENTORY_INCOMPLETE'})
+
+          if raw_payload is not None:
+              if raw_payload.get('schema')!='SPINCORE_R7_5_3C_PHASE2_RAW_LOGIT_GUARD_RESULT_V1':
+                  failures.append({'type':'RAW_GUARD_SCHEMA'})
+              if raw_payload.get('execution_sha')!=os.environ['RAW_GUARD_SHA']:
+                  failures.append({'type':'RAW_GUARD_SHA'})
+              if raw_payload.get('status')!='PASS' or raw_payload.get('cells')!=16 or raw_payload.get('phase2_selection_validity_prerequisite_pass') is not True:
+                  failures.append({'type':'RAW_GUARD_NOT_PASS','status':raw_payload.get('status'),'cells':raw_payload.get('cells')})
+
+          winner=None
+          strategic_status=None
+          if strategic_payload is not None:
+              if strategic_payload.get('schema')!='SPINCORE_R7_5_3C_PHASE2_EVALUATION_RESULT_V1':
+                  failures.append({'type':'STRATEGIC_RESULT_SCHEMA'})
+              if strategic_payload.get('evaluator_execution_sha')!=os.environ['EVALUATOR_SHA']:
+                  failures.append({'type':'STRATEGIC_RESULT_SHA'})
+              if strategic_payload.get('training_execution_sha')!=os.environ['TRAINING_SHA']:
+                  failures.append({'type':'STRATEGIC_TRAINING_SHA'})
+              strategic_status=strategic_payload.get('status')
+              winner=strategic_payload.get('winner')
+              if strategic_status == 'SELECTED':
+                  if winner not in ('H2','H3'):
+                      failures.append({'type':'INVALID_STRATEGIC_WINNER','winner':winner})
+              elif strategic_status == 'BLOCKED':
+                  failures.append({'type':'STRATEGIC_SELECTION_BLOCKED','reason':strategic_payload.get('decision',{}).get('reason')})
+              else:
+                  failures.append({'type':'UNKNOWN_STRATEGIC_STATUS','status':strategic_status})
+
+          selected = not failures and strategic_status=='SELECTED' and winner in ('H2','H3')
+          result={
+              'schema':'SPINCORE_R7_5_3C_PHASE2_FINAL_ADMISSION_RESULT_V1',
+              'status':'SELECTED' if selected else 'BLOCKED',
+              'winner':winner if selected else None,
+              'training_run_id':int(os.environ['TRAINING_RUN_ID']),
+              'training_execution_sha':os.environ['TRAINING_SHA'],
+              'strategic_evaluator_run_id':int(os.environ['EVALUATOR_RUN_ID']),
+              'strategic_evaluator_execution_sha':os.environ['EVALUATOR_SHA'],
+              'raw_logit_guard_run_id':int(os.environ['RAW_GUARD_RUN_ID']),
+              'raw_logit_guard_execution_sha':os.environ['RAW_GUARD_SHA'],
+              'regression_run_id':int(os.environ['REGRESSION_RUN_ID']),
+              'upstream_conclusions':{k:v.get('conclusion') for k,v in metas.items()},
+              'training_inventory_integrity_complete':bool(inventory_payload and inventory_payload.get('integrity_complete') is True),
+              'raw_logit_guard_pass':bool(raw_payload and raw_payload.get('phase2_selection_validity_prerequisite_pass') is True),
+              'strategic_result_status':strategic_status,
+              'strategic_result_winner':winner,
+              'failures':failures,
+              'phase2_representation_admission_pass':selected,
+              'r8_production_representation_freeze_authorized':selected,
+              'production_training_authorized':False,
+              'ready_for_tables':False,
+          }
+          Path('output/R7_5_3C_PHASE2_FINAL_ADMISSION_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload durable final admission result
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-final-admission-${{ github.sha }}
+          path: output/R7_5_3C_PHASE2_FINAL_ADMISSION_RESULT.json
+          if-no-files-found: error
+          retention-days: 30

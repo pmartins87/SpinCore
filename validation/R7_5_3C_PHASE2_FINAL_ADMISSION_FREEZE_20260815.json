@@ -1,0 +1,52 @@
+{
+  "decision_rule": {
+    "any_required_upstream_run_failure_blocks": true,
+    "any_upstream_sha_mismatch_blocks": true,
+    "incomplete_training_inventory_blocks": true,
+    "only_joined_pass_can_authorize_R8_production_representation_freeze": true,
+    "phase2_admission_does_not_authorize_production_training": true,
+    "phase2_admission_does_not_set_ready_for_tables": true,
+    "raw_guard_failure_blocks": true,
+    "raw_logit_guard_is_mandatory_prerequisite": true,
+    "strategic_result_cannot_authorize_selection_alone": true,
+    "strategic_status_BLOCKED_blocks": true,
+    "strategic_status_SELECTED_requires_winner_H2_or_H3": true
+  },
+  "main_regression": {
+    "execution_sha": "e9b994259f098d7d6159b7992ab96d57ad56cf5b",
+    "observed_before_freeze": "success",
+    "required_conclusion": "success",
+    "run_id": 31887615723
+  },
+  "production_training_authorized": false,
+  "purpose": "Join immutable Phase2 training integrity, strategic H2/H3 evaluation, independent raw pre-mask logit validity, and regression evidence before any representation is admitted to the R8 production-representation freeze.",
+  "raw_guard_result_artifacts_seen_before_freeze": 0,
+  "raw_logit_guard": {
+    "execution_sha": "e9b994259f098d7d6159b7992ab96d57ad56cf5b",
+    "required_cells": 16,
+    "required_conclusion": "success",
+    "result_artifact": "r7-5-3c-p2-raw-logit-result-e9b994259f098d7d6159b7992ab96d57ad56cf5b",
+    "result_schema": "SPINCORE_R7_5_3C_PHASE2_RAW_LOGIT_GUARD_RESULT_V1",
+    "run_id": 31887615716
+  },
+  "ready_for_tables": false,
+  "result_schema": "SPINCORE_R7_5_3C_PHASE2_FINAL_ADMISSION_RESULT_V1",
+  "schema": "SPINCORE_R7_5_3C_PHASE2_FINAL_ADMISSION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_PHASE2_STRATEGIC_OUTPUTS",
+  "strategic_evaluator": {
+    "execution_sha": "e887564834df01b1d024fede9b89e678528f9ecf",
+    "required_conclusion": "success",
+    "result_artifact": "r7-5-3c-p2-strategic-result-e887564834df01b1d024fede9b89e678528f9ecf",
+    "result_schema": "SPINCORE_R7_5_3C_PHASE2_EVALUATION_RESULT_V1",
+    "run_id": 31887392458
+  },
+  "strategic_result_artifacts_seen_before_freeze": 0,
+  "training_run": {
+    "execution_sha": "9b0ccc207135c3adaec76ea87de8ec21f7415957",
+    "required_cells": 8,
+    "required_conclusion": "success",
+    "required_inventory_schema": "SPINCORE_R7_5_3C_PHASE2_TRAINING_INVENTORY_V1",
+    "run_id": 31865993350
+  },
+  "workflow_git_blob": "328dc74145c221240390f330a1ef2d9fc9e4e8eb"
+}
