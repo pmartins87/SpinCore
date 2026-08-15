@@ -1,0 +1,174 @@
+name: SpinCore R7.5.3C policy-refit stability decomposition
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_policy_refit_decomposition.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-policy-refit-decomposition
+  cancel-in-progress: false
+
+env:
+  TRAINING_RUN_ID: '31865993350'
+  TRAINING_SHA: '9b0ccc207135c3adaec76ea87de8ec21f7415957'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify frozen diagnostic contract
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_POLICY_REFIT_DECOMPOSITION_FREEZE_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_POLICY_REFIT_DECOMPOSITION_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_POLICY_REFIT_DECOMPOSITION_OUTPUT'
+          assert p['diagnostic_output_seen_before_freeze'] is False
+          assert p['preconditions']['cross_seed_parity_audit_status']=='PASS'
+          assert p['immutable_sources']['training_run_id']==31865993350
+          assert p['immutable_sources']['heldout_run_id']==31866538984
+          assert p['refit_contract']['diagnostic_refits']==16
+          assert p['refit_contract']['policy_optimizer_steps_each']==16384
+          assert p['refit_contract']['batch_size']==256
+          assert p['refit_contract']['learning_rate']==0.001
+          assert p['refit_contract']['cfr_rerun'] is False
+          assert p['metrics']['mean_tv_threshold_reference_only']==0.15
+          assert p['metrics']['p95_tv_threshold_reference_only']==0.35
+          assert p['metrics']['thresholds_are_not_new_selection_gates'] is True
+          for path, expected in {**p['code_blobs'], **p['frozen_inherited_blobs']}.items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==expected,(path,actual,expected)
+          g=p['governance']
+          assert g['diagnostic_only'] and not g['may_select_h2_or_h3']
+          assert not g['may_relax_phase2_cross_seed_thresholds']
+          assert not g['may_authorize_h4'] and not g['may_authorize_r7_5_4_spnniv3_action_sizing_revalidation'] and not g['may_authorize_r8']
+          assert not g['production_training_authorized'] and not g['ready_for_tables']
+          PY
+          echo "execution_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+  refit:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        representation:
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL
+          - H3_HYBRID_EXACT_SEMANTIC_FINAL
+        domain:
+          - TRUE_HEADS_UP
+          - THREE_HANDED
+        source_training_seed:
+          - 1342191342
+          - 1801739323
+        learner_seed:
+          - 1342191342
+          - 1801739323
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable source final checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-p2-final-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.source_training_seed }}-${{ env.TRAINING_SHA }}
+          path: source
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.TRAINING_RUN_ID }}
+      - name: Download frozen heldout corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-heldout-*-${{ env.HELDOUT_SHA }}
+          path: heldout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Refit final policy on frozen strategy memory
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+          SPINCORE_TORCH_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/r7_5_3c_policy_refit_decomposition_worker.py \
+            --repo-root . \
+            --source-checkpoint source/checkpoint.pt \
+            --heldout-root heldout \
+            --representation '${{ matrix.representation }}' \
+            --domain '${{ matrix.domain }}' \
+            --source-training-seed '${{ matrix.source_training_seed }}' \
+            --learner-seed '${{ matrix.learner_seed }}' \
+            --out output/cell.json.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-policy-refit-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.source_training_seed }}-${{ matrix.learner_seed }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/cell.json.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, refit]
+    if: ${{ always() && needs.gate.result == 'success' && needs.refit.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install metric dependency
+        run: python -m pip install 'numpy==2.3.5'
+      - name: Download all 16 diagnostic refits
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-policy-refit-*-${{ needs.gate.outputs.execution_sha }}
+          path: cells
+      - name: Aggregate frozen decomposition
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/r7_5_3c_policy_refit_decomposition_aggregate.py \
+            --cells-root cells \
+            --blocker-evidence validation/R7_5_3C_PHASE2_BLOCKER_EVIDENCE_20260815.json \
+            --out output/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-policy-refit-decomposition-result-${{ needs.gate.outputs.execution_sha }}
+          path: output/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json
+          if-no-files-found: error
+          retention-days: 30
