@@ -164,3 +164,23 @@ def test_h3_adds_semantic_capacity_without_removing_exact_channels() -> None:
     assert p3 > p2
     assert p2 < 400_000
     assert p3 < 500_000
+
+
+def test_v3_model_factories_do_not_advance_global_torch_rng() -> None:
+    torch.manual_seed(0x753C)
+    state_before = torch.random.get_rng_state().clone()
+    _, h2a = make_h2_final_v3(seed=123456)
+    state_after_h2 = torch.random.get_rng_state().clone()
+    _, h3a = make_h3_final_v3(seed=654321)
+    state_after_h3 = torch.random.get_rng_state().clone()
+    assert torch.equal(state_before, state_after_h2)
+    assert torch.equal(state_before, state_after_h3)
+
+    # Same isolated seed remains bit-identical regardless of caller RNG state.
+    torch.manual_seed(999999)
+    _, h2b = make_h2_final_v3(seed=123456)
+    _, h3b = make_h3_final_v3(seed=654321)
+    for a, b in zip(h2a.parameters(), h2b.parameters()):
+        assert torch.equal(a, b)
+    for a, b in zip(h3a.parameters(), h3b.parameters()):
+        assert torch.equal(a, b)
