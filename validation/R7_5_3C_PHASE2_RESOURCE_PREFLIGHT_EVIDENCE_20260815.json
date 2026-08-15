@@ -1,0 +1,73 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_RESOURCE_PREFLIGHT_EVIDENCE_V1",
+  "status": "PASS",
+  "execution_sha": "0d7f079899be21e9dbfcf707bf9cc7c84ba6561a",
+  "workflow_run_id": 31865059816,
+  "aggregate_artifact": {
+    "artifact_id": 9241783802,
+    "name": "r7-5-3c-phase2-resource-aggregate-0d7f079899be21e9dbfcf707bf9cc7c84ba6561a",
+    "digest": "sha256:01e0c08f46503a2e507b8ceecbd4d0fb8f61d451df3e83d9b9913dc393cf0567"
+  },
+  "selection_authority": false,
+  "resource_preflight_pass": true,
+  "hard_failures": [],
+  "runtime": {
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "torch_threads": 2,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+  },
+  "model_evidence": {
+    "H0_V1_RESOURCE_CONTROL": {
+      "parameter_count": 152954,
+      "architecture_fingerprint_sha256": "6ccc652e85628de6b731b8d2e4d5ecff4953352acfb397169ed2d3723386f6e6"
+    },
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL": {
+      "parameter_count": 190958,
+      "parameter_count_ratio_vs_H0": 1.2484668593171804,
+      "architecture_fingerprint_sha256": "1362caf9f893cee88bfb2f3f26e8054c4932e112b27e0a5dc112a08a727a9f97"
+    },
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL": {
+      "parameter_count": 228110,
+      "parameter_count_ratio_vs_H0": 1.491363416452005,
+      "architecture_fingerprint_sha256": "3568865e93366a793c3ecddb5ceeaad9de73540ca6985a20653c925b2a7576cf"
+    }
+  },
+  "source_sha256": {
+    "python/spincore/r7_5_representation_v3.py": "ff362f5cdf585ad019b92e348e11cac069a370d0539933e685dd0f9aa491e301",
+    "python/spincore/solver_v3.py": "2708445fb6ca44f8f74c45cc4ae4c7f65e655dd9e85c58ef660ae0ff0b022ec3",
+    "python/spincore_nn/card_orbit_v3.py": "398e69cd97d1d7b7e064778baa11506f7d36aa83b83e90bf63ad96b3f55572cf",
+    "python/spincore_nn/codec_v3.py": "45f472c74d94b4364d9e48915c90c9d4f0dd0743c8116acaed5f990e3747821e",
+    "python/spincore_nn/models_v3_final.py": "7965772d3f7e1d3ae436e2ce13789d417e7e35995046558db434829485444a06",
+    "python/spincore_nn/semantics_v3.py": "3622fba14c86c84415ca563dbb4c48ffee07e08795b3285d6b9a7d12fa711710"
+  },
+  "domain_evidence": {
+    "TRUE_HEADS_UP": {
+      "state_count": 256,
+      "street_counts": {"preflop": 74, "flop": 79, "turn": 62, "river": 41},
+      "history_len": {"min": 2, "mean": 6.828125, "p95": 12, "max": 16},
+      "spnniv3_bytes": {"min": 160, "mean": 256.5625, "p95": 360, "max": 440},
+      "H0": {"online_batch1_s": 0.0007955582109375747, "model_batch1_s": 0.0007265591171874419, "model_batch64_s_per_sample": 0.00006107778466796915, "preprocess_s": 0.00003988685156253169, "peak_rss_bytes": 254169088},
+      "H2": {"online_batch1_s": 0.0011481017734374932, "online_ratio_vs_H0": 1.4431398704117977, "model_batch1_s": 0.0007844420468750002, "model_batch64_s_per_sample": 0.00002863320654296342, "preprocess_s": 0.000333963992187436, "peak_rss_bytes": 254935040, "peak_rss_ratio_vs_H0": 1.0030135529305593},
+      "H3": {"online_batch1_s": 0.002148901257812419, "online_ratio_vs_H0": 2.7011238502333015, "model_batch1_s": 0.0008254561015623718, "model_batch64_s_per_sample": 0.00003201168652343378, "preprocess_s": 0.0012605859921874796, "peak_rss_bytes": 255401984, "peak_rss_ratio_vs_H0": 1.0048506921502587}
+    },
+    "THREE_HANDED": {
+      "state_count": 256,
+      "street_counts": {"preflop": 111, "flop": 78, "turn": 43, "river": 24},
+      "history_len": {"min": 2, "mean": 9.359375, "p95": 18, "max": 23},
+      "spnniv3_bytes": {"min": 160, "mean": 307.1875, "p95": 480, "max": 580},
+      "H0": {"online_batch1_s": 0.0008229148515626061, "model_batch1_s": 0.0007508390781250096, "model_batch64_s_per_sample": 0.000041478867187499935, "preprocess_s": 0.000041120999999977315, "peak_rss_bytes": 254279680},
+      "H2": {"online_batch1_s": 0.0010565789374999968, "online_ratio_vs_H0": 1.2839468573129935, "model_batch1_s": 0.0006687086015625399, "model_batch64_s_per_sample": 0.000028726390136717822, "preprocess_s": 0.00029675676562501696, "peak_rss_bytes": 255680512, "peak_rss_ratio_vs_H0": 1.0055090206185566},
+      "H3": {"online_batch1_s": 0.0022157766328125272, "online_ratio_vs_H0": 2.692595264996204, "model_batch1_s": 0.0008215744140624981, "model_batch64_s_per_sample": 0.00003247746972656271, "preprocess_s": 0.0013169122968749725, "peak_rss_bytes": 256258048, "peak_rss_ratio_vs_H0": 1.0077802835051546}
+    }
+  },
+  "interpretation_guard": {
+    "resource_preflight_selects_strategy": false,
+    "absolute_ci_time_is_ryzen_time": false,
+    "slower_than_H0_alone_rejects_candidate": false,
+    "H2_H3_mechanically_admitted_to_phase2": true,
+    "phase2_strategic_evidence_still_required": true
+  },
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
