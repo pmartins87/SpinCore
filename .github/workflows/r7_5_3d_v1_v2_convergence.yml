@@ -1,0 +1,191 @@
+name: SpinCore R7.5.3D V1 V2 convergence diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/r7_5_3d_v1_v2_convergence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3d-v1-v2-convergence
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  TORCH_VERSION: '2.13.0+cpu'
+  NUMPY_VERSION: '2.3.5'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Validate diagnostic precommit
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3D_V1_V2_CONVERGENCE_PRECOMMIT_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3D_V1_V2_CONVERGENCE_PRECOMMIT_V1'
+          assert p['status']=='FROZEN_BEFORE_R7_5_3D_OUTPUTS'
+          assert p['selection_authority']=='DIAGNOSTIC_ONLY'
+          assert p['production_representation_authority'] is False
+          assert p['historical_r7_5_3_result_reopened'] is False
+          assert p['paired_corpus_run_id']==31767822186
+          assert p['split_seed']==1925930899
+          assert p['fit_seeds']==[247244420,1953786788,2029202803]
+          assert p['domains']==['TRUE_HEADS_UP','THREE_HANDED']
+          assert p['candidates']['C0_V1_FROZEN_CONTROL']['budgets']==[
+            {'label':'1x','advantage_steps':4096,'policy_steps':8192}]
+          assert p['candidates']['C1_V2_NO_FLOP_TOKEN']['budgets']==[
+            {'label':'0.5x','advantage_steps':2048,'policy_steps':4096},
+            {'label':'1x','advantage_steps':4096,'policy_steps':8192},
+            {'label':'2x','advantage_steps':8192,'policy_steps':16384}]
+          assert p['strategic_output_seen_before_freeze'] is False
+          assert p['ready_for_tables'] is False
+          PY
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+  fit:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        fit_seed: [247244420, 1953786788, 2029202803]
+        cell:
+          - candidate: C0_V1_FROZEN_CONTROL
+            budget: 1x
+            advantage_steps: 4096
+            policy_steps: 8192
+          - candidate: C1_V2_NO_FLOP_TOKEN
+            budget: 0.5x
+            advantage_steps: 2048
+            policy_steps: 4096
+          - candidate: C1_V2_NO_FLOP_TOKEN
+            budget: 1x
+            advantage_steps: 4096
+            policy_steps: 8192
+          - candidate: C1_V2_NO_FLOP_TOKEN
+            budget: 2x
+            advantage_steps: 8192
+            policy_steps: 16384
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable historical paired corpus
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3-corpus-${{ matrix.domain }}-*
+          path: corpora
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 31767822186
+      - name: Fit one frozen convergence cell from scratch
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t advantages < <(find corpora -name advantage_pairs.pt -type f | sort)
+          mapfile -t strategies < <(find corpora -name strategy_pairs.pt -type f | sort)
+          test "${#advantages[@]}" -eq 2
+          test "${#strategies[@]}" -eq 2
+          adv_args=(); strategy_args=()
+          for f in "${advantages[@]}"; do adv_args+=(--advantage "$f"); done
+          for f in "${strategies[@]}"; do strategy_args+=(--strategy "$f"); done
+          mkdir -p fit_output
+          python tools/run_with_heartbeat.py \
+            --label "r7.5.3d-${{ matrix.cell.candidate }}-${{ matrix.domain }}-${{ matrix.fit_seed }}-${{ matrix.cell.budget }}" \
+            --interval-seconds 300 -- \
+            python tools/r7_5_fit_representation_candidate.py \
+              --candidate '${{ matrix.cell.candidate }}' \
+              --domain '${{ matrix.domain }}' \
+              --fit-seed '${{ matrix.fit_seed }}' \
+              --split-seed 1925930899 \
+              "${adv_args[@]}" "${strategy_args[@]}" \
+              --out fit_output/fit.pt \
+              --device cpu \
+              --learning-rate 0.001 \
+              --batch-size 256 \
+              --advantage-steps '${{ matrix.cell.advantage_steps }}' \
+              --policy-steps '${{ matrix.cell.policy_steps }}' \
+              --min-tag-samples 128
+          test -s fit_output/fit.json
+      - name: Upload compact immutable fit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3d-${{ matrix.cell.candidate }}-${{ matrix.domain }}-${{ matrix.fit_seed }}-${{ matrix.cell.budget }}
+          path: fit_output/fit.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, fit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout immutable execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - name: Download all frozen fit reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3d-*
+          path: fits
+      - name: Aggregate diagnostic without production authority
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t reports < <(find fits -name fit.json -type f | sort)
+          test "${#reports[@]}" -eq 24
+          args=()
+          for f in "${reports[@]}"; do args+=(--fit-json "$f"); done
+          python tools/r7_5_3d_aggregate_v1_v2_convergence.py \
+            --repo-root . \
+            --execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            "${args[@]}" \
+            --out R7_5_3D_V1_V2_CONVERGENCE_RESULT.json
+      - name: Upload convergence diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3d-v1-v2-convergence-result-${{ needs.gate.outputs.execution_sha }}
+          path: R7_5_3D_V1_V2_CONVERGENCE_RESULT.json
+          if-no-files-found: error
+          retention-days: 30
