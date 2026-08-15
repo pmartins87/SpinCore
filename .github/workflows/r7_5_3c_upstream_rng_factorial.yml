@@ -1,0 +1,327 @@
+name: SpinCore R7.5.3C upstream RNG factorial
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_upstream_rng_factorial.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-upstream-rng-factorial
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+  PRIOR_RECOVERY_RUN_ID: '31901724211'
+  PRIOR_RECOVERY_ARTIFACT: 'r7-5-3c-policy-refit-decomposition-recovery-bc33c0a7462f68e9bbd7177394d4615ca9c85916'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify frozen factorial before any output
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import hashlib, json, subprocess
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_UPSTREAM_RNG_FACTORIAL_FREEZE_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_UPSTREAM_RNG_FACTORIAL_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_UPSTREAM_RNG_FACTORIAL_OUTPUT'
+          assert p['trigger_evidence']['policy_refit_result_sha256']=='48ffe2a5078c54d54f501d75516df5e015f8f91aa332d15366037801767e862e'
+          f=p['factorial']
+          assert f['cells']==16
+          assert f['sampling_seeds']==[1342191342,1801739323]
+          assert f['learning_memory_seeds']==[1342191342,1801739323]
+          assert f['phase2_budget_per_cell']['iterations']==3
+          assert f['phase2_budget_per_cell']['roots_per_iteration']==64
+          assert f['phase2_budget_per_cell']['exact_opponent_levels']==2
+          assert f['phase2_budget_per_cell']['advantage_steps_per_member_per_iteration']==4096
+          assert p['fixed_final_policy_readout']['policy_steps']==16384
+          ns="SpinCore|R7.5.3C|UPSTREAM-FACTORIAL|FINAL-POLICY-LEARNER"
+          derived=int.from_bytes(hashlib.sha256(ns.encode()).digest()[:4],'big') & 0x7fffffff
+          assert derived==p['fixed_final_policy_readout']['learner_seed']==1538612375
+          for path, expected in {**p['code_blobs'], **p['inherited_code_blobs']}.items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==expected,(path,actual,expected)
+          g=p['governance']
+          assert g['diagnostic_output_seen_before_freeze'] is False
+          assert g['diagnostic_only'] and not g['may_select_h2_or_h3']
+          assert not g['may_change_phase2_cross_seed_thresholds']
+          assert not g['may_authorize_h4'] and not g['may_authorize_r7_5_4_spnniv3_action_sizing_revalidation'] and not g['may_authorize_r8']
+          assert not g['production_training_authorized'] and not g['ready_for_tables']
+          PY
+          echo "execution_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime and compile diagnostic tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+          python -m py_compile tools/r7_5_3c_upstream_rng_factorial_stage_worker.py tools/r7_5_3c_upstream_rng_factorial_final_worker.py tools/r7_5_3c_upstream_rng_factorial_aggregate.py
+      - name: Build immutable solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-upstream-factorial-solver-${{ steps.freeze.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration1:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: &factorial_matrix
+        representation:
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL
+          - H3_HYBRID_EXACT_SEMANTIC_FINAL
+        domain:
+          - TRUE_HEADS_UP
+          - THREE_HANDED
+        sampling_seed:
+          - 1342191342
+          - 1801739323
+        learning_seed:
+          - 1342191342
+          - 1801739323
+    steps:
+      - &checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - &setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - &runtime
+        name: Install frozen runtime
+        shell: bash
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - &solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-upstream-factorial-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build
+      - name: Run factorial iteration 1
+        shell: bash
+        env: &worker_env
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'upstream-f1-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_upstream_rng_factorial_stage_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --sampling-seed '${{ matrix.sampling_seed }}' --learning-seed '${{ matrix.learning_seed }}' \
+              --target-iteration 1 --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-upstream-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-i1-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration2:
+    needs: [gate, iteration1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: *factorial_matrix
+    steps:
+      - *checkout
+      - *setup
+      - *runtime
+      - *solver
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-upstream-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-i1-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run factorial iteration 2
+        shell: bash
+        env: *worker_env
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'upstream-f2-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_upstream_rng_factorial_stage_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --sampling-seed '${{ matrix.sampling_seed }}' --learning-seed '${{ matrix.learning_seed }}' \
+              --target-iteration 2 --resume input/checkpoint.pt \
+              --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-upstream-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-i2-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration3:
+    needs: [gate, iteration2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: *factorial_matrix
+    steps:
+      - *checkout
+      - *setup
+      - *runtime
+      - *solver
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-upstream-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-i2-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run factorial iteration 3 without final policy
+        shell: bash
+        env: *worker_env
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'upstream-f3-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_upstream_rng_factorial_stage_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --sampling-seed '${{ matrix.sampling_seed }}' --learning-seed '${{ matrix.learning_seed }}' \
+              --target-iteration 3 --resume input/checkpoint.pt \
+              --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-upstream-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-i3-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  fixed_policy_readout:
+    needs: [gate, iteration3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: *factorial_matrix
+    steps:
+      - *checkout
+      - *setup
+      - *runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-upstream-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-i3-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Download frozen heldout corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-heldout-*-${{ env.HELDOUT_SHA }}
+          path: heldout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Fit common final policy and evaluate frozen heldout
+        shell: bash
+        env: *worker_env
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'upstream-readout-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_upstream_rng_factorial_final_worker.py \
+              --repo-root . --source-checkpoint input/checkpoint.pt --heldout-root heldout \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --sampling-seed '${{ matrix.sampling_seed }}' --learning-seed '${{ matrix.learning_seed }}' \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}' --out output/cell.json.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-upstream-cell-${{ matrix.representation }}-${{ matrix.domain }}-S${{ matrix.sampling_seed }}-L${{ matrix.learning_seed }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/cell.json.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, fixed_policy_readout]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen metric runtime
+        shell: bash
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download all 16 factorial readouts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-upstream-cell-*-${{ needs.gate.outputs.execution_sha }}
+          path: cells
+      - name: Download prior immutable policy-refit decomposition
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PRIOR_RECOVERY_ARTIFACT }}
+          path: prior
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.PRIOR_RECOVERY_RUN_ID }}
+      - name: Aggregate frozen factorial
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          test "$(find cells -name cell.json.gz | wc -l)" -eq 16
+          test "$(sha256sum prior/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json | awk '{print $1}')" = '48ffe2a5078c54d54f501d75516df5e015f8f91aa332d15366037801767e862e'
+          mkdir -p output
+          python tools/r7_5_3c_upstream_rng_factorial_aggregate.py \
+            --cells-root cells \
+            --policy-refit-result prior/R7_5_3C_POLICY_REFIT_DECOMPOSITION_RESULT.json \
+            --out output/R7_5_3C_UPSTREAM_RNG_FACTORIAL_RESULT.json
+          sha256sum output/R7_5_3C_UPSTREAM_RNG_FACTORIAL_RESULT.json | tee output/RESULT_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-upstream-rng-factorial-result-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
