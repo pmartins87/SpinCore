@@ -1,0 +1,218 @@
+name: SpinCore R7.5.3C Phase 2 raw-logit validity guard
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_phase2_raw_logit_guard.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-phase2-raw-logit-guard
+  cancel-in-progress: false
+
+env:
+  TRAINING_RUN_ID: '31865993350'
+  TRAINING_SHA: '9b0ccc207135c3adaec76ea87de8ec21f7415957'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout immutable guard SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify pre-output raw-logit guard freeze
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_PHASE2_RAW_LOGIT_GUARD_FREEZE_20260815.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_PHASE2_RAW_LOGIT_GUARD_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_PHASE2_STRATEGIC_EVALUATION_OUTPUTS'
+          assert p['strategic_evaluator_run_already_launched']==31887392458
+          assert p['strategic_evaluator_had_reached_evaluation_cells_before_freeze'] is False
+          assert p['cells']==16 and p['sentinel_states_per_cell']==256
+          for path, expected in p['tool_blob'].items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==expected,(path,actual,expected)
+          assert p['relationship_to_existing_evaluator']['role']=='INDEPENDENT_HARD_VALIDITY_GUARD'
+          assert not p['production_training_authorized'] and not p['ready_for_tables']
+          PY
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+      - name: Wait for immutable Phase2 training completion
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 300); do
+            row="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$TRAINING_RUN_ID" --jq '[.head_sha,.status,(.conclusion//"")]|@tsv')"
+            IFS=$'\t' read -r sha status conclusion <<<"$row"
+            test "$sha" = "$TRAINING_SHA"
+            echo "training status=$status conclusion=$conclusion"
+            if [ "$status" = completed ]; then test "$conclusion" = success; break; fi
+            [ "$i" -lt 300 ] || exit 2
+            sleep 60
+          done
+
+  extract:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-p2-final-*-${{ env.TRAINING_SHA }}
+          path: final_checkpoints
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.TRAINING_RUN_ID }}
+      - name: Extract eight immutable light policies
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: python tools/r7_5_3c_phase2_extract_final_policies.py --input-root final_checkpoints --output-root light_policies --training-execution-sha "$TRAINING_SHA"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-raw-logit-light-policies-${{ needs.gate.outputs.execution_sha }}
+          path: light_policies
+          if-no-files-found: error
+          retention-days: 30
+
+  audit:
+    needs: [gate, extract]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        representation:
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL
+          - H3_HYBRID_EXACT_SEMANTIC_FINAL
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        training_seed: [1342191342, 1801739323]
+        evaluation_seed: [2029384436, 1150634112]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-p2-raw-logit-light-policies-${{ needs.gate.outputs.execution_sha }}
+          path: policies
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-heldout-${{ matrix.domain }}-${{ matrix.evaluation_seed }}-${{ env.HELDOUT_SHA }}
+          path: heldout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Check raw pre-mask logits
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          policy="policies/${{ matrix.representation }}__${{ matrix.domain }}__${{ matrix.training_seed }}.pt"
+          python tools/r7_5_3c_phase2_raw_logit_audit.py \
+            --repo-root . \
+            --policy "$policy" \
+            --heldout heldout/states.json.gz \
+            --representation '${{ matrix.representation }}' \
+            --domain '${{ matrix.domain }}' \
+            --training-seed '${{ matrix.training_seed }}' \
+            --evaluation-seed '${{ matrix.evaluation_seed }}' \
+            --training-execution-sha "$TRAINING_SHA" \
+            --heldout-execution-sha "$HELDOUT_SHA" \
+            --audit-execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            --out output/report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r7-5-3c-p2-raw-logit-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ matrix.evaluation_seed }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/report.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, audit]
+    if: ${{ always() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-p2-raw-logit-*-${{ needs.gate.outputs.execution_sha }}
+          path: reports
+      - name: Require all sixteen hard-validity cells
+        env:
+          EXECUTION_SHA: ${{ needs.gate.outputs.execution_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          rows=[]
+          for path in Path('reports').rglob('report.json'):
+              p=json.loads(path.read_text())
+              if p.get('schema')=='SPINCORE_R7_5_3C_PHASE2_RAW_LOGIT_SENTINEL_AUDIT_V1': rows.append(p)
+          keys={(p['representation'],p['domain'],int(p['training_seed']),int(p['evaluation_seed'])) for p in rows}
+          reps=('H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL','H3_HYBRID_EXACT_SEMANTIC_FINAL')
+          domains=('TRUE_HEADS_UP','THREE_HANDED')
+          train=(1342191342,1801739323); evals=(2029384436,1150634112)
+          expected={(r,d,t,e) for r in reps for d in domains for t in train for e in evals}
+          failures=[]
+          if keys!=expected or len(rows)!=16: failures.append({'type':'INVENTORY','missing':sorted(expected-keys),'extra':sorted(keys-expected),'rows':len(rows)})
+          for p in rows:
+              if p['audit_execution_sha']!=os.environ['EXECUTION_SHA']: failures.append({'type':'SHA','cell':[p['representation'],p['domain'],p['training_seed'],p['evaluation_seed']]})
+              if p['hard_validity_guard_pass'] is not True: failures.append({'type':'NONFINITE_RAW_LOGIT','cell':[p['representation'],p['domain'],p['training_seed'],p['evaluation_seed']],'details':p['failures']})
+          out={'schema':'SPINCORE_R7_5_3C_PHASE2_RAW_LOGIT_GUARD_RESULT_V1','execution_sha':os.environ['EXECUTION_SHA'],'status':'PASS' if not failures else 'FAIL','cells':len(rows),'failures':failures,'phase2_selection_validity_prerequisite_pass':not failures,'production_training_authorized':False,'ready_for_tables':False}
+          Path('output/R7_5_3C_PHASE2_RAW_LOGIT_GUARD_RESULT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(out,indent=2,sort_keys=True))
+          if failures: raise SystemExit(3)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-p2-raw-logit-result-${{ needs.gate.outputs.execution_sha }}
+          path: output/R7_5_3C_PHASE2_RAW_LOGIT_GUARD_RESULT.json
+          if-no-files-found: error
+          retention-days: 30

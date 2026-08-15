@@ -1,0 +1,43 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_RAW_LOGIT_GUARD_FREEZE_V1",
+  "status": "FROZEN_BEFORE_PHASE2_STRATEGIC_EVALUATION_OUTPUTS",
+  "created_utc": "2026-08-15",
+  "reason": "The Phase2 evaluator V1 finite-logit sentinel path masks illegal logits to -1e9 before checking finiteness. That could hide a NaN or infinity produced by the raw network in an illegal slot. The frozen strategic evaluator remains unchanged; this independent pre-output validity guard is mandatory before accepting any Phase2 strategic result.",
+  "strategic_evaluator_run_already_launched": 31887392458,
+  "strategic_evaluator_had_reached_evaluation_cells_before_freeze": false,
+  "training_run": 31865993350,
+  "training_execution_sha": "9b0ccc207135c3adaec76ea87de8ec21f7415957",
+  "heldout_run": 31866538984,
+  "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+  "representations": [
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+  ],
+  "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+  "training_seeds": [1342191342, 1801739323],
+  "evaluation_seeds": [2029384436, 1150634112],
+  "sentinel_states_per_cell": 256,
+  "cells": 16,
+  "test": "All six raw pre-mask network logits must be finite for every one of the first 256 frozen heldout states in every representation/domain/training-seed/evaluation-seed cell.",
+  "hard_validity_rule": "Any non-finite raw logit in any action slot, legal or illegal, invalidates Phase2 representation selection. No cell may be dropped.",
+  "relationship_to_existing_evaluator": {
+    "changes_winner_rule": false,
+    "changes_poker_rng": false,
+    "changes_bootstrap": false,
+    "changes_training": false,
+    "changes_heldout_states": false,
+    "role": "INDEPENDENT_HARD_VALIDITY_GUARD"
+  },
+  "tool_blob": {
+    "tools/r7_5_3c_phase2_raw_logit_audit.py": "d1fdef4d87f6acf162adebb3a60cd7ca9a73bc72"
+  },
+  "forbidden": [
+    "accept Phase2 selection if this guard is not complete across all 16 cells",
+    "ignore a non-finite value because its action is illegal",
+    "change the frozen heldout states or candidate policies to make the guard pass",
+    "use this guard to select H2 versus H3",
+    "authorize production or table use"
+  ],
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
