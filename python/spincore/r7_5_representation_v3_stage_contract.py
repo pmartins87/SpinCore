@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -80,6 +81,53 @@ def _read(path: Path) -> dict:
     if not path.exists():
         raise FileNotFoundError(path)
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _live_model_evidence(root: Path, representation: str, frozen_model: dict, frozen_sources: dict) -> dict:
+    from spincore_nn.models_v3_final import make_h2_final_v3, make_h3_final_v3
+
+    live_sources = {}
+    for relative_path, expected in frozen_sources.items():
+        actual = _sha256(root / relative_path)
+        if actual != expected:
+            raise ValueError(
+                f"Phase 2 frozen source drift: {relative_path} {actual} != {expected}"
+            )
+        live_sources[relative_path] = actual
+
+    factory = make_h2_final_v3 if representation == H2_FINAL else make_h3_final_v3
+    config, network = factory(device="cpu", seed=0)
+    parameter_count = int(sum(parameter.numel() for parameter in network.parameters()))
+    if parameter_count != MODEL_PARAMETER_COUNTS[representation]:
+        raise ValueError("Phase 2 live model parameter-count drift")
+    if parameter_count != int(frozen_model["parameter_count"]):
+        raise ValueError("Phase 2 live model disagrees with frozen parameter count")
+    config_dict = config.to_dict()
+    if config_dict != dict(frozen_model["config"]):
+        raise ValueError("Phase 2 live model config drift")
+
+    material = {
+        "representation": representation,
+        "config": config_dict,
+        "parameter_count": parameter_count,
+        "source_sha256": live_sources,
+    }
+    blob = json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    fingerprint = hashlib.sha256(blob).hexdigest()
+    if fingerprint != MODEL_FINGERPRINTS[representation]:
+        raise ValueError("Phase 2 live architecture fingerprint drift")
+    if fingerprint != frozen_model["architecture_fingerprint_sha256"]:
+        raise ValueError("Phase 2 live fingerprint disagrees with model freeze")
+    return {
+        "config": config_dict,
+        "parameter_count": parameter_count,
+        "source_sha256": live_sources,
+        "architecture_fingerprint_sha256": fingerprint,
+    }
 
 
 def validate_phase2_v3_contract(
@@ -182,6 +230,12 @@ def validate_phase2_v3_contract(
         raise ValueError("Phase 2 model fingerprint drift")
     if not model["admission"].get("phase2_strategic_training_allowed"):
         raise ValueError("Phase 2 model not strategically admitted")
+    live_model = _live_model_evidence(
+        root,
+        representation,
+        frozen_model,
+        dict(model["shared_source_sha256"]),
+    )
 
     from spincore.r7_5_action_contract import postflop_candidate_specs
     specs = postflop_candidate_specs(root)
@@ -193,5 +247,6 @@ def validate_phase2_v3_contract(
         "model": model,
         "precommit": precommit,
         "resource": resource,
+        "live_model": live_model,
         "action_spec": specs[ACTION_CANDIDATE],
     }
