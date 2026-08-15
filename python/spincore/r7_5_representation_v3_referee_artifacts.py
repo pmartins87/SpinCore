@@ -88,8 +88,9 @@ def save_heldout_v3_artifact(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = (json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
-    with gzip.GzipFile(filename=str(path), mode="wb", compresslevel=6, mtime=0) as handle:
-        handle.write(encoded)
+    with path.open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=6, mtime=0) as handle:
+            handle.write(encoded)
     return {key: value for key, value in payload.items() if key != "states"}
 
 
