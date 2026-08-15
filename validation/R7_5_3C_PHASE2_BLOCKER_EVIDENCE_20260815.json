@@ -1,0 +1,77 @@
+{
+  "schema": "SPINCORE_R7_5_3C_PHASE2_BLOCKER_EVIDENCE_V1",
+  "date": "2026-08-15",
+  "status": "BLOCKED",
+  "scope": "SPNNIV3 Phase2 H2 versus H3 representation admission",
+  "source_artifact": {
+    "recovery_run_id": 31894682444,
+    "recovery_execution_sha": "8930b8566f2c4b59063ae122d0c766b93c18f035",
+    "artifact_id": 9249473298,
+    "artifact_name": "r7-5-3c-p2-strategic-result-recovery-8930b8566f2c4b59063ae122d0c766b93c18f035",
+    "strategic_result_filename": "R7_5_3C_PHASE2_EVALUATION_RESULT.json",
+    "strategic_result_sha256": "c209dd1c10f3eb3595cc141112f69661a49804cbba20d355b7b3b321d46b9238",
+    "lineage_filename": "R7_5_3C_PHASE2_AGGREGATE_RECOVERY_LINEAGE.json",
+    "worker_cells_recomputed": 0,
+    "worker_cell_artifacts_reused": 48,
+    "strategic_algorithm_changed": false
+  },
+  "decision": {
+    "reason": "BOTH_CANDIDATES_FAIL_HARD_GATES",
+    "winner": null,
+    "candidate_pass": {
+      "H2": false,
+      "H3": false
+    }
+  },
+  "passing_prerequisites": {
+    "training_inventory_integrity_complete": true,
+    "training_quality_pass": true,
+    "all_8_final_training_report_gates_pass": true,
+    "all_16_phase2_sentinel_cells_pass": true,
+    "independent_raw_logit_guard_pass": true
+  },
+  "exclusive_observed_phase2_blocker": "cross_seed_policy_stability",
+  "cross_seed_policy_stability_contract": {
+    "states_per_row": 1024,
+    "metric": "AvgPolicy total variation on identical heldout states across the two frozen training seeds",
+    "mean_tv_max": 0.15,
+    "p95_tv_max": 0.35,
+    "failed_rows": 8,
+    "total_rows": 8
+  },
+  "cross_seed_rows": [
+    {"representation":"H2","domain":"TRUE_HEADS_UP","evaluation_seed":2029384436,"mean":0.2565324894048132,"p95":0.6279997914326061,"max":0.9700257474841315,"gate_pass":false},
+    {"representation":"H2","domain":"TRUE_HEADS_UP","evaluation_seed":1150634112,"mean":0.23926190887175783,"p95":0.6087107979620523,"max":0.9600371025975308,"gate_pass":false},
+    {"representation":"H2","domain":"THREE_HANDED","evaluation_seed":2029384436,"mean":0.24008238515916497,"p95":0.6128355116378829,"max":0.9486438308636105,"gate_pass":false},
+    {"representation":"H2","domain":"THREE_HANDED","evaluation_seed":1150634112,"mean":0.25438857798779924,"p95":0.6554928152227244,"max":0.9685021049839933,"gate_pass":false},
+    {"representation":"H3","domain":"TRUE_HEADS_UP","evaluation_seed":2029384436,"mean":0.2554394010264401,"p95":0.6626772373442055,"max":0.9749264585287469,"gate_pass":false},
+    {"representation":"H3","domain":"TRUE_HEADS_UP","evaluation_seed":1150634112,"mean":0.238490034426227,"p95":0.6020988589045898,"max":0.9663691928595886,"gate_pass":false},
+    {"representation":"H3","domain":"THREE_HANDED","evaluation_seed":2029384436,"mean":0.23429120554313637,"p95":0.615324364056428,"max":0.9762630644269855,"gate_pass":false},
+    {"representation":"H3","domain":"THREE_HANDED","evaluation_seed":1150634112,"mean":0.24681818098981406,"p95":0.6605767391268038,"max":0.9250866732296898,"gate_pass":false}
+  ],
+  "strategic_diagnostics": {
+    "local_deviation_h3_minus_h2": {
+      "overall_direction": "INCONCLUSIVE",
+      "material_floor_icm": 0.001,
+      "equal_domain_pooled_estimate": -0.0002936979934106235,
+      "equal_domain_pooled_ci95": [-0.0005968806486274925, 0.000016682629075248995]
+    },
+    "pairwise_h3_perspective": {
+      "overall_direction": "INCONCLUSIVE",
+      "material_floor_icm": 0.001,
+      "equal_domain_pooled_estimate": 0.00003725320366678533,
+      "equal_domain_pooled_ci95": [-0.00003470233770304859, 0.00010808483075248309]
+    },
+    "common_reference_role": "DIAGNOSTIC_ONLY_NEVER_SELECTS_WINNER",
+    "proxy_called_exact_exploitability": false
+  },
+  "governance": {
+    "thresholds_may_be_relaxed_post_hoc": false,
+    "h4_authorized": false,
+    "r7_5_4_spnniv3_action_sizing_strategic_revalidation_authorized": false,
+    "r8_production_representation_freeze_authorized": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "next_required_work": "Independently audit cross-seed action-slot, legal-mask, heldout-state and AvgPolicy alignment. If sound, freeze and run a winner-independent diagnostic that decomposes training randomness without changing gates or representation selection criteria."
+}
