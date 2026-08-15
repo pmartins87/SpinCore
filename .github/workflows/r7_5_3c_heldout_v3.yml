@@ -1,0 +1,217 @@
+name: SpinCore R7.5.3C heldout V3 corpora
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_heldout_v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-r7-5-3c-heldout-v3
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  TORCH_VERSION: '2.13.0+cpu'
+  NUMPY_VERSION: '2.3.5'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - name: Checkout immutable heldout execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify heldout and inherited engine freezes
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          execution_sha="$(git rev-parse HEAD)"
+          test "$execution_sha" = "${GITHUB_SHA}"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          held=json.loads(Path('validation/R7_5_3C_HELDOUT_GENERATOR_IMPLEMENTATION_FREEZE_20260815.json').read_text())
+          run=json.loads(Path('validation/R7_5_3C_PHASE2_RUNNER_IMPLEMENTATION_FREEZE_20260815.json').read_text())
+          ev=json.loads(Path('validation/R7_5_3C_PHASE2_EVALUATION_FREEZE_20260815.json').read_text())
+          assert held['schema']=='SPINCORE_R7_5_3C_HELDOUT_GENERATOR_IMPLEMENTATION_FREEZE_V1'
+          assert held['status']=='FROZEN_BEFORE_HELDOUT_CORPUS_OUTPUTS'
+          assert held['heldout_corpus_output_seen_before_freeze'] is False
+          assert held['strategic_model_output_used_to_design_generator'] is False
+          assert ev['strategic_output_seen_before_freeze'] is False
+          assert ev['state_generation']['heldout_states_per_domain_evaluation_seed']==2048
+          for path, expected in held['new_git_blob_freeze'].items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              if actual != expected:
+                  raise SystemExit(f'heldout frozen blob drift: {path} {actual} != {expected}')
+          for path in held['authoritative_engine_blobs_inherited_from_training_runner_freeze']:
+              expected=run['git_blob_freeze'][path]
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              if actual != expected:
+                  raise SystemExit(f'authoritative engine drift: {path} {actual} != {expected}')
+          assert held['production_training_authorized'] is False
+          assert held['ready_for_tables'] is False
+          PY
+          echo "execution_sha=$execution_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+
+      - name: Build immutable solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+
+      - name: Full regression before heldout generation
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          ctest --test-dir build --output-on-failure
+          python -m compileall -q python tools python_tests
+          pytest -q python_tests
+
+      - name: Upload immutable heldout solver
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-heldout-solver-${{ steps.freeze.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  generate:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        domain: [TRUE_HEADS_UP, THREE_HANDED]
+        evaluation_seed: [2029384436, 1150634112]
+    steps:
+      - name: Checkout immutable heldout execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - name: Set up exact Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-heldout-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build
+      - name: Generate and fully replay one frozen heldout corpus
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          chmod +x build/libspincore_solver_c.so || true
+          python tools/r7_5_3c_generate_heldout_v3.py \
+            --repo-root . \
+            --solver build/libspincore_solver_c.so \
+            --domain '${{ matrix.domain }}' \
+            --evaluation-seed '${{ matrix.evaluation_seed }}' \
+            --execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            --out-artifact output/states.json.gz \
+            --out-report output/report.json
+      - name: Upload heldout corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-heldout-${{ matrix.domain }}-${{ matrix.evaluation_seed }}-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  inventory:
+    needs: [gate, generate]
+    if: ${{ always() && needs.gate.result == 'success' && needs.generate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout immutable heldout execution SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - name: Download all heldout reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-heldout-*-${{ needs.gate.outputs.execution_sha }}
+          path: corpora
+      - name: Verify exact four-cell inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          EXECUTION_SHA='${{ needs.gate.outputs.execution_sha }}' python - <<'PY'
+          import json, os
+          from pathlib import Path
+          rows=[]
+          for path in Path('corpora').rglob('report.json'):
+              p=json.loads(path.read_text())
+              if p.get('schema')=='SPINCORE_R7_5_3C_HELDOUT_V3_GENERATOR_REPORT_V1': rows.append(p)
+          expected={(d,s) for d in ('TRUE_HEADS_UP','THREE_HANDED') for s in (2029384436,1150634112)}
+          keys={(p['domain'],int(p['evaluation_seed'])) for p in rows}
+          failures=[]
+          if keys!=expected: failures.append({'type':'INVENTORY','missing':sorted(expected-keys),'extra':sorted(keys-expected)})
+          for p in rows:
+              if p['execution_sha']!=os.environ['EXECUTION_SHA']: failures.append({'type':'SHA','cell':[p['domain'],p['evaluation_seed']]})
+              if int(p['count'])!=2048: failures.append({'type':'COUNT','cell':[p['domain'],p['evaluation_seed']]})
+              if not p['all_states_replayed_byte_identically']: failures.append({'type':'REPLAY','cell':[p['domain'],p['evaluation_seed']]})
+              if not p['candidate_independent'] or not p['training_seed_independent']: failures.append({'type':'INDEPENDENCE','cell':[p['domain'],p['evaluation_seed']]})
+          payload={
+            'schema':'SPINCORE_R7_5_3C_HELDOUT_V3_INVENTORY_V1',
+            'execution_sha':os.environ['EXECUTION_SHA'],
+            'status':'PASS' if not failures else 'FAIL',
+            'failures':failures,
+            'cells':sorted(rows,key=lambda p:(p['domain'],p['evaluation_seed'])),
+            'production_training_authorized':False,
+            'ready_for_tables':False
+          }
+          Path('output/R7_5_3C_HELDOUT_V3_INVENTORY.json').write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(payload,indent=2,sort_keys=True))
+          if failures: raise SystemExit(2)
+          PY
+      - name: Upload heldout inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-heldout-inventory-${{ needs.gate.outputs.execution_sha }}
+          path: output/R7_5_3C_HELDOUT_V3_INVENTORY.json
+          if-no-files-found: error
+          retention-days: 30
