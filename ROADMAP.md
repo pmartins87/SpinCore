@@ -1,4 +1,4 @@
-# SpinCore finite roadmap — canonical state 2026-08-13
+# SpinCore finite roadmap — canonical state 2026-08-16
 
 Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate through R12 passes and every release debt, including the deferred R7.3 exact-reproducibility debt, is closed.
 
@@ -6,7 +6,7 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
 
 - R0 Foundation / canonical repository — **PASS REBUILT**
 - R1 Complete poker engine — **PASS REBUILT**
-- R2 Canonical infoset + neural encoder — **PASS REBUILT; V1 IS NOW CONTROL FOR R7.5, NOT PRODUCTION FREEZE**
+- R2 Canonical infoset + neural encoder — **PASS REBUILT; V1 IS NOW CONTROL/FALLBACK FOR R7.5, NOT PRODUCTION FREEZE**
 - R3 Tournament continuation value (`ICM_EXACT_V1`, explicit payout) — **PASS REBUILT**
 - R4 Neural infrastructure — **PASS REBUILT**
 - R5 CFR correctness oracle — **PASS REBUILT**
@@ -24,17 +24,17 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.4 held-out 3H 320 screen — **PASS**
   - R7.4 held-out 3H 640 confirmation — **PASS**
   - R7.4 final gate — **PASS; READY TO ADVANCE TO R8 ENGINEERING**
-- R7.5 Strategic representation & action abstraction — **IN PROGRESS**
+- R7.5 Strategic representation & action abstraction — **IN PROGRESS; FINITE-CLOSURE POLICY ACTIVE**
   - R7.5.0 legacy evidence + architecture precommit — **PASS AS DESIGN PRECOMMIT ONLY**
-  - R7.5.1 recover/regenerate + audit flop mappings — **LEGACY 184 RECOVERED; 22,100 COVERAGE PASS; HISTORICAL SUIT-INVARIANCE FAIL; CORRECTED/NEW CANDIDATE PENDING**
-  - R7.5.2 NeuralInputV2 + semantic regression — **POSTFLOP ONTOLOGY SCAFFOLD REGRESSION PASS; V2 ENCODER INTEGRATION PENDING**
-  - R7.5.3 frozen representation ablation — **PENDING**
-  - R7.5.4 frozen action-abstraction ablation — **PENDING**
+  - R7.5.1 recover/regenerate + audit flop mappings — **PASS AS DIAGNOSTIC/STRUCTURAL INPUT; LEGACY 184 DEFECT ESTABLISHED; SPNNIV3 SUCCESSOR IMPLEMENTED**
+  - R7.5.2 representation semantics/integration — **SPNNIV3 STRUCTURAL/SEMANTIC INTEGRITY IMPLEMENTED; V2 IS NOT THE PRODUCTION MIGRATION TARGET**
+  - R7.5.3 frozen representation admission/selection — **IN PROGRESS; H2/H3 LOCAL TRAINING PASS; CROSS-SEED BLOCKER DIAGNOSED AS DECK/CHANCE DOMINANT; X4 CHANCE-COVERAGE READMISSION IN PROGRESS**
+  - R7.5.4 frozen action-abstraction ablation — **PENDING PROVISIONAL REPRESENTATION WINNER**
   - R7.5.5 production representation/action freeze — **PENDING**
 - R8 Production training — **OFFICIAL TRAINING BLOCKED UNTIL R7.5.5 FINAL + R8.0 EXACT PROFILE**
   - R8.0 production-profile acquisition/validation pipeline — **INFRASTRUCTURE PASS; EXACT SELECTED-STATE DATA BLOCKED**
   - R8.1 deterministic production infrastructure — **PASS INFRASTRUCTURE**
-  - R8.2 Ryzen calibration selector/precommit — **PASS INFRASTRUCTURE; PHYSICAL CALIBRATION NOT RUN**
+  - R8.2 Ryzen calibration selector/precommit — **PASS INFRASTRUCTURE; GENERIC FROZEN LOCAL-RUN EVIDENCE WRAPPER ADDED; PHYSICAL CALIBRATION NOT RUN**
   - R8.3–R8.5 official training/freeze — **BLOCKED BY R7.5.5 + R8.0**
 - R9 Strategic audit — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R8.5**
 - R10 OpenHoldem runtime — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R9 PASS**
@@ -114,85 +114,62 @@ R7.4 authorizes further engineering only. It does not prove that the current neu
 
 ## R7.5 — strategic representation & action abstraction
 
-Legacy Spin & Go attempts were audited before production training. Canonical evidence now includes:
-
-```text
-validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
-validation/R7_5_LEGACY_CRUSHER_AND_184_AUDIT_20260813.md
-validation/R7_5_LEGACY_184_MAPPING_AUDIT.json
-```
+Legacy Spin & Go attempts were audited before production training. Canonical evidence includes the historical audits plus the SPNNIV3 integrity/admission chain. The old 184/V2 investigations are evidence feeding R7.5; they are not additional permanent roadmap branches.
 
 Key frozen decisions:
 
 ```text
 - exact poker/traversal state stays exact;
 - lossy compression is allowed only at neural-observation boundary;
-- current NeuralInputV1 is a control, not a production freeze;
-- 53-flop taxonomy is too coarse as the sole primary flop abstraction;
-- recovered historical 184 mapping has reference value but is NOT eligible unchanged;
-- a suit-invariant 184 descendant or new candidate must be audited before selection;
-- absolute physical card identity must not remain the dominant input channel by default;
-- exact stack/pot/SPR facts stay available even when auxiliary buckets are used;
-- actor-aware and sizing-aware action history is required;
-- c-bet, donk, probe, float, delayed and double-delayed semantics must be reconstructible;
+- NeuralInputV1 is control/fallback, not a production freeze;
+- V2 is an intermediate attempt, not the current production migration target;
+- SPNNIV3 is the intended successor lineage;
+- H2 and H3 are the current SPNNIV3 admission candidates;
+- exact stack/pot/SPR facts remain available;
+- actor-aware and sizing-aware complete action history is required;
 - richer postflop action sets must justify every extra branch by strategic gain vs Ryzen cost.
 ```
 
-### Recovered 184 mapping
+### Recovered 184 mapping and ontology evidence
 
-The missing historical `184Flops.json` was recovered from the updated legacy package.
+The missing historical `184Flops.json` was recovered. It covered all 22,100 physical flops and 184 representatives, but 40 exact suit-isomorphic classes were split by legacy suit spelling, so the historical map is not eligible unchanged. This defect is preserved as evidence; SPNNIV3 no longer relies on that map as its primary representation.
 
-```text
-physical flops mapped                         22,100 PASS
-unique representative texts                     184 PASS
-exact suit-isomorphic reference classes        1,755
-exact classes split by legacy suit spelling       40 FAIL
-historical suit-permutation invariance           false
-historical map eligible unchanged                 NO
-```
+The regression-proven C++ postflop ontology scaffold decomposes semantic lines such as c-bet, donk, probe, float, delayed lines and raises into compositional state facts rather than copying old strategy rules. Exact continuous geometry remains available.
 
-The failure is structural: global suit renaming can change the historical bucket even though absolute suit names are strategically irrelevant. SpinCore will not hide this with arbitrary post-hoc reassignment. Corrected and newly generated suit-invariant candidates will be compared under a precommitted R7.5.3 design.
+### R7.5.3 current admission state — 2026-08-16
 
-### Crusher ontology extraction
+SPNNIV3 structural integrity is implemented with complete variable-length structured history, universal deduplicated action slots, exact HU/3H geometry, exact suit/rank invariance at the neural boundary, and an action width of 10. H2 is the exact relational/history candidate; H3 adds objective poker semantics.
 
-`Crusher Framework 5.txt` confirms a rich legacy vocabulary with exactly 32 POSTFLOP DEFEND headings and 13 POSTFLOP ATTACK headings. The useful information is the state ontology, not the old strategy rules.
+The frozen Phase-2 local training gates passed for all eight H2/H3 × HU/3H × training-seed cells. The first complete strategic admission did **not** pass because every required cross-seed policy-stability row exceeded the unchanged `mean TV <= 0.15` and `p95 TV <= 0.35` gates. Independent parity auditing reproduced that failure and ruled out the covered evaluator/state/action identity mismatch path.
 
-The 32 DEFEND headings are intentionally decomposed rather than copied as 32 one-hot input states. For example `CALL VS HIGH DONK` and `RAISE VS HIGH DONK` describe the same observed state; CALL/RAISE are candidate policy outputs.
-
-The regression-proven C++ scaffold now represents compositional public semantics:
+Winner-independent decomposition then isolated the dominant variance source without selecting H2/H3:
 
 ```text
-include/spincore/postflop_ontology.hpp
-src/postflop_ontology.cpp
-tests/test_postflop_ontology.cpp
-regression run 31761845283 = PASS
+same strategy memory / different final-policy learner: about 0.107 mean TV / 0.282 p95 TV
 
-opening/facing line:
-  CBET
-  DONK_BET
-  PROBE_BET
-  FLOAT_BET
-  DELAYED_FLOAT_BET
-  DELAYED_CBET
-  DOUBLE_DELAYED_CBET
-  GENERIC_BET
-  RAISE
+different strategy memory / common final learner:     about 0.243 mean TV / 0.624 p95 TV
+=> upstream strategy-memory generation dominant
 
-plus:
-  lineage aggressor
-  lineage street
-  skipped streets since aggression
-  opening line preserved when facing a raise
-  raise depth
-  exact pot
-  exact amount to call
+learning/memory RNG sensitivity:                       about 0.148 / 0.401
+sampling/traversal RNG sensitivity:                     about 0.239 / 0.629
+=> sampling/traversal family dominant
+
+deck/chance sensitivity:                               0.239170 / 0.624240
+traversal-action-sampling sensitivity:                  about 0.14986 / 0.39321
+=> DECK_CHANCE_DOMINANT under the frozen 1.20x rule
 ```
 
-Legacy Crusher size boundaries remain reference evidence only. Production sizing thresholds are not frozen; exact continuous geometry remains available.
+The active primary remediation increases independent chance coverage from 64 to 256 roots per iteration while preserving the two independent training seeds, `deck_seed`, global-root semantics, scenario cycle, model/training budget and all hard gates. A mechanical zero-root reporting division in the first GitHub execution was frozen and corrected without changing the experiment; the corrected recovery is the same x4 remediation, not a new roadmap stage or extra strategic attempt.
 
-R7.5.3 will freeze the exact representation candidates, seeds, budgets, held-out states, numerical acceptance thresholds and tie-break rules **before** candidate outputs are inspected. R7.5.4 then selects the action abstraction under the same anti-post-hoc discipline.
+Finite closure is now authoritative under:
 
-Only R7.5.5 may freeze the production encoder/action abstraction.
+```text
+validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
+```
+
+R7.5.3 permits the active x4 remediation plus **at most one** final winner-independent chance-variance remediation if x4 fails. If x4 passes, one complete frozen strategic Phase-2 evaluation decides H2/H3. If the final permitted remediation also fails, R7.5.3 closes FAIL/BLOCKED rather than spawning R7.5.3D/E/F. No gate may be relaxed. If both admitted candidates remain strategically inconclusive after passing, the already-frozen smaller/faster H2 tie-break applies.
+
+Only after a provisional representation winner exists may R7.5.4 strategic action/sizing revalidation begin. Only R7.5.5 may freeze the production encoder/action abstraction.
 
 ## R8 preparation already accepted without starting official training
 
@@ -200,7 +177,9 @@ R8.0 has a fail-closed production-profile schema/evidence acquisition pipeline, 
 
 R8.1 production infrastructure has accepted deterministic independent-stream scheduling, central Algorithm-R state, durable scheduler checkpoints and integrated semantic transactions. Same-stream root-level parallelism remains forbidden because it would alter the persistent live RNG contract.
 
-R8.2 has an accepted calibration selector/precommit. Candidate concurrency is eligible only if it reproduces the exact validated R8.1 transaction-generation identities; among semantically exact error-free candidates, highest throughput wins and exact ties prefer lower concurrency. CPU utilization is telemetry, not an acceptance target. Physical Ryzen calibration is not yet authorized for production training.
+R8.2 has an accepted calibration selector/precommit. Candidate concurrency is eligible only if it reproduces the exact validated R8.1 transaction-generation identities; among semantically exact error-free candidates, highest throughput wins and exact ties prefer lower concurrency. CPU utilization is telemetry, not an acceptance target. **Physical Ryzen calibration has not run and is not marked PASS.**
+
+Heavy CPU-bound experiments and official training are now assigned to the Ryzen when their scale makes GitHub runner chaining inefficient. GitHub remains the frozen-contract/referee/certification environment. `tools/spincore_ryzen_frozen_runner.py` records exact commit, tracked-worktree state, contracts, runtime, command/log and SHA-256 artifact inventory for future heavy local executions; this infrastructure does not itself authorize R8 training.
 
 R8.0 data acquisition and other non-strategic engineering may proceed while R7.5 executes. R8.3/R8.4 official production training may not start until both R7.5.5 and R8.0 prerequisites are satisfied.
 
@@ -231,7 +210,9 @@ R12.9 is the only gate allowed to emit `READY FOR TABLES = YES`, and only after 
 
 ```text
 R7.4 FINAL PASS
--> R7.5 representation/action audit + production freeze
+-> R7.5.3 representation admission/selection [active; finite]
+-> R7.5.4 action/sizing audit
+-> R7.5.5 production representation/action freeze
 -> R8.0 exact production profiles
 -> R8.2 physical Ryzen calibration under selected R7.5 architecture
 -> R8.3 official HU training
