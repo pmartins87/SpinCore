@@ -1,0 +1,27 @@
+name: SpinCore R7.5.4 SPNNIV3 winner-binding guard smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/r7_5_4_spnniv3_winner_binding_guard.py'
+      - 'tools/test_r7_5_4_spnniv3_winner_binding_guard.py'
+      - '.github/workflows/r7_5_4_spnniv3_winner_binding_guard_smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile guard and tests
+        run: python -m py_compile tools/r7_5_4_spnniv3_winner_binding_guard.py tools/test_r7_5_4_spnniv3_winner_binding_guard.py
+      - name: Run fail-closed guard tests
+        run: python tools/test_r7_5_4_spnniv3_winner_binding_guard.py
