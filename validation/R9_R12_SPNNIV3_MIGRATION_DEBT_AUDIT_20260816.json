@@ -1,0 +1,73 @@
+{
+  "schema": "SPINCORE_R9_R12_SPNNIV3_MIGRATION_DEBT_AUDIT_V1",
+  "status": "AUDIT_COMPLETE_WITH_PREEXECUTION_DEBT",
+  "audit_scope": [
+    "validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md",
+    "validation/R10_OPENHOLDEM_RUNTIME_GATE_DESIGN_20260812.md",
+    "validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md",
+    "validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md",
+    "python/spincore_nn/__init__.py",
+    "python/spincore_nn/models.py",
+    "python/spincore_nn/codec.py",
+    "python/spincore_nn/models_v3_final.py"
+  ],
+  "canonical_current_representation_lineage": {
+    "production_winner_selected": false,
+    "intended_successor_schema": "SPNNIV3",
+    "candidate_representations": [
+      "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+    ],
+    "universal_action_width": 10,
+    "complete_variable_length_history_required": true
+  },
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "BLOCKING_BEFORE_R9_EXECUTION",
+      "path": "validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md",
+      "finding": "R9.1 still requires a six-action output shape.",
+      "required_resolution": "R9 must bind output width to the exact R7.5.5/R8.5 production action schema; under the current SPNNIV3 lineage the expected universal width is 10."
+    },
+    {
+      "id": "D2",
+      "severity": "BLOCKING_BEFORE_R10_EXECUTION",
+      "path": "validation/R10_OPENHOLDEM_RUNTIME_GATE_DESIGN_20260812.md",
+      "finding": "R10 still names SPNNIV1 neural-observation bytes and six-action inference/action IDs/probabilities in the runtime equivalence contract.",
+      "required_resolution": "R10 must use the exact observation schema and action width frozen by R7.5.5 and carried by the immutable R8.5/R9 artifact manifest; no SPNNIV1 or six-action fallback is allowed."
+    },
+    {
+      "id": "D3",
+      "severity": "MIGRATION_DEBT_BEFORE_PRODUCTION_FREEZE",
+      "paths": [
+        "python/spincore_nn/__init__.py",
+        "python/spincore_nn/models.py",
+        "python/spincore_nn/codec.py"
+      ],
+      "finding": "The package top-level exports still resolve the recovered V1 network, whose head width is 6, and codec.py is explicitly SPNNIV1 with a 32-event history cap.",
+      "required_resolution": "Preserve these modules only as legacy/control/reproducibility code. The production manifest/runtime must import the explicit R7.5.5-selected implementation and must never resolve production inference through the generic legacy top-level exports."
+    },
+    {
+      "id": "D4",
+      "severity": "NONE_FOUND",
+      "paths": [
+        "validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md",
+        "validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md"
+      ],
+      "finding": "No hardcoded SPNNIV1, six-action, 184-flop, or 32-event production assumption was found in the inspected R11/R12 finite gate designs.",
+      "required_resolution": "Continue binding their generic action/observation schema identities to the immutable R10/R9/R8.5 production manifest."
+    }
+  ],
+  "confirmed_v3_contract": {
+    "path": "python/spincore_nn/models_v3_final.py",
+    "universal_action_count": 10,
+    "legal_mask_shape": "[batch,10]",
+    "history_contract": "packed variable-length structured history"
+  },
+  "adjudication": "The original R9/R10 documents remain historical precommits from before the SPNNIV3 migration. Their finite anti-tuning structure remains valid, but representation-specific references to six actions and SPNNIV1 are superseded before any R9/R10 execution. No downstream gate has been executed, so this is a pre-result contract migration rather than post-hoc gate relaxation.",
+  "r9_execution_authorized": false,
+  "r10_execution_authorized": false,
+  "r11_execution_authorized": false,
+  "r12_execution_authorized": false,
+  "ready_for_tables": false
+}
