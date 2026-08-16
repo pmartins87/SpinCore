@@ -14,14 +14,20 @@
     "roots_per_iteration_original": 64,
     "coverage_multiplier": 4,
     "roots_per_iteration_effective": 256,
+    "runner_safe_root_chunks_per_iteration": 4,
+    "roots_per_chunk": 64,
+    "fit_once_after_all_four_chunks": true,
+    "chunking_changes_training_semantics": false,
     "iterations": 3,
     "roots_per_seed": 768,
     "training_seeds": [1342191342, 1801739323],
     "training_seeds_remain_independent": true,
     "deck_seed_function_unchanged": true,
+    "global_root_sequence_contiguous_across_chunks": true,
     "scenario_cycle_unchanged": true,
     "exact_opponent_levels": 2,
     "advantage_steps_per_member_per_iteration": 4096,
+    "advantage_fit_count_per_iteration": 1,
     "average_policy_steps": 16384,
     "batch_size": 256,
     "learning_rate": 0.001,
@@ -30,6 +36,11 @@
     "heldout_run_id": 31866538984,
     "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
     "heldout_states_per_cross_seed_metric": 1024
+  },
+  "chunking_adjudication": {
+    "reason": "A 256-root H3/3H iteration can exceed the GitHub-hosted single-job runtime limit. Collection is therefore checkpointed after each contiguous 64-root chunk, while Advantage fitting remains exactly once after the fourth chunk.",
+    "equivalence_contract": "The four chunks preserve the same global_root order, scenario-cycle order, production deck_seed(training_seed, global_root, iteration), collector RNG continuation, reservoirs, behavior models and iteration number that a single uninterrupted 256-root collection would use. No Advantage update occurs between chunks.",
+    "partial_checkpoint_phase": "x4_partial_collect"
   },
   "coverage_multiplier_rationale_frozen_before_outputs": {
     "assumption_role": "Planning heuristic only; it does not change or predict the admission gate.",
@@ -63,14 +74,17 @@
     "if_fail": "Remain BLOCKED. No gate waiver. Freeze a further winner-independent chance-coverage stratification or larger-coverage experiment before another readmission attempt."
   },
   "code_blobs": {
-    "tools/r7_5_3c_chance_coverage_x4_domain_worker.py": "eb690555855507c7dfc1fec688c4c57d654d2786",
+    "tools/r7_5_3c_chance_coverage_x4_domain_worker.py": "c3feec902957e4ef60658e3983d0b514822b630d",
     "tools/r7_5_3c_chance_coverage_x4_stability.py": "fc9503d7788f272f0ff1e43b9dc668dcf68f9cbd"
   },
   "inherited_code_blobs": {
     "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1",
     "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
     "python/spincore/r7_5_representation_v3.py": "e69ba053471765315655ecb4723bf0f807cdd9f7",
-    "python/spincore/r7_5_representation_v3_phase2_eval.py": "30624246d0c3846ecb31b90cdeb442e693265573"
+    "python/spincore/r7_5_representation_v3_phase2_eval.py": "30624246d0c3846ecb31b90cdeb442e693265573",
+    "python/spincore/r7_5_representation_v3_checkpoint.py": "09eafd4717bf0f66cdf453a71d9893156c5ce098",
+    "python/spincore/r7_5_representation_v3_uncertainty.py": "c6a740d04aed1b5785f0ccd502d35e10a8b91a85",
+    "python/spincore/r7_5_action_scenarios.py": "e3728399ad7db655671e7c5f39c8d681f11f7d54"
   },
   "governance": {
     "chance_coverage_output_seen_before_freeze": false,
