@@ -1,0 +1,88 @@
+{
+  "schema": "SPINCORE_R7_5_3C_CHANCE_COVERAGE_X4_READMISSION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_CHANCE_COVERAGE_X4_OUTPUTS",
+  "trigger": {
+    "evidence_file": "validation/R7_5_3C_SAMPLING_SPLIT_EVIDENCE_20260816.json",
+    "source_run_id": 31927672438,
+    "source_execution_sha": "0a5c979b8e55c7b40405402dc14a8e4772a4ce9e",
+    "source_result_sha256": "6655f5fcea3788a15e6a0671b00ad7d98b15e0f87f8dcdadc2ded57de5d46304",
+    "classification": "DECK_CHANCE_DOMINANT"
+  },
+  "remediation": {
+    "name": "INDEPENDENT_CHANCE_COVERAGE_X4",
+    "winner_independent": true,
+    "roots_per_iteration_original": 64,
+    "coverage_multiplier": 4,
+    "roots_per_iteration_effective": 256,
+    "iterations": 3,
+    "roots_per_seed": 768,
+    "training_seeds": [1342191342, 1801739323],
+    "training_seeds_remain_independent": true,
+    "deck_seed_function_unchanged": true,
+    "scenario_cycle_unchanged": true,
+    "exact_opponent_levels": 2,
+    "advantage_steps_per_member_per_iteration": 4096,
+    "average_policy_steps": 16384,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "ensemble_size": 4,
+    "reservoir_capacity": 100000,
+    "heldout_run_id": 31866538984,
+    "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+    "heldout_states_per_cross_seed_metric": 1024
+  },
+  "coverage_multiplier_rationale_frozen_before_outputs": {
+    "assumption_role": "Planning heuristic only; it does not change or predict the admission gate.",
+    "variance_scaling_heuristic": "For chance-dominated Monte Carlo variation, standard error is expected to scale approximately with 1/sqrt(N) before saturation or model effects.",
+    "observed_deck_sensitivity_baseline": {
+      "mean_of_mean_tv": 0.23917015701274177,
+      "mean_of_p95_tv": 0.6242395470460359
+    },
+    "two_x_nominal_projection": {
+      "mean_of_mean_tv": 0.169118839881161,
+      "mean_of_p95_tv": 0.44140401680107083,
+      "reason_rejected": "Both projections remain above the unchanged 0.15/0.35 hard gates."
+    },
+    "four_x_nominal_projection": {
+      "mean_of_mean_tv": 0.11958507850637089,
+      "mean_of_p95_tv": 0.31211977352301795,
+      "reason_selected": "Four is the first simple integer coverage multiplier in the 2x/4x sequence whose nominal projections fall below both unchanged hard gates."
+    }
+  },
+  "hard_gates_unchanged": {
+    "advantage_nrmse_max_each_iteration": 0.75,
+    "final_policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "all_eight_representation_domain_evaluation_rows_required": true,
+    "dropping_failed_domains_or_seeds_forbidden": true
+  },
+  "decision_rule": {
+    "stability_pass": "All 8 training cells pass the original local training gates and all 8 representation x domain x evaluation-seed cross-seed rows pass mean TV <= 0.15 and p95 TV <= 0.35.",
+    "if_pass": "This establishes a provisional stability remediation only. Freeze and run the complete original strategic Phase 2 evaluation on the x4 policies before selecting H2 or H3.",
+    "if_fail": "Remain BLOCKED. No gate waiver. Freeze a further winner-independent chance-coverage stratification or larger-coverage experiment before another readmission attempt."
+  },
+  "code_blobs": {
+    "tools/r7_5_3c_chance_coverage_x4_domain_worker.py": "eb690555855507c7dfc1fec688c4c57d654d2786",
+    "tools/r7_5_3c_chance_coverage_x4_stability.py": "fc9503d7788f272f0ff1e43b9dc668dcf68f9cbd"
+  },
+  "inherited_code_blobs": {
+    "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1",
+    "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
+    "python/spincore/r7_5_representation_v3.py": "e69ba053471765315655ecb4723bf0f807cdd9f7",
+    "python/spincore/r7_5_representation_v3_phase2_eval.py": "30624246d0c3846ecb31b90cdeb442e693265573"
+  },
+  "governance": {
+    "chance_coverage_output_seen_before_freeze": false,
+    "diagnostic_or_remediation_readmission_only": true,
+    "representation_winner": null,
+    "may_select_h2_or_h3": false,
+    "selection_rule_changed": false,
+    "may_change_phase2_thresholds": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
