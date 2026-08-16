@@ -1,0 +1,63 @@
+name: SpinCore R7.5.3C post-x4 evaluator readiness smoke
+
+on:
+  push:
+    paths:
+      - 'validation/R7_5_3C_POST_X4_STRATEGIC_EVALUATOR_FREEZE_20260816.json'
+      - '.github/workflows/r7_5_3c_post_x4_readiness_smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Verify frozen blob identities
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          f=json.loads(Path('validation/R7_5_3C_POST_X4_STRATEGIC_EVALUATOR_FREEZE_20260816.json').read_text())
+          assert f['status']=='FROZEN_BEFORE_POST_X4_STRATEGIC_OUTPUTS'
+          for table in ('new_code_blobs','frozen_evaluator_blobs','inherited_evaluator_blobs'):
+              for path, expected in f[table].items():
+                  actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+                  assert actual==expected,(path,actual,expected)
+          print('POST-X4 FROZEN BLOBS VALID')
+          PY
+      - name: Install frozen Python runtime
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' 'pytest==9.0.2'
+      - name: Compile/import adapters and verify matrix cardinality
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/r7_5_3c_post_x4_frontier_guard.py \
+            tools/r7_5_3c_post_x4_extract_final_policies.py \
+            tools/r7_5_3c_phase2_eval_matrix.py \
+            tools/r7_5_3c_phase2_eval_worker.py \
+            tools/r7_5_3c_phase2_eval_aggregate.py
+          python tools/r7_5_3c_post_x4_extract_final_policies.py --help >/dev/null
+          python - <<'PY'
+          import json, subprocess, sys
+          raw=subprocess.check_output([sys.executable,'tools/r7_5_3c_phase2_eval_matrix.py'], text=True)
+          matrix=json.loads(raw)
+          rows=matrix['include']
+          assert len(rows)==48, len(rows)
+          assert sum(r['mode']=='heldout' for r in rows)==16
+          assert sum(r['mode']=='commonref' for r in rows)==16
+          assert sum(r['mode']=='pairwise' for r in rows)==16
+          print('POST-X4 MATRIX 48/48 VALID')
+          PY
+          python -m pytest -q python_tests/test_r7_5_3c_post_x4_frontier_guard.py
