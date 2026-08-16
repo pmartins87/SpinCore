@@ -1,0 +1,37 @@
+{
+  "schema": "SPINCORE_R7_3_EXACT_REPRODUCIBILITY_AUDIT_V1",
+  "status": "BLOCKED_EXACT_REPRO",
+  "source_commit_sha": "01edcb4697ae07f8f379d79b0b4b8e43e309d65e",
+  "candidate_preset": "PE_RECENT_AVG64_UNCERTAINTY_DAMPING",
+  "semantic_fingerprint_sha256": "8594e9e1f421afe3366151e932320b51b20ee26d400bb2522e862459141976ec",
+  "checkpoint_recertification": {
+    "status": "PASS",
+    "frozen_result_sha256": "339321324b141190d93b0cf8457ed4646396b5010ba239078bd527f4f1acffbf",
+    "aggregate_mae": 0.0001454090146215549,
+    "aggregate_p95": 0.0003053755999999916,
+    "budget_mean": 0.5871852213541667,
+    "budget_ci95_low": 0.57916015625,
+    "budget_ci95_high": 0.59501953125,
+    "independent_threshold_pass": true,
+    "independent_score_moment_pass": true,
+    "expected_field_match": true
+  },
+  "fresh_process_reproduction": {
+    "status": "FAIL",
+    "difference_count": 734,
+    "matches_frozen_result": false,
+    "matches_regression_summary": false,
+    "fresh_result_sha256": "aaf985674a1778a566828a9b31e27e32bbd42f7c108b0e1d2ba7bffc2666bae6",
+    "expected_frozen_result_sha256": "339321324b141190d93b0cf8457ed4646396b5010ba239078bd527f4f1acffbf",
+    "metadata_only_fields_ignored": [
+      "commit_sha",
+      "generated_at_utc"
+    ],
+    "functional_difference_example": "advantage_seen"
+  },
+  "adjudication": "The historical frozen checkpoint remains a valid snapshot and independently recertifies against its frozen expectations. Fresh-process exact reproducibility from the source-pinned candidate logic is not established: 734 non-metadata differences remain after ignoring commit/timestamp fields. This is a durability/reproducibility debt, not grounds to rewrite the historical checkpoint PASS.",
+  "root_cause": "UNRESOLVED",
+  "root_cause_hypotheses_are_not_findings": true,
+  "exact_repro_authorizes_new_production_training": false,
+  "ready_for_tables": false
+}
