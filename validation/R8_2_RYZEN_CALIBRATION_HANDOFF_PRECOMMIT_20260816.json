@@ -1,0 +1,111 @@
+{
+  "schema": "SPINCORE_R8_2_RYZEN_CALIBRATION_HANDOFF_PRECOMMIT_V1",
+  "status": "FROZEN_BEFORE_R8_2_PHYSICAL_CALIBRATION",
+  "freeze_date": "2026-08-16",
+  "purpose": "Prepare the physical Ryzen calibration handoff without authorizing it before both selected-state and final architecture closure exist.",
+  "execution_seen_before_freeze": false,
+  "physical_calibration_result_seen_before_freeze": false,
+  "prerequisite_contract": {
+    "r8_selected_state": {
+      "path": "validation/generated/R8_SELECTED_STATE_PACKET.json",
+      "required_schema": "SPINCORE_R8_SELECTED_STATE_PACKET_V1",
+      "required_status": "PASS",
+      "require_selected_state_hash": true,
+      "require_primary_evidence_hash": true
+    },
+    "r7_5_5_architecture_closure": {
+      "path": "validation/generated/R7_5_5_ARCHITECTURE_CLOSURE.json",
+      "required_schema": "SPINCORE_R7_5_5_ARCHITECTURE_CLOSURE_V1",
+      "required_status": "PASS",
+      "require_architecture_finalized": true,
+      "require_representation": [
+        "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+        "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+      ],
+      "require_action_sizing_finalized": true,
+      "require_universal_action_width": 10,
+      "require_production_profile_hash": true
+    }
+  },
+  "machine_contract": {
+    "execution_class": "LOCAL_NATIVE_X86_64",
+    "operating_system": "Linux",
+    "architecture_allowed": ["x86_64", "AMD64"],
+    "python_minimum": "3.11",
+    "cpu_vendor_required": "AuthenticAMD",
+    "cpu_family_required_text": "Ryzen 9",
+    "record_at_execution": [
+      "uname",
+      "os_release",
+      "python_version",
+      "cpu_model_name",
+      "physical_cores",
+      "logical_cores",
+      "memory_total_bytes",
+      "cmake_version",
+      "compiler_id_and_version",
+      "pytorch_version",
+      "pytorch_thread_counts",
+      "git_sha"
+    ]
+  },
+  "integrity_contract": {
+    "require_clean_frozen_files": true,
+    "require_runtime_git_sha_equals_manifest_git_sha": true,
+    "require_sha256_for_all_frozen_tool_files": true,
+    "require_sha256_for_all_frozen_source_files": true,
+    "require_selected_state_packet_hash_binding": true,
+    "require_r7_5_5_closure_hash_binding": true,
+    "require_production_profile_hash_binding": true,
+    "require_platform_tolerance_evidence_when_cross_platform_claimed": true
+  },
+  "calibration_contract": {
+    "goal": "Measure the finalized architecture and selected-state workload on the user's physical Ryzen 9 and freeze a reproducible production training configuration; do not optimize poker strategy or choose H2/H3 here.",
+    "winner_independent_preparation_only_until_prerequisites_close": true,
+    "no_architecture_selection": true,
+    "no_action_sizing_selection": true,
+    "no_gate_relaxation": true,
+    "no_training_quality_threshold_change": true,
+    "calibration_axes_may_include": [
+      "worker_count",
+      "torch_intraop_threads",
+      "torch_interop_threads",
+      "batching_or_chunk_geometry",
+      "checkpoint_frequency",
+      "memory_headroom"
+    ],
+    "mandatory_measurements": [
+      "wall_clock_seconds",
+      "cpu_process_seconds",
+      "peak_rss_bytes",
+      "throughput_in_frozen_work_units_per_second",
+      "checkpoint_bytes",
+      "deterministic_output_digest_or_semantic_parity_digest"
+    ],
+    "selection_priority": [
+      "semantic_correctness_and_reproducibility",
+      "no_memory_pressure_or_swap_thrash",
+      "sustained_throughput",
+      "operational_checkpoint_safety"
+    ],
+    "must_not_assume_maximum_workers_is_optimal": true
+  },
+  "handoff_artifacts": {
+    "readiness_result": "validation/generated/R8_2_CALIBRATION_READINESS.json",
+    "machine_fingerprint": "validation/generated/R8_2_RYZEN_MACHINE_FINGERPRINT.json",
+    "calibration_manifest": "validation/generated/R8_2_RYZEN_CALIBRATION_MANIFEST.json",
+    "calibration_result": "validation/generated/R8_2_RYZEN_CALIBRATION_RESULT.json",
+    "production_training_profile": "validation/generated/R8_PRODUCTION_PROFILE.json"
+  },
+  "fail_closed_rules": [
+    "Missing or non-PASS R8 selected-state packet blocks R8.2.",
+    "Missing or non-PASS R7.5.5 architecture closure blocks R8.2.",
+    "A provisional H2/H3 winner is insufficient; the final R7.5.5 closure is required.",
+    "Any action width other than 10 blocks R8.2.",
+    "Any machine outside Linux x86_64/AMD64 or not identified as AMD Ryzen 9 blocks the physical calibration claim.",
+    "Calibration may tune runtime resource allocation only; it may not change the finalized poker architecture or strategic gates."
+  ],
+  "execution_r8_2_permitted_now": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
