@@ -1,0 +1,26 @@
+name: SpinCore downstream schema migration guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'python/spincore_nn/__init__.py'
+      - 'python/spincore_nn/models.py'
+      - 'python/spincore_nn/codec.py'
+      - 'python/spincore_nn/models_v3_final.py'
+      - 'validation/R9_R12_SPNNIV3_MIGRATION_DEBT_AUDIT_20260816.json'
+      - 'validation/R9_R10_SPNNIV3_GATE_DESIGN_ADJUDICATION_20260816.md'
+      - 'tools/check_downstream_schema_migration_guard.py'
+      - '.github/workflows/downstream_schema_migration_guard.yml'
+  workflow_dispatch:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check downstream representation/action schema migration contract
+        run: python tools/check_downstream_schema_migration_guard.py
