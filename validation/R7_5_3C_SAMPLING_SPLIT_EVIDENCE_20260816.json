@@ -1,0 +1,50 @@
+{
+  "schema": "SPINCORE_R7_5_3C_SAMPLING_SPLIT_EVIDENCE_V1",
+  "status": "DIAGNOSTIC_COMPLETE",
+  "source_run": {
+    "run_id": 31927672438,
+    "execution_sha": "0a5c979b8e55c7b40405402dc14a8e4772a4ce9e",
+    "conclusion": "success",
+    "artifact_id": 9264868712,
+    "artifact_name": "r7-5-3c-sampling-split-result-0a5c979b8e55c7b40405402dc14a8e4772a4ce9e",
+    "artifact_zip_digest": "sha256:cb03ec7054355732a96777ffa49fa116fbbffef0f852bf6c4ee8e49621a69d6f",
+    "result_file": "R7_5_3C_SAMPLING_SPLIT_RESULT.json",
+    "result_file_sha256": "6655f5fcea3788a15e6a0671b00ad7d98b15e0f87f8dcdadc2ded57de5d46304"
+  },
+  "classification": "DECK_CHANCE_DOMINANT",
+  "precommitted_dominance_ratio": 1.2,
+  "deck_chance_sensitivity": {
+    "comparisons": 16,
+    "mean_of_mean_tv": 0.23917015701274177,
+    "mean_of_p95_tv": 0.6242395470460359,
+    "max_mean_tv": 0.2564988394630765,
+    "max_p95_tv": 0.6676020677590119,
+    "reference_gate_pass_count": 0
+  },
+  "traversal_action_sampling_sensitivity": {
+    "comparisons": 16,
+    "mean_of_mean_tv": 0.14985919453683405,
+    "mean_of_p95_tv": 0.39321340356003176,
+    "max_mean_tv": 0.17503915223729666,
+    "max_p95_tv": 0.4735904248057905,
+    "reference_gate_pass_count": 7
+  },
+  "deck_to_traversal_ratio": {
+    "mean_of_mean_tv": 1.595988674105897,
+    "mean_of_p95_tv": 1.5875367800083008
+  },
+  "interpretation": "Changing only the independent deck/chance schedule reproduces essentially the full upstream instability, while changing only collector traversal/action sampling is materially smaller. Both precommitted 1.20x dominance conditions are satisfied, so the causal diagnostic classifies deck/chance coverage as dominant.",
+  "next_action": "Freeze a winner-independent chance-coverage stabilization/readmission experiment using the original independent training seeds and unchanged deck_seed semantics, increasing balanced chance coverage without relaxing any Phase 2 gate.",
+  "governance": {
+    "representation_winner": null,
+    "selection_rule_changed": false,
+    "changes_frozen_thresholds": false,
+    "phase2_cross_seed_mean_tv_max": 0.15,
+    "phase2_cross_seed_p95_tv_max": 0.35,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false
+  }
+}
