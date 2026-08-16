@@ -1,0 +1,79 @@
+{
+  "schema": "SPINCORE_R7_5_4_SPNNIV3_TRANSFER_READINESS_AUDIT_V1",
+  "status": "PREPARED_BUT_STRATEGIC_EXECUTION_BLOCKED",
+  "audit_date": "2026-08-16",
+  "scope": "Winner-independent audit of the existing R7.5.4 action/sizing stack before binding it to a provisional SPNNIV3 H2/H3 winner.",
+  "authority": {
+    "transfer_precommit": "validation/R7_5_4_SPNNIV3_ACTION_SIZING_TRANSFER_PRECOMMIT_20260815.json",
+    "representation_admission_required_before_strategic_execution": true,
+    "representation_winner": null,
+    "h4_allowed": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "reusable_without_strategic_claim": [
+    "exact no-limit action semantics",
+    "universal primitive action definitions",
+    "state-local exact-action deduplication",
+    "postflop and preflop candidate identities frozen by the transfer precommit",
+    "llround sizing semantics already frozen for the action abstraction",
+    "root escalation 160/320/640",
+    "training-quality thresholds and strategic referee semantics",
+    "bootstrap and materiality rules",
+    "dense-reference diagnostic role and conservative selection cascade"
+  ],
+  "legacy_bindings_found": [
+    {
+      "path": "tools/r7_5_4_strategic_preflight.py",
+      "severity": "HARD_BLOCKER_FOR_DIRECT_REUSE",
+      "finding": "REPRESENTATIONS accepts the historical C0/V2 ablation family and the preflight reads validation/R7_5_3_REPRESENTATION_ABLATION_RESULT.json rather than a post-x4 SPNNIV3 H2/H3 admission artifact."
+    },
+    {
+      "path": "python/spincore/r7_5_action_stage_contract.py",
+      "severity": "HARD_BLOCKER_FOR_DIRECT_REUSE",
+      "finding": "SELECTED_REPRESENTATION is hard-coded to C0_V1_FROZEN_CONTROL and validate_action_stage_contract explicitly requires the durable C0 winner and the historical R7.5.3 representation result."
+    },
+    {
+      "path": "python/spincore/r7_5_action_stage.py",
+      "severity": "HARD_BLOCKER_FOR_DIRECT_REUSE",
+      "finding": "Training, uncertainty behavior, advantage fitting/auditing and checkpoint restoration all consume SELECTED_REPRESENTATION from the legacy action-stage contract."
+    },
+    {
+      "path": "tools/r7_5_4a_160_domain_worker.py",
+      "severity": "TRANSITIVE_BLOCKER",
+      "finding": "The worker delegates to r7_5_action_stage and validate_action_stage_contract, therefore it inherits the C0/SPNNIV1 binding."
+    },
+    {
+      "path": "tools/r7_5_4a_160_candidate_cell_worker.py",
+      "severity": "REVALIDATION_REQUIRED",
+      "finding": "The strategic worker loads finalized action policies through the historical action-policy stack; evaluator semantics may be reusable, but checkpoint/model lineage must be rebound to the admitted SPNNIV3 winner before strategic authority is restored."
+    }
+  ],
+  "current_conclusion": {
+    "old_r7_5_4_results_are_strategic_authority_for_spnniv3": false,
+    "old_r7_5_4_workers_can_be_launched_unchanged_after_h2_h3_selection": false,
+    "candidate_sets_and_referee_contract_can_be_preserved": true,
+    "winner_independent_migration_can_be_prepared_now": true
+  },
+  "required_transfer_before_launch": [
+    "Bind the action-stage representation identity to the provisional H2 or H3 winner from the frozen post-x4 strategic result, never to C0_V1_FROZEN_CONTROL.",
+    "Use SPNNIV3 model/observation/checkpoint constructors for advantage, behavior ensemble and AveragePolicy while retaining universal action width 10 and exact legal masks.",
+    "Replace historical R7_5_3_REPRESENTATION_ABLATION_RESULT authority checks with a fail-closed SPNNIV3 provisional-winner artifact check.",
+    "Re-run structural parity C++ exact actions -> resolver/dedup -> collector -> target -> slot/mask -> AvgPolicy -> runtime for HU and 3H, including >32-event histories and HU absent seat.",
+    "Re-run R7.5.4A then R7.5.4B under the admitted provisional representation without changing frozen candidate sets, seeds, thresholds, roots, bootstrap or referee semantics.",
+    "If final action selection differs materially from the Phase2 control abstraction, reopen H2/H3 representation admission under the selected action abstraction as already precommitted."
+  ],
+  "launch_gate": {
+    "r7_5_4_strategic_execution_allowed_now": false,
+    "unlock_requires": [
+      "x4 stability readmission PASS",
+      "frozen post-x4 strategic evaluator produces a provisional H2 or H3 winner",
+      "SPNNIV3 action-stage migration and structural transfer audit PASS"
+    ]
+  },
+  "next_parallel_action": "Create a fail-closed SPNNIV3 winner-binding transfer guard and a migration contract that can be completed without knowing whether H2 or H3 wins.",
+  "selection_rule_changed": false,
+  "thresholds_relaxed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
