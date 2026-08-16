@@ -1,0 +1,40 @@
+{
+  "schema": "SPINCORE_R7_5_3C_UPSTREAM_RNG_FACTORIAL_EVIDENCE_V1",
+  "status": "DIAGNOSTIC_COMPLETE",
+  "source_run_id": 31902226378,
+  "source_execution_sha": "6e820fe00eb89b76eadf67bb33fa48b46ddeafaa",
+  "source_run_conclusion": "success",
+  "source_artifact_id": 9258145651,
+  "source_artifact_name": "r7-5-3c-upstream-rng-factorial-result-6e820fe00eb89b76eadf67bb33fa48b46ddeafaa",
+  "source_artifact_digest": "sha256:4bf4b2c6f12d702e5a3217717e30d2ade7417b39c9bf3d59fb1edd625cfe4099",
+  "result_file_sha256": "4a6a470e0e510b410a709d6aa2c130d55367c27cb3a542c3315d8e9f246d54d3",
+  "prior_combined_upstream_baseline": {
+    "mean_of_mean_tv": 0.2429767994000996,
+    "mean_of_p95_tv": 0.6236112896588146
+  },
+  "learning_memory_randomness_sensitivity": {
+    "comparisons": 16,
+    "mean_of_mean_tv": 0.14759412935351546,
+    "mean_of_p95_tv": 0.40090470935625144,
+    "max_mean_tv": 0.1705329757694941,
+    "max_p95_tv": 0.49998858134482194,
+    "reference_gate_pass_count": 4
+  },
+  "sampling_traversal_randomness_sensitivity": {
+    "comparisons": 16,
+    "mean_of_mean_tv": 0.23946036588166622,
+    "mean_of_p95_tv": 0.6293708346001149,
+    "max_mean_tv": 0.25865237880013603,
+    "max_p95_tv": 0.6654908563584209,
+    "reference_gate_pass_count": 0
+  },
+  "interpretation": "Sampling/traversal randomness is the dominant upstream instability family. It combines exact deck schedules with collector stochastic traversal/action draws and must be split before remediation.",
+  "governance": {
+    "diagnostic_only": true,
+    "representation_winner": null,
+    "selection_rule_changed": false,
+    "changes_frozen_thresholds": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
