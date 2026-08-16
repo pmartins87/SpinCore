@@ -1,0 +1,44 @@
+{
+  "schema": "SPINCORE_GOVERNANCE_STALENESS_AUDIT_V1",
+  "date": "2026-08-16",
+  "status": "AUDIT_COMPLETE_NO_PRODUCTION_RELABELLING",
+  "purpose": "Identify machine-readable governance fields that lag the canonical ROADMAP without falsely promoting SPNNIV3 while R7.5.3 admission is still open.",
+  "canonical_reference": "ROADMAP.md",
+  "status_json": {
+    "observed_version": "1.12.1-recovery.31",
+    "stale_fields": [
+      "physical_state still describes legacy 184/H1/H2-era R7.5 work",
+      "current_gate_status still describes legacy 184/H1/H2-era work",
+      "r7_5.primary_candidate predates the current SPNNIV3 H2/H3 admission program",
+      "r7_5.r7_5_3 is PENDING although R7.5.3 is actively executing x4 chance-coverage readmission",
+      "r7_5.r7_5_1 and r7_5.r7_5_2 text no longer summarizes the current integrated SPNNIV3 successor state"
+    ],
+    "fields_that_must_remain_false": [
+      "ready_for_tables",
+      "r8.ready_to_start_official_training"
+    ]
+  },
+  "version_json": {
+    "observed_version": "1.12.1-recovery.26",
+    "stale_fields": [
+      "status still describes the R7.3/R7.4 verification era and not active R7.5",
+      "file has no explicit candidate-successor neural schema field"
+    ],
+    "neural_schema_observed": "SPNNIV1",
+    "neural_schema_interpretation": "Do not overwrite SPNNIV1 with SPNNIV3 yet. SPNNIV1 remains the incumbent/control/fallback lineage until R7.5.5 freezes a production successor. Candidate SPNNIV3 should be represented by a separate candidate-successor field in a future schema-preserving governance refresh."
+  },
+  "safe_future_refresh_rules": {
+    "production_or_incumbent_neural_schema_until_r7_5_5": "SPNNIV1",
+    "candidate_successor_neural_schema": "SPNNIV3",
+    "r7_5_3_status": "IN_PROGRESS_X4_CHANCE_COVERAGE_READMISSION",
+    "representation_winner": null,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "must_not_rewrite_historical_pass_fail_evidence": true,
+    "must_not_mark_spnniv3_production_before_r7_5_5": true
+  },
+  "mutation_performed": false,
+  "reason_no_direct_mutation": "STATUS.json and VERSION.json carry historical and compatibility semantics. This audit records the exact stale surface first; direct mutation is deferred until a schema-preserving patch can distinguish incumbent SPNNIV1 from candidate SPNNIV3 without rewriting history.",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
