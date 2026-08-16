@@ -1,0 +1,319 @@
+name: SpinCore R7.5.3C deck-vs-traversal split
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_sampling_split.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-sampling-split
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11.15'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify frozen deck-vs-traversal contract
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import hashlib, json, subprocess
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_3C_SAMPLING_SPLIT_FREEZE_20260816.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_3C_SAMPLING_SPLIT_FREEZE_V1'
+          assert p['status']=='FROZEN_BEFORE_SAMPLING_SPLIT_OUTPUT'
+          assert p['trigger_evidence']['upstream_factorial_result_sha256']=='4a6a470e0e510b410a709d6aa2c130d55367c27cb3a542c3315d8e9f246d54d3'
+          s=p['fixed_learning_seed_selection']
+          raw=int.from_bytes(hashlib.sha256(s['namespace'].encode()).digest()[:4],'big')
+          assert raw==s['sha256_prefix_uint32']==3770340623
+          assert raw % 2 == s['selected_index']==1
+          assert s['candidate_seeds'][s['selected_index']]==s['fixed_learning_seed']==1801739323
+          f=p['factorial']
+          assert f['cells']==16
+          assert f['deck_seeds']==[1342191342,1801739323]
+          assert f['traversal_seeds']==[1342191342,1801739323]
+          assert f['phase2_budget_per_cell']['iterations']==3
+          assert f['phase2_budget_per_cell']['roots_per_iteration']==64
+          assert f['phase2_budget_per_cell']['exact_opponent_levels']==2
+          assert f['phase2_budget_per_cell']['advantage_steps_per_member_per_iteration']==4096
+          assert f['phase2_budget_per_cell']['policy_readout_steps']==16384
+          assert p['precommitted_interpretation']['dominance_ratio']==1.2
+          for path, expected in {**p['code_blobs'], **p['inherited_code_blobs']}.items():
+              actual=subprocess.check_output(['git','hash-object',path],text=True).strip()
+              assert actual==expected,(path,actual,expected)
+          g=p['governance']
+          assert g['diagnostic_output_seen_before_freeze'] is False
+          assert g['diagnostic_only'] and not g['may_select_h2_or_h3']
+          assert not g['may_change_phase2_cross_seed_thresholds']
+          assert not g['may_authorize_h4'] and not g['may_authorize_r7_5_4_spnniv3_action_sizing_revalidation'] and not g['may_authorize_r8']
+          assert not g['production_training_authorized'] and not g['ready_for_tables']
+          PY
+          echo "execution_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime and compile diagnostic tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+          python -m py_compile tools/r7_5_3c_sampling_split_stage_worker.py tools/r7_5_3c_sampling_split_final_worker.py tools/r7_5_3c_sampling_split_aggregate.py
+      - name: Build immutable solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-sampling-split-solver-${{ steps.freeze.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration1:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: &split_matrix
+        representation:
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL
+          - H3_HYBRID_EXACT_SEMANTIC_FINAL
+        domain:
+          - TRUE_HEADS_UP
+          - THREE_HANDED
+        deck_seed:
+          - 1342191342
+          - 1801739323
+        traversal_seed:
+          - 1342191342
+          - 1801739323
+    steps:
+      - &checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - &setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - &runtime
+        name: Install frozen runtime
+        shell: bash
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - &solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-sampling-split-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build
+      - name: Run split iteration 1
+        shell: bash
+        env: &worker_env
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'split-i1-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_sampling_split_stage_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --deck-seed '${{ matrix.deck_seed }}' --traversal-seed '${{ matrix.traversal_seed }}' \
+              --target-iteration 1 --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-split-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-i1-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration2:
+    needs: [gate, iteration1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: *split_matrix
+    steps:
+      - *checkout
+      - *setup
+      - *runtime
+      - *solver
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-split-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-i1-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run split iteration 2
+        shell: bash
+        env: *worker_env
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'split-i2-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_sampling_split_stage_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --deck-seed '${{ matrix.deck_seed }}' --traversal-seed '${{ matrix.traversal_seed }}' \
+              --target-iteration 2 --resume input/checkpoint.pt \
+              --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-split-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-i2-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  iteration3:
+    needs: [gate, iteration2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: *split_matrix
+    steps:
+      - *checkout
+      - *setup
+      - *runtime
+      - *solver
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-split-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-i2-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Run split iteration 3 without final policy
+        shell: bash
+        env: *worker_env
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'split-i3-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_sampling_split_stage_worker.py \
+              --repo-root . --solver build/libspincore_solver_c.so \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --deck-seed '${{ matrix.deck_seed }}' --traversal-seed '${{ matrix.traversal_seed }}' \
+              --target-iteration 3 --resume input/checkpoint.pt \
+              --checkpoint-out output/checkpoint.pt --report-out output/report.json \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-split-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-i3-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
+
+  fixed_policy_readout:
+    needs: [gate, iteration3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix: *split_matrix
+    steps:
+      - *checkout
+      - *setup
+      - *runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-split-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-i3-${{ needs.gate.outputs.execution_sha }}
+          path: input
+      - name: Download frozen heldout corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-heldout-*-${{ env.HELDOUT_SHA }}
+          path: heldout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Fit common final policy and evaluate frozen heldout
+        shell: bash
+        env: *worker_env
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/run_with_heartbeat.py --label 'split-readout-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_sampling_split_final_worker.py \
+              --repo-root . --source-checkpoint input/checkpoint.pt --heldout-root heldout \
+              --representation '${{ matrix.representation }}' --domain '${{ matrix.domain }}' \
+              --deck-seed '${{ matrix.deck_seed }}' --traversal-seed '${{ matrix.traversal_seed }}' \
+              --execution-sha '${{ needs.gate.outputs.execution_sha }}' --out output/cell.json.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-split-cell-${{ matrix.representation }}-${{ matrix.domain }}-D${{ matrix.deck_seed }}-T${{ matrix.traversal_seed }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/cell.json.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, fixed_policy_readout]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen metric runtime
+        shell: bash
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download all 16 immutable split cells
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-split-cell-*-${{ needs.gate.outputs.execution_sha }}
+          path: cells
+      - name: Aggregate frozen deck-vs-traversal split
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          test "$(find cells -name cell.json.gz | wc -l)" -eq 16
+          mkdir -p output
+          python tools/r7_5_3c_sampling_split_aggregate.py \
+            --cells-root cells \
+            --prior-evidence validation/R7_5_3C_UPSTREAM_RNG_FACTORIAL_EVIDENCE_20260816.json \
+            --out output/R7_5_3C_SAMPLING_SPLIT_RESULT.json
+          sha256sum output/R7_5_3C_SAMPLING_SPLIT_RESULT.json | tee output/RESULT_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-sampling-split-result-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
