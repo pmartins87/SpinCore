@@ -1,0 +1,69 @@
+name: SpinCore Ryzen frozen runner smoke
+
+on:
+  push:
+    paths:
+      - 'tools/spincore_ryzen_frozen_runner.py'
+      - '.github/workflows/ryzen_frozen_runner_smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile and exercise generic runner in disposable git repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/spincore_ryzen_frozen_runner.py
+          python tools/spincore_ryzen_frozen_runner.py --help >/dev/null
+          ROOT="$RUNNER_TEMP/ryzen-smoke-repo"
+          OUT="$RUNNER_TEMP/ryzen-smoke-runs"
+          mkdir -p "$ROOT"
+          cd "$ROOT"
+          git init -q
+          git config user.email smoke@spincore.invalid
+          git config user.name SpinCoreSmoke
+          printf 'frozen\n' > contract.txt
+          git add contract.txt
+          git commit -qm frozen
+          SHA="$(git rev-parse HEAD)"
+          cd "$GITHUB_WORKSPACE"
+          python tools/spincore_ryzen_frozen_runner.py \
+            --repo-root "$ROOT" \
+            --expected-commit "$SHA" \
+            --run-name smoke \
+            --output-root "$OUT" \
+            --contract contract.txt \
+            --artifact artifact.txt \
+            -- python -c "from pathlib import Path; Path('artifact.txt').write_text('ok\\n', encoding='utf-8')"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          out=Path(os.environ['RUNNER_TEMP'])/'ryzen-smoke-runs'
+          manifests=list(out.glob('*/manifest.json'))
+          assert len(manifests)==1, manifests
+          p=manifests[0]
+          data=json.loads(p.read_text())
+          assert data['schema']=='SPINCORE_RYZEN_FROZEN_RUN_MANIFEST_V1'
+          assert data['status']=='SUCCESS'
+          assert data['return_code']==0
+          assert data['git']['head_commit']==data['git']['expected_commit']
+          assert len(data['contracts'])==1
+          assert data['artifact_file_count']==1
+          row=data['artifacts'][0]
+          assert row['sha256']==hashlib.sha256(b'ok\n').hexdigest()
+          raw=p.read_bytes()
+          expected=hashlib.sha256(raw).hexdigest()
+          recorded=p.with_suffix('.json.sha256').read_text().split()[0]
+          assert expected==recorded
+          print(json.dumps({'runner_smoke':'PASS','manifest_sha256':expected}, indent=2))
+          PY
