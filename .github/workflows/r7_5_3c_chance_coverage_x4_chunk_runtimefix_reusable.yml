@@ -1,0 +1,126 @@
+name: R7.5.3C x4 chance chunk runtime-fix reusable
+
+on:
+  workflow_call:
+    inputs:
+      target_iteration:
+        required: true
+        type: number
+      root_chunk:
+        required: true
+        type: number
+      input_stage:
+        required: false
+        default: ''
+        type: string
+      finalize:
+        required: false
+        default: false
+        type: boolean
+      execution_sha:
+        required: true
+        type: string
+      source_run_id:
+        required: false
+        default: 0
+        type: number
+      source_execution_sha:
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cells:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        representation:
+          - H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL
+          - H3_HYBRID_EXACT_SEMANTIC_FINAL
+        domain:
+          - TRUE_HEADS_UP
+          - THREE_HANDED
+        training_seed:
+          - 1342191342
+          - 1801739323
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Install frozen runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download immutable solver
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-x4-runtimefix-solver-${{ inputs.execution_sha }}
+          path: build
+      - name: Download previous x4 stage from failed source run
+        if: ${{ inputs.input_stage != '' && inputs.source_run_id != 0 }}
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-x4-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ inputs.input_stage }}-${{ inputs.source_execution_sha }}
+          path: input
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+      - name: Download previous x4 stage from corrected run
+        if: ${{ inputs.input_stage != '' && inputs.source_run_id == 0 }}
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-x4-runtimefix-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.training_seed }}-${{ inputs.input_stage }}-${{ inputs.execution_sha }}
+          path: input
+      - name: Run corrected x4 collection chunk
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+          SPINCORE_X4_RESUME_EXECUTION_SHA: ${{ inputs.source_execution_sha }}
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          args=(
+            --repo-root .
+            --solver build/libspincore_solver_c.so
+            --representation '${{ matrix.representation }}'
+            --domain '${{ matrix.domain }}'
+            --training-seed '${{ matrix.training_seed }}'
+            --target-iteration '${{ inputs.target_iteration }}'
+            --root-chunk '${{ inputs.root_chunk }}'
+            --checkpoint-out output/checkpoint.pt
+            --report-out output/report.json
+            --execution-sha '${{ inputs.execution_sha }}'
+          )
+          if [ -n '${{ inputs.input_stage }}' ]; then
+            args+=(--resume input/checkpoint.pt)
+          fi
+          if [ '${{ inputs.finalize }}' = 'true' ]; then
+            args+=(--finalize)
+          fi
+          python tools/run_with_heartbeat.py \
+            --label 'x4fix-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.training_seed }}-i${{ inputs.target_iteration }}c${{ inputs.root_chunk }}' \
+            --interval-seconds 300 -- \
+            python tools/r7_5_3c_chance_coverage_x4_domain_worker_runtimefix.py "${args[@]}"
+      - name: Upload corrected x4 stage checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-x4-runtimefix-${{ matrix.representation }}-${{ matrix.domain }}-${{ matrix.training_seed }}-i${{ inputs.target_iteration }}c${{ inputs.root_chunk }}-${{ inputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
