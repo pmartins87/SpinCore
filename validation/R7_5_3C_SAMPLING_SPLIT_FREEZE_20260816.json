@@ -1,0 +1,100 @@
+{
+  "schema": "SPINCORE_R7_5_3C_SAMPLING_SPLIT_FREEZE_V1",
+  "status": "FROZEN_BEFORE_SAMPLING_SPLIT_OUTPUT",
+  "created_utc": "2026-08-16",
+  "purpose": "Winner-independent split of the dominant upstream sampling/traversal instability into exact deck/chance schedule randomness versus collector stochastic traversal/action sampling randomness.",
+  "trigger_evidence": {
+    "upstream_factorial_run_id": 31902226378,
+    "upstream_factorial_execution_sha": "6e820fe00eb89b76eadf67bb33fa48b46ddeafaa",
+    "upstream_factorial_result_sha256": "4a6a470e0e510b410a709d6aa2c130d55367c27cb3a542c3315d8e9f246d54d3",
+    "sampling_traversal_mean_of_mean_tv": 0.23946036588166622,
+    "sampling_traversal_mean_of_p95_tv": 0.6293708346001149,
+    "learning_memory_mean_of_mean_tv": 0.14759412935351546,
+    "learning_memory_mean_of_p95_tv": 0.40090470935625144,
+    "classification": "SAMPLING_TRAVERSAL_DOMINANT_UPSTREAM_FAMILY"
+  },
+  "fixed_learning_seed_selection": {
+    "candidate_seeds": [1342191342, 1801739323],
+    "namespace": "SpinCore|R7.5.3C|SAMPLING-SPLIT|FIXED-LEARNING-SEED-INDEX",
+    "sha256_prefix_uint32": 3770340623,
+    "index_rule": "sha256_prefix_uint32 modulo 2",
+    "selected_index": 1,
+    "fixed_learning_seed": 1801739323,
+    "selection_seen_after_diagnostic_output": false
+  },
+  "factorial": {
+    "representations": [
+      "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+    ],
+    "domains": ["TRUE_HEADS_UP", "THREE_HANDED"],
+    "deck_seeds": [1342191342, 1801739323],
+    "traversal_seeds": [1342191342, 1801739323],
+    "cells": 16,
+    "phase2_budget_per_cell": {
+      "iterations": 3,
+      "roots_per_iteration": 64,
+      "exact_opponent_levels": 2,
+      "advantage_steps_per_member_per_iteration": 4096,
+      "policy_readout_steps": 16384,
+      "batch_size": 256,
+      "learning_rate": 0.001
+    },
+    "deck_axis": "Only the deterministic exact solver deck schedule changes. stage.deck_seed is rebound to production deck_seed(deck_seed, global_root, iteration).",
+    "traversal_axis": "Only collector stochastic action/path draws change through an independent random.Random(traversal_seed XOR 0xC0FFEE).",
+    "learning_axis": "Advantage initialization/reset, side ensemble, optimizer minibatches, reservoir replacement and bundle batch RNG remain fixed at learning seed 1801739323.",
+    "final_policy_axis": "One common final AveragePolicy learner seed 1538612375 is used for every cell, identical to the prior upstream-factorial diagnostic readout."
+  },
+  "heldout": {
+    "run_id": 31866538984,
+    "execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+    "evaluation_seeds": [2029384436, 1150634112],
+    "states_per_metric": 1024,
+    "regenerated": false
+  },
+  "contrasts": {
+    "different_deck_same_traversal": "Hold traversal RNG fixed and compare the two independent deck/chance schedules.",
+    "same_deck_different_traversal": "Hold exact deck/chance schedule fixed and compare the two independent collector stochastic traversal RNG streams."
+  },
+  "reference_thresholds_only": {
+    "mean_tv_max": 0.15,
+    "p95_tv_max": 0.35,
+    "may_replace_or_relax_admission_gates": false
+  },
+  "precommitted_interpretation": {
+    "dominance_ratio": 1.2,
+    "deck_dominant": "DECK_CHANCE_DOMINANT only if deck mean-of-mean TV >= 1.20x traversal mean-of-mean TV AND deck mean-of-p95 TV >= 1.20x traversal mean-of-p95 TV.",
+    "traversal_dominant": "TRAVERSAL_ACTION_SAMPLING_DOMINANT only under the symmetric 1.20x condition on both aggregate metrics.",
+    "otherwise": "BOTH_MATERIAL_OR_INTERACTION; do not choose a subcomponent post hoc.",
+    "deck_next_action": "Freeze a chance-coverage stabilization experiment that preserves independent chance seeds while increasing and/or stratifying deck coverage; do not make both training seeds share the same chance schedule merely to pass stability.",
+    "traversal_next_action": "Freeze a variance-reduced traversal experiment that preserves unbiased policy sampling while reducing stochastic path variance.",
+    "both_next_action": "Freeze either a replicated split on the other learning seed or a joint variance-reduction experiment, with the choice itself frozen before outputs."
+  },
+  "code_blobs": {
+    "tools/r7_5_3c_sampling_split_stage_worker.py": "bcb85d96ce75a8f6339d11a8530a4dc69bc74cd6",
+    "tools/r7_5_3c_sampling_split_final_worker.py": "117d8bc799de91069213f3e024ba0122fc755744",
+    "tools/r7_5_3c_sampling_split_aggregate.py": "ab29431f665407d7da3d36350421b53d85b757ab"
+  },
+  "inherited_code_blobs": {
+    "python/spincore/r7_5_representation_v3.py": "e69ba053471765315655ecb4723bf0f807cdd9f7",
+    "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1",
+    "python/spincore/r7_5_action_cfr.py": "93176165a03c3cc3b5b751bf3365931071302c4a",
+    "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
+    "python/spincore/r7_5_representation_v3_checkpoint.py": "09eafd4717bf0f66cdf453a71d9893156c5ce098",
+    "python/spincore/r7_5_representation_v3_final_policy.py": "c902e2cd804609b2ccd9cd3045e79747ca95a192",
+    "python/spincore_nn/models_v3_final.py": "e0147f795a45292268c4328a2248796dc989242c",
+    "python/spincore_nn/reservoir.py": "c3f36a0ed36f096078986b952f4df9ea1d72ecb7",
+    "python/spincore_nn/training.py": "277f56efb6935108ddbb90f7fe2f0e6a4120120e"
+  },
+  "governance": {
+    "diagnostic_output_seen_before_freeze": false,
+    "diagnostic_only": true,
+    "may_select_h2_or_h3": false,
+    "may_change_phase2_cross_seed_thresholds": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
