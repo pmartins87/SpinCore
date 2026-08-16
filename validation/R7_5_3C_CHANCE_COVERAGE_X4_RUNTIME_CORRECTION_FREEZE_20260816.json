@@ -1,0 +1,73 @@
+{
+  "schema": "SPINCORE_R7_5_3C_CHANCE_COVERAGE_X4_RUNTIME_CORRECTION_FREEZE_V1",
+  "status": "FROZEN_BEFORE_CORRECTED_X4_OUTPUTS",
+  "source_failure": {
+    "workflow_run_id": 31960338213,
+    "execution_sha": "47ec48e8596d9dc02d44519d4d1ec94c8fdb351c",
+    "failed_stage": "ITERATION_1_CHUNK_4_AFTER_COLLECTION_AND_ADVANTAGE_FIT_BEFORE_CHECKPOINT_UPLOAD",
+    "exception": "ZeroDivisionError: division by zero",
+    "source_location": "python/spincore/r7_5_representation_v3_stage.py:443 nodes_added / roots_added",
+    "root_cause": "The x4 worker intentionally invoked the frozen Phase-2 iteration routine with roots_per_iteration=0 solely to reuse its unchanged Advantage fit. The fit completed, then the routine attempted root-normalized reporting with roots_added=0.",
+    "strategic_or_admission_output_emitted": false,
+    "completed_x4_iteration_checkpoint_emitted": false,
+    "safe_reusable_source_stage": "i1c3",
+    "safe_reusable_source_stage_semantics": "Three sequential 64-root chunks were successfully checkpointed for every H2/H3 x HU/3H x training-seed cell. The failed chunk-4 artifacts were not uploaded and are not reused."
+  },
+  "correction": {
+    "type": "MECHANICAL_RUNTIME_REPORTING_FIX_ONLY",
+    "coverage_multiplier": 4,
+    "roots_per_iteration_effective": 256,
+    "roots_per_chunk": 64,
+    "fit_once_after_four_chunks": true,
+    "training_seeds": [1342191342, 1801739323],
+    "training_seeds_remain_independent": true,
+    "deck_seed_function_unchanged": true,
+    "global_root_sequence_unchanged": true,
+    "scenario_cycle_unchanged": true,
+    "advantage_steps_per_member_per_iteration": 4096,
+    "average_policy_steps": 16384,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "ensemble_size": 4,
+    "reservoir_capacity": 100000,
+    "zero_root_placeholder_rates": 0.0,
+    "placeholder_rates_are_overwritten_by_true_256_root_accumulators": true,
+    "reuse_source_i1c3_only": true,
+    "recollect_failed_i1c4": true
+  },
+  "hard_gates_unchanged": {
+    "advantage_nrmse_max_each_iteration": 0.75,
+    "final_policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "all_eight_representation_domain_evaluation_rows_required": true,
+    "dropping_failed_domains_or_seeds_forbidden": true
+  },
+  "code_blobs": {
+    "tools/r7_5_3c_chance_coverage_x4_domain_worker.py": "c3feec902957e4ef60658e3983d0b514822b630d",
+    "tools/r7_5_3c_chance_coverage_x4_domain_worker_runtimefix.py": "7758aa7a72f69c2c385a26de4e7f966fee186f77",
+    ".github/workflows/r7_5_3c_chance_coverage_x4_chunk_runtimefix_reusable.yml": "4596f787fdbf07229d1e02f68164ef274dc84b83",
+    "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1",
+    "tools/r7_5_3c_chance_coverage_x4_stability.py": "fc9503d7788f272f0ff1e43b9dc668dcf68f9cbd"
+  },
+  "source_contracts": {
+    "original_readmission_freeze": "validation/R7_5_3C_CHANCE_COVERAGE_X4_READMISSION_FREEZE_20260816.json",
+    "sampling_split_evidence": "validation/R7_5_3C_SAMPLING_SPLIT_EVIDENCE_20260816.json",
+    "sampling_split_result_sha256": "6655f5fcea3788a15e6a0671b00ad7d98b15e0f87f8dcdadc2ded57de5d46304",
+    "heldout_run_id": 31866538984,
+    "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22"
+  },
+  "governance": {
+    "new_diagnostic_branch_created": false,
+    "roadmap_stage_changed": false,
+    "representation_winner": null,
+    "may_select_h2_or_h3": false,
+    "selection_rule_changed": false,
+    "may_change_phase2_thresholds": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
