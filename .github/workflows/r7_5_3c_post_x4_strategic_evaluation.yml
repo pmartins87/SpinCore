@@ -1,0 +1,323 @@
+name: SpinCore R7.5.3C post-x4 strategic evaluation
+
+on:
+  workflow_run:
+    workflows:
+      - SpinCore R7.5.3C x4 chance-coverage runtime-fix recovery
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-post-x4-strategic-evaluation
+  cancel-in-progress: false
+
+env:
+  SOURCE_X4_RUN_ID: '31965874264'
+  SOURCE_X4_SHA: '4ce6b91fabc246518b0011dedb08fe4c74d1113d'
+  SOURCE_X4_STABILITY_ARTIFACT: 'r7-5-3c-x4-runtimefix-stability-result-4ce6b91fabc246518b0011dedb08fe4c74d1113d'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      execution_sha: ${{ steps.freeze.outputs.execution_sha }}
+      strategic_unlocked: ${{ steps.frontier.outputs.strategic_unlocked }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Verify frozen post-x4 evaluator before strategic outputs
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          f=json.loads(Path('validation/R7_5_3C_POST_X4_STRATEGIC_EVALUATOR_FREEZE_20260816.json').read_text())
+          assert f['schema']=='SPINCORE_R7_5_3C_POST_X4_STRATEGIC_EVALUATOR_FREEZE_V1'
+          assert f['status']=='FROZEN_BEFORE_POST_X4_STRATEGIC_OUTPUTS'
+          s=f['source_x4']
+          assert s['run_id']==31965874264
+          assert s['execution_sha']=='4ce6b91fabc246518b0011dedb08fe4c74d1113d'
+          assert s['stability_artifact_name']=='r7-5-3c-x4-runtimefix-stability-result-4ce6b91fabc246518b0011dedb08fe4c74d1113d'
+          assert s['required_stability_status']=='STABILITY_PASS'
+          h=f['heldout']
+          assert h['run_id']==31866538984 and h['execution_sha']=='dfe5f83742495a457e92b29f97db5d3b631bca22'
+          assert h['must_reuse_existing_four_corpora'] is True
+          for table in ('new_code_blobs','frozen_evaluator_blobs','inherited_evaluator_blobs'):
+              for path, expected in f[table].items():
+                  actual=subprocess.check_output(['git','hash-object',path], text=True).strip()
+                  assert actual==expected,(path,actual,expected)
+          e=f['evaluator_contract']
+          assert e['heldout_cells']==16 and e['common_reference_cells']==16 and e['pairwise_cells']==16
+          assert e['bootstrap_replicates']==2000 and e['bootstrap_confidence']==0.95
+          assert e['material_floor_icm']==0.001
+          assert e['common_reference_selects_winner'] is False
+          assert e['local_deviation_called_exact_exploitability'] is False
+          assert e['rng_namespace']=='SpinCore|R7.5.3C|PHASE2|REFV1'
+          assert e['representation_identity_in_referee_rng_key'] is False
+          assert e['training_seed_identity_in_referee_rng_key'] is False
+          g=f['governance']
+          assert g['post_x4_strategic_output_seen_before_freeze'] is False
+          assert g['stability_result_may_select_representation'] is False
+          assert g['may_change_frozen_selection_rule'] is False
+          assert g['may_change_phase2_thresholds'] is False
+          assert g['may_authorize_h4'] is False and g['may_authorize_r8'] is False
+          assert g['production_training_authorized'] is False and g['ready_for_tables'] is False
+          PY
+          echo "execution_sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Compile transition and x4 extraction adapters
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          set -euo pipefail
+          python -m pip install 'numpy==2.3.5'
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m py_compile \
+            tools/r7_5_3c_post_x4_frontier_guard.py \
+            tools/r7_5_3c_post_x4_extract_final_policies.py \
+            tools/r7_5_3c_phase2_eval_matrix.py \
+            tools/r7_5_3c_phase2_eval_worker.py \
+            tools/r7_5_3c_phase2_eval_aggregate.py
+      - name: Verify triggering run identity when automatic
+        if: ${{ github.event_name == 'workflow_run' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test '${{ github.event.workflow_run.id }}' = "$SOURCE_X4_RUN_ID"
+          test '${{ github.event.workflow_run.head_sha }}' = "$SOURCE_X4_SHA"
+          test '${{ github.event.workflow_run.conclusion }}' = 'success'
+      - name: Verify frozen source run identity
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          row="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_X4_RUN_ID" --jq '[.head_sha,.status,(.conclusion//"")]|@tsv')"
+          read -r sha status conclusion <<<"$row"
+          test "$sha" = "$SOURCE_X4_SHA"
+          test "$status" = completed
+          test "$conclusion" = success
+      - name: Download exact x4 stability result
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SOURCE_X4_STABILITY_ARTIFACT }}
+          path: stability
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_X4_RUN_ID }}
+      - name: Apply fail-closed x4 frontier guard
+        id: frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          result="$(find stability -name R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_RESULT.json -type f -print -quit)"
+          test -n "$result"
+          python tools/r7_5_3c_post_x4_frontier_guard.py --stability-result "$result" --out frontier.json
+          unlocked="$(python - <<'PY'
+          import json
+          p=json.load(open('frontier.json'))
+          print('true' if p['may_run_complete_frozen_phase2_strategic_evaluation'] else 'false')
+          PY
+          )"
+          echo "strategic_unlocked=$unlocked" >> "$GITHUB_OUTPUT"
+          cat frontier.json
+      - id: matrix
+        if: ${{ steps.frontier.outputs.strategic_unlocked == 'true' }}
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: echo "matrix=$(python tools/r7_5_3c_phase2_eval_matrix.py)" >> "$GITHUB_OUTPUT"
+
+  prepare_solver:
+    needs: gate
+    if: ${{ needs.gate.outputs.strategic_unlocked == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Regress frozen evaluator environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' 'pytest==9.0.2'
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2
+          ctest --test-dir build --output-on-failure
+          PYTHONPATH="$PWD/python:$PWD/tools" python -m compileall -q python tools python_tests
+          PYTHONPATH="$PWD/python:$PWD/tools" pytest -q python_tests/test_r7_5_3c_post_x4_frontier_guard.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-evaluator-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 30
+
+  extract_policies:
+    needs: [gate, prepare_solver]
+    if: ${{ needs.gate.outputs.strategic_unlocked == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download all eight corrected final x4 checkpoints
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-x4-runtimefix-*-i3c4-${{ env.SOURCE_X4_SHA }}
+          path: final_checkpoints
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_X4_RUN_ID }}
+      - name: Extract x4 policies and compatible training inventory
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        run: |
+          python tools/r7_5_3c_post_x4_extract_final_policies.py \
+            --repo-root . \
+            --input-root final_checkpoints \
+            --output-root light_policies \
+            --training-execution-sha "$SOURCE_X4_SHA"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-light-policies-${{ needs.gate.outputs.execution_sha }}
+          path: light_policies
+          if-no-files-found: error
+          retention-days: 30
+
+  evaluate:
+    needs: [gate, prepare_solver, extract_policies]
+    if: ${{ needs.gate.outputs.strategic_unlocked == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.gate.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-evaluator-solver-${{ needs.gate.outputs.execution_sha }}
+          path: build
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-light-policies-${{ needs.gate.outputs.execution_sha }}
+          path: policies
+      - if: matrix.mode == 'heldout'
+        uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-heldout-${{ matrix.domain }}-${{ matrix.evaluation_seed }}-${{ env.HELDOUT_SHA }}
+          path: heldout_corpus
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Run unchanged frozen strategic cell
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x build/libspincore_solver_c.so || true
+          mkdir -p output
+          base=(--repo-root . --solver build/libspincore_solver_c.so --domain '${{ matrix.domain }}' --evaluation-seed '${{ matrix.evaluation_seed }}' --training-execution-sha "$SOURCE_X4_SHA" --evaluator-execution-sha '${{ needs.gate.outputs.execution_sha }}' --out output/cell.json.gz)
+          if [ '${{ matrix.mode }}' = pairwise ]; then
+            h2="policies/H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL__${{ matrix.domain }}__${{ matrix.h2_training_seed }}.pt"
+            h3="policies/H3_HYBRID_EXACT_SEMANTIC_FINAL__${{ matrix.domain }}__${{ matrix.h3_training_seed }}.pt"
+            extra=(--h2-training-seed '${{ matrix.h2_training_seed }}' --h3-training-seed '${{ matrix.h3_training_seed }}' --h2-policy "$h2" --h3-policy "$h3")
+          else
+            policy="policies/${{ matrix.representation }}__${{ matrix.domain }}__${{ matrix.training_seed }}.pt"
+            extra=(--representation '${{ matrix.representation }}' --training-seed '${{ matrix.training_seed }}' --policy "$policy")
+            if [ '${{ matrix.mode }}' = heldout ]; then
+              extra+=(--heldout-file heldout_corpus/states.json.gz --heldout-execution-sha "$HELDOUT_SHA")
+            fi
+          fi
+          python tools/run_with_heartbeat.py --label 'r7.5.3c-post-x4-${{ matrix.key }}' --interval-seconds 300 -- \
+            python tools/r7_5_3c_phase2_eval_worker.py --mode '${{ matrix.mode }}' "${base[@]}" "${extra[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-eval-${{ matrix.key }}-${{ needs.gate.outputs.execution_sha }}
+          path: output/cell.json.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: [gate, extract_policies, evaluate]
+    if: ${{ needs.gate.outputs.strategic_unlocked == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.execution_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - run: python -m pip install 'numpy==2.3.5'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-post-x4-eval-*-${{ needs.gate.outputs.execution_sha }}
+          path: cells
+      - uses: actions/download-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-light-policies-${{ needs.gate.outputs.execution_sha }}
+          path: policies
+      - name: Aggregate with unchanged frozen H2/H3 selection rule
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          inventory="policies/R7_5_3C_PHASE2_TRAINING_INVENTORY.json"
+          test -f "$inventory"
+          mkdir -p output
+          python tools/r7_5_3c_phase2_eval_aggregate.py \
+            --input-root cells \
+            --training-inventory "$inventory" \
+            --training-execution-sha "$SOURCE_X4_SHA" \
+            --heldout-execution-sha "$HELDOUT_SHA" \
+            --evaluator-execution-sha '${{ needs.gate.outputs.execution_sha }}' \
+            --out output/R7_5_3C_POST_X4_PHASE2_EVALUATION_RESULT.json
+          sha256sum output/R7_5_3C_POST_X4_PHASE2_EVALUATION_RESULT.json | tee output/RESULT_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-3c-post-x4-strategic-result-${{ needs.gate.outputs.execution_sha }}
+          path: output
+          if-no-files-found: error
+          retention-days: 30
