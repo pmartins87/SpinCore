@@ -1,0 +1,70 @@
+{
+  "schema": "SPINCORE_R8_0_SELECTED_STATE_ACQUISITION_CHECKLIST_V1",
+  "date": "2026-08-16",
+  "status": "INFRASTRUCTURE_READY_FIRST_PARTY_SELECTED_STATE_FACTS_REQUIRED",
+  "purpose": "Reduce R8.0 to the exact external evidence facts still required while R7.5.3 runs. This checklist does not infer client values and does not authorize training or table use.",
+  "existing_capture_builder": "tools/build_r8_selected_state_packet.py",
+  "existing_packet_schema": "SPINCORE_R8_SELECTED_STATE_EVIDENCE_PACKET_V1",
+  "existing_profile_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
+  "approved_selected_state_source_kinds": [
+    "OFFICIAL_CLIENT_CAPTURE",
+    "OFFICIAL_RULE_DOCUMENT"
+  ],
+  "selected_state_binding_key": [
+    "table_size",
+    "buy_in_minor_units",
+    "multiplier"
+  ],
+  "facts_required_from_each_selected_state_capture": {
+    "table_size": "must be exactly 3 for current SpinCore production path",
+    "currency": "must be USD for current production profile",
+    "buy_in_minor_units": "exact selected buy-in in integer minor units",
+    "multiplier": "exact selected multiplier",
+    "starting_chips_per_player": "exact starting stack visible/proven for this selected state",
+    "blind_levels": "complete ordered sequence; each row requires small_blind, big_blind, ante and duration_seconds when the official source specifies a duration",
+    "payouts_minor_units": "exact three-place client-displayed payout amounts; zero lower places are allowed if genuinely shown",
+    "source_kind": "OFFICIAL_CLIENT_CAPTURE or OFFICIAL_RULE_DOCUMENT",
+    "source_locator": "auditable locator identifying the captured client/rule source",
+    "captured_at_utc": "exact evidence capture time",
+    "capture_bytes": "original non-empty evidence bytes preserved so SHA-256 and byte size can be bound"
+  },
+  "global_or_additional_profile_fact_required": {
+    "tournament_fee_fraction": "must be proven by approved first-party evidence; it may not be inferred from prize-pool arithmetic unless the official source itself states the fee semantics"
+  },
+  "fields_the_packet_derives_mechanically": [
+    "capture_sha256",
+    "capture_size_bytes",
+    "payout_share_by_place normalized directly from exact captured integer payouts",
+    "packet_id from canonical semantic payload"
+  ],
+  "forbidden_substitutions": [
+    "R7 pilot constants",
+    "generic Spin & Gold values not bound to the exact selected buy-in/multiplier state",
+    "third-party strategy-site values as production authority",
+    "OCR-derived facts without preserving and explicitly binding the original first-party capture",
+    "assuming buy_in * multiplier equals the exact displayed prize pool",
+    "assuming an unproven blind duration or ante",
+    "assuming tournament_fee_fraction from a generic or stale page"
+  ],
+  "fail_closed_profile_requirements": [
+    "table_size",
+    "buy_in_minor_units",
+    "multiplier",
+    "starting_chips_per_player",
+    "blind_levels",
+    "payout_share_by_place",
+    "tournament_fee_fraction"
+  ],
+  "conflict_rule": "Two distinct semantic evidence packets claiming authority for the same table_size/buy_in/multiplier state must be rejected until the discrepancy is resolved from first-party evidence.",
+  "parallel_execution_boundary": {
+    "may_prepare_capture_spec_templates_now": true,
+    "may_validate_packet_builder_now": true,
+    "may_collect_first_party_selected_state_evidence_now": true,
+    "requires_h2_h3_winner": false,
+    "may_build_final_production_profile_without_all_required_evidence": false,
+    "may_start_r8_3_official_training": false
+  },
+  "remaining_external_dependency": "Acquire exact authoritative selected-state client/rule evidence for the intended GGPoker 3-Max buy-in/multiplier production state(s), including starting stack, complete blind schedule, exact payouts and first-party fee evidence.",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
