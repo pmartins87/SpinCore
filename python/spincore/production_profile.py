@@ -1,4 +1,11 @@
-"""Historical exact selected-state profile retained for audit compatibility.\n\nThe active SpinCore product target is the offline, stake-invariant simulator\nprofile in ``spincore.simulator_profile``.  This legacy module must not make\nnominal buy-in or currency select policy for that active target.\n"""\n\nfrom __future__ import annotations
+"""Historical exact selected-state profile retained for audit compatibility.
+
+The active SpinCore product target is the offline, stake-invariant simulator
+profile in ``spincore.simulator_profile``.  This legacy module must not make
+nominal buy-in or currency select policy for that active target.
+"""
+
+from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import hashlib
