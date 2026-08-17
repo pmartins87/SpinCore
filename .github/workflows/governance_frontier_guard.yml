@@ -1,0 +1,27 @@
+name: SpinCore governance frontier guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'STATUS.json'
+      - 'VERSION.json'
+      - 'validation/GOVERNANCE_STALENESS_AUDIT_20260816.json'
+      - 'validation/GOVERNANCE_FRONTIER_REFRESH_20260817.json'
+      - 'tools/check_governance_frontier.py'
+      - '.github/workflows/governance_frontier_guard.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check fail-closed machine-readable governance frontier
+        run: python tools/check_governance_frontier.py

@@ -1,0 +1,34 @@
+{
+  "schema": "SPINCORE_GOVERNANCE_FRONTIER_REFRESH_V1",
+  "date": "2026-08-17",
+  "status": "APPLIED_FAIL_CLOSED_GOVERNANCE_REFRESH",
+  "source_head_before_apply": "5ac8a153a9ef8e793df3a5aed6217962565da735",
+  "purpose": "Refresh machine-readable governance to the active R7.5.3 frontier without promoting SPNNIV3, choosing H2/H3, changing the active x4 experiment, authorizing production training or changing READY FOR TABLES.",
+  "incumbent_or_production_fallback_neural_schema": "SPNNIV1",
+  "candidate_successor_neural_schema": "SPNNIV3",
+  "candidate_representations": [
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+  ],
+  "representation_winner": null,
+  "candidate_universal_action_width": 10,
+  "complete_variable_length_history_required": true,
+  "active_x4": {
+    "workflow_run_id": 31965874264,
+    "execution_sha": "4ce6b91fabc246518b0011dedb08fe4c74d1113d",
+    "status_at_precommit": "in_progress",
+    "inputs_or_seeds_changed_by_refresh": false
+  },
+  "governance_version": "1.12.1-recovery.32",
+  "guarded_invariants": {
+    "incumbent_spnniv1_overwritten": false,
+    "spnniv3_marked_production": false,
+    "representation_winner_selected": false,
+    "historical_pass_fail_evidence_rewritten": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "external_parallel_dependency": "R8.0 still requires exact first-party selected-state GGPoker evidence; no pilot or inferred values may substitute.",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}

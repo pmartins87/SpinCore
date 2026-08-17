@@ -1,11 +1,11 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.31",
+  "version": "1.12.1-recovery.32",
   "recovery_generation": 2,
-  "physical_state": "R7_4_FINAL_PASS_R7_5_LEGACY_184_RECOVERED_SUIT_INVARIANCE_FAIL_DESCENDANTS_TESTED_ONTOLOGY_SCAFFOLD_PASS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
+  "physical_state": "R7_4_FINAL_PASS_R7_5_3_SPNNIV3_H2_H3_X4_CHANCE_COVERAGE_READMISSION_IN_PROGRESS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.5",
-  "current_gate_status": "R7_5_1_LEGACY_184_COVERAGE_PASS_RAW_SUIT_INVARIANCE_FAIL_H1_H2_DESCENDANTS_REGRESSION_PASS_R7_5_2_POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS",
+  "current_gate_status": "R7_5_3_SPNNIV3_H2_H3_X4_CHANCE_COVERAGE_READMISSION_IN_PROGRESS_NO_WINNER",
   "ready_for_tables": false,
   "roadmap": {
     "R0_R6": "PASS_REBUILT",
@@ -15,7 +15,7 @@
     "R7_3_strategy_quality_640": "PASS_PROVISIONAL_ADVANCEMENT",
     "R7_3_exact_reproducibility": "OPEN_RELEASE_CERTIFICATION_DEBT_NOT_PASS",
     "R7_4": "FINAL_PASS_READY_TO_ADVANCE_TO_R8_ENGINEERING",
-    "R7_5": "IN_PROGRESS_REPRESENTATION_AND_ACTION_ABSTRACTION",
+    "R7_5": "IN_PROGRESS_H2_H3_SPNNIV3_X4_CHANCE_COVERAGE_READMISSION",
     "R8_0": "ACQUISITION_PIPELINE_PASS_PRODUCTION_PROFILE_GATE_DATA_BLOCKED",
     "R8_1": "PASS_INFRASTRUCTURE",
     "R8_2": "PASS_INFRASTRUCTURE_PRECOMMIT_PHYSICAL_CALIBRATION_NOT_RUN",
@@ -39,8 +39,14 @@
     "epsilon_cap": 0.5,
     "deck_formula": "seed*1000003 + global_root*97 + iteration",
     "global_root_continuous_across_iterations": true,
-    "r7_3_selection_seeds": [20260829, 20260807],
-    "r7_4_heldout_seeds": [1954132610, 372483540],
+    "r7_3_selection_seeds": [
+      20260829,
+      20260807
+    ],
+    "r7_4_heldout_seeds": [
+      1954132610,
+      372483540
+    ],
     "primary_rng": "ONE_PERSISTENT_LIVE_BUNDLE_BATCH_RNG_IN_EXECUTION_ORDER",
     "production_utility": "ICM_EXACT_V1_EXPLICIT_PAYOUT_DELTA",
     "partial_exact_opponent_levels": 2,
@@ -137,7 +143,7 @@
     "ready_for_tables": false
   },
   "r7_5": {
-    "status": "IN_PROGRESS",
+    "status": "IN_PROGRESS_X4_CHANCE_COVERAGE_READMISSION",
     "precommit": "validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md",
     "legacy_audit": "validation/R7_5_LEGACY_CRUSHER_AND_184_AUDIT_20260813.md",
     "legacy_184_evidence": "validation/R7_5_LEGACY_184_MAPPING_AUDIT.json",
@@ -193,7 +199,11 @@
         "physical_assignments_changed": 200,
         "physical_assignments_changed_fraction": 0.00904977375565611,
         "suit_permutation_invariance_pass": true,
-        "representatives_lost": ["4s5sKd", "5s9sQd", "7sQsAd"]
+        "representatives_lost": [
+          "4s5sKd",
+          "5s9sQd",
+          "7sQsAd"
+        ]
       },
       "H3_reclustered_184": "PRECOMMITTED_NOT_GENERATED",
       "H4_exact_iso_1755": "LOSSLESS_STRUCTURAL_REFERENCE"
@@ -219,16 +229,26 @@
       "legacy_sizing_thresholds_frozen": false,
       "exact_to_call_and_pot_preserved": true
     },
-    "primary_candidate": "SUIT_INVARIANT_184_DESCENDANTS_PLUS_SEMANTIC_V2_NOT_YET_ACCEPTED",
+    "primary_candidate": "SPNNIV3_H2_H3_FROZEN_ADMISSION_NO_WINNER_SELECTED",
     "flop53_role": "DIAGNOSTIC_CONTROL_NOT_ELIGIBLE_AS_SOLE_PRIMARY_PRODUCTION_ABSTRACTION",
     "exact_game_state_remains_exact": true,
     "lossy_abstraction_only_at_neural_observation_boundary": true,
-    "r7_5_1": "LEGACY_184_RECOVERED_RAW_FAIL_H1_H2_INVARIANT_DESCENDANTS_TESTED_H3_AND_STRATEGIC_COMPARISON_PENDING",
-    "r7_5_2": "POSTFLOP_ONTOLOGY_SCAFFOLD_REGRESSION_PASS_NEURALINPUTV2_INTEGRATION_PENDING",
-    "r7_5_3": "PENDING",
-    "r7_5_4": "PENDING",
-    "r7_5_5": "PENDING",
-    "production_training_blocker": true
+    "r7_5_1": "PASS_LEGACY_184_DEFECT_ESTABLISHED_SPNNIV3_SUCCESSOR_IMPLEMENTED",
+    "r7_5_2": "PASS_SPNNIV3_STRUCTURAL_SEMANTIC_INTEGRITY_IMPLEMENTED",
+    "r7_5_3": "IN_PROGRESS_X4_CHANCE_COVERAGE_READMISSION",
+    "r7_5_4": "PENDING_PROVISIONAL_H2_H3_WINNER_TRANSFER_GUARD_READY",
+    "r7_5_5": "PENDING_R7_5_3_AND_R7_5_4_CLOSURE",
+    "production_training_blocker": true,
+    "incumbent_neural_schema": "SPNNIV1",
+    "candidate_successor_neural_schema": "SPNNIV3",
+    "candidate_representations": [
+      "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+      "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+    ],
+    "representation_winner": null,
+    "candidate_universal_action_width": 10,
+    "complete_variable_length_history_required": true,
+    "production_training_authorized": false
   },
   "r8": {
     "ready_to_start_official_training": false,
@@ -275,6 +295,5 @@
     "finite_endpoint_defined": true,
     "only_r12_9_can_set_ready_for_tables_true": true
   },
-  "next_physical_step": "Integrate the regression-proven compositional postflop ontology and a suit-invariant flop candidate interface into NeuralInputV2, then freeze R7.5.3 candidates, seeds, budgets, held-out states, acceptance metrics and tie-breaks before comparative learning results. Do not start official R8.3/R8.4 production training.",
-  "ready_for_tables": false
+  "next_physical_step": "Monitor immutable x4 chance-coverage run 31965874264 without changing its inputs. On terminal STABILITY_PASS, persist the exact result and run the already-frozen Phase-2 strategic evaluator before selecting H2 or H3. R8.0 first-party selected-state evidence acquisition remains an independent external dependency. Do not start official R8.3/R8.4 production training."
 }
