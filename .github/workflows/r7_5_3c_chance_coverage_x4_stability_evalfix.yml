@@ -1,0 +1,94 @@
+name: SpinCore R7.5.3C x4 stability eval-fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_3c_chance_coverage_x4_stability_evalfix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-3c-x4-stability-evalfix
+  cancel-in-progress: false
+
+env:
+  SOURCE_RUN_ID: '31965874264'
+  SOURCE_EXECUTION_SHA: '4ce6b91fabc246518b0011dedb08fe4c74d1113d'
+  HELDOUT_RUN_ID: '31866538984'
+  HELDOUT_SHA: 'dfe5f83742495a457e92b29f97db5d3b631bca22'
+
+jobs:
+  stability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+      - name: Verify mechanical-only readout contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from spincore.r7_5_representation_v3_stage_contract import CROSS_SEED_MEAN_TV_MAX, CROSS_SEED_P95_TV_MAX, TRAINING_SEEDS
+          assert CROSS_SEED_MEAN_TV_MAX == 0.15
+          assert CROSS_SEED_P95_TV_MAX == 0.35
+          assert list(map(int, TRAINING_SEEDS)) == [1342191342, 1801739323]
+          PY
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+      - name: Install frozen policy evaluation runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
+      - name: Download all eight completed x4 checkpoints
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-x4-runtimefix-*-i3c4-${{ env.SOURCE_EXECUTION_SHA }}
+          path: final
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+      - name: Verify exact checkpoint inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find final -name checkpoint.pt | wc -l)" -eq 8
+      - name: Download frozen heldout corpora
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r7-5-3c-heldout-*-${{ env.HELDOUT_SHA }}
+          path: heldout
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.HELDOUT_RUN_ID }}
+      - name: Evaluate unchanged hard x4 stability gates
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python:${{ github.workspace }}/tools
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python tools/r7_5_3c_chance_coverage_x4_stability_evalfix.py \
+            --repo-root . \
+            --input-root final \
+            --heldout-root heldout \
+            --training-execution-sha '${{ env.SOURCE_EXECUTION_SHA }}' \
+            --source-evidence validation/R7_5_3C_SAMPLING_SPLIT_EVIDENCE_20260816.json \
+            --out output/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_RESULT.json
+          sha256sum output/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_RESULT.json | tee output/RESULT_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_RESULT
+          path: output
+          if-no-files-found: error
+          retention-days: 30
