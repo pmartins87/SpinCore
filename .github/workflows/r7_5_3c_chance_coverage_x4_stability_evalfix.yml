@@ -31,6 +31,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11.15'
+      - name: Install frozen policy evaluation runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5'
       - name: Verify mechanical-only readout contract
         shell: bash
         run: |
@@ -43,11 +48,6 @@ jobs:
           PY
         env:
           PYTHONPATH: ${{ github.workspace }}/python
-      - name: Install frozen policy evaluation runtime
-        run: |
-          set -euo pipefail
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
-          python -m pip install 'numpy==2.3.5'
       - name: Download all eight completed x4 checkpoints
         uses: actions/download-artifact@v4
         with:
