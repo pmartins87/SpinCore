@@ -1,0 +1,131 @@
+{
+  "schema": "SPINCORE_R8_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_V1",
+  "date": "2026-08-17",
+  "status": "PASS_UNIVERSAL_CONTRACT_STAKE_INVARIANT",
+  "product_target": "OFFLINE_3MAX_SIMULATOR_NOT_REAL_MONEY_CLIENT",
+  "reference_game_family": "GGPOKER_SPIN_AND_GOLD_3MAX_RULE_REFERENCE",
+  "active_profile_schema": "SPINCORE_R8_UNIVERSAL_3MAX_SIMULATOR_PROFILE_V1",
+  "superseded_active_target_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
+  "superseded_schema_retention": "RETAINED_AS_HISTORICAL_FAIL_CLOSED_EVIDENCE_NOT_DELETED",
+  "user_capture_required": false,
+  "external_user_data_dependency": false,
+  "official_public_source_ingestion_owned_by_project": true,
+  "real_money_client_integration_authorized": false,
+  "table_size": 3,
+  "official_nominal_buy_in_minor_units": [
+    25,
+    100,
+    300,
+    500,
+    1000,
+    2000,
+    5000,
+    10000,
+    20000
+  ],
+  "official_sources": [
+    {
+      "locator": "https://ggpoker.com/poker-games/spin-gold/",
+      "observed_at_utc": "2026-08-17T00:00:00Z",
+      "proven_fields": [
+        "table_size",
+        "buy_in_catalog",
+        "multiplier_dependent_structure",
+        "payout_structure",
+        "deck_and_shuffle",
+        "tournament_fee_fraction",
+        "same_hand_elimination_tiebreak",
+        "no_make_a_deal"
+      ],
+      "observed_facts": {
+        "three_max_buy_ins_usd": [
+          0.25,
+          1,
+          3,
+          5,
+          10,
+          20,
+          50,
+          100,
+          200
+        ],
+        "deck_size": 52,
+        "shuffle_after_each_hand": true,
+        "tournament_fee_fraction": 0.07,
+        "starting_stack_blinds_and_time_bank_depend_on_multiplier": true,
+        "same_hand_elimination_tiebreak": "START_OF_HAND_STACK_THEN_LEFT_OF_BUTTON",
+        "make_a_deal_allowed": false
+      }
+    },
+    {
+      "locator": "https://ggpoker.com/blog/ggpoker-spin-gold-strategy/",
+      "observed_at_utc": "2026-08-17T00:00:00Z",
+      "proven_fields": [
+        "default_starting_stack",
+        "time_based_blind_cadence",
+        "payout_structure"
+      ],
+      "observed_facts": {
+        "standard_starting_chips": 500,
+        "starting_stack_increases_for_larger_multipliers": true,
+        "official_blind_cadence_seconds": 180,
+        "standard_games_are_winner_take_all": true,
+        "higher_multiplier_games_can_pay_second_and_third": true
+      }
+    }
+  ],
+  "strategic_identity_includes": [
+    "table_size",
+    "deck_and_shuffle_rules",
+    "effective_starting_chips_per_player",
+    "effective_hands_based_blind_schedule",
+    "effective_normalized_payout_vector",
+    "same_hand_elimination_tiebreak",
+    "make_a_deal_rule",
+    "ruleset_id",
+    "action_abstraction_id",
+    "utility_model_id",
+    "learning_profile_id",
+    "strategy_domain"
+  ],
+  "strategic_identity_excludes": [
+    "currency",
+    "nominal_buy_in_minor_units",
+    "displayed_multiplier_label",
+    "tournament_fee_fraction",
+    "skin_reference"
+  ],
+  "multiplier_semantics": "A multiplier label changes policy only when it changes an effective strategic field such as starting stack, blind schedule or payout vector.",
+  "blind_progression": {
+    "official_reference_basis": "ELAPSED_SECONDS",
+    "simulator_basis": "COMPLETED_HANDS",
+    "reason": "The offline simulator can execute thousands of hands per second; wall-clock time must not control training progression.",
+    "hands_per_level_is_part_of_strategic_identity": true,
+    "wall_clock_seconds_are_strategy_input": false
+  },
+  "variant_matrix": {
+    "status": "ENGINEERING_INGESTION_PENDING_NOT_USER_DEPENDENCY",
+    "source": "OFFICIAL_PUBLIC_GGPOKER_DATA",
+    "pilot_constants_allowed_as_substitute": false,
+    "required_before_official_R8_3_training": true
+  },
+  "guarded_invariants": {
+    "nominal_stake_change_selects_new_policy": false,
+    "currency_change_selects_new_policy": false,
+    "skin_change_selects_new_policy": false,
+    "effective_rules_change_selects_new_policy": true,
+    "true_heads_up_equals_three_handed": false,
+    "real_money_client_integration_authorized": false,
+    "production_training_authorized": false,
+    "ready_for_simulator_tables": false
+  },
+  "remaining_blockers": [
+    "R7.5.3 x4 terminal evidence and frozen H2/H3 strategic selection",
+    "R7.5.4 action/sizing revalidation",
+    "R7.5.5 architecture freeze",
+    "official multiplier-variant matrix ingestion",
+    "R8.2 physical Ryzen calibration under the selected architecture"
+  ],
+  "production_training_authorized": false,
+  "ready_for_simulator_tables": false
+}

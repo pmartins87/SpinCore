@@ -13,11 +13,14 @@ Current parallel frontier:
 - completed: R7.3 exact-reproducibility debt audit (`validation/R7_3_EXACT_REPRODUCIBILITY_AUDIT_20260816.json`); checkpoint snapshot recertification remains historical PASS, while fresh-process exact reproduction remains explicitly BLOCKED with 734 non-metadata differences;
 - completed: R9-R12 downstream SPNNIV3 migration audit (`validation/R9_R12_SPNNIV3_MIGRATION_DEBT_AUDIT_20260816.json`) and pre-execution R9/R10 adjudication (`validation/R9_R10_SPNNIV3_GATE_DESIGN_ADJUDICATION_20260816.md`); stale SPNNIV1/six-action wording is not eligible for production execution;
 - completed: fail-closed machine-readable governance refresh (`STATUS.json`, `VERSION.json`, `validation/GOVERNANCE_FRONTIER_REFRESH_20260817.json`); incumbent/production fallback remains SPNNIV1, SPNNIV3 is only the H2/H3 candidate-successor lineage, no representation winner exists and production training remains unauthorized;
-- execute now: evidence/persistence contracts, post-x4 fail-closed transition guard, Phase-2 strategic evaluator readiness, R7.5.4 transfer preparation, R8.0 acquisition tooling, Ryzen handoff preparation and other winner-independent release engineering;
+- completed: R8.0 universal offline 3-Max simulator contract (`validation/R8_0_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_20260817.json`); nominal stake/currency/skin/rake cannot select a policy, effective rules remain strategic inputs, and the obsolete request for user-provided selected-state captures is removed from the active product path;
+- execute now: evidence/persistence contracts, post-x4 fail-closed transition guard, Phase-2 strategic evaluator readiness, R7.5.4 transfer preparation, official public multiplier-variant matrix ingestion, Ryzen handoff preparation and other winner-independent release engineering;
 - prepare but do not execute: post-x4 strategic H2/H3 evaluation and SPNNIV3 R7.5.4 action/sizing jobs;
 - hard-blocked: H2/H3 winner, R7.5.4 strategic result, R7.5.5 freeze, R8 official training, R9/R10/R11/R12 execution;
 - forbidden: gate relaxation, seed shopping, H4 while H2/H3 remains unresolved, legacy V1 implicit production fallback, or any `READY FOR TABLES` claim before R12.9.
 
 The package-level recovered V1 neural exports remain historical/control code. Production inference must eventually bind the explicit R7.5.5-selected representation/action schema through the immutable production manifest.
 
-`READY FOR TABLES = NO`.
+The active product target is an offline 3-Max simulator. GGPoker supplies the reference rules and visual direction only; live real-money client attachment is outside scope and unauthorized.
+
+`READY FOR TABLES = NO` (legacy offline-simulator release alias).

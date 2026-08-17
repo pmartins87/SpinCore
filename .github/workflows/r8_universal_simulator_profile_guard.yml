@@ -1,0 +1,36 @@
+name: SpinCore R8 universal 3-max simulator profile guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'python/spincore/simulator_profile.py'
+      - 'python_tests/test_r8_universal_simulator_profile.py'
+      - 'validation/R8_0_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_20260817.json'
+      - 'tools/check_r8_universal_simulator_contract.py'
+      - 'STATUS.json'
+      - 'VERSION.json'
+      - 'ROADMAP.md'
+      - 'PARALLEL_ROADMAP.md'
+      - '.github/workflows/r8_universal_simulator_profile_guard.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen test runner
+        run: python -m pip install pytest==8.4.2
+      - name: Test universal simulator profile
+        env:
+          PYTHONPATH: python
+        run: python -m pytest -q python_tests/test_r8_universal_simulator_profile.py
+      - name: Check R8.0 universal simulator contract
+        run: python tools/check_r8_universal_simulator_contract.py

@@ -1,8 +1,8 @@
 {
   "schema": "SPINCORE_R8_0_SELECTED_STATE_ACQUISITION_CHECKLIST_V1",
   "date": "2026-08-16",
-  "status": "INFRASTRUCTURE_READY_FIRST_PARTY_SELECTED_STATE_FACTS_REQUIRED",
-  "purpose": "Reduce R8.0 to the exact external evidence facts still required while R7.5.3 runs. This checklist does not infer client values and does not authorize training or table use.",
+  "status": "SUPERSEDED_FOR_ACTIVE_OFFLINE_SIMULATOR_TARGET_RETAINED_HISTORICAL",
+  "purpose": "Historical fail-closed selected-state capture checklist retained for audit. It is not the active SpinCore product contract and does not create a task or dependency for the user.",
   "existing_capture_builder": "tools/build_r8_selected_state_packet.py",
   "existing_packet_schema": "SPINCORE_R8_SELECTED_STATE_EVIDENCE_PACKET_V1",
   "existing_profile_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
@@ -64,7 +64,15 @@
     "may_build_final_production_profile_without_all_required_evidence": false,
     "may_start_r8_3_official_training": false
   },
-  "remaining_external_dependency": "Acquire exact authoritative selected-state client/rule evidence for the intended GGPoker 3-Max buy-in/multiplier production state(s), including starting stack, complete blind schedule, exact payouts and first-party fee evidence.",
+  "remaining_external_dependency": null,
   "production_training_authorized": false,
-  "ready_for_tables": false
+  "ready_for_tables": false,
+  "active_product_target": "OFFLINE_3MAX_SIMULATOR_NOT_REAL_MONEY_CLIENT",
+  "superseded_on": "2026-08-17",
+  "superseded_by": "validation/R8_0_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_20260817.json",
+  "selected_state_client_capture_required_for_active_product": false,
+  "user_capture_required": false,
+  "official_public_source_ingestion_owned_by_project": true,
+  "real_money_client_integration_authorized": false,
+  "ready_for_simulator_tables": false
 }

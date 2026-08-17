@@ -1,8 +1,8 @@
 {
   "project": "SpinCore",
-  "version": "1.12.1-recovery.32",
+  "version": "1.12.1-recovery.33",
   "recovery_generation": 2,
-  "physical_state": "R7_4_FINAL_PASS_R7_5_3_SPNNIV3_H2_H3_X4_CHANCE_COVERAGE_READMISSION_IN_PROGRESS_R8_0_DATA_BLOCKED_R7_3_EXACT_REPRO_DEBT_OPEN",
+  "physical_state": "R7_4_FINAL_PASS_R7_5_3_SPNNIV3_H2_H3_X4_CHANCE_COVERAGE_READMISSION_IN_PROGRESS_R8_0_UNIVERSAL_SIMULATOR_CONTRACT_PASS_VARIANT_MATRIX_PENDING_R7_3_EXACT_REPRO_DEBT_OPEN",
   "byte_identical_to_lost_r5": false,
   "current_gate": "R7.5",
   "current_gate_status": "R7_5_3_SPNNIV3_H2_H3_X4_CHANCE_COVERAGE_READMISSION_IN_PROGRESS_NO_WINNER",
@@ -16,10 +16,10 @@
     "R7_3_exact_reproducibility": "OPEN_RELEASE_CERTIFICATION_DEBT_NOT_PASS",
     "R7_4": "FINAL_PASS_READY_TO_ADVANCE_TO_R8_ENGINEERING",
     "R7_5": "IN_PROGRESS_H2_H3_SPNNIV3_X4_CHANCE_COVERAGE_READMISSION",
-    "R8_0": "ACQUISITION_PIPELINE_PASS_PRODUCTION_PROFILE_GATE_DATA_BLOCKED",
+    "R8_0": "PASS_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_OFFICIAL_VARIANT_MATRIX_INGESTION_PENDING",
     "R8_1": "PASS_INFRASTRUCTURE",
     "R8_2": "PASS_INFRASTRUCTURE_PRECOMMIT_PHYSICAL_CALIBRATION_NOT_RUN",
-    "R8_3_R8_5": "BLOCKED_BY_R7_5_5_AND_R8_0",
+    "R8_3_R8_5": "BLOCKED_BY_R7_5_5_R8_0_VARIANT_MATRIX_AND_R8_2",
     "R9": "FINITE_GATE_DESIGN_FROZEN_EXECUTION_BLOCKED",
     "R10": "FINITE_GATE_DESIGN_FROZEN_EXECUTION_BLOCKED",
     "R11": "FINITE_GATE_DESIGN_FROZEN_EXECUTION_BLOCKED",
@@ -253,12 +253,26 @@
   "r8": {
     "ready_to_start_official_training": false,
     "r8_0": {
-      "status": "ACQUISITION_PIPELINE_PASS_PRODUCTION_PROFILE_DATA_BLOCKED",
-      "profile_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
-      "selected_state_evidence_binding_required": true,
-      "exact_dynamic_selected_state_stack_blind_payout_mapping_missing": true,
+      "status": "PASS_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_OFFICIAL_VARIANT_MATRIX_INGESTION_PENDING",
+      "profile_schema": "SPINCORE_R8_UNIVERSAL_3MAX_SIMULATOR_PROFILE_V1",
+      "product_target": "OFFLINE_3MAX_SIMULATOR_NOT_REAL_MONEY_CLIENT",
+      "legacy_selected_state_profile_schema": "SPINCORE_R8_PRODUCTION_PROFILE_V3",
+      "legacy_selected_state_profile_applicable_to_active_target": false,
+      "selected_state_client_capture_required": false,
+      "user_capture_required": false,
+      "external_user_data_dependency": false,
+      "official_public_source_ingestion_owned_by_project": true,
+      "nominal_stake_is_strategy_input": false,
+      "currency_is_strategy_input": false,
+      "skin_is_strategy_input": false,
+      "effective_stack_blinds_and_payout_are_strategy_inputs": true,
+      "blind_progression_basis": "COMPLETED_HANDS",
+      "official_variant_matrix_ingestion_status": "ENGINEERING_PENDING_NOT_USER_DEPENDENCY",
       "pilot_constants_forbidden_as_substitute": true,
-      "production_profile_gate_pass": false
+      "simulator_contract_pass": true,
+      "production_training_authorized": false,
+      "real_money_client_integration_authorized": false,
+      "ready_for_simulator_tables": false
     },
     "r8_1": {
       "status": "PASS_INFRASTRUCTURE",
@@ -276,7 +290,7 @@
       "physical_ryzen_calibration_run": false,
       "official_pass": false
     },
-    "r8_3_r8_5": "BLOCKED_BY_R7_5_5_AND_R8_0"
+    "r8_3_r8_5": "BLOCKED_BY_R7_5_5_R8_0_VARIANT_MATRIX_AND_R8_2"
   },
   "strategic_sentinels": {
     "framework_status": "PASS_INFRASTRUCTURE_ONLY",
@@ -295,5 +309,9 @@
     "finite_endpoint_defined": true,
     "only_r12_9_can_set_ready_for_tables_true": true
   },
-  "next_physical_step": "Monitor immutable x4 chance-coverage run 31965874264 without changing its inputs. On terminal STABILITY_PASS, persist the exact result and run the already-frozen Phase-2 strategic evaluator before selecting H2 or H3. R8.0 first-party selected-state evidence acquisition remains an independent external dependency. Do not start official R8.3/R8.4 production training."
+  "next_physical_step": "Monitor immutable x4 chance-coverage run 31965874264 without changing its inputs. On terminal STABILITY_PASS, persist the exact result and run the already-frozen Phase-2 strategic evaluator before selecting H2 or H3. In parallel, ingest the exact official public multiplier-variant matrix into the universal stake-invariant 3-Max simulator profile; no user captures are required. Do not start R8.3/R8.4 production training.",
+  "product_target": "OFFLINE_3MAX_SIMULATOR_NOT_REAL_MONEY_CLIENT",
+  "legacy_ready_for_tables_flag_scope": "OFFLINE_SIMULATOR_TABLES_ONLY",
+  "real_money_client_integration_authorized": false,
+  "ready_for_simulator_tables": false
 }

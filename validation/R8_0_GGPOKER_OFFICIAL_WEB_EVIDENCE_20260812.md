@@ -1,6 +1,6 @@
 # R8.0 — GGPoker official web evidence, 2026-08-12
 
-`R8.0 PASS = NO`
+> **Product-scope correction — 2026-08-17:** this artifact is retained as historical evidence for the superseded real-money selected-state profile path. The active target is an offline 3-Max simulator governed by `validation/R8_0_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_20260817.json`; user-provided client captures are not required. Official public rule ingestion is project-owned engineering.\n\n`R8.0 PASS = NO`
 
 `READY FOR TABLES = NO`
 

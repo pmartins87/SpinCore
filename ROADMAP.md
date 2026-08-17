@@ -1,6 +1,6 @@
-# SpinCore finite roadmap — canonical state 2026-08-16
+# SpinCore finite roadmap — canonical state 2026-08-17
 
-Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` until every required gate through R12 passes and every release debt, including the deferred R7.3 exact-reproducibility debt, is closed.
+Final endpoint: **ready for offline 3-Max simulator tables**. The product target is a simulator using GGPoker Spin & Gold rules as a reference, not attachment to or play in a real-money GGPoker client. The legacy `READY FOR TABLES` flag now means simulator-table release only and remains `NO` until every required gate through R12 passes and every release debt, including deferred R7.3 exact reproducibility, is closed.
 
 ## Canonical roadmap status
 
@@ -31,17 +31,17 @@ Final endpoint: **ready to start using at the tables**. `READY FOR TABLES = NO` 
   - R7.5.3 frozen representation admission/selection — **IN PROGRESS; H2/H3 LOCAL TRAINING PASS; CROSS-SEED BLOCKER DIAGNOSED AS DECK/CHANCE DOMINANT; X4 CHANCE-COVERAGE READMISSION IN PROGRESS**
   - R7.5.4 frozen action-abstraction ablation — **PENDING PROVISIONAL REPRESENTATION WINNER**
   - R7.5.5 production representation/action freeze — **PENDING**
-- R8 Production training — **OFFICIAL TRAINING BLOCKED UNTIL R7.5.5 FINAL + R8.0 EXACT PROFILE**
-  - R8.0 production-profile acquisition/validation pipeline — **INFRASTRUCTURE PASS; EXACT SELECTED-STATE DATA BLOCKED**
+- R8 Simulator production training — **BLOCKED UNTIL R7.5.5 FINAL + OFFICIAL VARIANT MATRIX + R8.2 PHYSICAL CALIBRATION**
+  - R8.0 universal 3-Max simulator profile — **CONTRACT PASS; STAKE-INVARIANT POLICY IDENTITY PASS; OFFICIAL MULTIPLIER-VARIANT MATRIX INGESTION PENDING AS PROJECT-OWNED ENGINEERING**
   - R8.1 deterministic production infrastructure — **PASS INFRASTRUCTURE**
   - R8.2 Ryzen calibration selector/precommit — **PASS INFRASTRUCTURE; GENERIC FROZEN LOCAL-RUN EVIDENCE WRAPPER ADDED; PHYSICAL CALIBRATION NOT RUN**
-  - R8.3–R8.5 official training/freeze — **BLOCKED BY R7.5.5 + R8.0**
+  - R8.3–R8.5 official simulator training/freeze — **BLOCKED BY R7.5.5 + R8.0 VARIANT MATRIX + R8.2**
 - R9 Strategic audit — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R8.5**
-- R10 OpenHoldem runtime — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R9 PASS**
+- R10 offline simulator/inference runtime (historical OpenHoldem gate name) — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R9 PASS; LIVE REAL-MONEY CLIENT ATTACHMENT FORBIDDEN**
 - R11 Safe exploitation — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R10 PASS**
 - R12 Operational homologation — **FINITE FINAL GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R11 PASS**
 
-No intermediate success authorizes table use.
+No intermediate success authorizes simulator release or any real-money client integration.
 
 ## Frozen R7.3/R7.4 strategic contract
 
@@ -110,7 +110,7 @@ max TV  = 0.4369678199291229     diagnostic only
 all scenarios exercised          PASS
 ```
 
-R7.4 authorizes further engineering only. It does not prove that the current neural representation/action abstraction is the best production design and never authorizes table use.
+R7.4 authorizes further engineering only. It does not prove that the current neural representation/action abstraction is the best production design and never authorizes simulator release.
 
 ## R7.5 — strategic representation & action abstraction
 
@@ -173,7 +173,7 @@ Only after a provisional representation winner exists may R7.5.4 strategic actio
 
 ## R8 preparation already accepted without starting official training
 
-R8.0 has a fail-closed production-profile schema/evidence acquisition pipeline, but exact first-party selected-state `buy-in × multiplier` mappings for all state-dependent stack/blind/payout semantics are still missing. Pilot constants are forbidden substitutes.
+R8.0 now has a fail-closed universal 3-Max simulator profile. Nominal buy-in, currency, displayed multiplier, rake and skin are presentation/accounting metadata and cannot select a policy. Policy identity is determined by effective stack, hands-based blind schedule, normalized payout vector, game rules and strategy domain. The former `SPINCORE_R8_PRODUCTION_PROFILE_V3` selected-state capture path is retained as historical evidence but is not the active product contract and requires no user-supplied captures. Exact public GGPoker multiplier-variant rows remain a project-owned ingestion task; pilot constants remain forbidden substitutes.
 
 R8.1 production infrastructure has accepted deterministic independent-stream scheduling, central Algorithm-R state, durable scheduler checkpoints and integrated semantic transactions. Same-stream root-level parallelism remains forbidden because it would alter the persistent live RNG contract.
 
@@ -181,7 +181,7 @@ R8.2 has an accepted calibration selector/precommit. Candidate concurrency is el
 
 Heavy CPU-bound experiments and official training are now assigned to the Ryzen when their scale makes GitHub runner chaining inefficient. GitHub remains the frozen-contract/referee/certification environment. `tools/spincore_ryzen_frozen_runner.py` records exact commit, tracked-worktree state, contracts, runtime, command/log and SHA-256 artifact inventory for future heavy local executions; this infrastructure does not itself authorize R8 training.
 
-R8.0 data acquisition and other non-strategic engineering may proceed while R7.5 executes. R8.3/R8.4 official production training may not start until both R7.5.5 and R8.0 prerequisites are satisfied.
+Official public multiplier-variant ingestion and other non-strategic engineering may proceed while R7.5 executes. R8.3/R8.4 simulator training may not start until R7.5.5 is frozen, the official variant matrix is bound to the universal profile and R8.2 physical calibration passes. This dependency belongs to the project, not the user.
 
 ## Strategic sentinels and finite downstream gates
 
@@ -204,7 +204,7 @@ validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md
 validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md
 ```
 
-R12.9 is the only gate allowed to emit `READY FOR TABLES = YES`, and only after all earlier gates pass and all release debts — specifically including R7.3 exact reproducibility — are closed.
+R12.9 is the only gate allowed to emit simulator readiness (`READY FOR TABLES = YES` as a legacy alias), and only after all earlier gates pass and all release debts — specifically including R7.3 exact reproducibility — are closed. It can never authorize a real-money GGPoker client integration.
 
 ## Remaining finite path to table use
 
@@ -213,17 +213,17 @@ R7.4 FINAL PASS
 -> R7.5.3 representation admission/selection [active; finite]
 -> R7.5.4 action/sizing audit
 -> R7.5.5 production representation/action freeze
--> R8.0 exact production profiles
+-> R8.0 universal simulator profile + official multiplier-variant matrix
 -> R8.2 physical Ryzen calibration under selected R7.5 architecture
 -> R8.3 official HU training
 -> R8.4 official 3H training
 -> R8.5 immutable production-policy freeze
 -> R9 strategic audit
--> R10 OpenHoldem runtime integration
+-> R10 offline simulator/inference runtime integration (no live client attachment)
 -> R11 safe exploitation
 -> R12 operational homologation
 -> close every release debt including R7.3 exact reproducibility
--> R12.9 READY FOR TABLES gate
+-> R12.9 READY FOR OFFLINE SIMULATOR TABLES gate
 ```
 
-`READY FOR TABLES = NO`.
+`READY FOR TABLES = NO` (legacy simulator-release alias). `READY FOR SIMULATOR TABLES = NO`.

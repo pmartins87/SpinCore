@@ -16,7 +16,7 @@ def main() -> None:
     version = json.loads(VERSION.read_text(encoding="utf-8"))
     audit = json.loads(AUDIT.read_text(encoding="utf-8"))
 
-    expected_version = "1.12.1-recovery.32"
+    expected_version = "1.12.1-recovery.33"
     expected_gate = "IN_PROGRESS_X4_CHANCE_COVERAGE_READMISSION"
     expected_candidates = [
         "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
@@ -37,6 +37,13 @@ def main() -> None:
     assert status["r7_5"]["production_training_authorized"] is False
     assert status["r7_5"]["production_training_blocker"] is True
     assert status["r8"]["ready_to_start_official_training"] is False
+    assert status["product_target"] == "OFFLINE_3MAX_SIMULATOR_NOT_REAL_MONEY_CLIENT"
+    assert status["r8"]["r8_0"]["profile_schema"] == "SPINCORE_R8_UNIVERSAL_3MAX_SIMULATOR_PROFILE_V1"
+    assert status["r8"]["r8_0"]["user_capture_required"] is False
+    assert status["r8"]["r8_0"]["nominal_stake_is_strategy_input"] is False
+    assert status["r8"]["r8_0"]["simulator_contract_pass"] is True
+    assert status["real_money_client_integration_authorized"] is False
+    assert status["ready_for_simulator_tables"] is False
     assert status["ready_for_tables"] is False
 
     assert version["neural_schema"] == "SPNNIV1"
@@ -44,6 +51,11 @@ def main() -> None:
     assert version["candidate_successor_action_width"] == 10
     assert version["candidate_representation_winner"] is None
     assert version["production_training_authorized"] is False
+    assert version["simulator_profile_schema"] == "SPINCORE_R8_UNIVERSAL_3MAX_SIMULATOR_PROFILE_V1"
+    assert version["product_target"] == status["product_target"]
+    assert version["nominal_stake_is_strategy_input"] is False
+    assert version["real_money_client_integration_authorized"] is False
+    assert version["ready_for_simulator_tables"] is False
     assert version["ready_for_tables"] is False
 
     safe = audit["safe_future_refresh_rules"]

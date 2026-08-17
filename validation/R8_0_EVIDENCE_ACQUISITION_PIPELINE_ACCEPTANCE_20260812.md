@@ -2,7 +2,7 @@
 
 Date: 2026-08-12
 
-```text
+> **Product-scope correction — 2026-08-17:** this artifact is retained as historical evidence for the superseded real-money selected-state profile path. The active target is an offline 3-Max simulator governed by `validation/R8_0_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_20260817.json`; user-provided client captures are not required. Official public rule ingestion is project-owned engineering.\n\n```text
 R8.0 EVIDENCE ACQUISITION / VALIDATION PIPELINE = PASS
 R8.0 PRODUCTION PROFILE GATE                  = NOT PASS / DATA BLOCKED
 R8 OFFICIAL TRAINING                           = BLOCKED
