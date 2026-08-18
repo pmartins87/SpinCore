@@ -9,12 +9,15 @@ if ($Dirty) {
 }
 
 $Freeze = Join-Path $Repo 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json'
+$RuntimeCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json'
 if (-not (Test-Path $Freeze)) { throw "Missing frozen x16 contract: $Freeze" }
+if (-not (Test-Path $RuntimeCorrection)) { throw "Missing frozen Windows runtime correction: $RuntimeCorrection" }
 
-# Match the admitted GitHub Phase-2 runtime exactly before spending the final contingency.
-& py -3.11 -c "import sys; assert sys.version_info[:3] == (3,11,15), sys.version"
+# Python 3.11.9 is the final Python 3.11 release with an official Windows binary installer.
+# The x16 algorithm/seeds/budgets/gates remain unchanged; the runtime correction is execution-only.
+& py -3.11 -c "import sys; assert sys.version_info[:3] == (3,11,9), sys.version"
 if ($LASTEXITCODE -ne 0) {
-    throw 'Python 3.11.15 is required for the frozen x16 run (py -3.11 must resolve exactly to 3.11.15).'
+    throw 'Python 3.11.9 is required for the frozen Windows x16 run (py -3.11 must resolve exactly to 3.11.9).'
 }
 
 $Venv = Join-Path $Repo '.venv-r7_5_3c_x16'
@@ -29,7 +32,7 @@ if ($LASTEXITCODE -ne 0) { throw 'pip upgrade failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Frozen torch install failed.' }
 & $Python -m pip install 'numpy==2.3.5'
 if ($LASTEXITCODE -ne 0) { throw 'Frozen numpy install failed.' }
-& $Python -c "import sys,torch,numpy as np; assert sys.version_info[:3]==(3,11,15); assert torch.__version__=='2.13.0+cpu',torch.__version__; assert np.__version__=='2.3.5',np.__version__; print(sys.version); print('torch',torch.__version__,'numpy',np.__version__)"
+& $Python -c "import sys,torch,numpy as np; assert sys.version_info[:3]==(3,11,9); assert torch.__version__=='2.13.0+cpu',torch.__version__; assert np.__version__=='2.3.5',np.__version__; print(sys.version); print('torch',torch.__version__,'numpy',np.__version__)"
 if ($LASTEXITCODE -ne 0) { throw 'Frozen Python/Torch/Numpy runtime verification failed.' }
 
 $Build = Join-Path $Repo 'build_x16'
@@ -62,6 +65,7 @@ Write-Host '[SpinCore x16] starting up to four independent cells in parallel; ea
     --expected-commit $Head `
     --run-name 'r7_5_3c_final_x16' `
     --contract 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json' `
+    --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json' `
     --contract 'validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json' `
     --contract 'validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md' `
     --contract 'tools/r7_5_3c_final_x16_domain_worker.py' `
