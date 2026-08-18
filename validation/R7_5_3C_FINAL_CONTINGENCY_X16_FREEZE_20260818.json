@@ -1,0 +1,100 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_V1",
+  "status": "FROZEN_BEFORE_X16_OUTPUTS",
+  "frozen_at_date": "2026-08-18",
+  "authorization": {
+    "user_authorized": true,
+    "authorization_text": "Autorizo a contingência final x16.",
+    "authorized_before_any_x16_candidate_output": true
+  },
+  "governance_basis": {
+    "finite_closure_policy": "validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md",
+    "x4_result_evidence": "validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json",
+    "x4_status": "STABILITY_BLOCKED",
+    "final_contingency_attempt": true,
+    "maximum_further_winner_independent_remediations_after_this": 0
+  },
+  "remediation": {
+    "name": "FINAL_INDEPENDENT_CHANCE_COVERAGE_X16",
+    "winner_independent": true,
+    "starts_from_fresh_phase2_state": true,
+    "reuses_x4_trained_checkpoints": false,
+    "reason_fresh_required": "The x4 policies already performed an Advantage fit after each 256-root iteration; extending those checkpoints would not be equivalent to a 1024-root-per-iteration experiment with one fit after the full chance batch.",
+    "coverage_multiplier_relative_to_original_64_roots": 16,
+    "coverage_multiplier_relative_to_x4": 4,
+    "roots_per_chunk": 64,
+    "chunks_per_iteration": 16,
+    "roots_per_iteration_effective": 1024,
+    "iterations": 3,
+    "roots_per_seed": 3072,
+    "training_seeds": [1342191342, 1801739323],
+    "training_seeds_remain_independent": true,
+    "deck_seed_function_unchanged": true,
+    "global_root_sequence_contiguous_across_chunks": true,
+    "scenario_cycle_unchanged": true,
+    "exact_opponent_levels": 2,
+    "advantage_steps_per_member_per_iteration": 4096,
+    "advantage_fit_count_per_iteration": 1,
+    "average_policy_steps": 16384,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "ensemble_size": 4,
+    "reservoir_capacity": 100000,
+    "heldout_run_id": 31866538984,
+    "heldout_execution_sha": "dfe5f83742495a457e92b29f97db5d3b631bca22",
+    "heldout_states_per_cross_seed_metric": 1024
+  },
+  "coverage_choice_rationale": {
+    "x4_observed_mean_of_mean_tv": 0.21878413656389623,
+    "x4_observed_mean_of_p95_tv": 0.5744807152796252,
+    "planning_model_only": "standard-error-like 1/sqrt(N) scaling; not an acceptance rule and not a guaranteed prediction",
+    "x8_nominal_from_x4": {
+      "mean_tv": 0.1547037465417782,
+      "p95_tv": 0.4062192093379326,
+      "assessment": "nominally above both unchanged hard gates"
+    },
+    "x16_nominal_from_x4": {
+      "mean_tv": 0.10939206828194812,
+      "p95_tv": 0.2872403576398126,
+      "assessment": "first simple escalation from x4 with nominal margin below both unchanged hard gates"
+    }
+  },
+  "hard_gates_unchanged": {
+    "advantage_nrmse_max_each_iteration": 0.75,
+    "final_policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "all_eight_training_cells_required": true,
+    "all_eight_representation_domain_evaluation_rows_required": true,
+    "dropping_failed_domains_or_seeds_forbidden": true,
+    "seed_shopping_forbidden": true,
+    "threshold_relaxation_forbidden": true
+  },
+  "execution_policy": {
+    "preferred_compute_host": "RYZEN_9_LOCAL",
+    "github_role": "CONTRACT_REFEREE_AND_RETURNED_ARTIFACT_CERTIFICATION",
+    "runner": "tools/spincore_ryzen_frozen_runner.py",
+    "exact_commit_required": true,
+    "tracked_worktree_must_be_clean": true,
+    "runtime_manifest_required": true,
+    "sha256_artifact_inventory_required": true,
+    "checkpoint_resume_must_preserve_global_root_and_rng_semantics": true
+  },
+  "decision_rule": {
+    "stability_pass": "All 8 local training cells pass the unchanged local gates and all 8 representation x domain x evaluation-seed cross-seed rows pass mean TV <= 0.15 and p95 TV <= 0.35.",
+    "if_pass": "Persist/certify the exact x16 result, then run the complete already-frozen H2/H3 Phase-2 strategic evaluation on the admitted x16 policies and apply the existing representation selection cascade.",
+    "if_fail": "Close R7.5.3 as FAIL/BLOCKED. No additional R7.5.3 remediation, seed shopping, threshold relaxation, H4 substitution, R7.5.4 strategic execution or R8 production training is authorized until an explicit architecture/fallback decision is frozen."
+  },
+  "governance": {
+    "x16_output_seen_before_freeze": false,
+    "representation_winner": null,
+    "may_select_h2_or_h3_from_stability_result": false,
+    "selection_rule_changed": false,
+    "may_change_phase2_thresholds": false,
+    "may_authorize_h4": false,
+    "may_authorize_r7_5_4_spnniv3_action_sizing_revalidation": false,
+    "may_authorize_r8": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
