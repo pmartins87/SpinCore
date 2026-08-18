@@ -1,0 +1,56 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_EXECUTION_PACKAGE_V1",
+  "status": "FROZEN_BEFORE_X16_EXECUTION_OUTPUTS",
+  "algorithm_contract": "validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json",
+  "algorithm_contract_blob_sha": "697e689d916fff0f2f243a0d929a0aa57d59b515",
+  "source_x4_blocked_evidence": "validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json",
+  "finite_closure_policy": "validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md",
+  "code_blobs": {
+    "tools/r7_5_3c_final_x16_domain_worker.py": "97eeae222b97a17fbb87e5069374e31bdc70c335",
+    "tools/r7_5_3c_final_x16_stability.py": "21e7d740e693b5f489da958244531567b2ac9b64",
+    "tools/r7_5_3c_final_x16_ryzen_orchestrator.py": "1ef7a63d70bcac88bce3b28e3aea6b3811e3f363",
+    "tools/run_r7_5_3c_final_x16_ryzen.ps1": "0bcdba515519054a497b4e98fda583181ed5d151",
+    "tools/spincore_ryzen_frozen_runner.py": "4619d8af899254110bced43bcc6fd714fad3650d",
+    "python/spincore/r7_5_representation_v3_stage_contract.py": "a79bb8b38060aee5767192b7ce675019013561a6",
+    "python/spincore/r7_5_representation_v3_stage.py": "e221881e92c53718a6db56c0bbb478563b43f7c1"
+  },
+  "runtime": {
+    "os_family": "Windows Ryzen host",
+    "python": "3.11.15",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "torch_threads_per_cell": 2,
+    "default_independent_cell_workers": 4,
+    "cell_worker_count_is_execution_only": true,
+    "lowering_cell_worker_count_after_resource_failure_changes_no_cell_rng_or_root_semantics": true
+  },
+  "execution": {
+    "launcher": "tools/run_r7_5_3c_final_x16_ryzen.ps1",
+    "output_root": "ryzen_x16_final",
+    "resumable_at_completed_chunk_boundaries": true,
+    "fresh_training_required": true,
+    "x4_checkpoint_extension_forbidden": true,
+    "eight_cells_required": true,
+    "chunks_per_iteration": 16,
+    "roots_per_chunk": 64,
+    "roots_per_iteration": 1024,
+    "iterations": 3,
+    "roots_per_seed": 3072
+  },
+  "certification": {
+    "training_result_alone_cannot_select_representation": true,
+    "independent_stability_tool": "tools/r7_5_3c_final_x16_stability.py",
+    "all_local_training_gates_required": true,
+    "all_cross_seed_rows_required": true,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35,
+    "if_stability_pass": "Run complete frozen strategic Phase-2 evaluation before selecting H2/H3.",
+    "if_stability_fail": "Close R7.5.3 FAIL/BLOCKED; no further remediation attempt permitted."
+  },
+  "governance": {
+    "representation_winner": null,
+    "selection_rule_changed": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
