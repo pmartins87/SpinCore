@@ -1,0 +1,57 @@
+{
+  "schema": "SPINCORE_GOVERNANCE_FRONTIER_REFRESH_V1",
+  "date": "2026-08-18",
+  "status": "APPLIED_FAIL_CLOSED_GOVERNANCE_REFRESH",
+  "purpose": "Refresh the active R7.5.3 frontier after the x4 stability failure and before any final x16 contingency output, without promoting SPNNIV3, choosing H2/H3, relaxing gates or authorizing downstream production work.",
+  "incumbent_or_production_fallback_neural_schema": "SPNNIV1",
+  "candidate_successor_neural_schema": "SPNNIV3",
+  "candidate_representations": [
+    "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "H3_HYBRID_EXACT_SEMANTIC_FINAL"
+  ],
+  "representation_winner": null,
+  "r7_5_3_frontier": {
+    "x4_source_run_id": 32082378868,
+    "x4_status": "STABILITY_BLOCKED",
+    "x4_training_cells_pass": 8,
+    "x4_cross_seed_rows_pass": 0,
+    "x4_cross_seed_rows_total": 8,
+    "final_contingency": "FINAL_INDEPENDENT_CHANCE_COVERAGE_X16",
+    "final_contingency_status": "FROZEN_AWAITING_RYZEN_EXECUTION",
+    "roots_per_iteration": 1024,
+    "iterations": 3,
+    "roots_per_seed": 3072,
+    "training_seeds": [1342191342, 1801739323],
+    "further_remediations_after_x16": 0
+  },
+  "authoritative_files": {
+    "x4_evidence": "validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json",
+    "finite_closure": "validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md",
+    "x16_algorithm_freeze": "validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json",
+    "x16_execution_package": "validation/R7_5_3C_FINAL_X16_EXECUTION_PACKAGE_20260818.json",
+    "x16_launcher": "tools/run_r7_5_3c_final_x16_ryzen.ps1"
+  },
+  "hard_gates_unchanged": {
+    "advantage_weighted_nrmse_max": 0.75,
+    "policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35
+  },
+  "guarded_invariants": {
+    "spnniv3_marked_production": false,
+    "representation_winner_selected": false,
+    "threshold_relaxed": false,
+    "seed_shopping_allowed": false,
+    "h4_authorized": false,
+    "r7_5_4_strategic_execution_authorized": false,
+    "r8_production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "if_x16_passes": "Persist/certify the exact stability result and run the complete frozen H2/H3 strategic Phase-2 evaluation before representation selection.",
+  "if_x16_fails": "Close R7.5.3 FAIL/BLOCKED and require an explicit architecture/fallback decision; no further R7.5.3 remediation is permitted.",
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "product_target": "OFFLINE_3MAX_SIMULATOR_NOT_REAL_MONEY_CLIENT",
+  "real_money_client_integration_authorized": false,
+  "ready_for_simulator_tables": false
+}
