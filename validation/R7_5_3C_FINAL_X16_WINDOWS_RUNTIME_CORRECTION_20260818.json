@@ -1,0 +1,43 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_V1",
+  "status": "FROZEN_BEFORE_ANY_X16_OUTPUT",
+  "date": "2026-08-18",
+  "trigger": {
+    "host_os": "Windows Ryzen host",
+    "observed_python_3_11": "3.11.9",
+    "original_execution_package_python": "3.11.15",
+    "issue": "Python 3.11.15 is a source-only security release and has no official Windows binary installer; Python 3.11.9 is the final Python 3.11 release with official Windows installers.",
+    "x16_output_seen_before_correction": false
+  },
+  "correction": {
+    "type": "MECHANICAL_RUNTIME_PORTABILITY_ONLY",
+    "windows_python": "3.11.9",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "torch_threads_per_cell": 2,
+    "default_independent_cell_workers": 4,
+    "same_runtime_required_for_all_eight_training_cells": true,
+    "runtime_recorded_in_manifest": true,
+    "algorithm_contract_changed": false,
+    "training_seeds_changed": false,
+    "deck_seed_function_changed": false,
+    "global_root_semantics_changed": false,
+    "scenario_cycle_changed": false,
+    "roots_per_iteration_changed": false,
+    "iterations_changed": false,
+    "training_budget_changed": false,
+    "hard_gates_changed": false
+  },
+  "scientific_interpretation": {
+    "cross_seed_stability_is_measured_between_two independent training seeds executed under the same corrected Windows runtime": true,
+    "windows_result_is_not_claimed_bit_identical_to_prior_linux_github_runs": true,
+    "github_remains_contract_referee_and_returned_artifact_certifier": true
+  },
+  "governance": {
+    "consumes_additional_remediation_attempt": false,
+    "reason": "No strategic algorithm, seed, chance coverage, training budget, representation, action abstraction or acceptance gate changes; this only makes the already-frozen final x16 experiment executable on the declared Windows Ryzen host.",
+    "representation_winner": null,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
