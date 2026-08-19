@@ -12,10 +12,12 @@ $Freeze = Join-Path $Repo 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260
 $RuntimeCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json'
 $ResourceCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_20260818.json'
 $ResourceHandleFix = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_HANDLE_FIX_20260818.json'
+$LfCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_LF_CHECKOUT_CORRECTION_20260818.json'
 if (-not (Test-Path $Freeze)) { throw "Missing frozen x16 contract: $Freeze" }
 if (-not (Test-Path $RuntimeCorrection)) { throw "Missing frozen Windows runtime correction: $RuntimeCorrection" }
 if (-not (Test-Path $ResourceCorrection)) { throw "Missing frozen Windows resource-import correction: $ResourceCorrection" }
 if (-not (Test-Path $ResourceHandleFix)) { throw "Missing frozen Windows resource HANDLE fix: $ResourceHandleFix" }
+if (-not (Test-Path $LfCorrection)) { throw "Missing frozen Windows LF checkout correction: $LfCorrection" }
 
 # Python 3.11.9 is the final Python 3.11 release with an official Windows binary installer.
 # The x16 algorithm/seeds/budgets/gates remain unchanged; the runtime correction is execution-only.
@@ -68,6 +70,11 @@ $env:MKL_NUM_THREADS = '2'
 & $Python -c "import resource; r=resource.getrusage(resource.RUSAGE_SELF); assert int(r.ru_maxrss)>=0; print('resource shim peak_rss_kib', int(r.ru_maxrss))"
 if ($LASTEXITCODE -ne 0) { throw 'Windows resource telemetry compatibility import failed.' }
 
+# Validate the complete frozen model/source contract once before starting any
+# worker. .gitattributes pins the six byte-hashed model sources to LF on Windows.
+& $Python -c "import sys; from spincore.r7_5_representation_v3 import H2_FINAL; from spincore.r7_5_representation_v3_stage_contract import validate_phase2_v3_contract; validate_phase2_v3_contract(sys.argv[1], representation=H2_FINAL, domain='TRUE_HEADS_UP', training_seed=1342191342); print('phase2 frozen source contract PASS')" $Repo
+if ($LASTEXITCODE -ne 0) { throw 'Frozen Phase-2 source/model contract preflight failed before x16 workers.' }
+
 $Output = 'ryzen_x16_final'
 Write-Host "[SpinCore x16] frozen HEAD: $Head"
 Write-Host "[SpinCore x16] solver: $Solver"
@@ -81,8 +88,10 @@ Write-Host '[SpinCore x16] starting up to four independent cells in parallel; ea
     --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json' `
     --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_20260818.json' `
     --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_HANDLE_FIX_20260818.json' `
+    --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_LF_CHECKOUT_CORRECTION_20260818.json' `
     --contract 'validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json' `
     --contract 'validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md' `
+    --contract '.gitattributes' `
     --contract 'tools/windows_compat/resource.py' `
     --contract 'tools/r7_5_3c_final_x16_domain_worker.py' `
     --contract 'tools/r7_5_3c_final_x16_ryzen_orchestrator.py' `
