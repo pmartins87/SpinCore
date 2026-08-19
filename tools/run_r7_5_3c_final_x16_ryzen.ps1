@@ -11,9 +11,11 @@ if ($Dirty) {
 $Freeze = Join-Path $Repo 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json'
 $RuntimeCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json'
 $ResourceCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_20260818.json'
+$ResourceHandleFix = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_HANDLE_FIX_20260818.json'
 if (-not (Test-Path $Freeze)) { throw "Missing frozen x16 contract: $Freeze" }
 if (-not (Test-Path $RuntimeCorrection)) { throw "Missing frozen Windows runtime correction: $RuntimeCorrection" }
 if (-not (Test-Path $ResourceCorrection)) { throw "Missing frozen Windows resource-import correction: $ResourceCorrection" }
+if (-not (Test-Path $ResourceHandleFix)) { throw "Missing frozen Windows resource HANDLE fix: $ResourceHandleFix" }
 
 # Python 3.11.9 is the final Python 3.11 release with an official Windows binary installer.
 # The x16 algorithm/seeds/budgets/gates remain unchanged; the runtime correction is execution-only.
@@ -77,6 +79,7 @@ Write-Host '[SpinCore x16] starting up to four independent cells in parallel; ea
     --contract 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json' `
     --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json' `
     --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_20260818.json' `
+    --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_HANDLE_FIX_20260818.json' `
     --contract 'validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json' `
     --contract 'validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md' `
     --contract 'tools/windows_compat/resource.py' `
