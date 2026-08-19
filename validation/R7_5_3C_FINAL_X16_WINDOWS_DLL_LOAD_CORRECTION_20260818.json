@@ -1,0 +1,42 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_WINDOWS_DLL_LOAD_CORRECTION_V1",
+  "status": "FROZEN_MECHANICAL_PRETRAINING_CORRECTION",
+  "failed_execution_commit": "03052a0896d138aa6d2b3ba2ff1473a817e5a113",
+  "failed_ryzen_manifest_sha256": "c3d4de85b515fbd94feb3eaca0d5af35a34f5b7407f82f242a1918780c9d5414",
+  "failure": {
+    "stage": "SolverLibrary construction before new_phase2_v3_runtime",
+    "exception": "OSError",
+    "windows_error": 193,
+    "message": "%1 is not a valid Win32 application",
+    "phase2_contract_preflight_passed": true,
+    "workers_entered_training": false,
+    "roots_collected": 0,
+    "model_fit_steps_completed": 0,
+    "checkpoint_produced": false
+  },
+  "correction": {
+    "clean_solver_build_before_execution": true,
+    "cmake_generator": "Visual Studio 17 2022",
+    "cmake_platform": "x64",
+    "require_64bit_python": true,
+    "verify_pe_machine_amd64_before_load": true,
+    "verify_ctypes_load_and_solver_abi_v2_before_workers": true,
+    "training_workers_start_only_after_solver_load_preflight_pass": true
+  },
+  "scientific_contract_unchanged": {
+    "representations": true,
+    "domains": true,
+    "training_seeds": true,
+    "deck_seed_semantics": true,
+    "global_root_order": true,
+    "scenario_cycle": true,
+    "roots_per_iteration": true,
+    "iterations": true,
+    "optimizer_budgets": true,
+    "model_architectures": true,
+    "model_fingerprints": true,
+    "stability_gates": true
+  },
+  "contingency_consumed": false,
+  "reason_contingency_not_consumed": "All workers failed while constructing SolverLibrary, before new_phase2_v3_runtime and before any root collection."
+}
