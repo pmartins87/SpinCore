@@ -18,7 +18,11 @@
     "explicit_getprocessmemoryinfo_argtypes": true,
     "explicit_getprocessmemoryinfo_restype": "wintypes.BOOL",
     "use_last_error": true,
-    "telemetry_only": true
+    "telemetry_only": true,
+    "fail_soft_if_native_rss_unavailable": true,
+    "fail_soft_value_ru_maxrss_kib": 0,
+    "launcher_accepts_zero_as_telemetry_unavailable": true,
+    "reason_for_fail_soft": "Peak RSS is report-only telemetry and must not gate or perturb the frozen scientific training run."
   },
   "scientific_contract_unchanged": {
     "representations": true,
