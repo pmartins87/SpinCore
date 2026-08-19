@@ -6,6 +6,10 @@ This file exists only so the frozen R7.5.3C x16 Windows worker can import the
 shared Phase-2 stage module unchanged. The stage uses ``resource`` exclusively
 for peak-RSS telemetry; none of these values affect RNG, sampling, model state,
 training budgets, gates, or decisions.
+
+Peak-RSS telemetry is deliberately fail-soft on Windows: if the native API is
+unavailable for any host-specific reason, ru_maxrss=0 is returned. Telemetry
+must never invalidate or perturb the scientific training run.
 """
 
 import ctypes
@@ -33,10 +37,6 @@ class _PROCESS_MEMORY_COUNTERS(ctypes.Structure):
 
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 _psapi = ctypes.WinDLL("psapi", use_last_error=True)
-
-# Explicit 64-bit-safe signatures are required. Without these declarations,
-# ctypes defaults GetCurrentProcess() to c_int, which truncates/sign-extends the
-# pseudo HANDLE on 64-bit Windows and causes GetProcessMemoryInfo to fail.
 _kernel32.GetCurrentProcess.argtypes = []
 _kernel32.GetCurrentProcess.restype = wintypes.HANDLE
 _psapi.GetProcessMemoryInfo.argtypes = [
@@ -52,11 +52,15 @@ def getrusage(who: int):
         raise ValueError("Windows compatibility shim supports only RUSAGE_SELF")
     counters = _PROCESS_MEMORY_COUNTERS()
     counters.cb = ctypes.sizeof(counters)
-    process = _kernel32.GetCurrentProcess()
-    ok = _psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), counters.cb)
-    if not ok:
-        err = ctypes.get_last_error()
-        raise OSError(err, "GetProcessMemoryInfo failed")
-    # Shared stage code multiplies ru_maxrss by 1024 on non-macOS platforms,
-    # matching Linux's KiB convention. Return KiB here to preserve that contract.
-    return _RUsage(ru_maxrss=int(counters.PeakWorkingSetSize // 1024))
+    try:
+        process = _kernel32.GetCurrentProcess()
+        ok = _psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), counters.cb)
+        if ok:
+            # Shared stage code multiplies ru_maxrss by 1024 on non-macOS
+            # platforms, matching Linux's KiB convention.
+            return _RUsage(ru_maxrss=int(counters.PeakWorkingSetSize // 1024))
+    except Exception:
+        pass
+    # Telemetry-only fallback. Zero is explicitly interpreted as unavailable;
+    # it does not enter any training or admission calculation.
+    return _RUsage(ru_maxrss=0)
