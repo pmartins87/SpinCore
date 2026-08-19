@@ -1,0 +1,44 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_WINDOWS_SCALAR_FIX_V1",
+  "status": "FROZEN_BEFORE_ANY_X16_TRAINING_OUTPUT",
+  "date": "2026-08-18",
+  "observed_host": "Windows Ryzen host",
+  "source_execution_commit": "6dfc6f0df3d3a625c7a9e0a0f3f6cf4953d907bc",
+  "failure_stage": "POST_BUILD_PRE_TRAINING_LAUNCH",
+  "observed_error": "PropertyNotFoundStrict on $SolverCandidates.Count when exactly one solver DLL existed and the pipeline result was unwrapped to a scalar under Set-StrictMode.",
+  "evidence": {
+    "python_3_11": "3.11.9",
+    "torch": "2.13.0+cpu",
+    "numpy": "2.3.5",
+    "cmake_configure_pass": true,
+    "msvc_compile_pass": true,
+    "solver_dll_built": "build_x16/Release/spincore_solver_c.dll",
+    "training_start_banner_reached": false,
+    "x16_cell_orchestrator_started": false,
+    "x16_training_output_seen": false
+  },
+  "correction": {
+    "type": "POWERSHELL_COLLECTION_SHAPE_ONLY",
+    "launcher": "tools/run_r7_5_3c_final_x16_ryzen.ps1",
+    "old_launcher_blob_sha": "29a7459d056282d200c70c9573ba610a2b4ba197",
+    "new_launcher_blob_sha": "9ab977b2a722e2e00ea8e81cc9b8333bea3444e7",
+    "change": "Wrap the filtered solver-candidate pipeline in an outer array expression so Count/indexing semantics remain stable when exactly one DLL exists."
+  },
+  "scientific_contract_unchanged": {
+    "algorithm": true,
+    "representations": true,
+    "training_seeds": true,
+    "deck_seed_function": true,
+    "chance_coverage": true,
+    "training_budgets": true,
+    "evaluation_seeds": true,
+    "hard_gates": true
+  },
+  "governance": {
+    "consumes_final_x16_remediation_attempt": false,
+    "reason": "The failure occurred before the x16 training orchestrator started; the correction only fixes PowerShell scalar/array handling after a successful solver build.",
+    "representation_winner": null,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
