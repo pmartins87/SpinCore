@@ -41,10 +41,14 @@ if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
 & cmake --build $Build --config Release --target spincore_solver_c --parallel
 if ($LASTEXITCODE -ne 0) { throw 'spincore_solver_c build failed.' }
 
+# Force array semantics even when exactly one DLL exists; StrictMode otherwise
+# exposes the single pipeline result as a scalar without a Count property.
 $SolverCandidates = @(
-    (Join-Path $Build 'Release/spincore_solver_c.dll'),
-    (Join-Path $Build 'spincore_solver_c.dll')
-) | Where-Object { Test-Path $_ }
+    @(
+        (Join-Path $Build 'Release/spincore_solver_c.dll'),
+        (Join-Path $Build 'spincore_solver_c.dll')
+    ) | Where-Object { Test-Path $_ }
+)
 if ($SolverCandidates.Count -ne 1) {
     throw "Expected exactly one Windows solver DLL after build; found: $($SolverCandidates -join ', ')"
 }
