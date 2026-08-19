@@ -1,0 +1,37 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_V1",
+  "status": "FROZEN_MECHANICAL_PRETRAINING_CORRECTION",
+  "failed_execution_commit": "89321ca766911e64f97a1b8e6ebabc01a77f43be",
+  "failed_ryzen_manifest_sha256": "83e25c3ee94a8665e765721aa451454b8b23c347912f16579b5c9ce9cd01843c",
+  "failure": {
+    "exception": "ModuleNotFoundError",
+    "module": "resource",
+    "import_site": "python/spincore/r7_5_representation_v3_stage.py",
+    "cause": "Python resource is Unix-only and unavailable on the frozen Windows Python 3.11.9 runtime. The shared stage imports it solely for peak-RSS telemetry.",
+    "worker_reached_training_logic": false,
+    "roots_collected": 0,
+    "model_fit_steps_completed": 0,
+    "checkpoint_produced_by_failed_workers": false
+  },
+  "correction": {
+    "compatibility_module": "tools/windows_compat/resource.py",
+    "launcher_prepends_windows_compat_to_pythonpath": true,
+    "semantics": "Expose only RUSAGE_SELF/getrusage().ru_maxrss using Windows GetProcessMemoryInfo PeakWorkingSetSize, converted to KiB so the unchanged shared stage returns bytes after its existing x1024 conversion.",
+    "telemetry_only": true
+  },
+  "scientific_contract_unchanged": {
+    "representations": true,
+    "domains": true,
+    "training_seeds": true,
+    "deck_seed_semantics": true,
+    "global_root_order": true,
+    "scenario_cycle": true,
+    "roots_per_iteration": true,
+    "iterations": true,
+    "optimizer_budgets": true,
+    "model_architectures": true,
+    "stability_gates": true
+  },
+  "contingency_consumed": false,
+  "reason_contingency_not_consumed": "All launched workers failed during module import before main/training logic executed; this is a mechanical Windows portability failure with zero collected roots."
+}
