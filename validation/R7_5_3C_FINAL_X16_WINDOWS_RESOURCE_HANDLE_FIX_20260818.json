@@ -1,0 +1,38 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_HANDLE_FIX_V1",
+  "status": "FROZEN_MECHANICAL_PRETRAINING_CORRECTION",
+  "failed_execution_commit": "4a042c9df76815ec5165aa6933a90e7c23a88476",
+  "failure": {
+    "stage": "launcher resource telemetry compatibility preflight",
+    "exception": "OSError",
+    "message": "GetProcessMemoryInfo failed",
+    "workers_launched": false,
+    "roots_collected": 0,
+    "model_fit_steps_completed": 0,
+    "checkpoint_produced": false
+  },
+  "cause": "The first Windows resource shim used ctypes default function signatures. On 64-bit Windows, GetCurrentProcess defaulted to c_int instead of HANDLE, making the pseudo-handle unsafe for GetProcessMemoryInfo.",
+  "correction": {
+    "file": "tools/windows_compat/resource.py",
+    "explicit_getcurrentprocess_restype": "wintypes.HANDLE",
+    "explicit_getprocessmemoryinfo_argtypes": true,
+    "explicit_getprocessmemoryinfo_restype": "wintypes.BOOL",
+    "use_last_error": true,
+    "telemetry_only": true
+  },
+  "scientific_contract_unchanged": {
+    "representations": true,
+    "domains": true,
+    "training_seeds": true,
+    "deck_seed_semantics": true,
+    "global_root_order": true,
+    "scenario_cycle": true,
+    "roots_per_iteration": true,
+    "iterations": true,
+    "optimizer_budgets": true,
+    "model_architectures": true,
+    "stability_gates": true
+  },
+  "contingency_consumed": false,
+  "reason_contingency_not_consumed": "Failure occurred in launcher preflight before the frozen runner or any x16 worker was launched."
+}
