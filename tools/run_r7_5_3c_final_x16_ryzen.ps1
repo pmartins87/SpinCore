@@ -59,13 +59,14 @@ if ($SolverCandidates.Count -ne 1) {
 $Solver = (Resolve-Path $SolverCandidates[0]).Path
 
 # The shared Phase-2 stage imports Python's Unix-only resource module solely for
-# peak-RSS telemetry. Prepend a Windows-only compatibility shim for this x16 run.
+# peak-RSS telemetry. Prepend a Windows compatibility shim. A value of zero is
+# explicitly allowed and means telemetry unavailable; it never gates training.
 $env:PYTHONPATH = "$(Join-Path $Repo 'tools/windows_compat');$(Join-Path $Repo 'python');$(Join-Path $Repo 'tools')"
 $env:SPINCORE_TORCH_THREADS = '2'
 $env:OMP_NUM_THREADS = '2'
 $env:MKL_NUM_THREADS = '2'
-& $Python -c "import resource; r=resource.getrusage(resource.RUSAGE_SELF); assert int(r.ru_maxrss)>0; print('resource shim peak_rss_kib', int(r.ru_maxrss))"
-if ($LASTEXITCODE -ne 0) { throw 'Windows resource telemetry compatibility preflight failed.' }
+& $Python -c "import resource; r=resource.getrusage(resource.RUSAGE_SELF); assert int(r.ru_maxrss)>=0; print('resource shim peak_rss_kib', int(r.ru_maxrss))"
+if ($LASTEXITCODE -ne 0) { throw 'Windows resource telemetry compatibility import failed.' }
 
 $Output = 'ryzen_x16_final'
 Write-Host "[SpinCore x16] frozen HEAD: $Head"
