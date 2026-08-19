@@ -1,0 +1,47 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_WINDOWS_LF_CHECKOUT_CORRECTION_V1",
+  "status": "FROZEN_MECHANICAL_PRETRAINING_CORRECTION",
+  "failed_execution_commit": "a5b8b5ca70786658b888ef8717b12e186db43c2d",
+  "failed_ryzen_manifest_sha256": "3e5c56f9e6cae8c2bbca3bfe96d046ebfead5d47ae3bc0897e687542bf09fea8",
+  "failure": {
+    "exception": "ValueError",
+    "message": "Phase 2 frozen source drift: python/spincore/r7_5_representation_v3.py 43fdc72ef85778cd8a2e8dad24a700a0d6c1c0541fb7d20e1de4d0eaec34e195 != ff362f5cdf585ad019b92e348e11cac069a370d0539933e685dd0f9aa491e301",
+    "stage": "validate_phase2_v3_contract before new_phase2_v3_runtime",
+    "workers_entered_training": false,
+    "roots_collected": 0,
+    "model_fit_steps_completed": 0,
+    "checkpoint_produced": false
+  },
+  "diagnosis": {
+    "frozen_model_source_sha256": "ff362f5cdf585ad019b92e348e11cac069a370d0539933e685dd0f9aa491e301",
+    "windows_worktree_sha256": "43fdc72ef85778cd8a2e8dad24a700a0d6c1c0541fb7d20e1de4d0eaec34e195",
+    "repository_source_changed_since_resource_freeze": false,
+    "resource_freeze_commit": "0d7f079899be21e9dbfcf707bf9cc7c84ba6561a",
+    "comparison_head": "a5b8b5ca70786658b888ef8717b12e186db43c2d",
+    "cause": "Git-for-Windows worktree EOL materialization changed byte-level SHA-256 without changing repository source content. The model freeze intentionally hashes exact LF source bytes."
+  },
+  "correction": {
+    "file": ".gitattributes",
+    "policy": "text eol=lf for all six R7.5.3C shared model-freeze source files",
+    "frozen_source_hashes_changed": false,
+    "model_freeze_changed": false,
+    "worker_algorithm_changed": false,
+    "launcher_preflights_full_phase2_contract_before_workers": true
+  },
+  "scientific_contract_unchanged": {
+    "representations": true,
+    "domains": true,
+    "training_seeds": true,
+    "deck_seed_semantics": true,
+    "global_root_order": true,
+    "scenario_cycle": true,
+    "roots_per_iteration": true,
+    "iterations": true,
+    "optimizer_budgets": true,
+    "model_architectures": true,
+    "model_fingerprints": true,
+    "stability_gates": true
+  },
+  "contingency_consumed": false,
+  "reason_contingency_not_consumed": "Every worker failed inside validate_phase2_v3_contract before new_phase2_v3_runtime and before any root collection."
+}
