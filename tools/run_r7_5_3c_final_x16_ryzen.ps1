@@ -10,8 +10,10 @@ if ($Dirty) {
 
 $Freeze = Join-Path $Repo 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json'
 $RuntimeCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json'
+$ResourceCorrection = Join-Path $Repo 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_20260818.json'
 if (-not (Test-Path $Freeze)) { throw "Missing frozen x16 contract: $Freeze" }
 if (-not (Test-Path $RuntimeCorrection)) { throw "Missing frozen Windows runtime correction: $RuntimeCorrection" }
+if (-not (Test-Path $ResourceCorrection)) { throw "Missing frozen Windows resource-import correction: $ResourceCorrection" }
 
 # Python 3.11.9 is the final Python 3.11 release with an official Windows binary installer.
 # The x16 algorithm/seeds/budgets/gates remain unchanged; the runtime correction is execution-only.
@@ -54,10 +56,14 @@ if ($SolverCandidates.Count -ne 1) {
 }
 $Solver = (Resolve-Path $SolverCandidates[0]).Path
 
-$env:PYTHONPATH = "$(Join-Path $Repo 'python');$(Join-Path $Repo 'tools')"
+# The shared Phase-2 stage imports Python's Unix-only resource module solely for
+# peak-RSS telemetry. Prepend a Windows-only compatibility shim for this x16 run.
+$env:PYTHONPATH = "$(Join-Path $Repo 'tools/windows_compat');$(Join-Path $Repo 'python');$(Join-Path $Repo 'tools')"
 $env:SPINCORE_TORCH_THREADS = '2'
 $env:OMP_NUM_THREADS = '2'
 $env:MKL_NUM_THREADS = '2'
+& $Python -c "import resource; r=resource.getrusage(resource.RUSAGE_SELF); assert int(r.ru_maxrss)>0; print('resource shim peak_rss_kib', int(r.ru_maxrss))"
+if ($LASTEXITCODE -ne 0) { throw 'Windows resource telemetry compatibility preflight failed.' }
 
 $Output = 'ryzen_x16_final'
 Write-Host "[SpinCore x16] frozen HEAD: $Head"
@@ -70,8 +76,10 @@ Write-Host '[SpinCore x16] starting up to four independent cells in parallel; ea
     --run-name 'r7_5_3c_final_x16' `
     --contract 'validation/R7_5_3C_FINAL_CONTINGENCY_X16_FREEZE_20260818.json' `
     --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RUNTIME_CORRECTION_20260818.json' `
+    --contract 'validation/R7_5_3C_FINAL_X16_WINDOWS_RESOURCE_IMPORT_CORRECTION_20260818.json' `
     --contract 'validation/R7_5_3C_CHANCE_COVERAGE_X4_STABILITY_EVIDENCE_20260818.json' `
     --contract 'validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md' `
+    --contract 'tools/windows_compat/resource.py' `
     --contract 'tools/r7_5_3c_final_x16_domain_worker.py' `
     --contract 'tools/r7_5_3c_final_x16_ryzen_orchestrator.py' `
     --contract 'python/spincore/r7_5_representation_v3_stage_contract.py' `
