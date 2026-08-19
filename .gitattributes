@@ -1,0 +1,9 @@
+# Frozen R7.5.3C model-source hashes are byte-level SHA-256 values created on LF files.
+# Git for Windows may otherwise materialize CRLF worktrees and trip the source-drift guard
+# even when the Git content is unchanged. These six files are the model-freeze sources.
+python/spincore/r7_5_representation_v3.py text eol=lf
+python/spincore/solver_v3.py text eol=lf
+python/spincore_nn/card_orbit_v3.py text eol=lf
+python/spincore_nn/codec_v3.py text eol=lf
+python/spincore_nn/models_v3_final.py text eol=lf
+python/spincore_nn/semantics_v3.py text eol=lf
