@@ -1,0 +1,46 @@
+{
+  "schema": "SPINCORE_R7_5_3C_FINAL_X16_STABILITY_EXTRACTION_ROOTCOUNT_FIX_V1",
+  "status": "MECHANICAL_POSTTRAINING_EVALUATION_FIX_BEFORE_STABILITY_RESULT",
+  "training_execution_sha": "f44e05513721b59f63ed5c61f37de2c115c67315",
+  "training_status": "TRAINING_COMPLETE_PENDING_INDEPENDENT_STABILITY_CERTIFICATION",
+  "observed_failure": {
+    "tool": "tools/r7_5_3c_final_x16_stability.py",
+    "exception": "ValueError",
+    "message": "final report root count mismatch",
+    "location": "extract_final_v3_policy_light",
+    "stability_rows_evaluated_before_failure": 0,
+    "stability_result_written": false
+  },
+  "diagnosis": {
+    "legacy_light_extractor_expected_total_roots": 192,
+    "final_x16_frozen_total_roots": 3072,
+    "cause": "The shared light-policy extractor retained the original Phase-2 64-roots-per-iteration total while the final x16 evaluator correctly requires 1024 roots per iteration for three iterations.",
+    "training_checkpoint_corruption": false,
+    "training_rerun_required": false
+  },
+  "correction": {
+    "file": "python/spincore/r7_5_representation_v3_final_policy.py",
+    "policy": "Admit exactly the two sanctioned frozen totals, 3x64=192 and 3x1024=3072, during representation-neutral light extraction. The x16 stability evaluator independently and strictly enforces 3072 total roots, 1024 roots per iteration, 16 chunks per iteration, and 64 roots per chunk.",
+    "legacy_192_root_extraction_preserved": true,
+    "arbitrary_root_counts_admitted": false
+  },
+  "scientific_contract_unchanged": {
+    "training_checkpoints": true,
+    "representations": true,
+    "domains": true,
+    "training_seeds": true,
+    "heldout_states": true,
+    "policy_weights": true,
+    "model_architectures": true,
+    "chance_coverage": true,
+    "cross_seed_mean_tv_max": true,
+    "cross_seed_p95_tv_max": true,
+    "selection_rule": true
+  },
+  "governance": {
+    "representation_winner": null,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "next_action": "Rerun the same frozen x16 stability evaluator against the existing f44e055 training checkpoints and frozen heldout bundle; do not retrain."
+  }
+}
