@@ -87,8 +87,16 @@ def extract_final_v3_policy_light(
         raise ValueError("final report training seed mismatch")
     if int(final_report.get("iterations", -1)) != ITERATIONS:
         raise ValueError("final report iteration count mismatch")
-    if int(final_report.get("roots", -1)) != ITERATIONS * 64:
-        raise ValueError("final report root count mismatch")
+    # The original frozen Phase-2 run used 64 roots/iteration (192 total).
+    # The final winner-independent x16 contingency is the same three-iteration
+    # training contract with 1024 roots/iteration (3072 total). Extraction is
+    # representation-neutral, so admit exactly these two frozen root totals;
+    # downstream evaluators remain responsible for enforcing their exact shape.
+    valid_root_counts = {ITERATIONS * 64, ITERATIONS * 1024}
+    if int(final_report.get("roots", -1)) not in valid_root_counts:
+        raise ValueError(
+            f"final report root count mismatch: {final_report.get('roots')!r} not in {sorted(valid_root_counts)}"
+        )
     if int(final_report.get("average_policy_optimizer_steps", -1)) != POLICY_STEPS:
         raise ValueError("final report policy optimizer step mismatch")
 
