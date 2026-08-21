@@ -1,0 +1,37 @@
+{
+  "schema": "SPINCORE_R7_5_3D_V1PLUS_FORENSIC_TRAINING_SHA_CORRECTION_V1",
+  "status": "MECHANICAL_PREFLIGHT_CORRECTION_BEFORE_FORENSIC_OUTPUTS",
+  "date": "2026-08-21",
+  "observed_failure": {
+    "launcher_commit": "82f0f1b1582f8511156e611b59f939162230b1e4",
+    "stage": "exact frozen x16 input inventory preflight",
+    "message": "x16 execution SHA mismatch",
+    "raw_postmortem_started": false,
+    "enriched_postmortem_started": false,
+    "forensic_output_written": false,
+    "training_started": false,
+    "model_mutated": false
+  },
+  "diagnosis": {
+    "incorrect_launcher_training_execution_sha": "03052a0896d138aa6d2b3ba2ff1473a817e5a113",
+    "authoritative_x16_training_execution_sha": "f44e05513721b59f63ed5c61f37de2c115c67315",
+    "authoritative_evidence": "validation/R7_5_3C_FINAL_X16_STABILITY_EXTRACTION_ROOTCOUNT_FIX_20260821.json",
+    "reason": "03052a was an earlier Windows LF execution-package checkpoint. The completed final x16 training checkpoints were produced by the later clean x64 solver/DLL-corrected execution package f44e055."
+  },
+  "correction": {
+    "file": "tools/run_r7_5_3d_v1plus_forensic_ryzen.ps1",
+    "change": "Bind the read-only forensic launcher to the actual completed x16 training execution SHA f44e05513721b59f63ed5c61f37de2c115c67315.",
+    "scientific_contract_changed": false,
+    "checkpoint_bytes_changed": false,
+    "heldout_bytes_changed": false,
+    "seeds_changed": false,
+    "gates_changed": false
+  },
+  "governance": {
+    "representation_winner": null,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "rerun_training_required": false,
+    "next_action": "Rerun the same read-only forensic launcher against the existing final x16 checkpoints and frozen heldout bundle."
+  }
+}
