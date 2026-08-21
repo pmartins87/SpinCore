@@ -23,7 +23,7 @@ if (-not $OutputRoot) {
     $OutputRoot = Join-Path $RepoRoot "ryzen_v1plus_postmortem"
 }
 
-$TrainingExecutionSha = "03052a0896d138aa6d2b3ba2ff1473a817e5a113"
+$TrainingExecutionSha = "f44e05513721b59f63ed5c61f37de2c115c67315"
 $Python = Join-Path $RepoRoot ".venv-r7_5_3c_x16\Scripts\python.exe"
 $RawOut = Join-Path $OutputRoot "R7_5_3D_V1PLUS_FORENSIC_RAW.json"
 $EnrichedOut = Join-Path $OutputRoot "R7_5_3D_V1PLUS_FORENSIC_ENRICHED.json"
