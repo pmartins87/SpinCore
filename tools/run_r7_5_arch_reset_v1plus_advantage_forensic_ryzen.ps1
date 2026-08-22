@@ -27,19 +27,25 @@ $env:SPINCORE_TORCH_THREADS = '2'
 $env:OMP_NUM_THREADS = '2'
 $env:MKL_NUM_THREADS = '2'
 
+$ForensicTool = Join-Path $Repo 'tools/r7_5_arch_reset_v1plus_advantage_forensic.py'
+$ForensicTest = Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_advantage_forensic.py'
+Write-Host '[V1+ Advantage forensic] compiling diagnostic scripts...'
+& $Python -m py_compile $ForensicTool $ForensicTest
+if ($LASTEXITCODE -ne 0) { throw 'Advantage forensic Python syntax preflight failed.' }
+
 Write-Host '[V1+ Advantage forensic] running deterministic synthetic tests...'
-& $Python (Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_advantage_forensic.py')
+& $Python $ForensicTest
 if ($LASTEXITCODE -ne 0) { throw 'Advantage forensic synthetic tests failed.' }
 
-$Input = Join-Path $Repo 'ryzen_v1plus_phase2a'
+$Phase2AInput = Join-Path $Repo 'ryzen_v1plus_phase2a'
 $Heldout = Join-Path $Repo 'heldout_v3_bundle'
-if (-not (Test-Path $Input -PathType Container)) { throw "Missing completed Phase2A output: $Input" }
+if (-not (Test-Path $Phase2AInput -PathType Container)) { throw "Missing completed Phase2A output: $Phase2AInput" }
 if (-not (Test-Path $Heldout -PathType Container)) { throw "Missing frozen heldout bundle: $Heldout" }
 
 $SourceExecutionSha = '4bfa55d69029cd69536fa6dbfcadd162719cb887'
 $Seeds = @(1342191342, 1801739323)
 foreach ($Seed in $Seeds) {
-    $SeedRoot = Join-Path $Input "seed_$Seed"
+    $SeedRoot = Join-Path $Phase2AInput "seed_$Seed"
     $Checkpoint = Join-Path $SeedRoot 'resume_checkpoint.pt'
     $SeedResult = Join-Path $SeedRoot 'seed_result.json'
     if (-not (Test-Path $Checkpoint -PathType Leaf)) { throw "Missing Phase2A resume checkpoint: $Checkpoint" }
@@ -47,7 +53,34 @@ foreach ($Seed in $Seeds) {
 }
 
 Write-Host '[V1+ Advantage forensic] validating frozen source checkpoint identities...'
-& $Python -c "import json,sys,torch; from pathlib import Path; root=Path(sys.argv[1]); sha=sys.argv[2]; seeds=(1342191342,1801739323); rows=[];`nfor s in seeds:`n p=root/f'seed_{s}'/'resume_checkpoint.pt'; r=root/f'seed_{s}'/'seed_result.json'; q=torch.load(p,map_location='cpu',weights_only=False); j=json.loads(r.read_text()); assert q.get('execution_sha')==sha and int(q.get('seed',-1))==s; assert q.get('representation')=='H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL' and q.get('domain')=='THREE_HANDED'; assert q.get('progress',{}).get('phase')=='phase2a_resume' and int(q.get('progress',{}).get('global_root',-1))==768; assert int(q.get('extra',{}).get('stage_index',-1))==12; assert int(q.get('adv_mem',{}).get('capacity',-1))==100000; assert j.get('status')=='SEED_COMPLETE' and j.get('execution_sha')==sha and j.get('all_advantage_gates_pass') is True; rows.append((s,int(q['adv_mem']['seen']),len(q['adv_mem']['items'])));`nprint('Phase2A Advantage source identity PASS',rows)" $Input $SourceExecutionSha
+$PreflightCode = @'
+import json
+import sys
+import torch
+from pathlib import Path
+root = Path(sys.argv[1])
+sha = sys.argv[2]
+rows = []
+for seed in (1342191342, 1801739323):
+    checkpoint = root / f"seed_{seed}" / "resume_checkpoint.pt"
+    result_path = root / f"seed_{seed}" / "seed_result.json"
+    payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    assert payload.get("execution_sha") == sha
+    assert int(payload.get("seed", -1)) == seed
+    assert payload.get("representation") == "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL"
+    assert payload.get("domain") == "THREE_HANDED"
+    assert payload.get("progress", {}).get("phase") == "phase2a_resume"
+    assert int(payload.get("progress", {}).get("global_root", -1)) == 768
+    assert int(payload.get("extra", {}).get("stage_index", -1)) == 12
+    assert int(payload.get("adv_mem", {}).get("capacity", -1)) == 100000
+    assert result.get("status") == "SEED_COMPLETE"
+    assert result.get("execution_sha") == sha
+    assert result.get("all_advantage_gates_pass") is True
+    rows.append((seed, int(payload["adv_mem"]["seen"]), len(payload["adv_mem"]["items"])))
+print("Phase2A Advantage source identity PASS", rows)
+'@
+$PreflightCode | & $Python - $Phase2AInput $SourceExecutionSha
 if ($LASTEXITCODE -ne 0) { throw 'Phase2A Advantage source identity preflight failed.' }
 
 $Output = Join-Path $Repo 'ryzen_v1plus_advantage_forensic'
@@ -56,7 +89,7 @@ New-Item -ItemType Directory -Force -Path $Output | Out-Null
 
 Write-Host "[V1+ Advantage forensic] diagnostic HEAD: $Head"
 Write-Host "[V1+ Advantage forensic] source execution SHA: $SourceExecutionSha"
-Write-Host "[V1+ Advantage forensic] Phase2A input: $Input"
+Write-Host "[V1+ Advantage forensic] Phase2A input: $Phase2AInput"
 Write-Host "[V1+ Advantage forensic] heldout: $Heldout"
 Write-Host "[V1+ Advantage forensic] output: $Result"
 Write-Host '[V1+ Advantage forensic] READ ONLY: no solver traversal, no reservoir replay/mutation, no optimizer step, no model fit.'
@@ -73,8 +106,8 @@ Write-Host '[V1+ Advantage forensic] READ ONLY: no solver traversal, no reservoi
     --contract 'python/spincore_nn/codec_v3.py' `
     --contract 'python/spincore_nn/models_v3_final.py' `
     --artifact $Output `
-    -- $Python (Join-Path $Repo 'tools/r7_5_arch_reset_v1plus_advantage_forensic.py') `
-        --input-root $Input `
+    -- $Python $ForensicTool `
+        --input-root $Phase2AInput `
         --heldout-root $Heldout `
         --source-execution-sha $SourceExecutionSha `
         --out $Result
