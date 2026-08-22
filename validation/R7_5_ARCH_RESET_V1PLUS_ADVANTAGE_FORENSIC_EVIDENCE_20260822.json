@@ -1,0 +1,111 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_ADVANTAGE_FORENSIC_EVIDENCE_V1",
+  "date": "2026-08-22",
+  "governance_scope": "Post-R7.5.3 architecture-reset evidence only; R7.5.3 remains closed and this evidence does not authorize additional H2/H3 readmission remediation.",
+  "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "uploaded_result_sha256": "d0a5e407a9efc1c1fcb0538ea8b5425908f8fbd89c681915da4a9ef0171a9ba1",
+  "uploaded_result_bytes": 122790,
+  "status": "ADVANTAGE_FORENSIC_COMPLETE_TARGET_NOISE_AND_FEEDBACK_DOMINANT",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "training_seeds": [1342191342, 1801739323],
+  "evaluation_seeds": [2029384436, 1150634112],
+  "roots_per_seed": 768,
+  "advantage_memory": {
+    "capacity": 100000,
+    "seed_1342191342": {
+      "seen": 325535,
+      "retained": 100000,
+      "retention_fraction": 0.30718663123780854,
+      "saturation_seen_over_capacity": 3.25535
+    },
+    "seed_1801739323": {
+      "seen": 308401,
+      "retained": 100000,
+      "retention_fraction": 0.3242531639002468,
+      "saturation_seen_over_capacity": 3.08401
+    },
+    "interpretation": "Advantage memory is saturated, but the retained fraction is about 31-32%, materially less severe than the Strategy-memory truncation previously disproven as the primary cause. Capacity remains a secondary candidate, not the first causal remedy."
+  },
+  "within_seed_exact_target_noise": {
+    "seed_1342191342": {
+      "duplicate_exact_groups": 622,
+      "fraction_retained_items_in_duplicate_groups": 0.01268,
+      "mean_fraction_legal_slots_with_both_target_signs": 0.47280278670953907,
+      "mean_legal_slot_rms_target_std": 0.026644087533438676
+    },
+    "seed_1801739323": {
+      "duplicate_exact_groups": 706,
+      "fraction_retained_items_in_duplicate_groups": 0.01435,
+      "mean_fraction_legal_slots_with_both_target_signs": 0.4800519357884797,
+      "mean_legal_slot_rms_target_std": 0.02593203677056759
+    }
+  },
+  "cross_seed_shared_exact_target_diagnostics": {
+    "shared_groups": 1380,
+    "group_jaccard": 0.006996375066541611,
+    "left_retained_item_coverage": 0.01461,
+    "right_retained_item_coverage": 0.01478,
+    "target_derived_regret_matching_policy_tv_mean": 0.568480680810281,
+    "target_derived_regret_matching_policy_tv_p50": 0.6590778438966677,
+    "target_derived_regret_matching_policy_tv_p95": 1.0,
+    "positive_sign_disagreement_fraction_mean": 0.4851449275362319,
+    "legal_target_mae_mean": 0.04816036285654339
+  },
+  "retained_support_jaccard": {
+    "exact_observation": 0.006996375066541611,
+    "cards_only": 0.02273381294964029,
+    "current_without_history": 0.007784888219670829,
+    "geometry_without_cards": 0.41416081600211946,
+    "history_exact": 0.27949348331256524,
+    "history_structured": 0.3656506020100169,
+    "history_v1_like": 0.36741352332123717,
+    "geometry_plus_v1_like_history": 0.22887586815374522
+  },
+  "retained_distribution_tv": {
+    "street": 0.01061999999999999,
+    "legal_mask": 0.00691,
+    "history_length_bin": 0.016220000000000012,
+    "iteration": 0.04946999999999996
+  },
+  "generated_advantage_samples_cross_seed": [
+    {
+      "iteration": 1,
+      "relative_difference_to_pair_mean": 0.009365647919864788
+    },
+    {
+      "iteration": 2,
+      "relative_difference_to_pair_mean": 0.06102691241964977
+    },
+    {
+      "iteration": 3,
+      "relative_difference_to_pair_mean": 0.2161566088320097
+    }
+  ],
+  "final_advantage_network_common_heldout": {
+    "evaluation_seed_2029384436": {
+      "behavior_policy_tv_mean": 0.5053508948091757,
+      "behavior_policy_tv_p95": 1.0,
+      "dominant_legal_action_mismatch_rate": 0.529296875,
+      "positive_sign_disagreement_fraction_mean": 0.40013020833333335
+    },
+    "evaluation_seed_1150634112": {
+      "behavior_policy_tv_mean": 0.5218671078483021,
+      "behavior_policy_tv_p95": 1.0,
+      "dominant_legal_action_mismatch_rate": 0.5439453125,
+      "positive_sign_disagreement_fraction_mean": 0.39873046874999996
+    }
+  },
+  "interpretation": [
+    "HYP-B chance/return target noise receives strong evidence: even shared exact infosets have about 0.568 mean target-derived regret-matching TV and about 48.5% legal-slot sign disagreement.",
+    "HYP-C trajectory-feedback divergence also receives strong evidence: generated Advantage-sample count divergence grows from about 0.9% in iteration 1 to 21.6% in iteration 3, while the final Advantage networks disagree by about 0.51 behavior-policy TV on the same heldout states.",
+    "The very small marginal distribution TVs by street/legal/history length show that the problem is not a simple gross distribution imbalance; it is fine-grained support/target divergence.",
+    "HYP-D representation fragmentation is an amplifier because coarse geometry/history projections recover much more support overlap, but coarse target-derived policy TV remains about 0.54-0.57, so compression alone cannot be expected to cure the instability.",
+    "HYP-A Advantage-memory pressure remains plausible but is not yet causally isolated and is not the first remedy because target disagreement is already severe on shared exact infosets.",
+    "The next step should screen a variance-to-policy feedback remedy before any heavy retraining: average the ensemble raw Advantage estimates before the discontinuous regret-matching transform, while preserving the existing uncertainty-damping epsilon, and compare it read-only against the frozen current algebra."
+  ],
+  "next_gate": "R7_5_ARCH_RESET_V1PLUS_PHASE2B0_POLICY_ALGEBRA_SCREEN",
+  "architecture_winner": null,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
