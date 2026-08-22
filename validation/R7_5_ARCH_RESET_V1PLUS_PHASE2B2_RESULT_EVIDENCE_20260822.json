@@ -1,0 +1,46 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B2_RESULT_EVIDENCE_V1",
+  "date": "2026-08-22",
+  "governance_scope": "Post-R7.5.3 V1+ architecture-reset evidence only; R7.5.3 remains FAIL_BLOCKED_CLOSED.",
+  "diagnostic_execution_sha": "ca9fe7bfa9f2f0cd96332d7e486932305fde194a",
+  "source_phase2a_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "phase2b1_result_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
+  "uploaded_result_sha256": "49cd1bd98ffe30f21a2b4263c50eb0b5c6d3e616b651a1353f136a670453e281",
+  "uploaded_result_bytes": 30171,
+  "status": "MIXED_CHANCE_SUPPORT_AND_FEEDBACK",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "action_candidate": "PF0_CONTROL_33_75_AI",
+  "source_behavior_seeds": [1342191342, 1801739323],
+  "phase2b1_reference": {
+    "chance_only_k1_policy_tv": 0.5153716032136447,
+    "traversal_only_k1_policy_tv": 0.05194165047961052
+  },
+  "phase2b2_primary": {
+    "common_traversal_rng_k1_cross_behavior_tv": 0.38709419727000416,
+    "independent_traversal_rng_k1_cross_behavior_tv": 0.38892191351328625,
+    "absolute_reduction_vs_phase2b1_chance_reference": 0.12644968970035847,
+    "relative_reduction_vs_phase2b1_chance_reference": 0.24535633882788724,
+    "independent_k1_sign_disagreement": 0.32083333333333336,
+    "independent_k1_dominant_action_mismatch": 0.31666666666666665,
+    "independent_k1_target_mean_abs_diff": 0.02020205841997862,
+    "shared_support_gate_pass": false
+  },
+  "frozen_gate_context": {
+    "shared_support_absolute_improvement_min": 0.10,
+    "shared_support_relative_improvement_min": 0.30,
+    "shared_support_k1_tv_max": 0.35,
+    "feedback_dominant_threshold": 0.4122972825709158
+  },
+  "interpretation": [
+    "Putting both already-diverged behavior ensembles on exactly the same 240 stored chance realizations materially reduces cross-behavior target-policy TV, from the Phase2B1 chance reference 0.51537 to 0.38892 in the primary independent-traversal arm.",
+    "The reduction is real but insufficient under the frozen gate: 24.54% relative is below the required 30%, and the resulting 0.38892 remains above the absolute <=0.35 requirement.",
+    "COMMON_TRAVERSAL_RNG and INDEPENDENT_TRAVERSAL_RNG are nearly identical (0.38709 versus 0.38892), reinforcing the Phase2B1 conclusion that traversal RNG is a minor component.",
+    "Therefore neither different finite chance support nor already-diverged behavior feedback alone explains the full instability; both contribute materially.",
+    "Do not start a shared-chance training pilot yet. The remaining feedback must be localized before modifying training."
+  ],
+  "next_gate": "Localize the remaining same-chance behavior-feedback divergence into root traverser baseline-policy effects versus downstream continuation-policy effects before any training pilot.",
+  "small_training_pilot_precommit_allowed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
