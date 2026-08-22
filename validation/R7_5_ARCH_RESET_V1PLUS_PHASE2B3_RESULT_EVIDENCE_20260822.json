@@ -1,0 +1,57 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B3_RESULT_EVIDENCE_V1",
+  "date": "2026-08-22",
+  "governance_scope": "Post-R7.5.3 architecture-reset evidence only; R7.5.3 remains FAIL_BLOCKED_CLOSED.",
+  "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "diagnostic_execution_sha": "ef605dc35a40161c3d221727b659b4121b6719ed",
+  "uploaded_result_sha256": "158e450e96027871b5bf44caa5cd0cb9105782e648e91583960b49d3986fe0a7",
+  "uploaded_result_bytes": 59055,
+  "status": "MIXED_ROOT_AND_DOWNSTREAM_FEEDBACK",
+  "experiment": {
+    "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "domain": "THREE_HANDED",
+    "source_behavior_seeds": [1342191342, 1801739323],
+    "paired_deal_count": 240,
+    "exact_opponent_levels": 2,
+    "target_iteration": 3
+  },
+  "reproduction": {
+    "phase2b2_independent_rng_k1_tv_expected": 0.38892191351328625,
+    "phase2b3_native_k1_tv_reproduced": 0.38892191351328625,
+    "exact_reproduction_pass": true
+  },
+  "pooled": {
+    "native_tv": 0.38892191351328625,
+    "common_root_sigma_tv": 0.32770276958712846,
+    "common_action_values_tv": 0.21015032820513388,
+    "root_sigma_tv": 0.4293359237379805,
+    "root_action_value_mean_abs_diff": 0.018569311604547216,
+    "crossed_root_sigma_step_tv": 0.19527867187477665,
+    "crossed_downstream_value_step_tv": 0.3255564955970557
+  },
+  "effects": {
+    "root_sigma_removal": {
+      "absolute_reduction": 0.06121914392615779,
+      "relative_reduction": 0.15740728871032472,
+      "residual_tv": 0.32770276958712846,
+      "material": true
+    },
+    "downstream_value_removal": {
+      "absolute_reduction": 0.17877158530815238,
+      "relative_reduction": 0.45965932773815077,
+      "residual_tv": 0.21015032820513388,
+      "material": true
+    }
+  },
+  "interpretation": [
+    "Root-sigma disagreement is a real secondary amplifier: holding the root CFR baseline policy common reduces target-policy TV by about 15.7%.",
+    "Downstream continuation disagreement is the larger component: holding root action values common reduces target-policy TV by about 46.0%.",
+    "The effects are not assumed additive because target centering and regret matching are nonlinear.",
+    "The next diagnostic must localize downstream continuation feedback by street/depth while retaining a common root-baseline control.",
+    "No training pilot is authorized by Phase2B3."
+  ],
+  "next_gate": "LOCALIZE_DOWNSTREAM_STREET_DEPTH_AND_RETAIN_ROOT_BASELINE_CONTROL",
+  "training_pilot_precommit_allowed": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
