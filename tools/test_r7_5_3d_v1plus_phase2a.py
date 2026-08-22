@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import random
 import tempfile
 from pathlib import Path
 
+import torch
+
+import r7_5_3d_v1plus_phase2a_policy_fit_worker as fit_worker
 import r7_5_3d_v1plus_phase2a_strategy_capacity as base
 import r7_5_3d_v1plus_phase2a_strategy_capacity_runtimefix as guard
 from spincore_nn.reservoir import UniformReservoir
@@ -23,6 +25,7 @@ def test_frozen_constants() -> None:
     }
     assert base.COMMON_POLICY_INIT_SEED == 0x13579BDF
     assert base.COMMON_BATCH_SEED == 0x2468ACE013579BDF
+    assert fit_worker.CONTEXT_SCHEMA == "SPINCORE_R7_5_3D_PHASE2A_POLICY_FIT_CONTEXT_V1"
 
 
 def test_capture_preserves_control_reservoir_exactly() -> None:
@@ -46,6 +49,29 @@ def test_capacity_replay_is_deterministic() -> None:
         left.add(item)
         right.add(item)
     assert left.state_dict() == right.state_dict()
+
+
+def test_parallel_fit_context_roundtrip() -> None:
+    reservoir = UniformReservoir(23, 777)
+    for item in range(250):
+        reservoir.add(item)
+    native_rng = __import__("random").Random(1234).getstate()
+    payload = {
+        "schema": fit_worker.CONTEXT_SCHEMA,
+        "training_seed": 1342191342,
+        "arm": "S400K",
+        "capacity": 400_000,
+        "memory_state": reservoir.state_dict(),
+        "native_batch_rng_state": native_rng,
+    }
+    with tempfile.TemporaryDirectory() as temp:
+        path = Path(temp) / "context.pt"
+        base._atomic_torch_save(payload, path)
+        loaded = torch.load(path, map_location="cpu", weights_only=False)
+        rebuilt = UniformReservoir.from_state_dict(loaded["memory_state"])
+        assert loaded["schema"] == fit_worker.CONTEXT_SCHEMA
+        assert loaded["native_batch_rng_state"] == native_rng
+        assert rebuilt.state_dict() == reservoir.state_dict()
 
 
 def test_curve_rule() -> None:
@@ -76,8 +102,9 @@ def test_curve_rule() -> None:
 
 def test_runtime_guard_bindings() -> None:
     assert callable(guard._fit_only_iteration)
-    assert callable(guard._fit_seed_policies_authoritative_audit)
+    assert callable(guard._fit_seed_policies_parallel)
     assert callable(guard._run_parent_guarded)
+    assert callable(fit_worker._valid_existing)
     training_seed = 1342191342
     assert (training_seed ^ 0x71A5BEEF) == (training_seed ^ 0x71A5BEEF)
 
@@ -96,6 +123,7 @@ def main() -> int:
     test_frozen_constants()
     test_capture_preserves_control_reservoir_exactly()
     test_capacity_replay_is_deterministic()
+    test_parallel_fit_context_roundtrip()
     test_curve_rule()
     test_runtime_guard_bindings()
     test_last_stage_report_recovery_contract()
