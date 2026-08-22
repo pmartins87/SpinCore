@@ -68,7 +68,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Phase2A authoritative Phase-2 contract preflig
 
 $Heldout = Join-Path $Repo 'heldout_v3_bundle'
 if (-not (Test-Path $Heldout -PathType Container)) { throw "Missing frozen heldout bundle: $Heldout" }
-& $Python -c "import sys; from pathlib import Path; from spincore.r7_5_representation_v3_referee_artifacts import load_heldout_v3_artifact; root=Path(sys.argv[1]); seeds=(2029384436,1150634112); found=[]; [found.append((s,p)) for s in seeds for p in root.rglob('states.json.gz') if (lambda q: q)(load_heldout_v3_artifact(p,expected_domain='THREE_HANDED',expected_evaluation_seed=s,expected_count=2048))]; assert {s for s,_ in found}==set(seeds),found; assert all(sum(1 for x,_ in found if x==s)==1 for s in seeds),found; print('3H heldout identity PASS',[(s,str(p)) for s,p in found])" $Heldout
+& $Python -c "import sys; from pathlib import Path; import r7_5_3d_v1plus_phase2a_strategy_capacity as p; root=Path(sys.argv[1]); rows=[(s,p._find_heldout(root,s)) for s in (2029384436,1150634112)]; print('3H heldout identity PASS',[(s,str(path)) for s,path in rows])" $Heldout
 if ($LASTEXITCODE -ne 0) { throw 'Phase2A frozen 3H heldout preflight failed.' }
 
 $Output = Join-Path $Repo 'ryzen_v1plus_phase2a'
