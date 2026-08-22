@@ -11,7 +11,8 @@ if ($Dirty) {
 $Precommit = Join-Path $Repo 'validation/R7_5_3D_V1PLUS_PHASE2A_STRATEGY_MEMORY_CAPACITY_ABLATION_PRECOMMIT_20260821.md'
 $ImplementationFreeze = Join-Path $Repo 'validation/R7_5_3D_V1PLUS_PHASE2A_IMPLEMENTATION_FREEZE_20260821.md'
 $RuntimeGuard = Join-Path $Repo 'validation/R7_5_3D_V1PLUS_PHASE2A_RUNTIME_GUARD_20260821.md'
-foreach ($Path in @($Precommit, $ImplementationFreeze, $RuntimeGuard)) {
+$ParallelFitFreeze = Join-Path $Repo 'validation/R7_5_3D_V1PLUS_PHASE2A_PARALLEL_FIT_EXECUTION_FREEZE_20260821.md'
+foreach ($Path in @($Precommit, $ImplementationFreeze, $RuntimeGuard, $ParallelFitFreeze)) {
     if (-not (Test-Path $Path -PathType Leaf)) { throw "Missing Phase2A frozen contract: $Path" }
 }
 
@@ -75,7 +76,8 @@ $Output = Join-Path $Repo 'ryzen_v1plus_phase2a'
 Write-Host "[V1+ Phase2A] frozen execution HEAD: $Head"
 Write-Host "[V1+ Phase2A] solver: $Solver"
 Write-Host "[V1+ Phase2A] output/resume root: $Output"
-Write-Host '[V1+ Phase2A] two independent H2/3H x4 seed trajectories may run in parallel; capacity arms are passive and never affect traversal.'
+Write-Host '[V1+ Phase2A] collection: two independent H2/3H x4 seed trajectories in parallel; canonical root order remains sequential within each seed.'
+Write-Host '[V1+ Phase2A] policy fitting: up to 3 independent capacity-arm processes per seed x 2 torch threads = up to 12 fit threads across both seeds.'
 
 & $Python (Join-Path $Repo 'tools/spincore_ryzen_frozen_runner.py') `
     --expected-commit $Head `
@@ -83,8 +85,10 @@ Write-Host '[V1+ Phase2A] two independent H2/3H x4 seed trajectories may run in 
     --contract 'validation/R7_5_3D_V1PLUS_PHASE2A_STRATEGY_MEMORY_CAPACITY_ABLATION_PRECOMMIT_20260821.md' `
     --contract 'validation/R7_5_3D_V1PLUS_PHASE2A_IMPLEMENTATION_FREEZE_20260821.md' `
     --contract 'validation/R7_5_3D_V1PLUS_PHASE2A_RUNTIME_GUARD_20260821.md' `
+    --contract 'validation/R7_5_3D_V1PLUS_PHASE2A_PARALLEL_FIT_EXECUTION_FREEZE_20260821.md' `
     --contract 'tools/r7_5_3d_v1plus_phase2a_strategy_capacity.py' `
     --contract 'tools/r7_5_3d_v1plus_phase2a_strategy_capacity_runtimefix.py' `
+    --contract 'tools/r7_5_3d_v1plus_phase2a_policy_fit_worker.py' `
     --contract 'tools/test_r7_5_3d_v1plus_phase2a.py' `
     --contract 'tools/r7_5_3c_chance_coverage_x4_domain_worker_runtimefix.py' `
     --contract 'python/spincore/r7_5_representation_v3_stage_contract.py' `
