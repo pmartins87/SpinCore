@@ -1,0 +1,86 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2A_RESULT_EVIDENCE_V1",
+  "date": "2026-08-22",
+  "governance_scope": "Post-R7.5.3 architecture-reset evidence only; this is not an additional R7.5.3 readmission remediation and does not reopen the finite-closure chain.",
+  "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "evaluation_recovery_sha": "34fbd9de4ede4053105ce793ecad75fef6970aa3",
+  "uploaded_result_sha256": "65f691e6b9cf7fbbddf88852c5ac6e0dcd2211af45f53cc4bb3e8271dbaa6149",
+  "uploaded_result_bytes": 404979,
+  "status": "CAPACITY_EFFECT_NOT_SUPPORTED",
+  "experiment": {
+    "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "domain": "THREE_HANDED",
+    "training_seeds": [1342191342, 1801739323],
+    "evaluation_seeds": [2029384436, 1150634112],
+    "iterations": 3,
+    "roots_per_iteration": 256,
+    "roots_per_seed": 768,
+    "strategy_capacities": [100000, 400000, 800000]
+  },
+  "local_validity": {
+    "all_advantage_gates_pass": true,
+    "common_policy_fit_gates_pass": true,
+    "evaluation_recovery_training_replayed": false,
+    "evaluation_recovery_reservoir_replayed": false,
+    "evaluation_recovery_policy_refit": false,
+    "evaluation_correction": "CANONICAL_VARIABLE_LENGTH_LEGAL_SET_TO_TEN_SLOT_MASK_BEFORE_V3_COLLATION"
+  },
+  "strategy_streams": {
+    "1342191342": {
+      "seen": 1051044,
+      "retention_fraction_100k": 0.09514349541979213,
+      "retention_fraction_400k": 0.3805739816791685,
+      "retention_fraction_800k": 0.761147963358337
+    },
+    "1801739323": {
+      "seen": 865707,
+      "retention_fraction_100k": 0.11551252329021251,
+      "retention_fraction_400k": 0.46205009316085005,
+      "retention_fraction_800k": 0.9241001863217001
+    }
+  },
+  "pooled_mean_tv": {
+    "COMMON_LEARNER": {
+      "S100K_CONTROL": 0.21376380367532596,
+      "S400K": 0.21005422564397866,
+      "S800K": 0.20860854047441169
+    },
+    "NATIVE_LEARNER": {
+      "S100K_CONTROL": 0.20754090668153097,
+      "S400K": 0.21167249329143017,
+      "S800K": 0.19655150392729998
+    }
+  },
+  "common_learner_decision": {
+    "absolute_improvement_100k_to_800k": 0.0051552632009142785,
+    "relative_improvement_100k_to_800k": 0.024116632995286345,
+    "bootstrap_95_ci": [-0.0024544445544687743, 0.01277043231040434],
+    "bootstrap_strictly_positive": false,
+    "both_evaluation_seeds_improved": true,
+    "curve_ideal_monotone": true,
+    "practical_materiality": false,
+    "statistically_supported": false
+  },
+  "native_learner_diagnostic": {
+    "absolute_improvement_100k_to_800k": 0.010989402754230986,
+    "bootstrap_95_ci": [0.003262391630746416, 0.01820930577021876],
+    "direction_positive": true,
+    "note": "Statistically positive native readout is smaller than the frozen practical continuation threshold and does not override the common-learner causal result."
+  },
+  "hard_stability_gates": {
+    "mean_tv_max": 0.15,
+    "p95_tv_max": 0.35,
+    "any_capacity_readout_passed_both_heldouts": false
+  },
+  "interpretation": [
+    "Increasing Strategy-memory capacity from 100k to 800k alone does not materially or statistically explain the 3H cross-seed instability under the precommitted COMMON_LEARNER causal readout.",
+    "The monotone but very small common-learner improvement shows Strategy-memory truncation is at most a secondary amplifier at this scale, not the dominant root cause.",
+    "The upstream 3H Advantage/chance trajectory remains the primary remediation target, consistent with the earlier variance decomposition and Phase1B support-divergence evidence.",
+    "Do not escalate blindly to multi-million Strategy-memory capacity.",
+    "Do not select H2/H3 or authorize production from this experiment."
+  ],
+  "next_gate": "Precommit a controlled upstream 3H sampling/variance-reduction ablation before any further heavy training. Representation compression remains a later isolated ablation after upstream variance causality is resolved.",
+  "representation_winner": null,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
