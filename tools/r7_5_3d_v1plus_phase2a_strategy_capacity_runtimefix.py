@@ -10,9 +10,11 @@ same Advantage fit/audit/state semantics and emits zero placeholders until the
 Phase2A runner patches them with the true 256-root totals.
 
 This wrapper also pins the local AveragePolicy audit to the authoritative Phase-2
-seed `training_seed ^ 0x71A5BEEF` for every capacity arm and makes the final
+seed `training_seed ^ 0x71A5BEEF` for every capacity arm, makes the final
 stage-report marker recoverable if power is lost after the atomic resume
-checkpoint but before the small JSON report is written.
+checkpoint but before the small JSON report is written, and guarantees that
+parallel child seed workers execute this same guarded entrypoint rather than the
+unguarded base module.
 
 No scientific dimension, training seed, chance schedule, model, threshold,
 reservoir capacity arm, or learner budget is changed here.
@@ -34,7 +36,7 @@ def _validate_stream_prefix_recoverable(seed_root: Path, stage_index: int) -> No
             raise RuntimeError(f"Phase2A completed Strategy stream missing at stage {index}: {sp}")
         if not rp.is_file():
             if index == int(stage_index):
-                # The resume checkpoint is the authoritative atomic state.  The
+                # The resume checkpoint is the authoritative atomic state. The
                 # base runner rewrites this last small report from checkpoint
                 # metadata immediately after this validation returns.
                 continue
@@ -112,11 +114,50 @@ def _fit_seed_policies_authoritative_audit(*, seed_root: Path, training_seed: in
     return rows
 
 
+def _run_parent_guarded(args) -> int:
+    output_root = Path(args.output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    guarded_entrypoint = str(Path(__file__).resolve())
+    commands = []
+    for seed in base.TRAINING_SEEDS:
+        cmd = [
+            base.sys.executable,
+            guarded_entrypoint,
+            "--repo-root", str(Path(args.repo_root).resolve()),
+            "--solver", str(Path(args.solver).resolve()),
+            "--heldout-root", str(Path(args.heldout_root).resolve()),
+            "--output-root", str(output_root),
+            "--execution-sha", str(args.execution_sha),
+            "--single-seed", str(int(seed)),
+        ]
+        commands.append((int(seed), cmd))
+    with base.ThreadPoolExecutor(max_workers=min(int(args.seed_workers), len(commands))) as pool:
+        futures = {pool.submit(base.subprocess.run, cmd, check=False): seed for seed, cmd in commands}
+        for future in base.as_completed(futures):
+            seed = futures[future]
+            completed = future.result()
+            if int(completed.returncode) != 0:
+                raise RuntimeError(f"Phase2A guarded seed worker {seed} failed with exit code {completed.returncode}")
+    result = base._evaluate_parent(args)
+    out = output_root / "R7_5_3D_V1PLUS_PHASE2A_RESULT.json"
+    base._atomic_json(result, out)
+    print(json.dumps({
+        "status": result["status"],
+        "common_mean_tv": result["pooled_mean_tv"]["COMMON_LEARNER"],
+        "native_mean_tv": result["pooled_mean_tv"]["NATIVE_LEARNER"],
+        "absolute_improvement_100k_to_800k": result["decision"]["common_100k_to_800k_absolute_improvement"],
+        "relative_improvement_100k_to_800k": result["decision"]["common_100k_to_800k_relative_improvement"],
+        "result": str(out),
+    }, indent=2, sort_keys=True), flush=True)
+    return 0
+
+
 def main() -> int:
     base.run_one_phase2_v3_iteration = _fit_only_iteration
     base._validate_stream_prefix = _validate_stream_prefix_recoverable
     base._fit_seed_policies = _fit_seed_policies_authoritative_audit
-    print("PHASE2A_RUNTIME_GUARD zero_root_fit=ACTIVE authoritative_policy_audit=ACTIVE", flush=True)
+    base._run_parent = _run_parent_guarded
+    print("PHASE2A_RUNTIME_GUARD zero_root_fit=ACTIVE authoritative_policy_audit=ACTIVE guarded_children=ACTIVE", flush=True)
     return int(base.main())
 
 
