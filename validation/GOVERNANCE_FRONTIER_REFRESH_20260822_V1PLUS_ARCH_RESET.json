@@ -28,12 +28,21 @@
       "consequence": "Do not blindly escalate Strategy memory; upstream Advantage/chance trajectory remains the primary diagnostic target."
     },
     "advantage_trajectory_forensic": {
-      "status": "FROZEN_AWAITING_READOUT",
+      "status": "COMPLETE_TARGET_NOISE_AND_FEEDBACK_DOMINANT",
       "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
-      "training_authorized": false,
-      "purpose": "Read-only separation of Advantage-memory pressure, sampled target noise, trajectory-support divergence and representation fragmentation."
+      "shared_exact_target_policy_tv_mean": 0.568480680810281,
+      "shared_exact_positive_sign_disagreement_mean": 0.4851449275362319,
+      "final_advantage_common_heldout_mean_tv": [0.5053508948091757, 0.5218671078483021],
+      "generated_advantage_sample_relative_divergence_by_iteration": [0.009365647919864788, 0.06102691241964977, 0.2161566088320097],
+      "consequence": "Target/sign noise is already severe on shared exact infosets and is amplified into seed-dependent Advantage behavior/trajectory feedback. Compression or memory escalation alone is not the first remedy."
     },
-    "causal_phase2b_training": "NOT_YET_PRECOMMITTED",
+    "phase2b0_policy_algebra_screen": {
+      "status": "FROZEN_AWAITING_READOUT",
+      "candidate": "RAW_MEAN_THEN_REGRET_MATCH_WITH_CONTROL_EPSILON",
+      "training_authorized": false,
+      "purpose": "Read-only screen whether averaging the four raw Advantage estimates before the discontinuous regret-matching transform reduces cross-seed behavior divergence while holding uncertainty epsilon fixed."
+    },
+    "causal_phase2b_training": "BLOCKED_PENDING_PHASE2B0_SCREEN",
     "architecture_winner": null
   },
   "r7_5_4": {
