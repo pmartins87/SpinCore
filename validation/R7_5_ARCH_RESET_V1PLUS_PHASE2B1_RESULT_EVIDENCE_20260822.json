@@ -1,0 +1,65 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B1_RESULT_EVIDENCE_V1",
+  "date": "2026-08-22",
+  "governance_scope": "Post-R7.5.3 V1+ architecture-reset evidence only; R7.5.3 remains FAIL_BLOCKED_CLOSED.",
+  "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "diagnostic_execution_sha": "0dd2d5b1542c90066f90b7cb54a531ed21f1b1c4",
+  "uploaded_result_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
+  "uploaded_result_bytes": 87289,
+  "status": "PHASE2B1_K4_SCREEN_FAIL_NO_GENERIC_K4_TRAINING_PILOT",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "source_behavior_seeds": [1342191342, 1801739323],
+  "replicates_per_arm": 16,
+  "k_values": [1, 2, 4, 8],
+  "source_classification": "CHANCE_DOMINANT",
+  "pooled_k1_regret_matching_policy_tv": {
+    "TRAVERSAL_ONLY": 0.05194165047961052,
+    "CHANCE_ONLY": 0.5153716032136447,
+    "COMBINED": 0.5045434331933222
+  },
+  "chance_to_traversal_k1_tv_ratio": 9.922126112870183,
+  "pooled_k1_legal_sign_disagreement": {
+    "TRAVERSAL_ONLY": 0.06354166666666666,
+    "CHANCE_ONLY": 0.4375,
+    "COMBINED": 0.421875
+  },
+  "pooled_target_mean_abs_diff_by_k": {
+    "CHANCE_ONLY": {
+      "K1": 0.02337436098850536,
+      "K2": 0.016991779958872858,
+      "K4": 0.014204339368347436,
+      "K8": 0.009423738379107895
+    },
+    "TRAVERSAL_ONLY": {
+      "K1": 0.0024508592605596356,
+      "K2": 0.001681224326749275,
+      "K4": 0.0011962810078560743,
+      "K8": 0.0009206397055575548
+    }
+  },
+  "generic_k4_screen": {
+    "combined_both_source_behavior_seeds_directionally_improve": false,
+    "combined_k4_screen_pass": false,
+    "small_causal_pilot_precommit_allowed": false,
+    "next_route": "NO_K4_TRAINING_PILOT",
+    "combined_k1_policy_tv": 0.5045434331933222,
+    "combined_k4_policy_tv": 0.5883340553974603,
+    "combined_k1_to_k4_absolute_improvement": -0.08379062220413813,
+    "combined_k1_to_k4_relative_improvement": -0.16607216879985176,
+    "chance_only_k1_policy_tv": 0.5153716032136447,
+    "chance_only_k4_policy_tv": 0.61044841154848,
+    "chance_only_k1_to_k4_absolute_improvement": -0.09507680833483523
+  },
+  "interpretation": [
+    "Holding the entire deal fixed leaves only modest traversal/action-sampling variance: pooled K1 regret-matching policy TV is about 0.052.",
+    "Holding the acting player's exact root SPNNIV3 observation fixed while changing hidden/future chance increases pooled K1 target-policy TV to about 0.515, roughly 9.9x the traversal-only value.",
+    "COMBINED is essentially the same scale as CHANCE_ONLY, so chance/deck realization is the dominant upstream source in this diagnostic.",
+    "Raw target averaging does reduce numeric target mean-absolute difference monotonically as K grows, but K4 does not reduce sign instability or regret-matching policy TV; therefore generic K4 continuation averaging is not justified for training.",
+    "The K4 failure does not imply chance variance is unimportant. It implies naive small-K averaging is not a sufficient remedy for a target distribution whose action advantages frequently lie near the regret-matching zero boundary.",
+    "Before any new training, the next diagnostic should hold chance support identical across the two frozen source behavior ensembles and directly measure residual cross-behavior target divergence. This distinguishes deck-support variance from feedback/policy-induced divergence on the same deals."
+  ],
+  "next_gate": "PHASE2B2_COMMON_CHANCE_CROSS_BEHAVIOR_DIAGNOSTIC",
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
