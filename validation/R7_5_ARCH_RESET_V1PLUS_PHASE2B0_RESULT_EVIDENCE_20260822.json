@@ -1,0 +1,43 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B0_RESULT_EVIDENCE_V1",
+  "date": "2026-08-22",
+  "status": "FAIL_DO_NOT_TRAIN_CANDIDATE",
+  "source_result_sha256": "5162d14a0ebb072e9e138a6bde418fd32e0fe875b114b9de175b0b7b029ea702",
+  "source_result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B0_POLICY_ALGEBRA_SCREEN_V1",
+  "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "diagnostic_head": "0520a71fb04fea0587e79bb2fd019a4f61d357af",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "candidate": "RAW_MEAN_THEN_REGRET_MATCH_WITH_CONTROL_EPSILON",
+  "epsilon_identity_checks": 4096,
+  "epsilon_identity_pass": true,
+  "pooled": {
+    "control_mean_tv": 0.30122738070967015,
+    "control_p95_tv": 0.7321924950729314,
+    "control_dominant_action_mismatch_rate": 0.44873046875,
+    "candidate_mean_tv": 0.3439887521790942,
+    "candidate_p95_tv": 0.8333333333333334,
+    "candidate_dominant_action_mismatch_rate": 0.46533203125,
+    "absolute_mean_tv_improvement": -0.04276137146942405,
+    "relative_mean_tv_improvement": -0.14195712012859296,
+    "both_evaluation_seeds_improve": false,
+    "p95_nonworsening_rule_pass": false,
+    "dominant_action_mismatch_nonworsening_pass": false,
+    "materiality_rule_pass": false
+  },
+  "screen_rule_pass": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "decision": {
+    "train_candidate": false,
+    "reason": "The candidate worsened pooled cross-seed mean TV by 0.04276137146942405 absolute (14.195712012859296% relative), worsened p95, and worsened dominant-action mismatch while preserving the control epsilon exactly.",
+    "next_frontier": "PHASE2B1_ADVANTAGE_TARGET_VARIANCE_DECOMPOSITION"
+  },
+  "governance": [
+    "R7.5.3 remains FAIL_BLOCKED_CLOSED.",
+    "No representation winner is selected.",
+    "R7.5.4 and R8 remain blocked.",
+    "READY FOR TABLES remains NO.",
+    "Phase2B0 was read-only and does not authorize production training."
+  ]
+}
