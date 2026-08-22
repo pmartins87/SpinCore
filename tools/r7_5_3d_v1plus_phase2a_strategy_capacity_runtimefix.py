@@ -12,18 +12,21 @@ Phase2A runner patches them with the true 256-root totals.
 This wrapper also pins the local AveragePolicy audit to the authoritative Phase-2
 seed `training_seed ^ 0x71A5BEEF` for every capacity arm, makes the final
 stage-report marker recoverable if power is lost after the atomic resume
-checkpoint but before the small JSON report is written, and guarantees that
-parallel child seed workers execute this same guarded entrypoint rather than the
-unguarded base module.
+checkpoint but before the small JSON report is written, guarantees that parallel
+child seed workers execute this same guarded entrypoint, and parallelizes only the
+three already-independent final Strategy-capacity policy-fit arms in isolated
+processes.  COMMON/NATIVE fits remain sequential inside each arm process so the
+memory is loaded once and each learner keeps its exact frozen RNG semantics.
 
 No scientific dimension, training seed, chance schedule, model, threshold,
-reservoir capacity arm, or learner budget is changed here.
+reservoir capacity arm, learner budget, Strategy sample, or traversal behavior is
+changed here.
 """
 
 import json
 from pathlib import Path
-import random
 
+import r7_5_3d_v1plus_phase2a_policy_fit_worker as policy_worker
 import r7_5_3d_v1plus_phase2a_strategy_capacity as base
 from r7_5_3c_chance_coverage_x4_domain_worker_runtimefix import _fit_only_iteration
 
@@ -49,68 +52,107 @@ def _validate_stream_prefix_recoverable(seed_root: Path, stage_index: int) -> No
             raise RuntimeError("Phase2A Strategy stream count mismatch")
 
 
-def _fit_seed_policies_authoritative_audit(*, seed_root: Path, training_seed: int, bundle, arms):
+def _all_arm_rows_complete(seed_root: Path, training_seed: int, arm_name: str) -> tuple[bool, dict]:
     policy_root = seed_root / "policies"
-    policy_root.mkdir(parents=True, exist_ok=True)
-    native_state = bundle.batch_rng.getstate()
     rows = {}
     for mode in ("COMMON_LEARNER", "NATIVE_LEARNER"):
-        for arm_name in base.CAPACITIES:
-            key = f"{mode}__{arm_name}"
-            artifact = policy_root / f"{key}.pt"
-            meta = policy_root / f"{key}.json"
-            if artifact.is_file() and meta.is_file():
-                saved = json.loads(meta.read_text(encoding="utf-8"))
-                if (
-                    saved.get("status") == "POLICY_FIT_COMPLETE"
-                    and int(saved.get("training_seed", -1)) == int(training_seed)
-                    and saved.get("authoritative_policy_audit_seed") == (int(training_seed) ^ 0x71A5BEEF)
-                ):
-                    rows[key] = saved
-                    print(f"[Phase2A policy resume] seed={training_seed} {key}", flush=True)
-                    continue
-            if mode == "COMMON_LEARNER":
-                init_seed = base.COMMON_POLICY_INIT_SEED
-                rng = random.Random(base.COMMON_BATCH_SEED)
-            else:
-                init_seed = (int(training_seed) ^ 0x5DEECE66D) & 0x7FFFFFFF
-                rng = random.Random()
-                rng.setstate(native_state)
-            audit_seed = int(training_seed) ^ 0x71A5BEEF
-            print(f"[Phase2A policy fit] seed={training_seed} {key}", flush=True)
-            model, fit = base._fit_policy(
-                arms[arm_name],
-                init_seed=init_seed,
-                rng=rng,
-                audit_seed=audit_seed,
-            )
-            payload = {
-                "schema": base.SEED_SCHEMA,
-                "status": "POLICY_FIT_COMPLETE",
-                "representation": base.REPRESENTATION,
-                "domain": base.DOMAIN,
-                "training_seed": int(training_seed),
-                "learner_mode": mode,
-                "arm": arm_name,
-                "capacity": base.CAPACITIES[arm_name],
-                "authoritative_policy_audit_seed": int(audit_seed),
-                "model_state": model.state_dict(),
-                "fit": fit,
+        key = f"{mode}__{arm_name}"
+        artifact = policy_root / f"{key}.pt"
+        meta = policy_root / f"{key}.json"
+        saved = policy_worker._valid_existing(
+            meta,
+            artifact,
+            training_seed=int(training_seed),
+            arm=str(arm_name),
+        )
+        if saved is None:
+            return False, rows
+        rows[key] = saved
+    return True, rows
+
+
+def _fit_seed_policies_parallel(*, seed_root: Path, training_seed: int, bundle, arms):
+    """Fit the three passive capacity arms in isolated processes.
+
+    The parent materializes each already-built reservoir state exactly once to a
+    temporary context.  Child processes do no traversal and cannot mutate the
+    authoritative bundle.  Each child owns one capacity arm and fits COMMON then
+    NATIVE sequentially with the same seeds/budgets as the frozen experiment.
+    """
+    policy_root = seed_root / "policies"
+    policy_root.mkdir(parents=True, exist_ok=True)
+    context_root = seed_root / "fit_context"
+    context_root.mkdir(parents=True, exist_ok=True)
+    native_state = bundle.batch_rng.getstate()
+    pending = []
+    rows = {}
+
+    for arm_name in base.CAPACITIES:
+        complete, existing = _all_arm_rows_complete(seed_root, int(training_seed), arm_name)
+        rows.update(existing)
+        if complete:
+            print(f"[Phase2A policy arm resume] seed={training_seed} {arm_name} complete", flush=True)
+            continue
+        context_path = context_root / f"{arm_name}.pt"
+        context = {
+            "schema": policy_worker.CONTEXT_SCHEMA,
+            "training_seed": int(training_seed),
+            "arm": str(arm_name),
+            "capacity": int(base.CAPACITIES[arm_name]),
+            "memory_state": arms[arm_name].state_dict(),
+            "native_batch_rng_state": native_state,
+            "production_training_authorized": False,
+            "ready_for_tables": False,
+        }
+        base._atomic_torch_save(context, context_path)
+        cmd = [
+            base.sys.executable,
+            str(Path(policy_worker.__file__).resolve()),
+            "--context", str(context_path.resolve()),
+            "--seed-root", str(seed_root.resolve()),
+            "--training-seed", str(int(training_seed)),
+            "--arm", str(arm_name),
+        ]
+        pending.append((arm_name, context_path, cmd))
+
+    if pending:
+        workers = min(3, len(pending))
+        print(
+            f"[Phase2A policy parallel] seed={training_seed} arms={len(pending)} "
+            f"processes={workers} torch_threads_per_process={base.TORCH_THREADS}",
+            flush=True,
+        )
+        with base.ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {
+                pool.submit(base.subprocess.run, cmd, check=False): (arm_name, context_path)
+                for arm_name, context_path, cmd in pending
             }
-            base._atomic_torch_save(payload, artifact)
-            saved = {
-                "schema": base.SEED_SCHEMA,
-                "status": "POLICY_FIT_COMPLETE",
-                "training_seed": int(training_seed),
-                "learner_mode": mode,
-                "arm": arm_name,
-                "capacity": base.CAPACITIES[arm_name],
-                "authoritative_policy_audit_seed": int(audit_seed),
-                "artifact": str(artifact),
-                "fit": fit,
-            }
-            base._atomic_json(saved, meta)
-            rows[key] = saved
+            for future in base.as_completed(futures):
+                arm_name, context_path = futures[future]
+                completed = future.result()
+                if int(completed.returncode) != 0:
+                    raise RuntimeError(
+                        f"Phase2A policy-fit arm worker {training_seed}/{arm_name} "
+                        f"failed with exit code {completed.returncode}; preserve {context_path}"
+                    )
+
+    # Re-read authoritative metadata after all workers complete.  Only now remove
+    # the large temporary contexts so interrupted runs remain recoverable.
+    rows = {}
+    for arm_name in base.CAPACITIES:
+        complete, existing = _all_arm_rows_complete(seed_root, int(training_seed), arm_name)
+        if not complete:
+            raise RuntimeError(f"Phase2A policy arm incomplete after parallel fit: {training_seed}/{arm_name}")
+        rows.update(existing)
+    for _arm_name, context_path, _cmd in pending:
+        try:
+            context_path.unlink()
+        except FileNotFoundError:
+            pass
+    try:
+        context_root.rmdir()
+    except OSError:
+        pass
     return rows
 
 
@@ -155,9 +197,13 @@ def _run_parent_guarded(args) -> int:
 def main() -> int:
     base.run_one_phase2_v3_iteration = _fit_only_iteration
     base._validate_stream_prefix = _validate_stream_prefix_recoverable
-    base._fit_seed_policies = _fit_seed_policies_authoritative_audit
+    base._fit_seed_policies = _fit_seed_policies_parallel
     base._run_parent = _run_parent_guarded
-    print("PHASE2A_RUNTIME_GUARD zero_root_fit=ACTIVE authoritative_policy_audit=ACTIVE guarded_children=ACTIVE", flush=True)
+    print(
+        "PHASE2A_RUNTIME_GUARD zero_root_fit=ACTIVE authoritative_policy_audit=ACTIVE "
+        "guarded_children=ACTIVE parallel_policy_arms=3x2threads_per_seed",
+        flush=True,
+    )
     return int(base.main())
 
 
