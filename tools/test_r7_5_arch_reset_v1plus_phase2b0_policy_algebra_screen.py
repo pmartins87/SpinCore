@@ -11,7 +11,27 @@ def test_identical_members_match_control() -> None:
     assert abs(float(stats["epsilon"])) < 1e-15
 
 
-def test_raw_mean_occurs_before_regret_matching() -> None:
+def test_raw_mean_is_applied_before_regret_matching() -> None:
+    legal = (0, 1)
+    rows = [
+        (100.0, -1.0, 0, 0, 0, 0, 0, 0, 0, 0),
+        (-1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0),
+        (-1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0),
+        (-1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0),
+    ]
+    control, candidate, stats = screen.raw_mean_then_regret_match_same_epsilon(rows, legal)
+    # RM-then-mean treats the four members as 1 vote for slot 0 and 3 votes for
+    # slot 1 before damping.  Raw-mean-then-RM preserves the much larger raw
+    # magnitude of the first member before the nonlinearity, so the two paths
+    # must differ while sharing the exact same epsilon scalar.
+    assert screen._policy_tv(control, candidate) > 0.1
+    assert stats["raw_mean_positive_legal_count"] == 2
+    assert candidate[0] > candidate[1]
+    assert abs(sum(control) - 1.0) < 1e-15
+    assert abs(sum(candidate) - 1.0) < 1e-15
+
+
+def test_zero_raw_mean_falls_back_to_uniform() -> None:
     legal = (0, 1)
     rows = [
         (1.0, -1.0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -19,13 +39,10 @@ def test_raw_mean_occurs_before_regret_matching() -> None:
         (1.0, -1.0, 0, 0, 0, 0, 0, 0, 0, 0),
         (-1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0),
     ]
-    control, candidate, stats = screen.raw_mean_then_regret_match_same_epsilon(rows, legal)
-    # Raw mean is exactly zero, so candidate exploitation is uniform.  The same
-    # control epsilon is then applied, leaving the candidate uniform.
+    _control, candidate, stats = screen.raw_mean_then_regret_match_same_epsilon(rows, legal)
     assert abs(candidate[0] - 0.5) < 1e-15
     assert abs(candidate[1] - 0.5) < 1e-15
     assert stats["raw_mean_positive_legal_count"] == 0
-    assert abs(sum(control) - 1.0) < 1e-15
 
 
 def test_same_epsilon_preserves_legal_mass() -> None:
@@ -57,7 +74,8 @@ def test_frozen_constants() -> None:
 
 def main() -> int:
     test_identical_members_match_control()
-    test_raw_mean_occurs_before_regret_matching()
+    test_raw_mean_is_applied_before_regret_matching()
+    test_zero_raw_mean_falls_back_to_uniform()
     test_same_epsilon_preserves_legal_mass()
     test_frozen_constants()
     print("R7.5 architecture-reset Phase2B0 policy-algebra synthetic tests PASS", flush=True)
