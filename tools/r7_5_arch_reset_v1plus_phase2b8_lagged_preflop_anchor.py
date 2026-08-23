@@ -498,6 +498,11 @@ def _fit_seed_policies(*, seed_root: Path, training_seed: int, bundle) -> dict:
                 and saved.get("status") == "POLICY_FIT_COMPLETE"
                 and int(saved.get("training_seed", -1)) == int(training_seed)
                 and saved.get("learner_mode") == mode
+                and int(saved.get("capacity", -1)) == RESERVOIR_CAPACITY
+                and int(saved.get("authoritative_policy_audit_seed", -1)) == audit_seed
+                and saved.get("candidate") == "LAGGED_BEHAVIOR_ANCHOR_025"
+                and float(saved.get("anchor_training", -1.0)) == ANCHOR_WEIGHT
+                and float(saved.get("anchor_inference", -1.0)) == 0.0
                 and saved.get("artifact_sha256") == _sha256(artifact)
             ):
                 rows[mode] = saved
@@ -557,7 +562,13 @@ def _run_single_seed(args, training_seed: int) -> int:
     result_path = seed_root / "seed_result.json"
     if result_path.is_file():
         existing = json.loads(result_path.read_text(encoding="utf-8"))
-        if existing.get("status") == "SEED_COMPLETE" and existing.get("execution_sha") == str(args.execution_sha):
+        if (
+            existing.get("status") == "SEED_COMPLETE"
+            and existing.get("execution_sha") == str(args.execution_sha)
+            and existing.get("candidate") == "LAGGED_BEHAVIOR_ANCHOR_025"
+            and float(existing.get("anchor_weight", -1.0)) == ANCHOR_WEIGHT
+            and float(existing.get("anchor_inference", -1.0)) == 0.0
+        ):
             print(f"[Phase2B8 seed resume] seed={training_seed} already complete", flush=True)
             return 0
 
@@ -578,6 +589,7 @@ def _run_single_seed(args, training_seed: int) -> int:
             "gate_max": ADVANTAGE_NRMSE_MAX,
             "gate_pass": bool(value <= ADVANTAGE_NRMSE_MAX and row.get("ensemble_advantage_gate_pass")),
             "anchor_policy_iteration": dict(row.get("anchor_policy_iteration") or {}),
+            "roots_added": int(row.get("roots_added", -1)),
             "advantage_seen_added": int(row.get("advantage_seen_added", -1)),
             "strategy_seen_added": int(row.get("strategy_seen_added", -1)),
             "lagged_source_after_fit": row.get("lagged_source_after_fit"),
@@ -652,6 +664,14 @@ def _validate_b6_b7(b6_result_path: Path, b7_result_path: Path) -> tuple[dict, d
         raise RuntimeError("Phase2B8 wrong Phase2B7 localization status")
     if r7.get("decision", {}).get("next_route") != "PRECOMMIT_EARLY_PREFLOP_LAGGED_TARGET_OR_ANCHOR_SCREEN":
         raise RuntimeError("Phase2B8 route not authorized by Phase2B7")
+    if r7.get("representation") != REPRESENTATION or r7.get("domain") != DOMAIN:
+        raise RuntimeError("Phase2B8 Phase2B7 representation/domain drift")
+    if list(map(int, r7.get("training_seeds") or [])) != list(map(int, TRAINING_SEEDS)):
+        raise RuntimeError("Phase2B8 Phase2B7 training-seed drift")
+    if list(map(int, r7.get("evaluation_seeds") or [])) != list(map(int, EVALUATION_SEEDS)):
+        raise RuntimeError("Phase2B8 Phase2B7 evaluation-seed drift")
+    if int(r7.get("policy_count_per_evaluation_seed", -1)) != POLICY_COUNT:
+        raise RuntimeError("Phase2B8 Phase2B7 policy-count drift")
     return r6, r7
 
 
@@ -667,7 +687,12 @@ def _equivalence_before_divergence(candidate_seed_results: dict[int, dict], b6_r
         for iteration in (1, 2):
             c = cand_by_i[iteration]
             b = ctrl_by_i[iteration]
+            control_stage = json.loads(
+                (b6_root / f"seed_{seed}" / "stages" / f"i{iteration}c4.json").read_text(encoding="utf-8")
+            )
+            control_roots = int((control_stage.get("iteration_report") or {}).get("roots_added", -1))
             checks = {
+                "roots_added": int(c["roots_added"]) == control_roots == ROOTS_PER_ITERATION_EFFECTIVE,
                 "advantage_seen_added": int(c["advantage_seen_added"]) == int(b["advantage_seen_added"]),
                 "strategy_seen_added": int(c["strategy_seen_added"]) == int(b["strategy_seen_added"]),
                 "nrmse": abs(float(c["ensemble_weighted_nrmse"]) - float(b["ensemble_weighted_nrmse"])) <= REPRO_TOL,
@@ -722,19 +747,50 @@ def _evaluate_parent(args) -> dict:
     output_root = Path(args.output_root).resolve()
     b6_root = Path(args.phase2b6_root).resolve()
     heldout_root = Path(args.heldout_root).resolve()
-    _r6, _r7 = _validate_b6_b7(Path(args.phase2b6_result).resolve(), Path(args.phase2b7_result).resolve())
+    _r6, r7 = _validate_b6_b7(Path(args.phase2b6_result).resolve(), Path(args.phase2b7_result).resolve())
     torch.set_num_threads(TORCH_THREADS)
 
     seed_results = {}
     for seed in map(int, TRAINING_SEEDS):
         payload = json.loads((output_root / f"seed_{seed}" / "seed_result.json").read_text(encoding="utf-8"))
-        if payload.get("status") != "SEED_COMPLETE" or payload.get("execution_sha") != str(args.execution_sha):
-            raise RuntimeError(f"Phase2B8 incomplete seed {seed}")
+        if (
+            payload.get("status") != "SEED_COMPLETE"
+            or payload.get("execution_sha") != str(args.execution_sha)
+            or payload.get("candidate") != "LAGGED_BEHAVIOR_ANCHOR_025"
+            or float(payload.get("anchor_weight", -1.0)) != ANCHOR_WEIGHT
+            or float(payload.get("anchor_inference", -1.0)) != 0.0
+            or int(payload.get("roots", -1)) != TOTAL_ROOTS
+            or int(payload.get("iterations", -1)) != ITERATIONS
+        ):
+            raise RuntimeError(f"Phase2B8 incomplete/invalid seed {seed}")
         seed_results[seed] = payload
 
     equivalence = _equivalence_before_divergence(seed_results, b6_root)
     if not equivalence["pass"]:
         raise RuntimeError("Phase2B8 equivalence-before-divergence check FAILED")
+
+    expected_b6_policy_hashes = {
+        (int(row["training_seed"]), str(row["learner_mode"])): str(row["sha256"])
+        for row in (
+            r7.get("frozen_inputs", {})
+            .get("phase2b6_policies", {})
+            .get("policy_artifacts", [])
+        )
+    }
+    if len(expected_b6_policy_hashes) != 4:
+        raise RuntimeError("Phase2B8 Phase2B7 missing exact four Phase2B6 control policy hashes")
+    for seed in map(int, TRAINING_SEEDS):
+        for mode in ("COMMON_LEARNER", "NATIVE_LEARNER"):
+            control_path = b6_root / f"seed_{seed}" / "policies" / f"{mode}.pt"
+            if _sha256(control_path) != expected_b6_policy_hashes[(seed, mode)]:
+                raise RuntimeError(f"Phase2B8 exact Phase2B6 control policy hash drift: {seed}/{mode}")
+
+    expected_heldout_hashes = {
+        int(row["evaluation_seed"]): str(row["sha256"])
+        for row in r7.get("frozen_inputs", {}).get("heldout", [])
+    }
+    if set(expected_heldout_hashes) != set(map(int, EVALUATION_SEEDS)):
+        raise RuntimeError("Phase2B8 Phase2B7 heldout identity inventory drift")
 
     descriptors = {}
     heldout_identity = []
@@ -746,8 +802,11 @@ def _evaluate_parent(args) -> dict:
             expected_evaluation_seed=evaluation_seed,
             expected_count=2048,
         )[:POLICY_COUNT]
+        actual_heldout_hash = _sha256(heldout)
+        if actual_heldout_hash != expected_heldout_hashes[evaluation_seed]:
+            raise RuntimeError(f"Phase2B8 frozen heldout hash drift: {evaluation_seed}")
         descriptors[evaluation_seed] = rows
-        heldout_identity.append({"evaluation_seed": evaluation_seed, "path": str(heldout), "sha256": _sha256(heldout)})
+        heldout_identity.append({"evaluation_seed": evaluation_seed, "path": str(heldout), "sha256": actual_heldout_hash})
 
     comparisons = []
     paired = {"COMMON_LEARNER": {}, "NATIVE_LEARNER": {}}
