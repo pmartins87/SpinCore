@@ -1,0 +1,119 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B7_RESULT_EVIDENCE_V1",
+  "date": "2026-08-23",
+  "governance_scope": "Post-R7.5.3 architecture-reset residual-localization evidence only; no training, architecture selection, production authorization, or table deployment is authorized by this result.",
+  "uploaded_result_sha256": "ff55a5a047d62952e505b8e4d59d79d4016f30b6696a339318bc696dd6f77fe6",
+  "uploaded_result_bytes": 121553,
+  "schema_verified": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B7_RESIDUAL_LOCALIZATION_V1",
+  "status": "PREFLOP_CONTINUATION_DOMINANT",
+  "experiment": {
+    "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "domain": "THREE_HANDED",
+    "training_seeds": [1342191342, 1801739323],
+    "evaluation_seeds": [2029384436, 1150634112],
+    "policy_count_per_evaluation_seed": 1024,
+    "phase2a_result_sha256": "65f691e6b9cf7fbbddf88852c5ac6e0dcd2211af45f53cc4bb3e8271dbaa6149",
+    "phase2b6_execution_sha": "4fa96434321c32efc734a55ae75982018ff2d091",
+    "phase2b6_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a"
+  },
+  "reproduction_validity": {
+    "common_2029384436_mean": 0.18810851478911766,
+    "common_2029384436_p95": 0.48880605139812816,
+    "common_1150634112_mean": 0.19058781873387604,
+    "common_1150634112_p95": 0.5286989995226848,
+    "native_2029384436_mean": 0.18829450451887253,
+    "native_2029384436_p95": 0.4873225636976235,
+    "native_1150634112_mean": 0.188487982771333,
+    "native_1150634112_p95": 0.5054664663330384,
+    "all_recorded_reproduction_abs_errors": 0.0
+  },
+  "common_overall": {
+    "phase2a_baseline_mean_tv": 0.21376380367532596,
+    "phase2b6_pilot_mean_tv": 0.18934816676149685,
+    "absolute_improvement": 0.024415636913829114,
+    "relative_improvement": 0.11421782590897697,
+    "phase2a_baseline_p95_tv": 0.5528994085304298,
+    "phase2b6_pilot_p95_tv": 0.5082244856993092,
+    "pilot_tail_gt_035_count": 291
+  },
+  "common_region_localization": {
+    "PREFLOP_ROOT": {
+      "count": 444,
+      "baseline_mean_tv": 0.2226316130920923,
+      "pilot_mean_tv": 0.25663072380695223,
+      "absolute_improvement": -0.03399911071485992,
+      "pilot_p95_tv": 0.6509606611106077,
+      "pilot_tv_mass_share": 0.29383299506889526,
+      "pilot_tail_share": 0.422680412371134,
+      "interpretation": "Root was never directly floored in Phase2B6, yet final AveragePolicy root stability worsened materially. This is evidence that continuation intervention changes upstream learned root targets/policy through downstream value feedback; root is an important secondary residual even though it misses the precommitted mass-share dominance threshold."
+    },
+    "PREFLOP_CONTINUATION_1": {
+      "count": 443,
+      "baseline_mean_tv": 0.26283806436483587,
+      "pilot_mean_tv": 0.19934711180374368,
+      "absolute_improvement": 0.06349095256109219,
+      "relative_improvement": 0.24155920001359746,
+      "pilot_p95_tv": 0.5120570357749407,
+      "pilot_tv_mass_share": 0.22773124324306948,
+      "pilot_tail_share": 0.23711340206185566
+    },
+    "PREFLOP_CONTINUATION_2PLUS": {
+      "count": 755,
+      "baseline_mean_tv": 0.21903057865535774,
+      "pilot_mean_tv": 0.165166463202133,
+      "absolute_improvement": 0.053864115453224753,
+      "relative_improvement": 0.24592052755327537,
+      "pilot_p95_tv": 0.43160325220355333,
+      "pilot_tv_mass_share": 0.3215716571740579,
+      "pilot_tail_share": 0.23711340206185566
+    },
+    "PREFLOP_CONTINUATION_COMBINED": {
+      "count": 1198,
+      "baseline_mean_tv_weighted": 0.23522984090018145,
+      "pilot_mean_tv_weighted": 0.1778058850139139,
+      "pilot_tv_mass_share": 0.5493029004171274,
+      "pilot_tail_share": 0.4742268041237113,
+      "dominant_eligible": true
+    },
+    "POSTFLOP_COMBINED": {
+      "pilot_tv_mass_share": 0.15686410451397587,
+      "pilot_tail_share": 0.10309278350515465,
+      "dominant_eligible": false
+    }
+  },
+  "native_corroboration": {
+    "root_baseline_mean_tv": 0.21514296172301578,
+    "root_pilot_mean_tv": 0.24430744972058058,
+    "root_worsening": 0.029164487997564797,
+    "continuation1_baseline_mean_tv": 0.2442685364313326,
+    "continuation1_pilot_mean_tv": 0.20514264782051556,
+    "continuation2plus_baseline_mean_tv": 0.21573995970248155,
+    "continuation2plus_pilot_mean_tv": 0.16357546384249277,
+    "interpretation": "The same qualitative pattern appears under the independent NATIVE learner: continuations improve while root worsens, making the localization robust to final learner RNG choice."
+  },
+  "scenario_concentration": {
+    "top3_scenarios": ["1", "12", "3"],
+    "top3_tv_mass_share": 0.23024370426839857,
+    "top3_tail_share": 0.24742268041237112,
+    "scenario_concentrated": false
+  },
+  "decision": {
+    "classification": "PREFLOP_CONTINUATION_DOMINANT",
+    "next_route": "PRECOMMIT_EARLY_PREFLOP_LAGGED_TARGET_OR_ANCHOR_SCREEN",
+    "training_authorized_by_phase2b7": false,
+    "higher_floor_training_authorized": false,
+    "architecture_winner_selected": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "interpretation": [
+    "Phase2B6 did what it was intended to do in the continuation region: both first-continuation and deeper-preflop cross-seed TV fell by about 24% under COMMON, and NATIVE corroborates the direction.",
+    "The residual is still predominantly preflop continuation by the frozen routing rule: 54.93% of residual TV mass and 47.42% of TV>0.35 tail states.",
+    "The root is a major secondary problem: it contributes 29.38% of residual TV mass and 42.27% of the tail, and its mean/p95 became materially worse even though the Phase2B6 floor was never applied at root.",
+    "This root worsening argues against simply increasing the uniform floor. The next candidate should damp temporal feedback with a learned lagged anchor rather than flattening more strongly toward uniform.",
+    "The residual is not concentrated in a small scenario subset, so scenario-specific remediation is not justified at this point.",
+    "Hard stability remains failed and strategic-strength testing remains premature."
+  ],
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
