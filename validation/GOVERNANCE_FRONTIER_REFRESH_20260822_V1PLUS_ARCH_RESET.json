@@ -33,16 +33,59 @@
       "shared_exact_target_policy_tv_mean": 0.568480680810281,
       "shared_exact_positive_sign_disagreement_mean": 0.4851449275362319,
       "final_advantage_common_heldout_mean_tv": [0.5053508948091757, 0.5218671078483021],
-      "generated_advantage_sample_relative_divergence_by_iteration": [0.009365647919864788, 0.06102691241964977, 0.2161566088320097],
-      "consequence": "Target/sign noise is already severe on shared exact infosets and is amplified into seed-dependent Advantage behavior/trajectory feedback. Compression or memory escalation alone is not the first remedy."
+      "generated_advantage_sample_relative_divergence_by_iteration": [0.009365647919864788, 0.06102691241964977, 0.2161566088320097]
     },
-    "phase2b0_policy_algebra_screen": {
-      "status": "FROZEN_AWAITING_READOUT",
-      "candidate": "RAW_MEAN_THEN_REGRET_MATCH_WITH_CONTROL_EPSILON",
-      "training_authorized": false,
-      "purpose": "Read-only screen whether averaging the four raw Advantage estimates before the discontinuous regret-matching transform reduces cross-seed behavior divergence while holding uncertainty epsilon fixed."
+    "phase2b1_target_variance": {
+      "status": "COMPLETE",
+      "evidence_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef"
     },
-    "causal_phase2b_training": "BLOCKED_PENDING_PHASE2B0_SCREEN",
+    "phase2b2_common_chance_feedback": {
+      "status": "COMPLETE",
+      "evidence_sha256": "49cd1bd98ffe30f21a2b4263c50eb0b5c6d3e616b651a1353f136a670453e281"
+    },
+    "phase2b3_root_feedback_decomposition": {
+      "status": "MIXED_ROOT_AND_DOWNSTREAM_FEEDBACK",
+      "result_sha256": "158e450e96027871b5bf44caa5cd0cb9105782e648e91583960b49d3986fe0a7",
+      "native_k1_tv": 0.38892191351328625,
+      "common_root_sigma_residual_tv": 0.32770276958712846,
+      "downstream_value_removal_residual_tv": 0.21015032820513388,
+      "next_route": "LOCALIZE_DOWNSTREAM_STREET_DEPTH_AND_RETAIN_ROOT_BASELINE_CONTROL"
+    },
+    "phase2b4_downstream_street_localization": {
+      "status": "PREFLOP_DOWNSTREAM_FEEDBACK_DOMINANT",
+      "result_sha256": "6b639b1608a0572c0ae2f6641c038786fa30cb8858bdda62da3fd5e30f49f0aa",
+      "native_common_root_sigma_tv": 0.32770276958712846,
+      "common_from_flop_tv": 0.32010786853721923,
+      "common_from_preflop_tv": 0.060271017892879135,
+      "preflop_increment_absolute_reduction": 0.2598368506443401,
+      "preflop_increment_relative_to_native": 0.7929040421956385
+    },
+    "phase2b5_preflop_feedback_stabilization": {
+      "status": "MILD_PREFLOP_DAMPING_CANDIDATE",
+      "result_sha256": "0fb028c02dbbea0c4fa7a323a3edeed5c4e12789145235be2e851452e16ab5b8",
+      "selected_candidate": "UNIFORM_FLOOR_025",
+      "floor": 0.25,
+      "control_tv": 0.32010786853721923,
+      "candidate_residual_tv": 0.21666478360495514,
+      "absolute_reduction": 0.10344308493226409,
+      "relative_reduction": 0.3231507098059249,
+      "scenarios_improved": "14_OF_15",
+      "small_training_pilot_precommit_allowed": true,
+      "production_training_authorized": false
+    },
+    "phase2b6_preflop_damping_training_pilot": {
+      "status": "FROZEN_AWAITING_RYZEN_READOUT",
+      "intervention": "25_PERCENT_UNIFORM_FLOOR_ON_PREFLOP_CONTINUATION_ONLY",
+      "root_floor": 0.0,
+      "postflop_floor": 0.0,
+      "heldout_inference_floor": 0.0,
+      "roots_per_seed": 768,
+      "reuses_exact_phase2a_s100k_control": true,
+      "higher_floor_training_authorized": false,
+      "architecture_winner_selected": false,
+      "production_training_authorized": false,
+      "ready_for_tables": false
+    },
     "architecture_winner": null
   },
   "r7_5_4": {
@@ -54,12 +97,13 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No candidate may advance on stability alone. Any stable V1+ successor must separately demonstrate strategic non-inferiority or superiority to the certified stable V1 control under precommitted paired evaluation.",
+  "strategic_strength_rule": "No candidate may advance on stability alone. Even a Phase2B6 stability PASS must undergo a separate precommitted strategic-strength comparison against the certified stable V1 control before architecture selection.",
   "prohibitions": [
     "NO_GATE_RELAXATION",
     "NO_SEED_SHOPPING",
     "NO_DROPPING_THREE_HANDED",
     "NO_ADDITIONAL_H2_H3_R7_5_3_REMEDIATION",
+    "NO_OPPORTUNISTIC_ESCALATION_TO_50_75_100_PERCENT_PREFLOP_FLOOR",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]
