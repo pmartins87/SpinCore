@@ -1,6 +1,6 @@
 {
   "schema": "SPINCORE_GOVERNANCE_FRONTIER_REFRESH_V1PLUS_ARCH_RESET_V1",
-  "date": "2026-08-22",
+  "date": "2026-08-23",
   "ready_for_tables": false,
   "production_training_authorized": false,
   "r7_5_3": {
@@ -74,15 +74,34 @@
       "production_training_authorized": false
     },
     "phase2b6_preflop_damping_training_pilot": {
-      "status": "FROZEN_AWAITING_RYZEN_READOUT",
+      "status": "PREFLOP_DAMPING_CAUSAL_EFFECT_SUPPORTED_BUT_STILL_UNSTABLE",
+      "result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
       "intervention": "25_PERCENT_UNIFORM_FLOOR_ON_PREFLOP_CONTINUATION_ONLY",
       "root_floor": 0.0,
       "postflop_floor": 0.0,
       "heldout_inference_floor": 0.0,
       "roots_per_seed": 768,
-      "reuses_exact_phase2a_s100k_control": true,
+      "common_baseline_mean_tv": 0.21376380367532596,
+      "common_pilot_mean_tv": 0.18934816676149685,
+      "common_absolute_improvement": 0.024415636913829114,
+      "common_relative_improvement": 0.11421782590897697,
+      "common_bootstrap_95_ci": [0.015543579793138763, 0.03274093539153998],
+      "causal_effect_supported": true,
+      "hard_stability_pass": false,
       "higher_floor_training_authorized": false,
+      "next_route": "LOCALIZE_RESIDUAL_WITHOUT_ESCALATING_DAMPING_FLOOR",
       "architecture_winner_selected": false,
+      "production_training_authorized": false,
+      "ready_for_tables": false
+    },
+    "phase2b7_residual_localization": {
+      "status": "FROZEN_AWAITING_RYZEN_READOUT",
+      "scope": "READ_ONLY_PHASE2A_CONTROL_VS_PHASE2B6_PILOT_RESIDUAL_LOCALIZATION",
+      "primary_learner": "COMMON_LEARNER",
+      "heldout_states_per_seed": 1024,
+      "routing_regions": ["PREFLOP_ROOT", "PREFLOP_CONTINUATION", "POSTFLOP", "SCENARIO_CONCENTRATED", "BROAD_MIXED_RESIDUAL"],
+      "training_authorized": false,
+      "higher_floor_training_authorized": false,
       "production_training_authorized": false,
       "ready_for_tables": false
     },
@@ -97,7 +116,7 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No candidate may advance on stability alone. Even a Phase2B6 stability PASS must undergo a separate precommitted strategic-strength comparison against the certified stable V1 control before architecture selection.",
+  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B6 remains stability-ineligible; strategic-strength comparison against the certified stable V1 control stays blocked until a successor passes the stability eligibility gates.",
   "prohibitions": [
     "NO_GATE_RELAXATION",
     "NO_SEED_SHOPPING",
