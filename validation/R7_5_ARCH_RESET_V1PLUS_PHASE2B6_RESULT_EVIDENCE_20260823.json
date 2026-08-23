@@ -1,0 +1,113 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B6_RESULT_EVIDENCE_V1",
+  "date": "2026-08-23",
+  "governance_scope": "Post-R7.5.3 architecture-reset causal training evidence only; old R7.5.3 remains closed and this result does not authorize production or architecture selection.",
+  "execution_sha": "4fa96434321c32efc734a55ae75982018ff2d091",
+  "uploaded_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
+  "uploaded_result_bytes": 13084,
+  "status": "PREFLOP_DAMPING_CAUSAL_EFFECT_SUPPORTED_BUT_STILL_UNSTABLE",
+  "experiment": {
+    "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "domain": "THREE_HANDED",
+    "action_candidate": "PF0_CONTROL_33_75_AI",
+    "training_seeds": [1342191342, 1801739323],
+    "evaluation_seeds": [2029384436, 1150634112],
+    "iterations": 3,
+    "roots_per_seed": 768,
+    "floor_training": 0.25,
+    "floor_scope": "PREFLOP_CONTINUATION_AFTER_AT_LEAST_ONE_NONFORCED_PREFLOP_EVENT",
+    "root_floor": 0.0,
+    "postflop_floor": 0.0,
+    "heldout_inference_floor": 0.0,
+    "advantage_reservoir_capacity": 100000,
+    "strategy_reservoir_capacity": 100000
+  },
+  "local_validity": {
+    "all_advantage_gates_pass": true,
+    "all_common_policy_fit_gates_pass": true,
+    "all_native_policy_fit_gates_pass": true,
+    "common_policy_weighted_mean_tv": {
+      "1342191342": 0.028170332312583923,
+      "1801739323": 0.0279923714697361
+    },
+    "native_policy_weighted_mean_tv": {
+      "1342191342": 0.030065106227993965,
+      "1801739323": 0.03231789171695709
+    }
+  },
+  "common_learner": {
+    "baseline_pooled_mean_tv": 0.21376380367532596,
+    "pilot_pooled_mean_tv": 0.18934816676149685,
+    "absolute_improvement": 0.024415636913829114,
+    "relative_improvement": 0.11421782590897697,
+    "bootstrap_95_ci": [0.015543579793138763, 0.03274093539153998],
+    "bootstrap_strictly_positive": true,
+    "both_evaluation_seed_means_improved": true,
+    "evaluation_seed_rows": {
+      "2029384436": {
+        "baseline_mean_tv": 0.20309536267509865,
+        "pilot_mean_tv": 0.18810851478911766,
+        "baseline_p95_tv": 0.5051164075355614,
+        "pilot_p95_tv": 0.48880605139812816
+      },
+      "1150634112": {
+        "baseline_mean_tv": 0.22443224467555328,
+        "pilot_mean_tv": 0.19058781873387604,
+        "baseline_p95_tv": 0.5718324664025745,
+        "pilot_p95_tv": 0.5286989995226848
+      }
+    }
+  },
+  "native_learner": {
+    "baseline_pooled_mean_tv": 0.20754090668153097,
+    "pilot_pooled_mean_tv": 0.18839124364510276,
+    "absolute_improvement": 0.019149663036428205,
+    "relative_improvement": 0.09226934266897625,
+    "bootstrap_95_ci": [0.010883603343535704, 0.027446896357396267],
+    "noncontradiction_pass": true
+  },
+  "mechanism_evidence": {
+    "strategy_seen_phase2b6": {
+      "1342191342": 865704,
+      "1801739323": 919519
+    },
+    "advantage_seen_phase2b6": {
+      "1342191342": 305151,
+      "1801739323": 322502
+    },
+    "damped_calls": {
+      "1342191342": 673209,
+      "1801739323": 673794
+    },
+    "interpretation": "The intervention was applied at nearly identical counts across the two seeds and produced a statistically supported end-to-end reduction in final AveragePolicy cross-seed TV. This confirms that early preflop behavior feedback is causally material, while the remaining instability proves it is not the sole source."
+  },
+  "hard_stability": {
+    "mean_tv_max": 0.15,
+    "p95_tv_max": 0.35,
+    "both_common_heldouts_pass": false,
+    "2029384436_excess_over_mean_gate": 0.03810851478911766,
+    "2029384436_excess_over_p95_gate": 0.13880605139812818,
+    "1150634112_excess_over_mean_gate": 0.04058781873387604,
+    "1150634112_excess_over_p95_gate": 0.1786989995226848
+  },
+  "decision": {
+    "causal_effect_supported": true,
+    "hard_stability_pass": false,
+    "higher_floor_training_authorized": false,
+    "architecture_winner_selected": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "next_route": "LOCALIZE_RESIDUAL_WITHOUT_ESCALATING_DAMPING_FLOOR"
+  },
+  "interpretation": [
+    "The precommitted 25% preflop-continuation damping intervention causally reduced cross-seed instability in both COMMON heldouts and also improved the corroborative NATIVE readout.",
+    "The effect is materially large under the frozen Phase2B6 rule and its paired bootstrap confidence interval is strictly positive.",
+    "The candidate remains outside both historical hard stability thresholds on both COMMON heldouts, especially in the p95 tail.",
+    "Do not escalate to 50%, 75%, or 100% damping merely because the read-only Phase2B5 screen made those policies flatter; that would confound stability with strategic blunting.",
+    "The next experiment must be read-only residual localization of the learned pilot versus the exact Phase2A control before choosing any further causal intervention.",
+    "Strategic-strength evaluation against stable V1 remains blocked until a stability-eligible successor exists."
+  ],
+  "representation_winner": null,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
