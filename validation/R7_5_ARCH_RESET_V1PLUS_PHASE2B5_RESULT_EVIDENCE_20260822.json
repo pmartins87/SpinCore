@@ -1,0 +1,100 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B5_RESULT_EVIDENCE_V1",
+  "recorded_date": "2026-08-22",
+  "diagnostic_head": "2f62c3d85d7b798452cfa8ce04f2fa8c8715c1ce",
+  "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
+  "uploaded_result_sha256": "0fb028c02dbbea0c4fa7a323a3edeed5c4e12789145235be2e851452e16ab5b8",
+  "runner_manifest_sha256": "1fda9b984efa990f28cc7d2660a3dd10ab70bceae256f65bcc8e8c3d243c7f2d",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "source_behavior_seeds": [1342191342, 1801739323],
+  "paired_deal_count": 240,
+  "runtime_seconds_total": 868.0966426999948,
+  "status": "MILD_PREFLOP_DAMPING_CANDIDATE",
+  "classification": "MILD_PREFLOP_DAMPING_CANDIDATE",
+  "no_training_performed": true,
+  "controls": {
+    "preflop_native_postflop_common_tv": 0.32010786853721923,
+    "oracle_common_preflop_tv": 0.060271017892879135,
+    "both_frozen_controls_reproduced_exactly": true
+  },
+  "depth_localization": {
+    "DEPTH_COMMON_GE_1": 0.060271017892879135,
+    "DEPTH_COMMON_GE_2": 0.20721989381404524,
+    "DEPTH_COMMON_GE_3": 0.2937219167729822,
+    "DEPTH_COMMON_GE_4": 0.3217479753262238,
+    "DEPTH_COMMON_GE_5": 0.3137083078153201,
+    "DEPTH_COMMON_GE_6": 0.31594213697073126,
+    "sequential_tv_increments": {
+      "DELTA1": 0.1469488759211661,
+      "DELTA2": 0.08650202295893697,
+      "DELTA3": 0.028026058553241584,
+      "DELTA4": -0.00803966751090368,
+      "DELTA5": 0.002233829155411149,
+      "DEEPER_THAN_6": 0.0041657315664879735
+    },
+    "largest_positive_depth_increment": "DELTA1"
+  },
+  "uniform_floor_screens": {
+    "UNIFORM_FLOOR_010": {
+      "floor": 0.10,
+      "residual_tv": 0.26316056086985495,
+      "absolute_reduction": 0.05694730766736428,
+      "relative_reduction": 0.17790036817149643,
+      "scenarios_improved": 14,
+      "max_scenario_degradation": 0.036432998918004195,
+      "dominant_action_mismatch_rate": 0.23333333333333334,
+      "dominant_action_mismatch_increase": -0.08750000000000002,
+      "numerical_screen_pass": false
+    },
+    "UNIFORM_FLOOR_025": {
+      "floor": 0.25,
+      "residual_tv": 0.21666478360495514,
+      "absolute_reduction": 0.10344308493226409,
+      "relative_reduction": 0.3231507098059249,
+      "scenarios_improved": 14,
+      "max_scenario_degradation": 0.008110920818435091,
+      "dominant_action_mismatch_rate": 0.16666666666666666,
+      "dominant_action_mismatch_increase": -0.1541666666666667,
+      "numerical_screen_pass": true
+    },
+    "UNIFORM_FLOOR_050": {
+      "floor": 0.50,
+      "residual_tv": 0.13698997987306374,
+      "absolute_reduction": 0.1831178886641555,
+      "relative_reduction": 0.5720505700186005,
+      "scenarios_improved": 15,
+      "numerical_screen_pass": true,
+      "strategically_intrusive_control_only": true
+    },
+    "UNIFORM_FLOOR_075": {
+      "floor": 0.75,
+      "residual_tv": 0.07199159698237209,
+      "absolute_reduction": 0.24811627155484714,
+      "relative_reduction": 0.7751020700885971,
+      "scenarios_improved": 15,
+      "numerical_screen_pass": true,
+      "strategically_intrusive_control_only": true
+    },
+    "UNIFORM_FLOOR_100": {
+      "floor": 1.00,
+      "residual_tv": 0.04873145145673123,
+      "absolute_reduction": 0.271376417080488,
+      "relative_reduction": 0.8477655307899274,
+      "scenarios_improved": 15,
+      "numerical_screen_pass": true,
+      "strategically_intrusive_control_only": true
+    }
+  },
+  "selected_mild_candidate": "UNIFORM_FLOOR_025",
+  "selected_floor": 0.25,
+  "small_training_pilot_precommit_allowed": true,
+  "next_route": "PRECOMMIT_SMALL_PREFLOP_DAMPING_TRAINING_PILOT",
+  "interpretation": "With common root baseline and common postflop continuation, cross-seed target divergence is injected predominantly in the earliest preflop continuation decisions. A seed-independent 25% uniform floor materially reduced the frozen read-only target-policy divergence and passed every precommitted mild-candidate screen. This supports exactly one small causal end-to-end training pilot. It does not establish final stability, strategic strength, architecture selection, or production readiness.",
+  "governance": {
+    "r7_5_3_old_admission_remains_closed": true,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "architecture_winner_selected": false
+  }
+}
