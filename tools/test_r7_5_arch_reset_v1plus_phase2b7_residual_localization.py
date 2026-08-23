@@ -25,6 +25,17 @@ def _g(mass: float, tail: float) -> dict:
     }
 
 
+def _nondominant_regions() -> dict:
+    return {
+        "PREFLOP_ROOT": _g(0.34, 0.34),
+        "PREFLOP_CONTINUATION_1": _g(0.17, 0.17),
+        "PREFLOP_CONTINUATION_2PLUS": _g(0.16, 0.16),
+        "FLOP": _g(0.11, 0.11),
+        "TURN": _g(0.11, 0.11),
+        "RIVER": _g(0.11, 0.11),
+    }
+
+
 def test_decode_regions() -> None:
     assert p._decode_observation(_obs(0, []))["region"] == "PREFLOP_ROOT"
     assert p._decode_observation(_obs(0, [(0, 0)]))["region"] == "PREFLOP_CONTINUATION_1"
@@ -94,14 +105,6 @@ def test_route_postflop() -> None:
 
 
 def test_route_scenario_concentrated() -> None:
-    regions = {
-        "PREFLOP_ROOT": _g(0.20, 0.20),
-        "PREFLOP_CONTINUATION_1": _g(0.10, 0.10),
-        "PREFLOP_CONTINUATION_2PLUS": _g(0.10, 0.10),
-        "FLOP": _g(0.20, 0.20),
-        "TURN": _g(0.20, 0.20),
-        "RIVER": _g(0.20, 0.20),
-    }
     scenarios = {
         "0": _g(0.25, 0.25),
         "1": _g(0.20, 0.20),
@@ -111,21 +114,13 @@ def test_route_scenario_concentrated() -> None:
         "5": _g(0.10, 0.10),
         "6": _g(0.10, 0.10),
     }
-    out = p._route_decision(regions, scenarios)
+    out = p._route_decision(_nondominant_regions(), scenarios)
     assert out["classification"] == "SCENARIO_CONCENTRATED"
 
 
 def test_route_broad_mixed() -> None:
-    regions = {
-        "PREFLOP_ROOT": _g(0.20, 0.20),
-        "PREFLOP_CONTINUATION_1": _g(0.10, 0.10),
-        "PREFLOP_CONTINUATION_2PLUS": _g(0.10, 0.10),
-        "FLOP": _g(0.20, 0.20),
-        "TURN": _g(0.20, 0.20),
-        "RIVER": _g(0.20, 0.20),
-    }
     scenarios = {str(i): _g(0.10, 0.10) for i in range(10)}
-    out = p._route_decision(regions, scenarios)
+    out = p._route_decision(_nondominant_regions(), scenarios)
     assert out["classification"] == "BROAD_MIXED_RESIDUAL"
 
 
