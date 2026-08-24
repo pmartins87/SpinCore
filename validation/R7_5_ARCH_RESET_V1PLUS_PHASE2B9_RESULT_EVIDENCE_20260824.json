@@ -1,0 +1,82 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B9_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "governance_scope": "Post-R7.5.3 V1+ architecture-reset evidence only; R7.5.3 remains FAIL_BLOCKED_CLOSED.",
+  "diagnostic_execution_sha": "dc6538e598da7b2d5a5c176eb80c37ade74c085b",
+  "uploaded_result_sha256": "71f77b6921597c7b1d048f8fb3e448f5fce74a974b247ac4ca88383fece5c64a",
+  "uploaded_result_bytes": 26280,
+  "status": "HUBER_ROBUSTNESS_SCREEN_FAIL_DO_NOT_TRAIN",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "candidate": "HUBER_BETA_002",
+  "huber_beta": 0.02,
+  "source_phase2b6_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
+  "source_phase2b8_result_sha256": "1fd9144a488cea6de0a7500320d552abf994908b5200146d4baa4bd6f81c4d98",
+  "canonical_side_member_reproduction_pass": true,
+  "ensemble_weighted_nrmse": {
+    "1342191342": {
+      "MSE_PAIRED_CONTROL": 0.599260687828064,
+      "HUBER_BETA_002": 0.5891279578208923
+    },
+    "1801739323": {
+      "MSE_PAIRED_CONTROL": 0.5712841153144836,
+      "HUBER_BETA_002": 0.5645597577095032
+    }
+  },
+  "pooled": {
+    "mse_equal_heldout_mean_tv": 0.30567460296341376,
+    "huber_equal_heldout_mean_tv": 0.3161210369628588,
+    "absolute_mse_minus_huber": -0.01044643399944506,
+    "relative_mse_minus_huber": -0.03417501453562171,
+    "bootstrap_95_ci_mse_minus_huber": [-0.019915579281452708, 0.00012082570893172335],
+    "mse_dominant_action_mismatch_rate": 0.4443359375,
+    "huber_dominant_action_mismatch_rate": 0.42626953125,
+    "mse_root_mean_tv": 0.3314203258816359,
+    "huber_root_mean_tv": 0.33829252058253784,
+    "mse_preflop_continuation_mean_tv": 0.31075173900800307,
+    "huber_preflop_continuation_mean_tv": 0.3211122064758923
+  },
+  "heldout_mean_tv": {
+    "2029384436": {
+      "MSE_PAIRED_CONTROL": 0.2971208619228264,
+      "HUBER_BETA_002": 0.3097141915940146
+    },
+    "1150634112": {
+      "MSE_PAIRED_CONTROL": 0.3142283440040011,
+      "HUBER_BETA_002": 0.32252788233170304
+    }
+  },
+  "heldout_p95_tv": {
+    "2029384436": {
+      "MSE_PAIRED_CONTROL": 0.7196698366251552,
+      "HUBER_BETA_002": 0.7771122105806897
+    },
+    "1150634112": {
+      "MSE_PAIRED_CONTROL": 0.7314398939901252,
+      "HUBER_BETA_002": 0.75
+    }
+  },
+  "decision": {
+    "huber_nrmse_gate_pass": true,
+    "both_evaluation_seed_means_improve": false,
+    "materiality_pass": false,
+    "bootstrap_ci_strictly_positive": false,
+    "p95_non_degradation_pass": false,
+    "dominant_action_mismatch_nonincrease_pass": true,
+    "root_non_degradation_pass": true,
+    "preflop_continuation_non_degradation_pass": false,
+    "screen_pass": false,
+    "small_causal_training_pilot_authorized": false,
+    "next_route": "DESIGN_STRATIFIED_CHANCE_SUPPORT_OR_SOLVER_LEVEL_VARIANCE_REDUCTION"
+  },
+  "interpretation": [
+    "Huber slightly improved frozen-source Advantage NRMSE for both training seeds, so the candidate was not rejected because it could not fit the source memories.",
+    "Despite the NRMSE improvement, Huber worsened cross-seed behavior mean TV on both heldout seeds and worsened pooled mean TV by about 3.4% relative.",
+    "The paired bootstrap interval crosses zero and is centered on a negative MSE-minus-Huber effect, so robust regression does not provide evidence of a stability gain.",
+    "Huber also worsened the preflop-continuation mean TV and materially worsened at least one heldout p95, so no Huber trajectory-training pilot is authorized.",
+    "The negative result strengthens the routing away from loss-function and behavior-anchor tuning and toward explicit chance-support / solver-level variance decomposition."
+  ],
+  "architecture_winner_selected": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
