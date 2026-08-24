@@ -58,7 +58,9 @@ For **both arms and every logical root**:
 * use one fixed traversal RNG across the 64 target traversals for that continuation so the auxiliary average integrates private/public chance rather than traversal RNG;
 * perform all 64 auxiliary continuation target traversals in both arms.
 
-The control inserts the **first** of the 64 structurally generated continuation targets. The candidate inserts the arithmetic mean of the **same 64** targets. Therefore the causal comparison is equal-compute.
+The control inserts **one uniformly selected cell of the same 64-cell stratified proposal set**. The selected cell index is drawn from a separate frozen deterministic RNG namespace, uniformly from `0..63`, independent of arm. This is essential: a fixed first stratum would not itself have the full posterior marginal and is therefore forbidden. For implementation convenience, the selected control cell may be rotated to position zero after the 64-cell set is generated; the candidate arithmetic mean is invariant to that rotation.
+
+The candidate inserts the arithmetic mean of all 64 targets. Therefore the control is a valid single posterior draw and the causal comparison remains equal-compute.
 
 Exactly one root sample and exactly one depth-2 preflop continuation sample must be replaced per logical root. Missing, duplicate, or identity-drifting replacements abort the pilot.
 
@@ -76,9 +78,10 @@ The 64 private assignments are produced without rejection or self-normalized imp
 2. divide its CDF into 8 equal-probability strata and draw one deterministic seeded uniform inside each stratum;
 3. for each selected seat-A hand, compute the exact conditional CDF of seat B under card removal;
 4. draw 8 deterministic seeded stratified seat-B samples;
-5. the 8x8 product yields exactly 64 legal posterior assignments.
+5. the 8x8 product yields exactly 64 legal posterior assignments;
+6. choose one of those 64 cells uniformly with the frozen control-index namespace and rotate it to the first position solely so the equal-compute control can consume it without a second target path.
 
-The random-within-stratum seeds are frozen namespaces independent of arm. Both arms receive byte-identical assignment/board/traversal proposals.
+The random-within-stratum seeds and the uniform control-cell seed are frozen namespaces independent of arm. Both arms receive byte-identical assignment/board/traversal proposals.
 
 ## Local validity gates
 
@@ -120,4 +123,4 @@ Phase2C2 itself never authorizes architecture winner selection, production train
 
 ## Prohibitions
 
-No K sweep; no K128/K256; no alternate stratification side after outputs; no posterior clipping/tempering/importance/rejection/MCMC/SIR; no extra continuation target count after outputs; no threshold relaxation; no seed shopping; no heldout/scenario dropping; no change to the 25% continuation floor; no production training; no ready-for-tables claim.
+No K sweep; no K128/K256; no fixed-low-stratum single-draw control; no alternate stratification side after outputs; no posterior clipping/tempering/importance/rejection/MCMC/SIR; no extra continuation target count after outputs; no threshold relaxation; no seed shopping; no heldout/scenario dropping; no change to the 25% continuation floor; no production training; no ready-for-tables claim.
