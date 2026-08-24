@@ -1,0 +1,60 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B16_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "uploaded_result_sha256": "3b5e71c3cc92ed530589877f6790333b1f94b579bb39e7c687082787693d958c",
+  "result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B16_EXACT_REJECTION_POSTERIOR_CONTINUATION_V1",
+  "execution_sha": "0d00cec5c522dc701aa36ef6e7c6f301d947f911",
+  "status": "EXACT_POSTERIOR_STILL_TOO_UNSTABLE_CLOSE_ESTIMATOR_REPAIR_PATH",
+  "local_valid": true,
+  "proposal_cap_pass": true,
+  "proposal_cap_hits": 0,
+  "direct_posterior": {
+    "mean_tv": 0.2517340306655365,
+    "sign_disagreement": 0.21940104166666663,
+    "tail_rate_tv_ge_035": 0.25,
+    "dominant_mismatch_rate": 0.2734375,
+    "acceptance_rate_mean": 0.16686604784919123,
+    "acceptance_rate_p50": 0.10737063049194431,
+    "max_proposals_per_pair": 5821
+  },
+  "phase2b15_snis_reference": {
+    "mean_tv": 0.3157316176926827,
+    "sign_disagreement": 0.25846354166666663,
+    "tail_rate_tv_ge_035": 0.328125
+  },
+  "phase2b15_unweighted_reference": {
+    "mean_tv": 0.21994731031322912
+  },
+  "improvement_vs_snis": {
+    "tv_absolute": 0.0639975870271462,
+    "tv_relative": 0.20269616167943696,
+    "sign_absolute": 0.0390625,
+    "sign_relative": 0.15113350125944586
+  },
+  "frozen_gate_results": {
+    "snis_tv_material_improvement": true,
+    "direct_tv_ceiling_le_024": false,
+    "direct_tv_ceiling_excess_absolute": 0.011734030665536521,
+    "direct_tv_ceiling_excess_relative": 0.04889179443973557,
+    "snis_sign_material_improvement": true,
+    "direct_tail_ceiling": true,
+    "both_behavior_seeds_improve_vs_snis": true,
+    "continuation_region_non_degradation_vs_snis": true,
+    "direct_dominant_mismatch_ceiling": true,
+    "screen_pass": false
+  },
+  "important_comparison": {
+    "direct_exact_posterior_minus_unweighted_iid64_mean_tv": 0.031786720352307396,
+    "direct_exact_posterior_relative_worse_than_unweighted_iid64": 0.1445197047740189,
+    "interpretation": "Exact posterior sampling removes SNIS weight noise and materially improves the failed weighted estimator, but posterior-conditioned continuation targets remain too unstable and are still less stable than the unweighted IID64 continuation estimator."
+  },
+  "decision": {
+    "training_authorized": false,
+    "full_x4_confirmation_authorized": false,
+    "architecture_winner_selected": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "estimator_repair_path_closed": true,
+    "next_route": "CHOOSE_STRUCTURAL_REACH_SUPPORT_OR_CERTIFIED_V1_FALLBACK"
+  }
+}
