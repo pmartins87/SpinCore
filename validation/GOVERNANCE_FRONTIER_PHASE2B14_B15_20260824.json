@@ -1,0 +1,89 @@
+{
+  "schema": "SPINCORE_GOVERNANCE_FRONTIER_PHASE2B14_B15_V1",
+  "date": "2026-08-24",
+  "supersedes_frontier_detail_for_phase2b13_plus": "validation/GOVERNANCE_FRONTIER_PHASE2B13_20260824.json",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "architecture_winner": null,
+  "r7_5_3_old_h2_h3_chain": "FAIL_BLOCKED_CLOSED",
+  "phase2b13": {
+    "status": "ROOT_IID64_TRAINING_EFFECT_NOT_SUPPORTED",
+    "result_sha256": "6de7996282236d34adf5e8e53416fd8a443a1fbf5abc89fc807492d0cb3dbf80",
+    "common_control_mean_tv": 0.20975866893326492,
+    "common_candidate_mean_tv": 0.19523816167507577,
+    "common_absolute_improvement": 0.014520507258189153,
+    "common_relative_improvement": 0.0692248255198877,
+    "common_bootstrap_ci": [
+      0.006679806669292539,
+      0.022883819632246317
+    ],
+    "materiality_pass": false,
+    "full_x4_confirmation_authorized": false
+  },
+  "phase2b14": {
+    "status": "PREFLOP_CONTINUATION_RESIDUAL_DOMINANT_AFTER_ROOT_IID64",
+    "result_sha256": "7cd1886596d345abdcdef479775498eddf7e014205de86e44afb5bb0ea291f86",
+    "reproduction_pass": true,
+    "root_effect_consistent": true,
+    "pooled_root_mean_improvement": 0.028490307767738407,
+    "broad_region_tv_mass_share": {
+      "ROOT": 0.2868771029138797,
+      "PREFLOP_CONTINUATION": 0.5465539347457481,
+      "POSTFLOP": 0.16656896234037427
+    },
+    "broad_region_tail_share": {
+      "ROOT": 0.40064102564102566,
+      "PREFLOP_CONTINUATION": 0.46794871794871795,
+      "POSTFLOP": 0.1314102564102564
+    },
+    "next_route": "PRECOMMIT_POSTERIOR_WEIGHTED_PREFLOP_CONTINUATION_CHANCE_SCREEN",
+    "training_authorized": false
+  },
+  "phase2b15": {
+    "status": "FROZEN_IMPLEMENTED_AWAITING_RYZEN_OUTPUT",
+    "scope": "READ_ONLY_POSTERIOR_WEIGHTED_PREFLOP_CONTINUATION_CHANCE_SCREEN",
+    "regions": [
+      "PREFLOP_CONTINUATION_1",
+      "PREFLOP_CONTINUATION_2PLUS"
+    ],
+    "anchors_per_region_per_evaluation_seed": 16,
+    "total_anchors": 64,
+    "behavior_seeds": [
+      1342191342,
+      1801739323
+    ],
+    "evaluation_seeds": [
+      2029384436,
+      1150634112
+    ],
+    "blocks": 2,
+    "k": 64,
+    "total_target_traversals": 16384,
+    "equal_compute_unweighted_vs_posterior": true,
+    "posterior_likelihood": "FROZEN_FINAL_PHASE2B13_CANDIDATE_BEHAVIOR_ACTION_PATH_PROBABILITY",
+    "behavior_floor": 0.25,
+    "training_authorized": false,
+    "full_x4_confirmation_authorized": false,
+    "architecture_winner_selected": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "next_decision": "RUN_PHASE2B15_RYZEN_AND_APPLY_FROZEN_POSTERIOR_WEIGHT_STABILITY_GATES",
+  "r7_5_4": "BLOCKED_NO_PROVISIONAL_REPRESENTATION_WINNER",
+  "r8": "BLOCKED",
+  "prohibitions": [
+    "NO_GATE_RELAXATION",
+    "NO_SEED_SHOPPING",
+    "NO_DROPPED_THREE_HANDED_SCENARIO",
+    "NO_REOPEN_OLD_R7_5_3_H2_H3_REMEDIATION",
+    "NO_PHASE2B13_FULL_X4_CONFIRMATION",
+    "NO_K128_OR_K256_CONTINUATION_SWEEP",
+    "NO_UNCONDITIONAL_POST_HISTORY_HIDDEN_CARD_RESAMPLING",
+    "NO_AD_HOC_POSTERIOR_LIKELIHOOD_FLOOR",
+    "NO_HIGHER_PREFLOP_CONTINUATION_BEHAVIOR_FLOOR",
+    "NO_HUBER_OR_LAG_ANCHOR_TUNING",
+    "NO_PRODUCTION_TRAINING",
+    "NO_READY_FOR_TABLES"
+  ],
+  "strategic_strength_rule": "Stability does not imply strategic strength. Even a later posterior-weighted causal training PASS and full-budget hard-stability PASS must still pass a separately precommitted strategic-strength comparison against the certified stable V1 control before architecture selection."
+}
