@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """Phase2C0: structural preflop reach-factorization feasibility audit.
 
-This is not a target estimator.  It verifies whether the frozen public-action
+This is not a target estimator. It verifies whether the frozen public-action
 likelihood at preflop continuation infosets factorizes exactly into seat-local
-private-hand likelihood tables, coupled only by card removal.  PASS permits a
+private-hand likelihood tables, coupled only by card removal. PASS permits a
 separately precommitted solver-level range/reach prototype; FAIL selects the
 certified stable V1 fallback.
 """
@@ -21,7 +21,6 @@ import random
 from typing import Sequence
 
 import numpy as np
-import torch
 
 import r7_5_arch_reset_v1plus_phase2b10_private_public_chance_decomposition as b10
 import r7_5_arch_reset_v1plus_phase2b13_root_iid64_target_training as b13
@@ -241,12 +240,14 @@ def _worker_task(task: dict) -> dict:
     seat_a, seat_b = opponents
     wa, wb = tables[seat_a], tables[seat_b]
     rng = random.Random(_mix64(int(task["behavior_seed"]), int(task["evaluation_seed"]),
-                               int(task["state_index"]), 0xFACTOR))
+                               int(task["state_index"]), 0xFAC70))
     factor_error = 0.0
     checks = 0
     attempts = 0
     while checks < FACTORIZATION_CHECKS and attempts < FACTORIZATION_CHECKS * 100:
-        ia = rng.randrange(len(hands)); ib = rng.randrange(len(hands)); attempts += 1
+        ia = rng.randrange(len(hands))
+        ib = rng.randrange(len(hands))
+        attempts += 1
         ha, hb = hands[ia], hands[ib]
         if len({ha[0], ha[1], hb[0], hb[1]}) != 4:
             continue
@@ -315,41 +316,29 @@ def run(args) -> dict:
     anchors, heldout_identity = _select_c0_anchors(heldout_root, j14)
     tasks = []
     behavior_identity = []
+    states_by_seed = {}
     for behavior_seed in map(int, TRAINING_SEEDS):
         checkpoint = b13_root / b13.CANDIDATE_ARM / f"seed_{behavior_seed}" / "resume_checkpoint.pt"
         states, identity = b15._load_behavior_states(checkpoint, behavior_seed)
+        states_by_seed[int(behavior_seed)] = states
         behavior_identity.append(identity)
         for anchor in anchors:
             task = dict(anchor)
             task["behavior_seed"] = int(behavior_seed)
-            task["behavior_states"] = states
             tasks.append(task)
 
     rows = []
-    workers = min(int(args.workers), len(tasks))
-    # Behavior states differ by source seed, so initialize per task in a small
-    # wrapper rather than sharing one initializer across mixed-seed tasks.
-    def submit_payload(task: dict) -> dict:
-        states = task.pop("behavior_states")
-        b10._worker_init(str(repo_root), str(solver_path), int(task["behavior_seed"]), states)
-        return _worker_task(task)
-
-    # Windows spawn cannot pickle a nested function reliably; run two pools,
-    # one per behavior seed, each with the canonical initializer.
-    rows = []
     for behavior_seed in map(int, TRAINING_SEEDS):
         seed_tasks = [dict(t) for t in tasks if int(t["behavior_seed"]) == behavior_seed]
-        states = seed_tasks[0].pop("behavior_states")
-        for t in seed_tasks[1:]:
-            t.pop("behavior_states")
         with ProcessPoolExecutor(
-            max_workers=min(workers, len(seed_tasks)),
+            max_workers=min(int(args.workers), len(seed_tasks)),
             initializer=b10._worker_init,
-            initargs=(str(repo_root), str(solver_path), int(behavior_seed), states),
+            initargs=(str(repo_root), str(solver_path), int(behavior_seed), states_by_seed[behavior_seed]),
         ) as pool:
             fmap = {pool.submit(_worker_task, t): t for t in seed_tasks}
             for future in as_completed(fmap):
-                row = future.result(); rows.append(row)
+                row = future.result()
+                rows.append(row)
                 print(
                     f"[Phase2C0 task] behavior={behavior_seed} eval={row['evaluation_seed']} "
                     f"state={row['state_index']} {row['region']} factor_err={row['max_factorization_abs_error']:.3e} "
