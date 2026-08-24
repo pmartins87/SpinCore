@@ -1,0 +1,45 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B15_RESULT_EVIDENCE_V1",
+  "source_result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B15_POSTERIOR_WEIGHTED_CONTINUATION_CHANCE_V1",
+  "uploaded_result_sha256": "0e4f0a5bf2d48fb7f48b2763f8a65e3093d879aa50729f5d8a80d28fa9578f6a",
+  "execution_sha": "ea53812e39efaa41889ea6ff676eeda9f0c0e2b0",
+  "status": "POSTERIOR_WEIGHTING_MATERIAL_BUT_STABILITY_NOT_SUPPORTED",
+  "local_valid": true,
+  "importance_weight_health_pass": true,
+  "posterior_shift_material": true,
+  "screen_pass": false,
+  "pooled": {
+    "unweighted_mean_tv": 0.21994731031322912,
+    "posterior_mean_tv": 0.3157316176926827,
+    "tv_absolute_improvement": -0.09578430737945359,
+    "tv_relative_improvement": -0.4354875140007224,
+    "unweighted_sign_disagreement_mean": 0.16731770833333334,
+    "posterior_sign_disagreement_mean": 0.25846354166666663,
+    "sign_absolute_improvement": -0.09114583333333329,
+    "unweighted_tail_rate_tv_ge_035": 0.234375,
+    "posterior_tail_rate_tv_ge_035": 0.328125,
+    "tail_relative_improvement": -0.4,
+    "unweighted_dominant_mismatch_rate": 0.2265625,
+    "posterior_dominant_mismatch_rate": 0.3125,
+    "posterior_shift_tv_mean": 0.15353847770331913,
+    "ess_mean": 41.17248113191965,
+    "ess_p10": 28.500811874848015,
+    "ess_p50": 40.91421665504938,
+    "max_normalized_weight_p95": 0.09677083299202816
+  },
+  "by_behavior_seed_tv_absolute_improvement": {
+    "1342191342": -0.10208191145729845,
+    "1801739323": -0.0894867033016086
+  },
+  "by_region_tv_absolute_improvement": {
+    "PREFLOP_CONTINUATION_1": -0.04764828709430008,
+    "PREFLOP_CONTINUATION_2PLUS": -0.143920327664607
+  },
+  "interpretation": "Self-normalized posterior importance weighting materially changes continuation targets and has healthy weights, but increases independent-block target/regret-matching instability in both behavior seeds and both continuation regions. Weight degeneracy is therefore not the explanation for the failure. No training is authorized from Phase2B15.",
+  "next_route": "PRECOMMIT_EXACT_REJECTION_POSTERIOR_CONTINUATION_SCREEN_AS_FINAL_ESTIMATOR_LEVEL_TEST",
+  "training_authorized": false,
+  "full_x4_confirmation_authorized": false,
+  "architecture_winner_selected": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
