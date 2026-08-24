@@ -1,0 +1,57 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B11_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "uploaded_result_sha256": "1596023d39609ddfe5a6528a2e62d376c8e6bd29dde68d24a20a9b0ed782b1aa",
+  "source_result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B11_FACTORIZED_CHANCE_ESTIMATOR_V1",
+  "status": "FACTORIZED_CHANCE_ESTIMATOR_SCREEN_FAIL",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "source_behavior": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
+  "training_seeds": [1342191342, 1801739323],
+  "frozen_inputs": {
+    "phase2b1_result_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
+    "phase2b6_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
+    "phase2b10_result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc"
+  },
+  "primary_factor4x4_vs_iid16": {
+    "iid16_mean_tv": 0.33467186760867673,
+    "factor4x4_mean_tv": 0.43390513657870394,
+    "tv_absolute_improvement": -0.09923326897002721,
+    "tv_relative_improvement": -0.29650914395367745,
+    "iid16_sign_disagreement": 0.2520833333333333,
+    "factor4x4_sign_disagreement": 0.35625,
+    "iid16_target_mad": 0.006673636639562426,
+    "factor4x4_target_mad": 0.009347351938116458,
+    "iid16_dominant_mismatch": 0.3333333333333333,
+    "factor4x4_dominant_mismatch": 0.45,
+    "iid16_p95_tv": 1.0,
+    "factor4x4_p95_tv": 1.0
+  },
+  "secondary_factor2x2_vs_iid4": {
+    "iid4_mean_tv": 0.5230440461990666,
+    "factor2x2_mean_tv": 0.5523969058329288,
+    "tv_absolute_improvement": -0.02935285963386214,
+    "tv_relative_improvement": -0.056119288322212656
+  },
+  "by_source_behavior_seed": {
+    "1342191342": {
+      "iid16_mean_tv": 0.3171922054847577,
+      "factor4x4_mean_tv": 0.4410486076861882
+    },
+    "1801739323": {
+      "iid16_mean_tv": 0.3521515297325957,
+      "factor4x4_mean_tv": 0.42676166547121963
+    }
+  },
+  "interpretation": [
+    "Crossed private/public factorization worsened target-policy stability at equal compute for both source behavior seeds.",
+    "The failure is coherent across mean TV, sign disagreement, target MAD and dominant-action mismatch; it is not a single-metric artifact.",
+    "The useful surviving signal is ordinary IID convergence: IID16 is materially more stable than IID4, so the next diagnostic should measure the IID chance-expectation convergence curve before abandoning solver-level variance reduction.",
+    "No factorized training pilot is authorized."
+  ],
+  "next_route": "PHASE2B12_IID_CHANCE_EXPECTATION_CONVERGENCE",
+  "training_pilot_authorized": false,
+  "production_training_authorized": false,
+  "architecture_winner_selected": false,
+  "ready_for_tables": false
+}
