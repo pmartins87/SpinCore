@@ -9,6 +9,7 @@ struct HandSettlement { std::array<std::int32_t,3> final_stacks{}; friend bool o
 class HandEngine {
 public:
  HandEngine(const EpisodeScenario& s,std::uint64_t deck_seed);
+ HandEngine(const EpisodeScenario& s,const std::array<std::array<Card,2>,3>& hole_cards,const std::array<Card,5>& board_cards);
  [[nodiscard]] const EpisodeScenario& scenario() const noexcept{return scenario_;}
  [[nodiscard]] const BettingEngine& betting() const noexcept{return betting_;}
  [[nodiscard]] BettingEngine& betting() noexcept{return betting_;}
