@@ -4,6 +4,7 @@
 #include <stdexcept>
 namespace spincore { namespace { int clamp_raise_target(int target,const LegalActions&l){return std::min(std::max(target,l.min_raise_to),l.max_raise_to);} }
 SpinTraversalState::SpinTraversalState(const EpisodeScenario&s,std::uint64_t seed):scenario_(s),hand_(s,seed){}
+SpinTraversalState::SpinTraversalState(const EpisodeScenario&s,const std::array<std::array<Card,2>,3>&holes,const std::array<Card,5>&board):scenario_(s),hand_(s,holes,board){}
 CanonicalInfoset SpinTraversalState::infoset()const{if(terminal())throw std::logic_error("terminal state has no infoset");return build_current_actor_infoset(hand_,blind_index());}
 NeuralInputV1 SpinTraversalState::neural_input()const{return encode_neural_input_v1(infoset());}
 std::vector<AbstractActionSlot> SpinTraversalState::legal_abstract_actions()const{if(terminal())return{};auto info=infoset();std::vector<AbstractActionSlot>o;for(std::uint8_t i=0;i<6;++i)if(info.legal_action_mask[i])o.push_back((AbstractActionSlot)i);return o;}
