@@ -156,17 +156,40 @@
       "ready_for_tables": false
     },
     "phase2b10_private_public_chance_decomposition": {
+      "status": "MIXED_PRIVATE_PUBLIC_CHANCE",
+      "result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc",
+      "source": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
+      "arm_k1_policy_tv": {
+        "TRAVERSAL_ONLY": 0.05516957953078942,
+        "PRIVATE_ONLY": 0.40876631080266784,
+        "PUBLIC_ONLY": 0.4470753497550347,
+        "COMBINED": 0.5439893672482926
+      },
+      "private_excess_vs_traversal": 0.3535967312718784,
+      "public_excess_vs_traversal": 0.3919057702242453,
+      "combined_excess_vs_traversal": 0.4888197877175032,
+      "interaction_excess_combined_minus_max_single": 0.0969140174932579,
+      "public_gt_private_both_source_behavior_seeds": false,
+      "private_gt_public_both_source_behavior_seeds": false,
+      "next_route": "PRECOMMIT_FACTORIZED_PRIVATE_PUBLIC_CHANCE_VARIANCE_REDUCTION_DIAGNOSTIC",
+      "training_pilot_authorized": false,
+      "architecture_winner_selected": false,
+      "production_training_authorized": false,
+      "ready_for_tables": false
+    },
+    "phase2b11_factorized_private_public_chance_estimator": {
       "status": "FROZEN_AWAITING_RYZEN_READOUT",
-      "scope": "READ_ONLY_ROOT_PRIVATE_VS_PUBLIC_CHANCE_DECOMPOSITION_ON_EXACT_PHASE2B6_BEHAVIORS",
+      "scope": "READ_ONLY_EQUAL_COMPUTE_IID_VS_FACTORIZED_PRIVATE_PUBLIC_ROOT_TARGET_ESTIMATOR",
       "source": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
       "phase2b1_result_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
       "phase2b6_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
-      "phase2b9_result_sha256": "71f77b6921597c7b1d048f8fb3e448f5fce74a974b247ac4ca88383fece5c64a",
+      "phase2b10_result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc",
+      "designs": ["IID4", "FACTOR2X2", "IID16", "FACTOR4X4"],
+      "blocks": 4,
       "anchors_per_scenario": 4,
-      "replicates_per_arm": 8,
-      "arms": ["TRAVERSAL_ONLY", "PRIVATE_ONLY", "PUBLIC_ONLY", "COMBINED"],
-      "total_root_target_traversals": 3840,
-      "explicit_deal_solver_extension": "ADDITIVE_DIAGNOSTIC_ONLY",
+      "total_root_target_traversals": 19200,
+      "primary_comparison": "FACTOR4X4_VS_IID16_EQUAL_COMPUTE",
+      "small_causal_training_pilot_precommit_allowed_only_on_screen_pass": true,
       "training_pilot_authorized": false,
       "architecture_winner_selected": false,
       "production_training_authorized": false,
@@ -183,7 +206,7 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B10 is a read-only chance-source diagnostic; its classification authorizes only a separately precommitted variance-reduction design. A later hard stability PASS may open a separate precommitted strategic-strength comparison against the certified stable V1 control.",
+  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B11 is a read-only equal-compute chance-estimator screen. A PASS can authorize only a separately precommitted small causal trajectory pilot; only a later hard stability PASS may open a separate precommitted strategic-strength comparison against the certified stable V1 control.",
   "prohibitions": [
     "NO_GATE_RELAXATION",
     "NO_SEED_SHOPPING",
@@ -193,6 +216,8 @@
     "NO_POSTHOC_PHASE2B8_LAG_WEIGHT_TUNING",
     "NO_PHASE2B9_HUBER_BETA_SWEEP",
     "NO_PHASE2B10_EXPLICIT_DEAL_PRODUCTION_TRAINING",
+    "NO_POSTHOC_PHASE2B11_FACTOR_SIZE_OR_GATE_TUNING",
+    "NO_PHASE2B11_TRAINING_WITHOUT_SEPARATE_PRECOMMIT",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]
