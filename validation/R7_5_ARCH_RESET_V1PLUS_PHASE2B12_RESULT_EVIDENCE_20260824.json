@@ -1,0 +1,64 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B12_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "uploaded_result_sha256": "dbccadae5805381d0188bef41fb62a72b25b42e03e5564ca88f05d9666e6e182",
+  "result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B12_IID_CHANCE_EXPECTATION_CONVERGENCE_V1",
+  "status": "IID_CHANCE_EXPECTATION_CONVERGES_MATERIALLY",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "source_behavior": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
+  "b11_iid16_reproduction_pass": true,
+  "b11_iid16_reproduction_tolerance": 1e-12,
+  "k_mean_tv": {
+    "8": 0.4504905245525747,
+    "16": 0.33467186760867673,
+    "32": 0.23364186576967497,
+    "64": 0.17378003404961345
+  },
+  "k_sign_disagreement": {
+    "8": 0.3625,
+    "16": 0.2520833333333333,
+    "32": 0.18125,
+    "64": 0.12604166666666666
+  },
+  "k_tail_rate_tv_ge_035": {
+    "8": 0.5083333333333333,
+    "16": 0.38333333333333336,
+    "32": 0.26666666666666666,
+    "64": 0.18333333333333332
+  },
+  "k_target_mad": {
+    "8": 0.010060758983030488,
+    "16": 0.006673636639562426,
+    "32": 0.004806513539125931,
+    "64": 0.0034688280885178343
+  },
+  "k_dominant_mismatch": {
+    "8": 0.4708333333333333,
+    "16": 0.3333333333333333,
+    "32": 0.225,
+    "64": 0.16666666666666666
+  },
+  "k64_vs_k16": {
+    "tv_absolute_improvement": 0.16089183355906328,
+    "tv_relative_improvement": 0.48074501961781263,
+    "sign_absolute_improvement": 0.12604166666666666,
+    "sign_relative_improvement": 0.5,
+    "tail_absolute_improvement": 0.20000000000000004,
+    "tail_relative_improvement": 0.5217391304347827
+  },
+  "per_source_seed_k64_mean_tv": {
+    "1342191342": 0.16365397541064744,
+    "1801739323": 0.1839060926885794
+  },
+  "screen_pass": true,
+  "both_source_behavior_seeds_directionally_improve": true,
+  "monotone_convergence_guardrail_pass": true,
+  "small_causal_training_pilot_precommit_allowed": true,
+  "training_pilot_authorized": false,
+  "production_training_authorized": false,
+  "architecture_winner_selected": false,
+  "ready_for_tables": false,
+  "next_route": "PRECOMMIT_SMALL_MULTI_CHANCE_TARGET_TRAINING_PILOT_WITH_EQUAL_COMPUTE_CONTROL",
+  "interpretation": "Plain conditional IID chance averaging, unlike the rejected crossed/factorized estimator, converges strongly and monotonically through K64 at the initial preflop root. The result justifies only a separately precommitted small causal training pilot. It does not justify applying K64 to arbitrary post-history infosets, does not authorize production training, and does not select H2 as the architecture winner."
+}
