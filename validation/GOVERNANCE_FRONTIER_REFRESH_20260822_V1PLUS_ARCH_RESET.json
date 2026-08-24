@@ -3,6 +3,7 @@
   "date": "2026-08-24",
   "ready_for_tables": false,
   "production_training_authorized": false,
+  "architecture_winner_selected": false,
   "r7_5_3": {
     "status": "FAIL_BLOCKED_CLOSED",
     "final_contingency": "FINAL_INDEPENDENT_CHANCE_COVERAGE_X16",
@@ -13,188 +14,112 @@
     "finite_closure_reopened": false,
     "further_h2_h3_readmission_remediation_authorized": false
   },
+  "certified_stable_v1_fallback": {
+    "available": true,
+    "role": "STABILITY_CERTIFIED_CONTROL_AND_ARCHITECTURE_FALLBACK_NOT_PRODUCTION_WINNER",
+    "three_handed_640_cross_seed_mean_tv": 0.0899957567,
+    "three_handed_640_cross_seed_p95_tv": 0.2001979053,
+    "strategic_strength_revalidation_required_before_production_selection": true
+  },
+  "hard_stability_gates": {
+    "advantage_weighted_nrmse_max_each_iteration": 0.75,
+    "final_average_policy_weighted_mean_tv_max": 0.12,
+    "cross_seed_mean_tv_max": 0.15,
+    "cross_seed_p95_tv_max": 0.35
+  },
   "post_r7_5_3_architecture_reset": {
     "name": "V1PLUS_ARCHITECTURE_RESET",
-    "scope": "Design a successor that must independently satisfy stability eligibility and strategic non-inferiority/superiority; this scope is not R7.5.3 remediation.",
-    "phase1_forensic": "COMPLETE",
-    "phase1b_projection_decomposition": "COMPLETE",
-    "phase2a_strategy_memory_capacity_ablation": {
-      "status": "CAPACITY_EFFECT_NOT_SUPPORTED",
-      "common_mean_tv_100k": 0.21376380367532596,
-      "common_mean_tv_800k": 0.20860854047441169,
-      "absolute_improvement": 0.0051552632009142785,
-      "relative_improvement": 0.024116632995286345,
-      "bootstrap_95_ci": [-0.0024544445544687743, 0.01277043231040434],
-      "consequence": "Do not blindly escalate Strategy memory; upstream Advantage/chance trajectory remains the primary diagnostic target."
-    },
-    "advantage_trajectory_forensic": {
-      "status": "COMPLETE_TARGET_NOISE_AND_FEEDBACK_DOMINANT",
-      "source_execution_sha": "4bfa55d69029cd69536fa6dbfcadd162719cb887",
-      "shared_exact_target_policy_tv_mean": 0.568480680810281,
-      "shared_exact_positive_sign_disagreement_mean": 0.4851449275362319,
-      "final_advantage_common_heldout_mean_tv": [0.5053508948091757, 0.5218671078483021],
-      "generated_advantage_sample_relative_divergence_by_iteration": [0.009365647919864788, 0.06102691241964977, 0.2161566088320097]
-    },
-    "phase2b0_policy_algebra_screen": {
-      "status": "FAIL_DO_NOT_TRAIN_CANDIDATE",
-      "candidate": "RAW_MEAN_THEN_REGRET_MATCH_WITH_CONTROL_EPSILON",
-      "control_mean_tv": 0.30122738070967015,
-      "candidate_mean_tv": 0.3439887521790942,
-      "consequence": "Do not train raw-mean-before-regret-matching candidate."
-    },
-    "phase2b1_target_variance": {
-      "status": "PHASE2B1_K4_SCREEN_FAIL_NO_GENERIC_K4_TRAINING_PILOT",
-      "evidence_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
-      "chance_only_k1_policy_tv": 0.5153716032136447,
-      "traversal_only_k1_policy_tv": 0.05194165047961052,
-      "generic_k4_training_authorized": false
-    },
-    "phase2b2_common_chance_feedback": {
-      "status": "MIXED_CHANCE_SUPPORT_AND_FEEDBACK",
-      "evidence_sha256": "49cd1bd98ffe30f21a2b4263c50eb0b5c6d3e616b651a1353f136a670453e281",
-      "common_traversal_rng_k1_cross_behavior_tv": 0.38709419727000416,
-      "relative_reduction_vs_phase2b1_chance_reference": 0.24535633882788724
-    },
-    "phase2b3_root_feedback_decomposition": {
-      "status": "MIXED_ROOT_AND_DOWNSTREAM_FEEDBACK",
-      "result_sha256": "158e450e96027871b5bf44caa5cd0cb9105782e648e91583960b49d3986fe0a7",
-      "native_k1_tv": 0.38892191351328625,
-      "common_root_sigma_residual_tv": 0.32770276958712846,
-      "downstream_value_removal_residual_tv": 0.21015032820513388,
-      "next_route": "LOCALIZE_DOWNSTREAM_STREET_DEPTH_AND_RETAIN_ROOT_BASELINE_CONTROL"
-    },
-    "phase2b4_downstream_street_localization": {
-      "status": "PREFLOP_DOWNSTREAM_FEEDBACK_DOMINANT",
-      "result_sha256": "6b639b1608a0572c0ae2f6641c038786fa30cb8858bdda62da3fd5e30f49f0aa",
-      "native_common_root_sigma_tv": 0.32770276958712846,
-      "common_from_flop_tv": 0.32010786853721923,
-      "common_from_preflop_tv": 0.060271017892879135,
-      "preflop_increment_absolute_reduction": 0.2598368506443401,
-      "preflop_increment_relative_to_native": 0.7929040421956385
-    },
-    "phase2b5_preflop_feedback_stabilization": {
-      "status": "MILD_PREFLOP_DAMPING_CANDIDATE",
-      "result_sha256": "0fb028c02dbbea0c4fa7a323a3edeed5c4e12789145235be2e851452e16ab5b8",
-      "selected_candidate": "UNIFORM_FLOOR_025",
-      "floor": 0.25,
-      "control_tv": 0.32010786853721923,
-      "candidate_residual_tv": 0.21666478360495514,
-      "absolute_reduction": 0.10344308493226409,
-      "relative_reduction": 0.3231507098059249,
-      "scenarios_improved": "14_OF_15",
-      "small_training_pilot_precommit_allowed": true,
-      "production_training_authorized": false
-    },
+    "scope": "Successor architecture must independently satisfy stability eligibility and strategic non-inferiority/superiority; this is not a reopening of R7.5.3 H2/H3 remediation.",
+    "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+    "domain_under_current_structural_investigation": "THREE_HANDED",
+    "phase2a_strategy_memory_capacity_ablation": "CAPACITY_EFFECT_NOT_SUPPORTED",
+    "advantage_trajectory_forensic": "COMPLETE_TARGET_NOISE_AND_FEEDBACK_DOMINANT",
+    "phase2b0_policy_algebra_screen": "FAIL_DO_NOT_TRAIN_CANDIDATE",
+    "phase2b1_target_variance": "PHASE2B1_K4_SCREEN_FAIL_NO_GENERIC_K4_TRAINING_PILOT",
+    "phase2b2_common_chance_feedback": "MIXED_CHANCE_SUPPORT_AND_FEEDBACK",
+    "phase2b3_root_feedback_decomposition": "MIXED_ROOT_AND_DOWNSTREAM_FEEDBACK",
+    "phase2b4_downstream_street_localization": "PREFLOP_DOWNSTREAM_FEEDBACK_DOMINANT",
+    "phase2b5_preflop_feedback_stabilization": "MILD_PREFLOP_DAMPING_CANDIDATE",
     "phase2b6_preflop_damping_training_pilot": {
       "status": "PREFLOP_DAMPING_CAUSAL_EFFECT_SUPPORTED_BUT_STILL_UNSTABLE",
       "result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
-      "intervention": "25_PERCENT_UNIFORM_FLOOR_ON_PREFLOP_CONTINUATION_ONLY",
-      "root_floor": 0.0,
-      "postflop_floor": 0.0,
-      "heldout_inference_floor": 0.0,
-      "roots_per_seed": 768,
       "common_baseline_mean_tv": 0.21376380367532596,
-      "common_pilot_mean_tv": 0.18934816676149685,
-      "common_absolute_improvement": 0.024415636913829114,
-      "common_relative_improvement": 0.11421782590897697,
-      "common_bootstrap_95_ci": [0.015543579793138763, 0.03274093539153998],
-      "causal_effect_supported": true,
-      "hard_stability_pass": false,
-      "higher_floor_training_authorized": false,
-      "next_route": "LOCALIZE_RESIDUAL_WITHOUT_ESCALATING_DAMPING_FLOOR",
-      "architecture_winner_selected": false,
-      "production_training_authorized": false,
-      "ready_for_tables": false
+      "common_candidate_mean_tv": 0.18934816676149685,
+      "hard_stability_pass": false
     },
     "phase2b7_residual_localization": {
       "status": "PREFLOP_CONTINUATION_DOMINANT",
       "result_sha256": "ff55a5a047d62952e505b8e4d59d79d4016f30b6696a339318bc696dd6f77fe6",
-      "primary_learner": "COMMON_LEARNER",
-      "common_preflop_continuation_tv_mass_share": 0.5493029004171274,
-      "common_preflop_continuation_tail_share": 0.4742268041237113,
-      "common_root_tv_mass_share": 0.29383299506889526,
-      "common_root_tail_share": 0.422680412371134,
-      "common_root_baseline_mean_tv": 0.2226316130920923,
-      "common_root_phase2b6_mean_tv": 0.25663072380695223,
-      "common_root_phase2b6_p95_tv": 0.6509606611106077,
-      "scenario_concentrated": false,
-      "next_route": "PRECOMMIT_EARLY_PREFLOP_LAGGED_TARGET_OR_ANCHOR_SCREEN"
+      "preflop_continuation_tv_mass_share": 0.5493029004171274
     },
-    "phase2b8_lagged_preflop_anchor": {
-      "status": "LAGGED_ANCHOR_EFFECT_NOT_SUPPORTED",
-      "result_sha256": "1fd9144a488cea6de0a7500320d552abf994908b5200146d4baa4bd6f81c4d98",
-      "candidate": "LAGGED_BEHAVIOR_ANCHOR_025",
-      "equivalence_before_divergence_pass": true,
-      "common_control_mean_tv": 0.18934816676149685,
-      "common_candidate_mean_tv": 0.20333039705340733,
-      "common_absolute_improvement": -0.01398223029191048,
-      "common_bootstrap_95_ci_control_minus_candidate": [-0.02168171060108362, -0.006820936161345012],
-      "common_root_control_mean_tv": 0.25663072380695223,
-      "common_root_candidate_mean_tv": 0.2701833787367644,
-      "common_continuation_control_mean_tv": 0.17780588501391395,
-      "common_continuation_candidate_mean_tv": 0.19516229242670072,
-      "alternate_lag_weight_authorized": false,
-      "higher_uniform_floor_authorized": false,
-      "next_route": "REASSESS_ROOT_ANCHOR_OR_DIRECT_TARGET_VARIANCE_REDUCTION",
-      "production_training_authorized": false,
-      "ready_for_tables": false
+    "phase2b8_lagged_anchor": "LAGGED_ANCHOR_EFFECT_NOT_SUPPORTED",
+    "phase2b9_robust_regression": "HUBER_ROBUSTNESS_SCREEN_FAIL_DO_NOT_TRAIN",
+    "phase2b10_private_public_chance": "MIXED_PRIVATE_PUBLIC_CHANCE",
+    "phase2b11_factorized_estimator": {
+      "status": "FACTORIZED_CHANCE_ESTIMATOR_NOT_SUPPORTED",
+      "iid16_mean_tv": 0.33467186760867673,
+      "factor4x4_mean_tv": 0.433906,
+      "consequence": "Do not tune factorization size or train factorized estimator."
     },
-    "phase2b9_robust_advantage_regression": {
-      "status": "HUBER_ROBUSTNESS_SCREEN_FAIL_DO_NOT_TRAIN",
-      "result_sha256": "71f77b6921597c7b1d048f8fb3e448f5fce74a974b247ac4ca88383fece5c64a",
-      "candidate": "HUBER_BETA_002",
-      "huber_beta": 0.02,
-      "canonical_side_member_reproduction_pass": true,
-      "mse_equal_heldout_mean_tv": 0.30567460296341376,
-      "huber_equal_heldout_mean_tv": 0.3161210369628588,
-      "absolute_mse_minus_huber": -0.01044643399944506,
-      "bootstrap_95_ci_mse_minus_huber": [-0.019915579281452708, 0.00012082570893172335],
-      "both_evaluation_seed_means_improve": false,
-      "huber_training_pilot_authorized": false,
-      "next_route": "DESIGN_STRATIFIED_CHANCE_SUPPORT_OR_SOLVER_LEVEL_VARIANCE_REDUCTION",
-      "production_training_authorized": false,
-      "ready_for_tables": false
+    "phase2b12_iid_convergence": {
+      "status": "IID_CHANCE_EXPECTATION_CONVERGENCE_SUPPORTED",
+      "k16_mean_tv": 0.33467186760867673,
+      "k32_mean_tv": 0.23364,
+      "k64_mean_tv": 0.17378,
+      "source_result_sha256": "dbccadae5805381d0188bef41fb62a72b25b42e03e5564ca88f05d9666e6e182"
     },
-    "phase2b10_private_public_chance_decomposition": {
-      "status": "MIXED_PRIVATE_PUBLIC_CHANCE",
-      "result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc",
-      "source": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
-      "arm_k1_policy_tv": {
-        "TRAVERSAL_ONLY": 0.05516957953078942,
-        "PRIVATE_ONLY": 0.40876631080266784,
-        "PUBLIC_ONLY": 0.4470753497550347,
-        "COMBINED": 0.5439893672482926
-      },
-      "private_excess_vs_traversal": 0.3535967312718784,
-      "public_excess_vs_traversal": 0.3919057702242453,
-      "combined_excess_vs_traversal": 0.4888197877175032,
-      "interaction_excess_combined_minus_max_single": 0.0969140174932579,
-      "public_gt_private_both_source_behavior_seeds": false,
-      "private_gt_public_both_source_behavior_seeds": false,
-      "next_route": "PRECOMMIT_FACTORIZED_PRIVATE_PUBLIC_CHANCE_VARIANCE_REDUCTION_DIAGNOSTIC",
-      "training_pilot_authorized": false,
-      "architecture_winner_selected": false,
-      "production_training_authorized": false,
-      "ready_for_tables": false
+    "phase2b13_root_iid64_training": {
+      "status": "ROOT_IID64_TRAINING_EFFECT_NOT_SUPPORTED",
+      "result_sha256": "6de7996282236d34adf5e8e53416fd8a443a1fbf5abc89fc807492d0cb3dbf80",
+      "control_common_mean_tv": 0.20976,
+      "candidate_common_mean_tv": 0.19524,
+      "effect_direction_positive": true,
+      "precommitted_materiality_pass": false,
+      "full_x4_authorized": false
     },
-    "phase2b11_factorized_private_public_chance_estimator": {
+    "phase2b14_residual_localization": {
+      "status": "PREFLOP_CONTINUATION_RESIDUAL_DOMINANT_AFTER_ROOT_IID64",
+      "result_sha256": "7cd1886596d345abdcdef479775498eddf7e014205de86e44afb5bb0ea291f86",
+      "preflop_continuation_tv_mass_share": 0.5466,
+      "root_effect_consistent": true
+    },
+    "phase2b15_posterior_weighted_continuation": {
+      "status": "POSTERIOR_WEIGHTING_MATERIAL_BUT_STABILITY_NOT_SUPPORTED",
+      "result_sha256": "0e4f0a5bf2d48fb7f48b2763f8a65e3093d879aa50729f5d8a80d28fa9578f6a",
+      "unweighted_mean_tv": 0.21994731031322912,
+      "posterior_mean_tv": 0.3157316176926827,
+      "importance_weight_health_pass": true,
+      "screen_pass": false
+    },
+    "phase2b16_exact_rejection_posterior": {
+      "status": "EXACT_POSTERIOR_STILL_TOO_UNSTABLE_CLOSE_ESTIMATOR_REPAIR_PATH",
+      "result_sha256": "3b5e71c3cc92ed530589877f6790333b1f94b579bb39e7c687082787693d958c",
+      "direct_mean_tv": 0.2517340306655365,
+      "mean_tv_gate": 0.24,
+      "all_other_frozen_support_gates_pass": true,
+      "estimator_repair_path_closed": true,
+      "training_authorized": false
+    },
+    "phase2c0_structural_reach_factorization": {
+      "status": "STRUCTURAL_REACH_FACTORIZATION_FEASIBLE",
+      "result_sha256": "55e83be4fd8776e0fcdb63e7d4400ed05aff8c48213898ad8f1abe3713a35876",
+      "complete_16_tasks": true,
+      "max_factorization_abs_error": 5.551115123125783e-17,
+      "max_filler_independence_abs_error": 0.0,
+      "positive_finite_normalizers": true,
+      "table_policy_evaluation_budget_pass": true,
+      "next_route": "PRECOMMIT_PHASE2C1_EXACT_RANGE_REACH_SOLVER_PROTOTYPE"
+    },
+    "phase2c1_exact_range_reach_solver_prototype": {
       "status": "FROZEN_AWAITING_RYZEN_READOUT",
-      "scope": "READ_ONLY_EQUAL_COMPUTE_IID_VS_FACTORIZED_PRIVATE_PUBLIC_ROOT_TARGET_ESTIMATOR",
-      "source": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
-      "phase2b1_result_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
-      "phase2b6_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
-      "phase2b10_result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc",
-      "designs": ["IID4", "FACTOR2X2", "IID16", "FACTOR4X4"],
-      "blocks": 4,
-      "anchors_per_scenario": 4,
-      "total_root_target_traversals": 19200,
-      "primary_comparison": "FACTOR4X4_VS_IID16_EQUAL_COMPUTE",
-      "small_causal_training_pilot_precommit_allowed_only_on_screen_pass": true,
-      "training_pilot_authorized": false,
-      "architecture_winner_selected": false,
-      "production_training_authorized": false,
-      "ready_for_tables": false
+      "source_phase2c0_result_sha256": "55e83be4fd8776e0fcdb63e7d4400ed05aff8c48213898ad8f1abe3713a35876",
+      "scope": "DETERMINISTIC_INCREMENTAL_PUBLIC_ACTION_REACH_PROPAGATION_OVER_TWO_2450_ENTRY_OPPONENT_PRIVATE_HAND_TABLES",
+      "target_estimator": null,
+      "training_authorized": false,
+      "pass_route": "PRECOMMIT_SINGLE_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
+      "fail_route": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET"
     },
+    "estimator_repair_path": "CLOSED_AFTER_PHASE2B16",
     "architecture_winner": null
   },
   "r7_5_4": {
@@ -206,18 +131,23 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B11 is a read-only equal-compute chance-estimator screen. A PASS can authorize only a separately precommitted small causal trajectory pilot; only a later hard stability PASS may open a separate precommitted strategic-strength comparison against the certified stable V1 control.",
+  "strategic_strength_rule": "No successor may advance on stability alone. After a hard stability PASS, a separately precommitted paired strategic-strength evaluation against the certified stable V1 control is mandatory before architecture selection.",
+  "finite_structural_route": {
+    "current": "PHASE2C1_EXACT_RANGE_REACH_SOLVER_PROTOTYPE",
+    "on_phase2c1_pass": "ONE_SEPARATELY_PRECOMMITTED_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
+    "on_phase2c1_fail": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
+    "no_open_ended_c_series": true
+  },
   "prohibitions": [
     "NO_GATE_RELAXATION",
     "NO_SEED_SHOPPING",
     "NO_DROPPING_THREE_HANDED",
     "NO_ADDITIONAL_H2_H3_R7_5_3_REMEDIATION",
-    "NO_OPPORTUNISTIC_ESCALATION_TO_50_75_100_PERCENT_PREFLOP_FLOOR",
-    "NO_POSTHOC_PHASE2B8_LAG_WEIGHT_TUNING",
-    "NO_PHASE2B9_HUBER_BETA_SWEEP",
-    "NO_PHASE2B10_EXPLICIT_DEAL_PRODUCTION_TRAINING",
-    "NO_POSTHOC_PHASE2B11_FACTOR_SIZE_OR_GATE_TUNING",
-    "NO_PHASE2B11_TRAINING_WITHOUT_SEPARATE_PRECOMMIT",
+    "NO_REOPENING_PHASE2B_ESTIMATOR_REPAIR",
+    "NO_K128_K256_ESCALATION",
+    "NO_POSTHOC_IMPORTANCE_WEIGHT_CLIPPING_OR_TEMPERING",
+    "NO_MCMC_OR_SIR_POSTHOC_SUBSTITUTION",
+    "NO_PHASE2C1_TRAINING",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]
