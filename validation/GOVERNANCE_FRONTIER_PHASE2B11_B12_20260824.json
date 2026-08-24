@@ -1,0 +1,49 @@
+{
+  "schema": "SPINCORE_GOVERNANCE_FRONTIER_PHASE2B11_B12_V1",
+  "date": "2026-08-24",
+  "parent_governance": "validation/GOVERNANCE_FRONTIER_REFRESH_20260822_V1PLUS_ARCH_RESET.json",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "architecture_winner": null,
+  "phase2b11_factorized_chance_estimator": {
+    "status": "FACTORIZED_CHANCE_ESTIMATOR_SCREEN_FAIL",
+    "result_sha256": "1596023d39609ddfe5a6528a2e62d376c8e6bd29dde68d24a20a9b0ed782b1aa",
+    "iid16_mean_tv": 0.33467186760867673,
+    "factor4x4_mean_tv": 0.43390513657870394,
+    "iid4_mean_tv": 0.5230440461990666,
+    "factor2x2_mean_tv": 0.5523969058329288,
+    "both_source_behavior_seeds_directionally_improve": false,
+    "factorized_training_pilot_authorized": false,
+    "consequence": "Do not retry crossed private/public factorization. Ordinary IID size convergence remains the only solver-level chance-estimator signal worth measuring next."
+  },
+  "phase2b12_iid_chance_expectation_convergence": {
+    "status": "FROZEN_AWAITING_RYZEN_READOUT",
+    "scope": "READ_ONLY_NESTED_IID_K8_K16_K32_K64_TARGET_EXPECTATION_ON_EXACT_PHASE2B6_BEHAVIORS",
+    "phase2b11_result_sha256": "1596023d39609ddfe5a6528a2e62d376c8e6bd29dde68d24a20a9b0ed782b1aa",
+    "anchors_per_scenario": 4,
+    "blocks": 4,
+    "k_values": [8, 16, 32, 64],
+    "nested_prefix_stream": true,
+    "total_root_target_traversals": 30720,
+    "mandatory_b11_iid16_reproduction_tolerance": 1e-12,
+    "training_pilot_authorized": false,
+    "production_training_authorized": false,
+    "architecture_winner_selected": false,
+    "ready_for_tables": false
+  },
+  "r7_5_4": "BLOCKED_NO_PROVISIONAL_REPRESENTATION_WINNER",
+  "r8": "BLOCKED",
+  "prohibitions": [
+    "NO_GATE_RELAXATION",
+    "NO_SEED_SHOPPING",
+    "NO_FACTOR4X4_OR_FACTOR2X2_RETRY",
+    "NO_RESULT_DEPENDENT_K_SELECTION",
+    "NO_HIGHER_PREFLOP_UNIFORM_FLOOR",
+    "NO_LAG_WEIGHT_TUNING",
+    "NO_HUBER_BETA_SWEEP",
+    "NO_EXPLICIT_DEAL_PRODUCTION_TRAINING_IN_PHASE2B12",
+    "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
+    "NO_READY_FOR_TABLES"
+  ],
+  "strategic_strength_firewall": "Stability admission and strategic strength remain separate. A Phase2B12 PASS can only open a separately precommitted small equal-compute causal training pilot; any later stable candidate still requires a separately precommitted strategic-strength comparison against the certified stable V1 control."
+}
