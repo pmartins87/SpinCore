@@ -18,8 +18,21 @@ class ResolvedExactAction:
         if self.action_type<0 or self.action_type>5:raise ValueError('exact action type must be 0..5')
         if self.amount_to<0:raise ValueError('exact action amount_to must be nonnegative')
 
+@dataclass(frozen=True)
+class DealSnapshot:
+    holes:tuple[tuple[int,int],tuple[int,int],tuple[int,int]]
+    board:tuple[int,int,int,int,int]
+    visible_board_count:int
+    def __post_init__(self):
+        if len(self.holes)!=3 or any(len(row)!=2 for row in self.holes):raise ValueError('deal snapshot requires three two-card hole rows')
+        if len(self.board)!=5:raise ValueError('deal snapshot requires five board cards')
+        if self.visible_board_count<0 or self.visible_board_count>5:raise ValueError('invalid visible board count')
+
 class _ScenarioV2(C.Structure):
     _fields_=[('total_chips',C.c_int32),('game_is_hu',C.c_int32),('blind_index',C.c_int32),('small_blind',C.c_int32),('big_blind',C.c_int32),('stack_0',C.c_int32),('stack_1',C.c_int32),('stack_2',C.c_int32),('dead_player_0',C.c_int32),('dead_player_1',C.c_int32),('dead_player_count',C.c_int32),('dealer_id',C.c_int32)]
+
+class _DealV1(C.Structure):
+    _fields_=[('hole_0_0',C.c_int32),('hole_0_1',C.c_int32),('hole_1_0',C.c_int32),('hole_1_1',C.c_int32),('hole_2_0',C.c_int32),('hole_2_1',C.c_int32),('board_0',C.c_int32),('board_1',C.c_int32),('board_2',C.c_int32),('board_3',C.c_int32),('board_4',C.c_int32)]
 
 def _dead(e:Episode)->tuple[int,...]:
     if len(e.stacks)!=3: raise ValueError('exactly three seat stacks required')
@@ -28,6 +41,28 @@ def _dead(e:Episode)->tuple[int,...]:
     if len(d)>2 or len(set(d))!=len(d) or any(x not in (0,1,2) for x in d): raise ValueError('invalid dead_players')
     return d
 
+def _scenario(e:Episode)->_ScenarioV2:
+    d=_dead(e)
+    return _ScenarioV2(e.total_chips,int(e.game_is_hu),e.blind_index,e.small_blind,e.big_blind,*e.stacks,d[0] if len(d)>0 else -1,d[1] if len(d)>1 else -1,len(d),e.dealer_id)
+
+def _deal(e:Episode,holes:Sequence[Sequence[int]],board:Sequence[int])->_DealV1:
+    if len(holes)!=3 or any(len(row)!=2 for row in holes):raise ValueError('explicit deal requires three two-card hole rows')
+    if len(board)!=5:raise ValueError('explicit deal requires five board cards')
+    dead=set(_dead(e)); flat=[]
+    for seat,row in enumerate(holes):
+        for raw in row:
+            value=int(raw)
+            if seat in dead:
+                if value!=-1:raise ValueError('dead-seat explicit hole id must be -1')
+            elif value<0 or value>=52:raise ValueError('live-seat explicit hole id outside 0..51')
+            if value>=0:flat.append(value)
+    board_ids=tuple(int(x) for x in board)
+    if any(x<0 or x>=52 for x in board_ids):raise ValueError('explicit board id outside 0..51')
+    flat.extend(board_ids)
+    if len(flat)!=len(set(flat)):raise ValueError('explicit deal contains duplicate card ids')
+    vals=[int(holes[s][r]) for s in range(3) for r in range(2)]+list(board_ids)
+    return _DealV1(*vals)
+
 class SolverLibrary:
     def __init__(self,path:str|Path):
         self.path=Path(path); self.lib=C.CDLL(str(self.path)); L=self.lib
@@ -35,6 +70,12 @@ class SolverLibrary:
         L.spincore_solver_last_error.argtypes=[];L.spincore_solver_last_error.restype=C.c_char_p
         if L.spincore_solver_c_abi_version()!=2: raise RuntimeError('SPINCORE_SOLVER_C_ABI_V2 required')
         L.spincore_solver_state_create_v2.argtypes=[C.POINTER(_ScenarioV2),C.c_uint64];L.spincore_solver_state_create_v2.restype=C.c_void_p
+        create_deal=getattr(L,'spincore_solver_state_create_v2_deal',None);snapshot=getattr(L,'spincore_solver_state_deal_snapshot_v1',None)
+        if (create_deal is None)!=(snapshot is None):raise RuntimeError('incomplete explicit-deal diagnostic solver extension')
+        self.explicit_deal_available=create_deal is not None
+        if self.explicit_deal_available:
+            create_deal.argtypes=[C.POINTER(_ScenarioV2),C.POINTER(_DealV1)];create_deal.restype=C.c_void_p
+            snapshot.argtypes=[C.c_void_p,C.POINTER(_DealV1),C.POINTER(C.c_int32)];snapshot.restype=C.c_int32
         L.spincore_solver_state_clone.argtypes=[C.c_void_p];L.spincore_solver_state_clone.restype=C.c_void_p
         L.spincore_solver_state_destroy.argtypes=[C.c_void_p];L.spincore_solver_state_destroy.restype=None
         L.spincore_solver_state_terminal.argtypes=[C.c_void_p];L.spincore_solver_state_terminal.restype=C.c_int32
@@ -58,9 +99,13 @@ class SolverLibrary:
         L.spincore_solver_frontier_clone_state.argtypes=[C.c_void_p,C.c_size_t];L.spincore_solver_frontier_clone_state.restype=C.c_void_p
     def error(self)->str:return (self.lib.spincore_solver_last_error() or b'').decode('utf-8','replace')
     def create(self,e:Episode,seed:int)->'SolverState':
-        d=_dead(e); x=_ScenarioV2(e.total_chips,int(e.game_is_hu),e.blind_index,e.small_blind,e.big_blind,*e.stacks,d[0] if len(d)>0 else -1,d[1] if len(d)>1 else -1,len(d),e.dealer_id)
-        p=self.lib.spincore_solver_state_create_v2(C.byref(x),C.c_uint64(seed));
+        x=_scenario(e);p=self.lib.spincore_solver_state_create_v2(C.byref(x),C.c_uint64(seed));
         if not p: raise RuntimeError(self.error() or 'state creation failed')
+        return SolverState(self,p)
+    def create_with_deal(self,e:Episode,holes:Sequence[Sequence[int]],board:Sequence[int])->'SolverState':
+        if not self.explicit_deal_available:raise RuntimeError('solver library does not expose explicit-deal diagnostic API')
+        x=_scenario(e);d=_deal(e,holes,board);p=self.lib.spincore_solver_state_create_v2_deal(C.byref(x),C.byref(d))
+        if not p:raise RuntimeError(self.error() or 'explicit-deal state creation failed')
         return SolverState(self,p)
 
 class SolverState:
@@ -79,6 +124,13 @@ class SolverState:
         p=self.owner.lib.spincore_solver_state_clone(self._p());
         if not p:raise RuntimeError(self.owner.error() or 'clone failed')
         return SolverState(self.owner,p)
+    def deal_snapshot(self)->DealSnapshot:
+        if not self.owner.explicit_deal_available:raise RuntimeError('solver library does not expose explicit-deal diagnostic API')
+        d=_DealV1();visible=C.c_int32()
+        if self.owner.lib.spincore_solver_state_deal_snapshot_v1(self._p(),C.byref(d),C.byref(visible))!=0:raise RuntimeError(self.owner.error() or 'deal snapshot failed')
+        holes=((int(d.hole_0_0),int(d.hole_0_1)),(int(d.hole_1_0),int(d.hole_1_1)),(int(d.hole_2_0),int(d.hole_2_1)))
+        board=(int(d.board_0),int(d.board_1),int(d.board_2),int(d.board_3),int(d.board_4))
+        return DealSnapshot(holes,board,int(visible.value))
     @property
     def terminal(self):return bool(self.owner.lib.spincore_solver_state_terminal(self._p()))
     @property
