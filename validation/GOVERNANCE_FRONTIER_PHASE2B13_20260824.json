@@ -1,0 +1,77 @@
+{
+  "schema": "SPINCORE_GOVERNANCE_FRONTIER_PHASE2B13_V1",
+  "date": "2026-08-24",
+  "supersedes_frontier_detail_for_phase2b11_plus": "validation/GOVERNANCE_FRONTIER_REFRESH_20260822_V1PLUS_ARCH_RESET.json",
+  "ready_for_tables": false,
+  "production_training_authorized": false,
+  "architecture_winner": null,
+  "r7_5_3_old_h2_h3_chain": "FAIL_BLOCKED_CLOSED",
+  "phase2b10": {
+    "status": "MIXED_PRIVATE_PUBLIC_CHANCE",
+    "result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc",
+    "training_authorized": false
+  },
+  "phase2b11": {
+    "status": "FACTORIZED_CHANCE_ESTIMATOR_SCREEN_FAIL",
+    "result_sha256": "1596023d39609ddfe5a6528a2e62d376c8e6bd29dde68d24a20a9b0ed782b1aa",
+    "iid16_mean_tv": 0.33467186760867673,
+    "factor4x4_mean_tv": 0.43390513657870394,
+    "factorized_retry_authorized": false,
+    "training_authorized": false
+  },
+  "phase2b12": {
+    "status": "IID_CHANCE_EXPECTATION_CONVERGES_MATERIALLY",
+    "result_sha256": "dbccadae5805381d0188bef41fb62a72b25b42e03e5564ca88f05d9666e6e182",
+    "b11_iid16_reproduction_pass": true,
+    "k_mean_tv": {
+      "8": 0.4504905245525747,
+      "16": 0.33467186760867673,
+      "32": 0.23364186576967497,
+      "64": 0.17378003404961345
+    },
+    "k64_vs_k16_tv_relative_improvement": 0.48074501961781263,
+    "k64_tail_rate_tv_ge_035": 0.18333333333333332,
+    "screen_pass": true,
+    "small_causal_training_pilot_precommit_allowed": true,
+    "production_training_authorized": false
+  },
+  "phase2b13": {
+    "status": "FROZEN_IMPLEMENTED_AWAITING_RYZEN_OUTPUT",
+    "scope": "SMALL_EQUAL_COMPUTE_INITIAL_ROOT_IID64_TARGET_TRAINING_PILOT",
+    "control": "IID1_OF_64_EQUAL_COMPUTE_CONTROL",
+    "candidate": "IID64_MEAN_CANDIDATE",
+    "conditional_iid_scope": "INITIAL_PREFLOP_ROOT_ONLY",
+    "continuation_behavior_floor": 0.25,
+    "root_behavior_floor": 0.0,
+    "heldout_inference_floor": 0.0,
+    "logical_roots_per_arm_seed": 384,
+    "auxiliary_root_target_traversals_per_logical_root": 64,
+    "total_logical_roots": 1536,
+    "total_auxiliary_root_target_traversals": 98304,
+    "equal_compute_control": true,
+    "downstream_advantage_averaging": false,
+    "strategy_mechanism_changed": false,
+    "full_x4_confirmation_authorized_only_on_causal_pass": true,
+    "architecture_winner_selected": false,
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "next_decision": "RUN_PHASE2B13_RYZEN_AND_APPLY_FROZEN_CAUSAL_GATES",
+  "r7_5_4": "BLOCKED_NO_PROVISIONAL_REPRESENTATION_WINNER",
+  "r8": "BLOCKED",
+  "prohibitions": [
+    "NO_GATE_RELAXATION",
+    "NO_SEED_SHOPPING",
+    "NO_DROPPED_THREE_HANDED_SCENARIO",
+    "NO_REOPEN_OLD_R7_5_3_H2_H3_REMEDIATION",
+    "NO_FACTORIZED_CHANCE_ESTIMATOR_RETRY",
+    "NO_K_SWEEP_AFTER_PHASE2B12",
+    "NO_K128_OR_K256_IN_PHASE2B13",
+    "NO_CONDITIONAL_RESAMPLING_AT_ARBITRARY_POST_HISTORY_INFOSETS",
+    "NO_HIGHER_PREFLOP_CONTINUATION_FLOOR",
+    "NO_HUBER_OR_LAG_ANCHOR_TUNING",
+    "NO_PRODUCTION_TRAINING",
+    "NO_READY_FOR_TABLES"
+  ],
+  "strategic_strength_rule": "Stability does not imply strategic strength. A Phase2B13 causal PASS permits only a full-budget x4 confirmation. A later full-budget hard stability PASS must still pass a separately precommitted strategic-strength comparison against the certified stable V1 control before architecture selection."
+}
