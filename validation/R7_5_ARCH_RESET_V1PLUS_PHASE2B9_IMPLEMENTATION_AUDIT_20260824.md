@@ -19,7 +19,7 @@ Frozen evidence:
 - exact Phase2B6 result SHA-256 `33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a`;
 - exact Phase2B8 result SHA-256 `1fd9144a488cea6de0a7500320d552abf994908b5200146d4baa4bd6f81c4d98`;
 - Phase2B8 equivalence-before-divergence PASS;
-- exact Phase2B6 execution SHA `4fa96434321b59f63ed5c61f37de2c115c67315` is **not** the Phase2B6 pilot source and is intentionally not used here; the Phase2B6 pilot execution identity is `4fa96434321c32efc734a55ae75982018ff2d091`, which is what the implementation enforces.
+- exact Phase2B6 pilot execution identity `4fa96434321c32efc734a55ae75982018ff2d091`, which is what the implementation enforces on both source checkpoints.
 
 ## Findings
 
