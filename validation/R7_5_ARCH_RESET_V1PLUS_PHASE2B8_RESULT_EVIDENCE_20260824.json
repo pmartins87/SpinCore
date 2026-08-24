@@ -1,0 +1,77 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B8_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "governance_scope": "Post-R7.5.3 V1+ architecture-reset evidence only; R7.5.3 remains FAIL_BLOCKED_CLOSED.",
+  "source_result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B8_LAGGED_PREFLOP_ANCHOR_V1",
+  "uploaded_result_sha256": "1fd9144a488cea6de0a7500320d552abf994908b5200146d4baa4bd6f81c4d98",
+  "uploaded_result_bytes": 17221,
+  "execution_sha": "366e05959a359c4948744e8aa6f6321b30e0e939",
+  "status": "LAGGED_ANCHOR_EFFECT_NOT_SUPPORTED",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "candidate": "LAGGED_BEHAVIOR_ANCHOR_025",
+  "anchor_weight": 0.25,
+  "equivalence_before_divergence_pass": true,
+  "local_validity": {
+    "all_advantage_gates_pass": true,
+    "all_common_policy_fit_gates_pass": true,
+    "all_native_policy_fit_gates_pass": true,
+    "valid": true
+  },
+  "common_learner": {
+    "phase2b6_control_pooled_mean_tv": 0.18934816676149685,
+    "phase2b8_candidate_pooled_mean_tv": 0.20333039705340733,
+    "absolute_improvement_control_minus_candidate": -0.01398223029191048,
+    "relative_improvement": -0.07384402252767787,
+    "bootstrap_95_ci_control_minus_candidate": [-0.02168171060108362, -0.006820936161345012],
+    "heldouts": [
+      {
+        "evaluation_seed": 2029384436,
+        "control_mean_tv": 0.18810851478911766,
+        "candidate_mean_tv": 0.19912479925875587,
+        "control_p95_tv": 0.48880605139812816,
+        "candidate_p95_tv": 0.5550486160426066
+      },
+      {
+        "evaluation_seed": 1150634112,
+        "control_mean_tv": 0.19058781873387604,
+        "candidate_mean_tv": 0.2075359948480588,
+        "control_p95_tv": 0.5286989995226848,
+        "candidate_p95_tv": 0.5630397997919432
+      }
+    ],
+    "region_means": {
+      "PREFLOP_ROOT": {"control": 0.25663072380695223, "candidate": 0.2701833787367644},
+      "PREFLOP_CONTINUATION_1": {"control": 0.19934711180374354, "candidate": 0.2139845210338811},
+      "PREFLOP_CONTINUATION_2PLUS": {"control": 0.16516646320213313, "candidate": 0.18411825630354756},
+      "PREFLOP_CONTINUATION_COMBINED": {"control": 0.17780588501391395, "candidate": 0.19516229242670072},
+      "FLOP": {"control": 0.14960460545612553, "candidate": 0.15047735023120154},
+      "TURN": {"control": 0.14738866506978798, "candidate": 0.17540048724958687},
+      "RIVER": {"control": 0.16819131533805698, "candidate": 0.15594520557255306}
+    }
+  },
+  "native_learner": {
+    "phase2b6_control_pooled_mean_tv": 0.18839124364510276,
+    "phase2b8_candidate_pooled_mean_tv": 0.20242539701235546,
+    "absolute_improvement_control_minus_candidate": -0.014034153367252694,
+    "relative_improvement": -0.07449472223714741,
+    "bootstrap_95_ci_control_minus_candidate": [-0.021893208607824875, -0.006329246162576252]
+  },
+  "decision": {
+    "causal_effect_supported": false,
+    "hard_stability_pass": false,
+    "architecture_winner_selected": false,
+    "next_route": "REASSESS_ROOT_ANCHOR_OR_DIRECT_TARGET_VARIANCE_REDUCTION",
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  },
+  "interpretation": [
+    "The equivalence-before-divergence gate passed exactly, so the Phase2B8 comparison is causally interpretable rather than contaminated by an earlier implementation drift.",
+    "Replacing the Phase2B6 uniform component with a lagged learned policy in iteration 3 worsened pooled COMMON cross-seed mean TV by 0.01398223029191048 and the entire 95% bootstrap interval is below zero.",
+    "Both COMMON heldout means and p95 values worsened; NATIVE corroborates the same direction.",
+    "The lagged learned anchor worsened both preflop root and preflop continuation stability, so temporal inertia is not supported as the next remedy.",
+    "Do not tune the lag weight post hoc and do not escalate the uniform floor. The next frontier should test a direct mechanism for Advantage target-noise robustness before authorizing another trajectory-training intervention."
+  ],
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
