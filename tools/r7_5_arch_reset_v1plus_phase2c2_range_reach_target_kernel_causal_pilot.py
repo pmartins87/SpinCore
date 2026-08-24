@@ -1671,6 +1671,40 @@ def _path_preflight(args) -> int:
     return 0
 
 
+def _kernel_preflight(args) -> int:
+    repo_root = Path(args.repo_root).resolve()
+    solver_path = Path(args.solver).resolve()
+    b13_root = Path(args.phase2b13_root).resolve()
+    seed = int(TRAINING_SEEDS[0])
+    checkpoint = b13_root / b13.CANDIDATE_ARM / f"seed_{seed}" / "resume_checkpoint.pt"
+    states, _identity = b15._load_behavior_states(checkpoint, seed)
+    b10._worker_init(str(repo_root), str(solver_path), seed, states)
+    task = {
+        "training_seed": seed,
+        "scenario_index": 0,
+        "global_root": 0,
+        "iteration": 1,
+        "anchor_deck_seed": int(deck_seed(seed, 0, 1)),
+    }
+    row = _combined_aux_task(task)
+    if int(row["root"]["aux_traversals"]) != K:
+        raise RuntimeError("Phase2C2 kernel preflight root K drift")
+    if int(row["continuation"]["target_traversals"]) != K:
+        raise RuntimeError("Phase2C2 kernel preflight continuation K drift")
+    if row["continuation"]["region"] != "PREFLOP_CONTINUATION_2PLUS":
+        raise RuntimeError("Phase2C2 kernel preflight region drift")
+    if int(row["continuation"]["unique_joint_assignments"]) <= 0:
+        raise RuntimeError("Phase2C2 kernel preflight empty structural support")
+    print(
+        "Phase2C2 structural kernel preflight PASS "
+        f"root_aux={row['root']['aux_traversals']} "
+        f"cont_aux={row['continuation']['target_traversals']} "
+        f"joint_unique={row['continuation']['unique_joint_assignments']}",
+        flush=True,
+    )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="R7.5 architecture-reset Phase2C2 structural range/reach causal pilot"
@@ -1689,6 +1723,7 @@ def main() -> int:
     parser.add_argument("--single-seed", type=int, choices=TRAINING_SEEDS)
     parser.add_argument("--arm", choices=ARMS)
     parser.add_argument("--path-preflight-only", action="store_true")
+    parser.add_argument("--kernel-preflight-only", action="store_true")
     args = parser.parse_args()
 
     repo_root = args.repo_root.resolve()
@@ -1700,6 +1735,8 @@ def main() -> int:
     )
     if args.path_preflight_only:
         return _path_preflight(args)
+    if args.kernel_preflight_only:
+        return _kernel_preflight(args)
 
     required = (
         args.heldout_root,
