@@ -1,0 +1,62 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B10_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "uploaded_result_sha256": "0295574c6133eb05866ecbdccf7e31efa4e6e8936dbd8bb7e375e166b27fe4dc",
+  "result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B10_PRIVATE_PUBLIC_CHANCE_DECOMPOSITION_V1",
+  "status": "MIXED_PRIVATE_PUBLIC_CHANCE",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "source_behavior": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
+  "training_seeds": [1342191342, 1801739323],
+  "arms": ["TRAVERSAL_ONLY", "PRIVATE_ONLY", "PUBLIC_ONLY", "COMBINED"],
+  "arm_k1_policy_tv": {
+    "TRAVERSAL_ONLY": 0.05516957953078942,
+    "PRIVATE_ONLY": 0.40876631080266784,
+    "PUBLIC_ONLY": 0.4470753497550347,
+    "COMBINED": 0.5439893672482926
+  },
+  "excess_vs_traversal": {
+    "private": 0.3535967312718784,
+    "public": 0.3919057702242453,
+    "combined": 0.4888197877175032
+  },
+  "interaction_excess_combined_minus_max_single": 0.0969140174932579,
+  "pooled_sign_disagreement": {
+    "TRAVERSAL_ONLY": 0.036458333333333336,
+    "PRIVATE_ONLY": 0.35572916666666665,
+    "PUBLIC_ONLY": 0.3984375,
+    "COMBINED": 0.4942708333333333
+  },
+  "pooled_dominant_action_mismatch": {
+    "TRAVERSAL_ONLY": 0.05,
+    "PRIVATE_ONLY": 0.4083333333333333,
+    "PUBLIC_ONLY": 0.4895833333333333,
+    "COMBINED": 0.6020833333333333
+  },
+  "source_seed_direction": {
+    "1342191342": {
+      "private_tv": 0.4366978514321449,
+      "public_tv": 0.4250888914046577,
+      "combined_tv": 0.5346036143108466,
+      "traversal_tv": 0.050977486316145626
+    },
+    "1801739323": {
+      "private_tv": 0.3808347701731908,
+      "public_tv": 0.4690618081054117,
+      "combined_tv": 0.5533751201857389,
+      "traversal_tv": 0.059361672745433226
+    }
+  },
+  "interpretation": [
+    "Both opponent-private and future-public chance are materially active at the exact preflop root.",
+    "Neither component is consistently dominant across both frozen source behavior seeds, so a single-component intervention is not justified.",
+    "The combined arm remains materially above either single component, so private/public interaction or shared nonlinear regret-matching sensitivity remains relevant.",
+    "Traversal-only variation remains an order of magnitude smaller than combined chance variation and is not the primary target.",
+    "The explicit-deal diagnostic solver extension passed round-trip identity tests before the scientific run."
+  ],
+  "next_route": "PRECOMMIT_FACTORIZED_PRIVATE_PUBLIC_CHANCE_VARIANCE_REDUCTION_DIAGNOSTIC",
+  "training_pilot_authorized": false,
+  "architecture_winner_selected": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false
+}
