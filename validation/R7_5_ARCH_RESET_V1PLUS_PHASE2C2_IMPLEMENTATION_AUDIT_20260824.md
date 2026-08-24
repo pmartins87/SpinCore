@@ -25,7 +25,7 @@ The two arms are:
 * `RANGE1_EQUAL_COMPUTE_CONTROL`
 * `RANGE64_MEAN_CANDIDATE`
 
-Both arms compute the same 64 root IID targets and use their mean at the initial root. Both arms also compute the same 64 structural posterior continuation targets for one deterministic two-action preflop continuation per logical root. The control inserts target 0; the candidate inserts the arithmetic mean. Therefore candidate benefit cannot be attributed to greater auxiliary target compute.
+Both arms compute the same 64 root IID targets and use their mean at the initial root. Both arms also compute the same 64 structural posterior continuation targets for one deterministic two-action preflop continuation per logical root. The control inserts one cell selected uniformly from the same 64-cell stratified set and rotated to position zero; the candidate inserts the arithmetic mean. Therefore the control has the full posterior marginal and candidate benefit cannot be attributed to greater auxiliary target compute.
 
 The pilot uses 2 iterations × 64 logical roots per arm/seed = 128 roots per arm/seed. Across 2 arms × 2 training seeds this is 512 logical roots and 65,536 auxiliary target traversals total: 32,768 root-IID64 traversals plus 32,768 structural-continuation traversals.
 
@@ -65,6 +65,8 @@ The K64 structural proposal is generated without importance or rejection weights
 
 No rejection, self-normalized importance weighting, clipping, tempering, MCMC, SIR, or K tuning exists in the implementation.
 
+The fair-control patch is installed by the final wrapper entrypoint in the parent, each arm/seed subprocess, and the `ProcessPoolExecutor` chance workers created with Windows `spawn`. A dedicated spawn-context test verifies the stratified-kernel patch, continuation-task patch, entrypoint redirect, and deterministic control-cell index inside a fresh child process before the long pilot can start.
+
 ## Exact sample replacement
 
 `MultiReplacingAdvantageMemory` intercepts reservoir `add()` at the exact observation/iteration boundary. It replaces exactly two samples per logical root:
@@ -103,11 +105,14 @@ Hard stability (`mean <=0.15`, `p95 <=0.35` on both COMMON heldouts) is recorded
 * `validation/R7_5_ARCH_RESET_V1PLUS_PHASE2C2_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT_PRECOMMIT_20260824.md`
 * `tools/r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot.py`
 * `tools/test_r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot.py`
+* `tools/r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot_controlfair_v2.py`
+* `tools/test_r7_5_arch_reset_v1plus_phase2c2_controlfair.py`
+* `tools/test_r7_5_arch_reset_v1plus_phase2c2_controlfair_spawn.py`
 * `tools/test_r7_5_arch_reset_v1plus_phase2c2_live_replacement.py`
-* `tools/run_r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot_ryzen.ps1`
+* `tools/run_r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot_controlfair_ryzen.ps1`
 
 ## Real-execution status
 
-No real Windows/Ryzen Phase2C2 output has been observed when this audit was written. The launcher is responsible for the frozen Python check, synthetic tests, exact source-result/checkpoint hashes, fresh VS2022 x64 solver build, PE/ABI/SPNNIV3/explicit-deal checks, explicit-deal round-trip regression, all-scenario depth-2 path preflight, live structural K64 kernel preflight, and live two-sample replacement preflight before the pilot is allowed to start.
+No real Windows/Ryzen Phase2C2 output has been observed when this audit was written. The launcher is responsible for the frozen Python check, synthetic tests, explicit Windows-spawn fair-control propagation test, exact source-result/checkpoint hashes, fresh VS2022 x64 solver build, PE/ABI/SPNNIV3/explicit-deal checks, explicit-deal round-trip regression, all-scenario depth-2 path preflight, live structural K64 kernel preflight, and live two-sample replacement preflight before the pilot is allowed to start.
 
 No PASS is claimed for any of those real-machine checks until the user runs the frozen launcher.

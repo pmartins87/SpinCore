@@ -24,6 +24,7 @@ $ToolBase = Join-Path $Repo 'tools/r7_5_arch_reset_v1plus_phase2c2_range_reach_t
 $Tool = Join-Path $Repo 'tools/r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot_controlfair_v2.py'
 $Test = Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot.py'
 $FairTest = Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_phase2c2_controlfair.py'
+$FairSpawnTest = Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_phase2c2_controlfair_spawn.py'
 $LiveTest = Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_phase2c2_live_replacement.py'
 $B10Test = Join-Path $Repo 'tools/test_r7_5_arch_reset_v1plus_phase2b10_private_public_chance_decomposition.py'
 $B13Root = Join-Path $Repo 'ryzen_v1plus_phase2b13'
@@ -35,7 +36,7 @@ $C1Result = Join-Path $C1Root 'R7_5_ARCH_RESET_V1PLUS_PHASE2C1_EXACT_RANGE_REACH
 $Heldout = Join-Path $Repo 'heldout_v3_bundle'
 
 Write-Host '[V1+ Phase2C2] compiling final fair-control structural causal-pilot scripts...'
-& $Python -m py_compile $ToolBase $Tool $Test $FairTest $LiveTest
+& $Python -m py_compile $ToolBase $Tool $Test $FairTest $FairSpawnTest $LiveTest
 if ($LASTEXITCODE -ne 0) { throw 'Phase2C2 py_compile failed.' }
 
 Write-Host '[V1+ Phase2C2] running deterministic structural tests...'
@@ -44,6 +45,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Phase2C2 structural synthetic tests failed.' }
 Write-Host '[V1+ Phase2C2] running fair single-draw control tests...'
 & $Python $FairTest
 if ($LASTEXITCODE -ne 0) { throw 'Phase2C2 fair-control synthetic tests failed.' }
+Write-Host '[V1+ Phase2C2] proving fair-control propagation through Windows spawn...'
+& $Python $FairSpawnTest
+if ($LASTEXITCODE -ne 0) { throw 'Phase2C2 fair-control Windows-spawn test failed.' }
 
 foreach ($Path in @($B13Result,$B14Result,$C1Result)) {
     if (-not (Test-Path $Path -PathType Leaf)) { throw "Missing exact Phase2C2 prerequisite: $Path" }
@@ -111,6 +115,7 @@ Write-Host '[V1+ Phase2C2] no production training, no architecture winner, no re
     --contract 'tools/r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot_controlfair_v2.py' `
     --contract 'tools/test_r7_5_arch_reset_v1plus_phase2c2_range_reach_target_kernel_causal_pilot.py' `
     --contract 'tools/test_r7_5_arch_reset_v1plus_phase2c2_controlfair.py' `
+    --contract 'tools/test_r7_5_arch_reset_v1plus_phase2c2_controlfair_spawn.py' `
     --contract 'tools/test_r7_5_arch_reset_v1plus_phase2c2_live_replacement.py' `
     --contract 'tools/r7_5_arch_reset_v1plus_phase2c1_exact_range_reach_solver_prototype.py' `
     --contract 'tools/r7_5_arch_reset_v1plus_phase2b13_root_iid64_target_training.py' `
