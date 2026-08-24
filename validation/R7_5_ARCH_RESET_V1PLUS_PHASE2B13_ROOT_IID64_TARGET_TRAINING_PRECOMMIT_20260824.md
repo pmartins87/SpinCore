@@ -73,15 +73,17 @@ The same 64 legal deals and the same traversal RNG are evaluated. The ten-slot r
 
 The ordinary training root collection still runs once for every logical root for **all traversers and Strategy collection**.
 
-A deterministic memory proxy suppresses exactly one sample: the Advantage sample whose observation bytes equal the initial root SPNNIV3 observation and whose iteration equals the current iteration. The collector must attempt to add exactly one such sample per logical root. Zero or multiple suppressions abort the run.
+A deterministic memory proxy intercepts exactly one sample: the Advantage sample whose observation bytes equal the initial root SPNNIV3 observation and whose iteration equals the current iteration. At that exact reservoir `add` call, it immediately delegates a replacement `ActionAdvantageSample` to the real reservoir. The collector must attempt exactly one such root insertion per logical root. Zero or multiple matches abort the run.
 
-After ordinary collection:
+The replacement is therefore **in-place in reservoir insertion order**, not a suppress-then-late-append mechanism. This preserves the reservoir `seen` count, replacement-RNG call position and ordering relative to downstream Advantage samples.
 
-- control inserts one replacement root sample using IID sample 0;
-- candidate inserts one replacement root sample using the mean of all 64 IID targets;
-- legal mask, weight and iteration must match the suppressed root sample contract (`weight == iteration` at the initial root).
+At that exact root insertion:
 
-Everything else from ordinary collection is retained byte-for-byte in mechanism:
+- control substitutes the target with IID sample 0;
+- candidate substitutes the target with the mean of all 64 IID targets;
+- observation bytes, legal mask, weight and iteration are inherited from and must match the ordinary root sample contract (`weight == iteration` at the initial root).
+
+Everything else from ordinary collection is retained in mechanism:
 
 - downstream Advantage samples are **not** replaced or averaged;
 - Strategy samples are unchanged in mechanism;
@@ -115,7 +117,7 @@ For a fixed training seed and logical root, the two arms use identical:
 - normal logical-root collection budget;
 - optimizer steps and policy-fit steps.
 
-Only the statistic inserted as the **single replacement root Advantage target** differs: first IID target versus mean of 64 IID targets.
+Only the statistic substituted as the **single root Advantage target** differs: first IID target versus mean of 64 IID targets.
 
 After the arms diverge, their learned behavior policies are naturally allowed to differ. Chance seeds remain paired; target values may differ because the source behavior has causally diverged.
 
@@ -125,7 +127,7 @@ For each arm and seed:
 
 - exactly 384 logical roots;
 - 3 completed iterations;
-- exactly one suppressed/replaced root sample per logical root;
+- exactly one in-place root replacement per logical root;
 - exactly 64 auxiliary target traversals per logical root;
 - all three iteration Advantage ensemble NRMSE gates pass;
 - COMMON and NATIVE AveragePolicy fit gates pass;
