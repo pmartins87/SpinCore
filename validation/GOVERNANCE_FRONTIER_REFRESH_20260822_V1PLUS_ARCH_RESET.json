@@ -111,13 +111,39 @@
       "next_route": "PRECOMMIT_PHASE2C1_EXACT_RANGE_REACH_SOLVER_PROTOTYPE"
     },
     "phase2c1_exact_range_reach_solver_prototype": {
-      "status": "FROZEN_AWAITING_RYZEN_READOUT",
-      "source_phase2c0_result_sha256": "55e83be4fd8776e0fcdb63e7d4400ed05aff8c48213898ad8f1abe3713a35876",
-      "scope": "DETERMINISTIC_INCREMENTAL_PUBLIC_ACTION_REACH_PROPAGATION_OVER_TWO_2450_ENTRY_OPPONENT_PRIVATE_HAND_TABLES",
-      "target_estimator": null,
+      "status": "EXACT_RANGE_REACH_TRANSITION_PROTOTYPE_FEASIBLE",
+      "result_sha256": "62ad2352c807a3b046bc84df2cbdf66cc8e0217e3422d01f2bcd9ddeafe7875b",
+      "complete_16_tasks": true,
+      "final_target_identity_exact_all": true,
+      "max_incremental_vs_direct_abs_error": 5.551115123125783e-17,
+      "max_actor_scalar_abs_error": 0.0,
+      "max_joint_normalizer_relative_error_vs_c0": 2.1541587260971804e-16,
+      "max_effective_support_relative_error_vs_c0": 3.8543787362290213e-16,
+      "positive_joint_assignments_match_all": true,
+      "max_raw_reach_storage_bytes": 39200,
+      "max_table_policy_evaluations": 4900,
+      "screen_pass": true,
+      "next_route": "PRECOMMIT_SINGLE_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
       "training_authorized": false,
-      "pass_route": "PRECOMMIT_SINGLE_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
-      "fail_route": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET"
+      "full_x4_confirmation_authorized": false
+    },
+    "phase2c2_range_reach_target_kernel_causal_pilot": {
+      "status": "FROZEN_AWAITING_RYZEN_READOUT",
+      "scope": "SINGLE_BOUNDED_EQUAL_COMPUTE_STRUCTURAL_RANGE_REACH_CONTINUATION_TARGET_CAUSAL_PILOT",
+      "source_phase2c1_result_sha256": "62ad2352c807a3b046bc84df2cbdf66cc8e0217e3422d01f2bcd9ddeafe7875b",
+      "arms": [
+        "RANGE1_EQUAL_COMPUTE_CONTROL",
+        "RANGE64_MEAN_CANDIDATE"
+      ],
+      "root_target_both_arms": "IID64_MEAN",
+      "continuation_kernel": "RANDOMIZED_8X8_EXACT_RANGE_REACH_K64",
+      "iterations": 2,
+      "roots_per_arm_seed": 128,
+      "total_logical_roots": 512,
+      "total_auxiliary_target_traversals": 65536,
+      "pass_route": "PRECOMMIT_FULL_X4_STRUCTURAL_RANGE_REACH_CONFIRMATION",
+      "causal_fail_route": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
+      "production_training_authorized": false
     },
     "estimator_repair_path": "CLOSED_AFTER_PHASE2B16",
     "architecture_winner": null
@@ -133,9 +159,10 @@
   },
   "strategic_strength_rule": "No successor may advance on stability alone. After a hard stability PASS, a separately precommitted paired strategic-strength evaluation against the certified stable V1 control is mandatory before architecture selection.",
   "finite_structural_route": {
-    "current": "PHASE2C1_EXACT_RANGE_REACH_SOLVER_PROTOTYPE",
-    "on_phase2c1_pass": "ONE_SEPARATELY_PRECOMMITTED_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
-    "on_phase2c1_fail": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
+    "current": "PHASE2C2_SINGLE_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
+    "on_phase2c2_pass": "ONE_FULL_X4_HARD_STABILITY_CONFIRMATION_OF_IDENTICAL_STRUCTURAL_CANDIDATE",
+    "on_phase2c2_causal_fail": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
+    "on_phase2c2_local_invalidity": "MECHANICAL_AUDIT_RECOVERY_ONLY_NO_SCIENTIFIC_TUNING",
     "no_open_ended_c_series": true
   },
   "prohibitions": [
@@ -147,7 +174,8 @@
     "NO_K128_K256_ESCALATION",
     "NO_POSTHOC_IMPORTANCE_WEIGHT_CLIPPING_OR_TEMPERING",
     "NO_MCMC_OR_SIR_POSTHOC_SUBSTITUTION",
-    "NO_PHASE2C1_TRAINING",
+    "NO_POSTHOC_PHASE2C2_STRATIFICATION_OR_K_TUNING",
+    "NO_PHASE2C2_PRODUCTION_TRAINING",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]
