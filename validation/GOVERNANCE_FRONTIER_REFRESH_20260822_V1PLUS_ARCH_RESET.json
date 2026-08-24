@@ -140,16 +140,34 @@
       "ready_for_tables": false
     },
     "phase2b9_robust_advantage_regression": {
-      "status": "FROZEN_AWAITING_RYZEN_READOUT",
-      "scope": "FIT_ONLY_PAIRED_MSE_VS_HUBER_ON_EXACT_PHASE2B6_ADVANTAGE_MEMORIES",
-      "source": "EXACT_COMPLETED_PHASE2B6",
+      "status": "HUBER_ROBUSTNESS_SCREEN_FAIL_DO_NOT_TRAIN",
+      "result_sha256": "71f77b6921597c7b1d048f8fb3e448f5fce74a974b247ac4ca88383fece5c64a",
       "candidate": "HUBER_BETA_002",
       "huber_beta": 0.02,
-      "solver_traversal": false,
-      "reservoir_mutation": false,
-      "average_policy_fit": false,
-      "paired_identical_batch_sequence": true,
-      "small_causal_training_pilot_authorized": false,
+      "canonical_side_member_reproduction_pass": true,
+      "mse_equal_heldout_mean_tv": 0.30567460296341376,
+      "huber_equal_heldout_mean_tv": 0.3161210369628588,
+      "absolute_mse_minus_huber": -0.01044643399944506,
+      "bootstrap_95_ci_mse_minus_huber": [-0.019915579281452708, 0.00012082570893172335],
+      "both_evaluation_seed_means_improve": false,
+      "huber_training_pilot_authorized": false,
+      "next_route": "DESIGN_STRATIFIED_CHANCE_SUPPORT_OR_SOLVER_LEVEL_VARIANCE_REDUCTION",
+      "production_training_authorized": false,
+      "ready_for_tables": false
+    },
+    "phase2b10_private_public_chance_decomposition": {
+      "status": "FROZEN_AWAITING_RYZEN_READOUT",
+      "scope": "READ_ONLY_ROOT_PRIVATE_VS_PUBLIC_CHANCE_DECOMPOSITION_ON_EXACT_PHASE2B6_BEHAVIORS",
+      "source": "EXACT_COMPLETED_PHASE2B6_WITH_25_PERCENT_PREFLOP_CONTINUATION_FLOOR",
+      "phase2b1_result_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
+      "phase2b6_result_sha256": "33ec6ba89823dae632b7af935def17444379c96a28e59478c0b7c91f1ec3659a",
+      "phase2b9_result_sha256": "71f77b6921597c7b1d048f8fb3e448f5fce74a974b247ac4ca88383fece5c64a",
+      "anchors_per_scenario": 4,
+      "replicates_per_arm": 8,
+      "arms": ["TRAVERSAL_ONLY", "PRIVATE_ONLY", "PUBLIC_ONLY", "COMBINED"],
+      "total_root_target_traversals": 3840,
+      "explicit_deal_solver_extension": "ADDITIVE_DIAGNOSTIC_ONLY",
+      "training_pilot_authorized": false,
       "architecture_winner_selected": false,
       "production_training_authorized": false,
       "ready_for_tables": false
@@ -165,7 +183,7 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B9 is only a fit-only mechanism screen; a PASS can authorize one small causal trajectory pilot, and only a later hard stability PASS may open a separate precommitted strategic-strength comparison against the certified stable V1 control.",
+  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B10 is a read-only chance-source diagnostic; its classification authorizes only a separately precommitted variance-reduction design. A later hard stability PASS may open a separate precommitted strategic-strength comparison against the certified stable V1 control.",
   "prohibitions": [
     "NO_GATE_RELAXATION",
     "NO_SEED_SHOPPING",
@@ -174,6 +192,7 @@
     "NO_OPPORTUNISTIC_ESCALATION_TO_50_75_100_PERCENT_PREFLOP_FLOOR",
     "NO_POSTHOC_PHASE2B8_LAG_WEIGHT_TUNING",
     "NO_PHASE2B9_HUBER_BETA_SWEEP",
+    "NO_PHASE2B10_EXPLICIT_DEAL_PRODUCTION_TRAINING",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]
