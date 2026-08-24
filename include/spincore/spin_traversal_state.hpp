@@ -11,6 +11,7 @@ namespace spincore {
 class SpinTraversalState {
 public:
  SpinTraversalState(const EpisodeScenario& scenario,std::uint64_t deck_seed);
+ SpinTraversalState(const EpisodeScenario& scenario,const std::array<std::array<Card,2>,3>& hole_cards,const std::array<Card,5>& board_cards);
  [[nodiscard]] const EpisodeScenario& scenario() const noexcept{return scenario_;}
  [[nodiscard]] const HandEngine& hand() const noexcept{return hand_;}
  [[nodiscard]] HandEngine& hand() noexcept{return hand_;}
