@@ -7,6 +7,7 @@
 #include "spincore/game_topology.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <exception>
 #include <memory>
@@ -15,6 +16,7 @@
 #include <vector>
 
 using spincore::AbstractActionSlot;
+using spincore::Card;
 using spincore::EpisodeScenario;
 using spincore::PayoutProfile;
 using spincore::SpinTraversalState;
@@ -63,6 +65,44 @@ static EpisodeScenario decode(const spincore_solver_scenario_v2& i) {
     s.state.dead_player_count = i.dead_player_count;
     s.dealer_id = i.dealer_id;
     return s;
+}
+
+struct DecodedExplicitDeal {
+    std::array<std::array<Card,2>,3> holes{};
+    std::array<Card,5> board{};
+};
+
+static DecodedExplicitDeal decode_deal(const EpisodeScenario& scenario, const spincore_solver_deal_v1& d) {
+    const int hole_ids[3][2] = {
+        {d.hole_0_0, d.hole_0_1},
+        {d.hole_1_0, d.hole_1_1},
+        {d.hole_2_0, d.hole_2_1},
+    };
+    const int board_ids[5] = {d.board_0, d.board_1, d.board_2, d.board_3, d.board_4};
+    DecodedExplicitDeal out{};
+    const auto topo = spincore::make_game_topology(scenario);
+    for (int seat = 0; seat < 3; ++seat) {
+        bool live = false;
+        for (int j = 0; j < topo.live_count; ++j) {
+            if (topo.live[static_cast<std::size_t>(j)] == seat) { live = true; break; }
+        }
+        for (int r = 0; r < 2; ++r) {
+            const int id = hole_ids[seat][r];
+            if (!live) {
+                if (id != -1) throw std::invalid_argument("dead-seat explicit hole id must be -1");
+                out.holes[static_cast<std::size_t>(seat)][static_cast<std::size_t>(r)] = Card{};
+            } else {
+                if (id < 0 || id >= 52) throw std::invalid_argument("live-seat explicit hole id outside 0..51");
+                out.holes[static_cast<std::size_t>(seat)][static_cast<std::size_t>(r)] = spincore::card_from_id(static_cast<std::uint8_t>(id));
+            }
+        }
+    }
+    for (int i = 0; i < 5; ++i) {
+        const int id = board_ids[i];
+        if (id < 0 || id >= 52) throw std::invalid_argument("explicit board id outside 0..51");
+        out.board[static_cast<std::size_t>(i)] = spincore::card_from_id(static_cast<std::uint8_t>(id));
+    }
+    return out;
 }
 
 static UniversalActionMaskV2 decode_universal_mask(uint32_t mask) {
@@ -114,6 +154,39 @@ spincore_solver_state* spincore_solver_state_create_v2(
         if (!s) throw std::invalid_argument("null scenario");
         return new spincore_solver_state(SpinTraversalState(decode(*s), seed));
     }, static_cast<spincore_solver_state*>(nullptr));
+}
+
+spincore_solver_state* spincore_solver_state_create_v2_deal(
+    const spincore_solver_scenario_v2* s,
+    const spincore_solver_deal_v1* d
+) {
+    return guard([&]() -> spincore_solver_state* {
+        if (!s || !d) throw std::invalid_argument("null explicit-deal arguments");
+        const auto scenario = decode(*s);
+        const auto deal = decode_deal(scenario, *d);
+        return new spincore_solver_state(SpinTraversalState(scenario, deal.holes, deal.board));
+    }, static_cast<spincore_solver_state*>(nullptr));
+}
+
+int32_t spincore_solver_state_deal_snapshot_v1(
+    const spincore_solver_state* s,
+    spincore_solver_deal_v1* out,
+    int32_t* visible_board_count
+) {
+    return guard([&]() {
+        if (!s || !out || !visible_board_count) throw std::invalid_argument("null deal-snapshot arguments");
+        const auto& holes = s->impl.hand().hole_cards();
+        const auto& board = s->impl.hand().board();
+        auto id_or_minus_one = [](const Card& c) -> int32_t { return c.valid() ? static_cast<int32_t>(c.id()) : -1; };
+        out->hole_0_0 = id_or_minus_one(holes[0][0]); out->hole_0_1 = id_or_minus_one(holes[0][1]);
+        out->hole_1_0 = id_or_minus_one(holes[1][0]); out->hole_1_1 = id_or_minus_one(holes[1][1]);
+        out->hole_2_0 = id_or_minus_one(holes[2][0]); out->hole_2_1 = id_or_minus_one(holes[2][1]);
+        out->board_0 = static_cast<int32_t>(board[0].id()); out->board_1 = static_cast<int32_t>(board[1].id());
+        out->board_2 = static_cast<int32_t>(board[2].id()); out->board_3 = static_cast<int32_t>(board[3].id());
+        out->board_4 = static_cast<int32_t>(board[4].id());
+        *visible_board_count = static_cast<int32_t>(s->impl.hand().visible_board_count());
+        return 0;
+    }, -1);
 }
 
 spincore_solver_state* spincore_solver_state_clone(const spincore_solver_state* s) {
