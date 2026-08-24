@@ -1,0 +1,64 @@
+{
+  "architecture_winner_selected": false,
+  "common_overall": {
+    "absolute_improvement": 0.014520507258189153,
+    "candidate_mean_tv": 0.19523816167507577,
+    "candidate_p95_tv": 0.5018352889847746,
+    "control_mean_tv": 0.20975866893326492,
+    "relative_improvement": 0.0692248255198877
+  },
+  "common_residual_broad_region_shares": {
+    "POSTFLOP": {
+      "tail_share": 0.1314102564102564,
+      "tv_mass_share": 0.16656896234037427
+    },
+    "PREFLOP_CONTINUATION": {
+      "tail_share": 0.46794871794871795,
+      "tv_mass_share": 0.5465539347457481
+    },
+    "ROOT": {
+      "tail_share": 0.40064102564102566,
+      "tv_mass_share": 0.2868771029138797
+    }
+  },
+  "common_root": {
+    "by_evaluation_seed": {
+      "1150634112": {
+        "candidate_mean_tv": 0.24591926296426972,
+        "control_mean_tv": 0.2801363913016471,
+        "improvement": 0.03421712833737736
+      },
+      "2029384436": {
+        "candidate_mean_tv": 0.2720757219054952,
+        "control_mean_tv": 0.2948392091035947,
+        "improvement": 0.022763487198099452
+      }
+    },
+    "effect_consistent_across_heldouts": true,
+    "pooled_mean_improvement": 0.028490307767738407
+  },
+  "date": "2026-08-24",
+  "domain": "THREE_HANDED",
+  "full_x4_confirmation_authorized": false,
+  "interpretation": "The Phase2B13 root IID64 intervention localized a consistent root improvement, but preflop continuation states still dominate the residual COMMON instability. Any continuation chance integration must condition hidden opponent cards on the already-observed preflop actions rather than resampling them from the unconditional card prior.",
+  "next_route": "PRECOMMIT_POSTERIOR_WEIGHTED_PREFLOP_CONTINUATION_CHANCE_SCREEN",
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "reproduction_pass": true,
+  "reproduction_tolerance": 1e-12,
+  "result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B14_B13_RESIDUAL_LOCALIZATION_V1",
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B14_RESULT_EVIDENCE_V1",
+  "source_phase2b13_execution_sha": "2cd7d1ece46a20d2b8937fe5135a415f6bbe54c2",
+  "source_phase2b13_result_sha256": "6de7996282236d34adf5e8e53416fd8a443a1fbf5abc89fc807492d0cb3dbf80",
+  "status": "PREFLOP_CONTINUATION_RESIDUAL_DOMINANT_AFTER_ROOT_IID64",
+  "top3_scenario_tail_share": 0.28525641025641024,
+  "top3_scenario_tv_mass_share": 0.24737052860085373,
+  "top3_scenarios": [
+    "2",
+    "0",
+    "3"
+  ],
+  "training_authorized": false,
+  "uploaded_result_sha256": "7cd1886596d345abdcdef479775498eddf7e014205de86e44afb5bb0ea291f86"
+}
