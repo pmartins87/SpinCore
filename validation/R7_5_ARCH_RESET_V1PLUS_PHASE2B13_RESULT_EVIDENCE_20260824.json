@@ -1,0 +1,46 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B13_RESULT_EVIDENCE_V1",
+  "date": "2026-08-24",
+  "uploaded_result_sha256": "6de7996282236d34adf5e8e53416fd8a443a1fbf5abc89fc807492d0cb3dbf80",
+  "result_schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2B13_ROOT_IID64_TARGET_TRAINING_V1",
+  "execution_sha": "2cd7d1ece46a20d2b8937fe5135a415f6bbe54c2",
+  "status": "ROOT_IID64_TRAINING_EFFECT_NOT_SUPPORTED",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "action_candidate": "PF0_CONTROL_33_75_AI",
+  "local_validity_pass": true,
+  "all_advantage_gates_pass": true,
+  "all_policy_fit_gates_pass": true,
+  "common_control_mean_tv": 0.20975866893326492,
+  "common_candidate_mean_tv": 0.19523816167507577,
+  "common_absolute_improvement": 0.014520507258189153,
+  "common_relative_improvement": 0.0692248255198877,
+  "common_bootstrap_95_ci_control_minus_candidate": [
+    0.006679806669292539,
+    0.022883819632246317
+  ],
+  "both_common_evaluation_seed_means_improve": true,
+  "common_p95_non_degradation_pass": true,
+  "native_control_mean_tv": 0.20596655834903665,
+  "native_candidate_mean_tv": 0.19303321196098563,
+  "native_absolute_improvement": 0.01293334638805102,
+  "native_relative_improvement": 0.06279342866007312,
+  "native_bootstrap_95_ci_control_minus_candidate": [
+    0.00568167069563984,
+    0.020078359231723113
+  ],
+  "native_noncontradiction_pass": true,
+  "common_materiality_gate": {
+    "absolute_min": 0.02,
+    "relative_min": 0.10,
+    "pass": false
+  },
+  "causal_effect_supported_under_frozen_gate": false,
+  "hard_stability_pass": false,
+  "full_x4_confirmation_authorized": false,
+  "architecture_winner_selected": false,
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "next_route": "REASSESS_CONTINUATION_CONDITIONAL_CHANCE_OR_REPRESENTATION_SUPPORT_NO_SCALEUP",
+  "interpretation": "Root IID64 produced a statistically consistent positive cross-seed stability shift in both COMMON heldouts and the NATIVE diagnostic, and improved p95 in every heldout, but the effect was smaller than the materiality threshold frozen before outputs: 0.01452 absolute and 6.92% relative versus the required 0.02 absolute or 10% relative. The result therefore fails the precommitted causal support gate and cannot authorize x4 scale-up. The positive-but-small effect should be localized read-only before considering any continuation-conditioned chance estimator or representation change."
+}
