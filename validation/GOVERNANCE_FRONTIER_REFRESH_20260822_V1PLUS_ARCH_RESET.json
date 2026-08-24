@@ -1,6 +1,6 @@
 {
   "schema": "SPINCORE_GOVERNANCE_FRONTIER_REFRESH_V1PLUS_ARCH_RESET_V1",
-  "date": "2026-08-23",
+  "date": "2026-08-24",
   "ready_for_tables": false,
   "production_training_authorized": false,
   "r7_5_3": {
@@ -35,13 +35,25 @@
       "final_advantage_common_heldout_mean_tv": [0.5053508948091757, 0.5218671078483021],
       "generated_advantage_sample_relative_divergence_by_iteration": [0.009365647919864788, 0.06102691241964977, 0.2161566088320097]
     },
+    "phase2b0_policy_algebra_screen": {
+      "status": "FAIL_DO_NOT_TRAIN_CANDIDATE",
+      "candidate": "RAW_MEAN_THEN_REGRET_MATCH_WITH_CONTROL_EPSILON",
+      "control_mean_tv": 0.30122738070967015,
+      "candidate_mean_tv": 0.3439887521790942,
+      "consequence": "Do not train raw-mean-before-regret-matching candidate."
+    },
     "phase2b1_target_variance": {
-      "status": "COMPLETE",
-      "evidence_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef"
+      "status": "PHASE2B1_K4_SCREEN_FAIL_NO_GENERIC_K4_TRAINING_PILOT",
+      "evidence_sha256": "f95751afeb17fcd5844bfcb2971577b92a400750444e5dabe2f4ddb5718ba6ef",
+      "chance_only_k1_policy_tv": 0.5153716032136447,
+      "traversal_only_k1_policy_tv": 0.05194165047961052,
+      "generic_k4_training_authorized": false
     },
     "phase2b2_common_chance_feedback": {
-      "status": "COMPLETE",
-      "evidence_sha256": "49cd1bd98ffe30f21a2b4263c50eb0b5c6d3e616b651a1353f136a670453e281"
+      "status": "MIXED_CHANCE_SUPPORT_AND_FEEDBACK",
+      "evidence_sha256": "49cd1bd98ffe30f21a2b4263c50eb0b5c6d3e616b651a1353f136a670453e281",
+      "common_traversal_rng_k1_cross_behavior_tv": 0.38709419727000416,
+      "relative_reduction_vs_phase2b1_chance_reference": 0.24535633882788724
     },
     "phase2b3_root_feedback_decomposition": {
       "status": "MIXED_ROOT_AND_DOWNSTREAM_FEEDBACK",
@@ -105,31 +117,39 @@
       "common_root_baseline_mean_tv": 0.2226316130920923,
       "common_root_phase2b6_mean_tv": 0.25663072380695223,
       "common_root_phase2b6_p95_tv": 0.6509606611106077,
-      "common_continuation1_relative_improvement": 0.24155920001359746,
-      "common_continuation2plus_relative_improvement": 0.24592052755327537,
       "scenario_concentrated": false,
-      "next_route": "PRECOMMIT_EARLY_PREFLOP_LAGGED_TARGET_OR_ANCHOR_SCREEN",
-      "training_authorized": false,
-      "higher_floor_training_authorized": false,
+      "next_route": "PRECOMMIT_EARLY_PREFLOP_LAGGED_TARGET_OR_ANCHOR_SCREEN"
+    },
+    "phase2b8_lagged_preflop_anchor": {
+      "status": "LAGGED_ANCHOR_EFFECT_NOT_SUPPORTED",
+      "result_sha256": "1fd9144a488cea6de0a7500320d552abf994908b5200146d4baa4bd6f81c4d98",
+      "candidate": "LAGGED_BEHAVIOR_ANCHOR_025",
+      "equivalence_before_divergence_pass": true,
+      "common_control_mean_tv": 0.18934816676149685,
+      "common_candidate_mean_tv": 0.20333039705340733,
+      "common_absolute_improvement": -0.01398223029191048,
+      "common_bootstrap_95_ci_control_minus_candidate": [-0.02168171060108362, -0.006820936161345012],
+      "common_root_control_mean_tv": 0.25663072380695223,
+      "common_root_candidate_mean_tv": 0.2701833787367644,
+      "common_continuation_control_mean_tv": 0.17780588501391395,
+      "common_continuation_candidate_mean_tv": 0.19516229242670072,
+      "alternate_lag_weight_authorized": false,
+      "higher_uniform_floor_authorized": false,
+      "next_route": "REASSESS_ROOT_ANCHOR_OR_DIRECT_TARGET_VARIANCE_REDUCTION",
       "production_training_authorized": false,
       "ready_for_tables": false
     },
-    "phase2b8_lagged_preflop_anchor": {
+    "phase2b9_robust_advantage_regression": {
       "status": "FROZEN_AWAITING_RYZEN_READOUT",
-      "candidate": "LAGGED_BEHAVIOR_ANCHOR_025",
-      "anchor_weight": 0.25,
-      "scope": "PREFLOP_CONTINUATION_AFTER_AT_LEAST_ONE_NONFORCED_PREFLOP_EVENT",
-      "root_anchor": 0.0,
-      "postflop_anchor": 0.0,
-      "heldout_inference_anchor": 0.0,
-      "iterations": 3,
-      "roots_per_seed": 768,
-      "control": "EXACT_COMPLETED_PHASE2B6",
-      "control_retrained": false,
-      "first_intended_causal_divergence_iteration": 3,
-      "equivalence_before_divergence_required": true,
-      "higher_uniform_floor_authorized": false,
-      "alternate_lag_weight_authorized": false,
+      "scope": "FIT_ONLY_PAIRED_MSE_VS_HUBER_ON_EXACT_PHASE2B6_ADVANTAGE_MEMORIES",
+      "source": "EXACT_COMPLETED_PHASE2B6",
+      "candidate": "HUBER_BETA_002",
+      "huber_beta": 0.02,
+      "solver_traversal": false,
+      "reservoir_mutation": false,
+      "average_policy_fit": false,
+      "paired_identical_batch_sequence": true,
+      "small_causal_training_pilot_authorized": false,
       "architecture_winner_selected": false,
       "production_training_authorized": false,
       "ready_for_tables": false
@@ -145,7 +165,7 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No candidate may advance on stability alone. Even a Phase2B8 hard stability PASS is only stability eligibility; a separate precommitted strategic-strength comparison against the certified stable V1 control is mandatory before architecture selection.",
+  "strategic_strength_rule": "No candidate may advance on stability alone. Phase2B9 is only a fit-only mechanism screen; a PASS can authorize one small causal trajectory pilot, and only a later hard stability PASS may open a separate precommitted strategic-strength comparison against the certified stable V1 control.",
   "prohibitions": [
     "NO_GATE_RELAXATION",
     "NO_SEED_SHOPPING",
@@ -153,6 +173,7 @@
     "NO_ADDITIONAL_H2_H3_R7_5_3_REMEDIATION",
     "NO_OPPORTUNISTIC_ESCALATION_TO_50_75_100_PERCENT_PREFLOP_FLOOR",
     "NO_POSTHOC_PHASE2B8_LAG_WEIGHT_TUNING",
+    "NO_PHASE2B9_HUBER_BETA_SWEEP",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]
