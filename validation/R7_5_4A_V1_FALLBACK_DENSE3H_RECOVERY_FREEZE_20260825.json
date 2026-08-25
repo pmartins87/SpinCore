@@ -1,0 +1,113 @@
+{
+  "schema": "SPINCORE_R7_5_4A_V1_FALLBACK_DENSE3H_RECOVERY_FREEZE_V1",
+  "frozen_at_utc": "2026-08-25T00:00:00Z",
+  "architectural_binding": {
+    "selected_representation": "C0_V1_FROZEN_CONTROL",
+    "selection_commit": "eb48df109fdecbf54bd2d2f0ad8b37a6d94577a1",
+    "v1plus_reset_closed": true
+  },
+  "original_training": {
+    "workflow_run_id": 31804178848,
+    "workflow_url": "https://github.com/pmartins87/SpinCore/actions/runs/31804178848",
+    "execution_sha": "457996944f76e9f1fa0475691df978f450259641",
+    "runtime": {
+      "os_family": "Linux",
+      "python": "3.11.15",
+      "torch": "2.13.0+cpu",
+      "numpy": "2.3.5",
+      "torch_threads": 2
+    },
+    "matrix_cells_expected": 36,
+    "final_checkpoints_present": 33,
+    "final_checkpoints_missing": 3,
+    "artifact_expiration_window": "2026-09-14"
+  },
+  "missing_cells": [
+    {
+      "candidate_id": "PF_DENSE_REFERENCE",
+      "domain": "THREE_HANDED",
+      "training_seed": 1737995611,
+      "last_completed_iteration": 1,
+      "source_iteration1_artifact_id": 9224957740,
+      "source_iteration1_artifact_sha256": "44231b6e8ac00da19bcca267511f8355490205baba8e758985419214111ac75a",
+      "source_iteration1_checkpoint_sha256": "ea598ec624ee2e4e72fc8c3780c53863d6f116d5d9baa9495bcbbfe7cfadea2c"
+    },
+    {
+      "candidate_id": "PF_DENSE_REFERENCE",
+      "domain": "THREE_HANDED",
+      "training_seed": 645939859,
+      "last_completed_iteration": 1,
+      "source_iteration1_artifact_id": 9225388016,
+      "source_iteration1_artifact_sha256": "1b6ba187a83fe4f04b106dd3f7f9b8d6d1624776bc379d332114cd328e3ef7bc",
+      "source_iteration1_checkpoint_sha256": "ba02b8a6b27da27b891c51a2e90bb437810ac2c44db6ca498375ca83be8cde09"
+    },
+    {
+      "candidate_id": "PF_DENSE_REFERENCE",
+      "domain": "THREE_HANDED",
+      "training_seed": 1311335590,
+      "last_completed_iteration": 1,
+      "source_iteration1_artifact_id": 9224960149,
+      "source_iteration1_artifact_sha256": "ecbf14071085b7f1674d814cb9ff066d6d3db7f4c913dee8359822dab403db07",
+      "source_iteration1_checkpoint_sha256": "064713c596b6e860f25240c6b649aba00126346363aa5c6790c179ddb5e2e5ac"
+    }
+  ],
+  "failure_classification": {
+    "classification": "HOSTED_RUNNER_TIMEOUT_AFTER_VALID_ITERATION1",
+    "iteration2_timeout_minutes": 350,
+    "strategic_gate_was_reached": false,
+    "checkpoint_corruption_observed": false
+  },
+  "recovery_intervention": {
+    "scope": "ONLY_THE_THREE_MISSING_PF_DENSE_REFERENCE_THREE_HANDED_CELLS",
+    "iterations_to_complete": [2, 3, 4, 5],
+    "roots_per_iteration": 32,
+    "collection_chunks_per_iteration": [16, 16],
+    "fit_after_all_32_roots": true,
+    "root_order_changed": false,
+    "deck_seed_formula_changed": false,
+    "behavior_policy_changed": false,
+    "reservoir_algorithm_changed": false,
+    "optimizer_algorithm_changed": false,
+    "training_budget_changed": false,
+    "strategic_threshold_changed": false
+  },
+  "equivalence_gate": {
+    "required_before_recovery_jobs": true,
+    "comparison": "MONOLITHIC_ITERATION_VS_SERIALIZED_PARTIAL_COLLECTION",
+    "exact_fields": [
+      "advantage_model_tensors",
+      "average_policy_model_tensors",
+      "four_behavior_member_tensors",
+      "advantage_reservoir_state",
+      "strategy_reservoir_state",
+      "batch_rng_state",
+      "torch_rng_state",
+      "training_counters",
+      "behavior_statistics",
+      "root_and_scenario_counters",
+      "scientific_iteration_report"
+    ],
+    "excluded_operational_fields": [
+      "wall_clock_seconds",
+      "peak_rss_bytes",
+      "mechanical_recovery_annotation"
+    ]
+  },
+  "runtime_governance": {
+    "required_os_family": "Linux",
+    "required_python": "3.11.15",
+    "required_torch": "2.13.0+cpu",
+    "required_numpy": "2.3.5",
+    "required_source_checkout": "457996944f76e9f1fa0475691df978f450259641",
+    "windows_resume_permitted": false,
+    "mixed_runtime_matrix_permitted": false
+  },
+  "post_recovery_route": {
+    "required_final_checkpoint_count": 36,
+    "reuse_original_final_checkpoints": 33,
+    "use_recovered_final_checkpoints": 3,
+    "next_gate": "R7_5_4A_160_FROZEN_STRATEGIC_EVALUATION",
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}

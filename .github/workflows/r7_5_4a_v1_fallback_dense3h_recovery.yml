@@ -1,0 +1,271 @@
+name: SpinCore R7.5.4A V1 fallback dense3H recovery
+
+on:
+  push:
+    paths:
+      - '.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery.yml'
+      - '.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml'
+      - 'python/spincore/r7_5_action_stage_recovery.py'
+      - 'python_tests/test_r7_5_action_stage_recovery.py'
+      - 'tools/r7_5_4a_160_dense3h_recovery_worker.py'
+      - 'validation/R7_5_4A_V1_FALLBACK_DENSE3H_RECOVERY_FREEZE_20260825.json'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: spincore-r7-5-4a-v1-fallback-dense3h-recovery
+  cancel-in-progress: false
+
+env:
+  SOURCE_EXECUTION_SHA: 457996944f76e9f1fa0475691df978f450259641
+  SOURCE_TRAINING_RUN_ID: '31804178848'
+  PYTHON_VERSION: '3.11.15'
+  TORCH_VERSION: '2.13.0+cpu'
+  NUMPY_VERSION: '2.3.5'
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      run_id: ${{ steps.identity.outputs.run_id }}
+      source_sha: ${{ steps.identity.outputs.source_sha }}
+      recovery_sha: ${{ steps.identity.outputs.recovery_sha }}
+    steps:
+      - name: Checkout immutable recovery implementation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Checkout immutable original training source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_EXECUTION_SHA }}
+          path: frozen-source
+
+      - name: Freeze recovery identity and scope
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          recovery_sha="$(git rev-parse HEAD)"
+          source_sha="$(git -C frozen-source rev-parse HEAD)"
+          test "$recovery_sha" = "$GITHUB_SHA"
+          test "$source_sha" = "$SOURCE_EXECUTION_SHA"
+          git merge-base --is-ancestor eb48df109fdecbf54bd2d2f0ad8b37a6d94577a1 "$recovery_sha"
+          echo "run_id=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "recovery_sha=$recovery_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Verify frozen recovery governance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('validation/R7_5_4A_V1_FALLBACK_DENSE3H_RECOVERY_FREEZE_20260825.json').read_text())
+          assert p['schema']=='SPINCORE_R7_5_4A_V1_FALLBACK_DENSE3H_RECOVERY_FREEZE_V1'
+          assert p['architectural_binding']['selected_representation']=='C0_V1_FROZEN_CONTROL'
+          assert p['architectural_binding']['v1plus_reset_closed'] is True
+          assert p['original_training']['workflow_run_id']==31804178848
+          assert p['original_training']['execution_sha']=='457996944f76e9f1fa0475691df978f450259641'
+          assert p['original_training']['final_checkpoints_present']==33
+          assert p['original_training']['final_checkpoints_missing']==3
+          assert len(p['missing_cells'])==3
+          assert {(x['candidate_id'],x['domain'],x['training_seed']) for x in p['missing_cells']} == {
+              ('PF_DENSE_REFERENCE','THREE_HANDED',1737995611),
+              ('PF_DENSE_REFERENCE','THREE_HANDED',645939859),
+              ('PF_DENSE_REFERENCE','THREE_HANDED',1311335590),
+          }
+          assert p['recovery_intervention']['collection_chunks_per_iteration']==[16,16]
+          assert p['runtime_governance']['required_os_family']=='Linux'
+          assert p['runtime_governance']['required_python']=='3.11.15'
+          assert p['runtime_governance']['windows_resume_permitted'] is False
+          assert p['runtime_governance']['mixed_runtime_matrix_permitted'] is False
+          assert p['post_recovery_route']['required_final_checkpoint_count']==36
+          assert p['post_recovery_route']['production_training_authorized'] is False
+          assert p['post_recovery_route']['ready_for_tables'] is False
+          print('R7.5.4A dense3H recovery governance PASS')
+          PY
+
+      - name: Verify original action-training source identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frozen-source
+          sha256sum -c <<'EOF'
+          c1bce8c256177686d2f7d035eb26fc989831141ca243cac198d30fc5632221f2  python/spincore/r7_5_action_stage.py
+          6dbf1213ef1520cae1ddab0f8bb2cb3cc5ac11f8e045cb6c8b60e32874749d79  python/spincore/r7_5_action_training.py
+          bb3d269f4b3df4f5e1996e49096d5a5f62c6e2e1a97bbf254b6e51c727f05786  python/spincore/r7_5_action_checkpoint.py
+          2891d5a8c1f6870899e9dd124850b49ad5b4e7b85a82f5a4c4da5c2a6c15c961  python/spincore/r7_5_action_cfr.py
+          3ac6411db450152c4fdc4983548f89783b3935208a29056e6622fd862f2f8808  python/spincore/r7_5_action_uncertainty.py
+          61f4f08b31d7fd4c0572576bc4f6d4c95f3aaa7ad8659055cf4e0ff423fdeba0  python/spincore/r7_5_action_contract.py
+          73cfa984224f8c677e5d68ce733328c249e69ec9a11a504a6301b541027e5cdb  python/spincore/r7_5_action_stage_contract.py
+          EOF
+
+      - name: Set up exact original Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.15'
+
+      - name: Install frozen runtime and test dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch==2.13.0+cpu'
+          python -m pip install 'numpy==2.3.5' pytest
+
+      - name: Build and test immutable original solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S frozen-source -B frozen-source/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build frozen-source/build -j2
+          ctest --test-dir frozen-source/build --output-on-failure
+
+      - name: Prove exact mid-iteration recovery equivalence
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/frozen-source/python:${{ github.workspace }}/frozen-source/tools
+          SPINCORE_RECOVERY_SOURCE_ROOT: ${{ github.workspace }}/frozen-source
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          install -m 0644 \
+            python/spincore/r7_5_action_stage_recovery.py \
+            frozen-source/python/spincore/r7_5_action_stage_recovery.py
+          python -m py_compile \
+            frozen-source/python/spincore/r7_5_action_stage_recovery.py \
+            tools/r7_5_4a_160_dense3h_recovery_worker.py \
+            python_tests/test_r7_5_action_stage_recovery.py
+          pytest -q \
+            frozen-source/python_tests/test_r7_5_action_stage_contract.py \
+            frozen-source/python_tests/test_r7_5_action_stage.py \
+            python_tests/test_r7_5_action_stage_recovery.py
+
+      - name: Upload exact original solver for recovery steps
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-5-4a-160-recovery-solver-${{ steps.identity.outputs.recovery_sha }}
+          path: frozen-source/build/libspincore_solver_c.so
+          if-no-files-found: error
+          retention-days: 14
+
+  i2c16:
+    needs: gate
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: 31804178848
+      input_stage: original_i1
+      output_stage: i2c16
+      target_iteration: 2
+      operation: collect
+
+  i2finish:
+    needs: [gate, i2c16]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i2c16.outputs.run_id) }}
+      input_stage: i2c16
+      output_stage: i2
+      target_iteration: 2
+      operation: finish
+
+  i3c16:
+    needs: [gate, i2finish]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i2finish.outputs.run_id) }}
+      input_stage: i2
+      output_stage: i3c16
+      target_iteration: 3
+      operation: collect
+
+  i3finish:
+    needs: [gate, i3c16]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i3c16.outputs.run_id) }}
+      input_stage: i3c16
+      output_stage: i3
+      target_iteration: 3
+      operation: finish
+
+  i4c16:
+    needs: [gate, i3finish]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i3finish.outputs.run_id) }}
+      input_stage: i3
+      output_stage: i4c16
+      target_iteration: 4
+      operation: collect
+
+  i4finish:
+    needs: [gate, i4c16]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i4c16.outputs.run_id) }}
+      input_stage: i4c16
+      output_stage: i4
+      target_iteration: 4
+      operation: finish
+
+  i5c16:
+    needs: [gate, i4finish]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i4finish.outputs.run_id) }}
+      input_stage: i4
+      output_stage: i5c16
+      target_iteration: 5
+      operation: collect
+
+  i5finish:
+    needs: [gate, i5c16]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i5c16.outputs.run_id) }}
+      input_stage: i5c16
+      output_stage: final
+      target_iteration: 5
+      operation: finish
+      final_artifact: true
