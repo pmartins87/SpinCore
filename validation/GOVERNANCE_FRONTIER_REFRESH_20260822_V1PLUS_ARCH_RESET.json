@@ -1,9 +1,10 @@
 {
   "schema": "SPINCORE_GOVERNANCE_FRONTIER_REFRESH_V1PLUS_ARCH_RESET_V1",
-  "date": "2026-08-24",
+  "date": "2026-08-25",
   "ready_for_tables": false,
   "production_training_authorized": false,
   "architecture_winner_selected": false,
+  "architecture_fallback_selected": "C0_V1_FROZEN_CONTROL",
   "r7_5_3": {
     "status": "FAIL_BLOCKED_CLOSED",
     "final_contingency": "FINAL_INDEPENDENT_CHANCE_COVERAGE_X16",
@@ -16,7 +17,15 @@
   },
   "certified_stable_v1_fallback": {
     "available": true,
-    "role": "STABILITY_CERTIFIED_CONTROL_AND_ARCHITECTURE_FALLBACK_NOT_PRODUCTION_WINNER",
+    "selected": true,
+    "selection_date": "2026-08-25",
+    "selection_trigger": "PHASE2C2_CAUSAL_FAIL_PRECOMMITTED_BRANCH",
+    "representation_id": "C0_V1_FROZEN_CONTROL",
+    "neural_schema": "SPNNIV1",
+    "neural_action_width": 6,
+    "complete_variable_length_history": false,
+    "known_representation_debt": "RAW_PHYSICAL_CARD_IDENTITY_AND_COARSE_LAST32_STREET_ACTION_HISTORY_REMAIN_FOR_R7_5_5_ADJUDICATION",
+    "role": "SELECTED_PROVISIONAL_R7_5_FALLBACK_PENDING_R7_5_4_AND_R7_5_5_NOT_PRODUCTION_WINNER",
     "three_handed_640_cross_seed_mean_tv": 0.0899957567,
     "three_handed_640_cross_seed_p95_tv": 0.2001979053,
     "strategic_strength_revalidation_required_before_production_selection": true
@@ -29,6 +38,7 @@
   },
   "post_r7_5_3_architecture_reset": {
     "name": "V1PLUS_ARCHITECTURE_RESET",
+    "status": "CLOSED_PHASE2C2_CAUSAL_EFFECT_NOT_SUPPORTED_V1_FALLBACK_SELECTED",
     "scope": "Successor architecture must independently satisfy stability eligibility and strategic non-inferiority/superiority; this is not a reopening of R7.5.3 H2/H3 remediation.",
     "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
     "domain_under_current_structural_investigation": "THREE_HANDED",
@@ -128,7 +138,9 @@
       "full_x4_confirmation_authorized": false
     },
     "phase2c2_range_reach_target_kernel_causal_pilot": {
-      "status": "FROZEN_AWAITING_RYZEN_READOUT",
+      "status": "STRUCTURAL_RANGE_REACH_CAUSAL_EFFECT_NOT_SUPPORTED_SELECT_V1_FALLBACK",
+      "result_sha256": "e4b60b0c2826af1751f75eb1d6efe4fd2d86bccf47fc95fa0ac2ffa9b0d04299",
+      "execution_sha": "c7b37b0e4876e9d6eb01183974502da3c3519969",
       "scope": "SINGLE_BOUNDED_EQUAL_COMPUTE_STRUCTURAL_RANGE_REACH_CONTINUATION_TARGET_CAUSAL_PILOT",
       "source_phase2c1_result_sha256": "62ad2352c807a3b046bc84df2cbdf66cc8e0217e3422d01f2bcd9ddeafe7875b",
       "arms": [
@@ -141,15 +153,38 @@
       "roots_per_arm_seed": 128,
       "total_logical_roots": 512,
       "total_auxiliary_target_traversals": 65536,
-      "pass_route": "PRECOMMIT_FULL_X4_STRUCTURAL_RANGE_REACH_CONFIRMATION",
-      "causal_fail_route": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
+      "local_validity_pass": true,
+      "all_advantage_gates_pass": true,
+      "all_policy_fit_gates_pass": true,
+      "common_control_mean_tv": 0.24397563991551113,
+      "common_candidate_mean_tv": 0.250565169991926,
+      "common_absolute_improvement": -0.0065895300764148845,
+      "common_relative_improvement": -0.027008967283360098,
+      "common_bootstrap_ci95_control_minus_candidate": [
+        -0.013963685599749054,
+        0.0006979154805808209
+      ],
+      "native_absolute_improvement": 0.0014259912794289398,
+      "native_bootstrap_ci95_control_minus_candidate": [
+        -0.005681398175388662,
+        0.008621593134042439
+      ],
+      "causal_effect_supported": false,
+      "hard_stability_pass": false,
+      "full_x4_confirmation_authorized": false,
+      "phase2c3_authorized": false,
+      "next_route_executed": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
       "production_training_authorized": false
     },
     "estimator_repair_path": "CLOSED_AFTER_PHASE2B16",
-    "architecture_winner": null
+    "architecture_winner": null,
+    "selected_fallback": "C0_V1_FROZEN_CONTROL",
+    "closed": true
   },
   "r7_5_4": {
-    "status": "BLOCKED_NO_PROVISIONAL_REPRESENTATION_WINNER"
+    "status": "UNBLOCKED_FOR_V1_FALLBACK_BINDING_AUDIT_STRATEGIC_REVALIDATION_NOT_STARTED",
+    "provisional_representation": "C0_V1_FROZEN_CONTROL",
+    "production_action_abstraction_selected": false
   },
   "r7_5_5": {
     "status": "BLOCKED"
@@ -157,12 +192,15 @@
   "r8": {
     "status": "BLOCKED"
   },
-  "strategic_strength_rule": "No successor may advance on stability alone. After a hard stability PASS, a separately precommitted paired strategic-strength evaluation against the certified stable V1 control is mandatory before architecture selection.",
+  "strategic_strength_rule": "Stability does not establish poker strength. The selected V1 fallback must complete the frozen R7.5.4 action/sizing strategic revalidation and R7.5.5 production freeze before production selection.",
   "finite_structural_route": {
-    "current": "PHASE2C2_SINGLE_BOUNDED_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT",
+    "current": "CLOSED_PHASE2C2_CAUSAL_FAIL_V1_FALLBACK_SELECTED",
+    "outcome": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
     "on_phase2c2_pass": "ONE_FULL_X4_HARD_STABILITY_CONFIRMATION_OF_IDENTICAL_STRUCTURAL_CANDIDATE",
     "on_phase2c2_causal_fail": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
     "on_phase2c2_local_invalidity": "MECHANICAL_AUDIT_RECOVERY_ONLY_NO_SCIENTIFIC_TUNING",
+    "full_x4_confirmation_authorized": false,
+    "phase2c3_authorized": false,
     "no_open_ended_c_series": true
   },
   "prohibitions": [
@@ -176,6 +214,8 @@
     "NO_MCMC_OR_SIR_POSTHOC_SUBSTITUTION",
     "NO_POSTHOC_PHASE2C2_STRATIFICATION_OR_K_TUNING",
     "NO_PHASE2C2_PRODUCTION_TRAINING",
+    "NO_PHASE2C3",
+    "NO_PHASE2C2_X4_CONFIRMATION_AFTER_CAUSAL_FAIL",
     "NO_PRODUCTION_TRAINING_BEFORE_ARCHITECTURE_SELECTION",
     "NO_READY_FOR_TABLES"
   ]

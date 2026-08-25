@@ -1,0 +1,62 @@
+{
+  "schema": "SPINCORE_R7_5_ARCH_RESET_V1PLUS_PHASE2C2_RESULT_EVIDENCE_V1",
+  "date": "2026-08-25",
+  "source_result_filename": "R7_5_ARCH_RESET_V1PLUS_PHASE2C2_RANGE_REACH_TARGET_KERNEL_CAUSAL_PILOT.json",
+  "source_result_sha256": "e4b60b0c2826af1751f75eb1d6efe4fd2d86bccf47fc95fa0ac2ffa9b0d04299",
+  "source_execution_sha": "c7b37b0e4876e9d6eb01183974502da3c3519969",
+  "source_phase2c1_result_sha256": "62ad2352c807a3b046bc84df2cbdf66cc8e0217e3422d01f2bcd9ddeafe7875b",
+  "source_phase2b13_result_sha256": "6de7996282236d34adf5e8e53416fd8a443a1fbf5abc89fc807492d0cb3dbf80",
+  "source_phase2b14_result_sha256": "7cd1886596d345abdcdef479775498eddf7e014205de86e44afb5bb0ea291f86",
+  "status": "STRUCTURAL_RANGE_REACH_CAUSAL_EFFECT_NOT_SUPPORTED_SELECT_V1_FALLBACK",
+  "representation": "H2_RELATIONAL_EXACT_STRUCTURED_HISTORY_FINAL",
+  "domain": "THREE_HANDED",
+  "action_candidate": "PF0_CONTROL_33_75_AI",
+  "local_validity_pass": true,
+  "all_advantage_gates_pass": true,
+  "all_policy_fit_gates_pass": true,
+  "common": {
+    "control_mean_tv": 0.24397563991551113,
+    "candidate_mean_tv": 0.250565169991926,
+    "absolute_improvement_control_minus_candidate": -0.0065895300764148845,
+    "relative_improvement": -0.027008967283360098,
+    "bootstrap_95_ci_control_minus_candidate": [
+      -0.013963685599749054,
+      0.0006979154805808209
+    ],
+    "both_evaluation_seed_means_improve": false,
+    "evaluation_seed_2029384436_improvement": 0.00048355650358292146,
+    "evaluation_seed_1150634112_improvement": -0.01366261665641269,
+    "p95_non_degradation_gate_pass": true,
+    "continuation_2plus_both_heldouts_improve": false,
+    "root_non_degradation_gate_pass": true,
+    "hard_stability_pass_both_heldouts": false
+  },
+  "native_diagnostic": {
+    "control_mean_tv": 0.22908683748423592,
+    "candidate_mean_tv": 0.22766084620480698,
+    "absolute_improvement_control_minus_candidate": 0.0014259912794289398,
+    "relative_improvement": 0.006224675739072377,
+    "bootstrap_95_ci_control_minus_candidate": [
+      -0.005681398175388662,
+      0.008621593134042439
+    ],
+    "noncontradiction_gate_pass": true,
+    "statistically_supported_improvement": false
+  },
+  "frozen_decision_gates": {
+    "common_materiality_pass": false,
+    "common_bootstrap_ci_strictly_positive": false,
+    "both_common_evaluation_seed_means_improve": false,
+    "continuation_2plus_both_heldouts_improve": false,
+    "causal_effect_supported": false
+  },
+  "full_x4_confirmation_authorized": false,
+  "phase2c3_authorized": false,
+  "architecture_winner_selected": false,
+  "certified_stable_v1_fallback_selected": true,
+  "v1plus_architecture_reset_closed": true,
+  "production_training_authorized": false,
+  "ready_for_tables": false,
+  "next_route": "SELECT_CERTIFIED_STABLE_V1_FALLBACK_AND_CLOSE_V1PLUS_ARCHITECTURE_RESET",
+  "interpretation": "The final fair equal-compute Phase2C2 execution is locally valid, but the structural RANGE64_MEAN candidate does not produce the precommitted causal stability effect. The primary COMMON learner is 0.00658953 mean-TV worse than control, its paired 95% bootstrap interval crosses zero, only one evaluation seed improves marginally, and continuation depth 2+ does not improve in both heldouts. The small NATIVE diagnostic improvement is statistically inconclusive. The frozen causal-fail branch therefore selects the certified stable SPNNIV1 fallback, closes the V1+ architecture reset, forbids x4 confirmation or a new C-series experiment, and leaves production selection and table readiness unauthorized pending downstream R7.5.4/R7.5.5 gates."
+}

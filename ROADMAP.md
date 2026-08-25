@@ -1,4 +1,4 @@
-# SpinCore finite roadmap — canonical state 2026-08-17
+# SpinCore finite roadmap — canonical state 2026-08-25
 
 Final endpoint: **ready for offline 3-Max simulator tables**. The product target is a simulator using GGPoker Spin & Gold rules as a reference, not attachment to or play in a real-money GGPoker client. The legacy `READY FOR TABLES` flag now means simulator-table release only and remains `NO` until every required gate through R12 passes and every release debt, including deferred R7.3 exact reproducibility, is closed.
 
@@ -6,7 +6,7 @@ Final endpoint: **ready for offline 3-Max simulator tables**. The product target
 
 - R0 Foundation / canonical repository — **PASS REBUILT**
 - R1 Complete poker engine — **PASS REBUILT**
-- R2 Canonical infoset + neural encoder — **PASS REBUILT; V1 IS NOW CONTROL/FALLBACK FOR R7.5, NOT PRODUCTION FREEZE**
+- R2 Canonical infoset + neural encoder — **PASS REBUILT; V1 SELECTED AS PROVISIONAL R7.5 FALLBACK AFTER V1+ CLOSURE, NOT PRODUCTION FREEZE**
 - R3 Tournament continuation value (`ICM_EXACT_V1`, explicit payout) — **PASS REBUILT**
 - R4 Neural infrastructure — **PASS REBUILT**
 - R5 CFR correctness oracle — **PASS REBUILT**
@@ -24,12 +24,12 @@ Final endpoint: **ready for offline 3-Max simulator tables**. The product target
   - R7.4 held-out 3H 320 screen — **PASS**
   - R7.4 held-out 3H 640 confirmation — **PASS**
   - R7.4 final gate — **PASS; READY TO ADVANCE TO R8 ENGINEERING**
-- R7.5 Strategic representation & action abstraction — **IN PROGRESS; FINITE-CLOSURE POLICY ACTIVE**
+- R7.5 Strategic representation & action abstraction — **IN PROGRESS; V1+ RESET CLOSED, V1 FALLBACK SELECTED, R7.5.4 NEXT**
   - R7.5.0 legacy evidence + architecture precommit — **PASS AS DESIGN PRECOMMIT ONLY**
   - R7.5.1 recover/regenerate + audit flop mappings — **PASS AS DIAGNOSTIC/STRUCTURAL INPUT; LEGACY 184 DEFECT ESTABLISHED; SPNNIV3 SUCCESSOR IMPLEMENTED**
   - R7.5.2 representation semantics/integration — **SPNNIV3 STRUCTURAL/SEMANTIC INTEGRITY IMPLEMENTED; V2 IS NOT THE PRODUCTION MIGRATION TARGET**
-  - R7.5.3 frozen representation admission/selection — **IN PROGRESS; H2/H3 LOCAL TRAINING PASS; CROSS-SEED BLOCKER DIAGNOSED AS DECK/CHANCE DOMINANT; X4 CHANCE-COVERAGE READMISSION IN PROGRESS**
-  - R7.5.4 frozen action-abstraction ablation — **PENDING PROVISIONAL REPRESENTATION WINNER**
+  - R7.5.3 frozen representation admission/selection — **CLOSED; SPNNIV3/V1+ SUCCESSOR NOT ADMITTED; CERTIFIED STABLE V1 FALLBACK SELECTED**
+  - R7.5.4 frozen action-abstraction ablation — **UNBLOCKED FOR V1 FALLBACK BINDING AUDIT; STRATEGIC REVALIDATION NOT STARTED**
   - R7.5.5 production representation/action freeze — **PENDING**
 - R8 Simulator production training — **BLOCKED UNTIL R7.5.5 FINAL + OFFICIAL VARIANT MATRIX + R8.2 PHYSICAL CALIBRATION**
   - R8.0 universal 3-Max simulator profile — **CONTRACT PASS; STAKE-INVARIANT POLICY IDENTITY PASS; OFFICIAL MULTIPLIER-VARIANT MATRIX INGESTION PENDING AS PROJECT-OWNED ENGINEERING**
@@ -136,7 +136,7 @@ The missing historical `184Flops.json` was recovered. It covered all 22,100 phys
 
 The regression-proven C++ postflop ontology scaffold decomposes semantic lines such as c-bet, donk, probe, float, delayed lines and raises into compositional state facts rather than copying old strategy rules. Exact continuous geometry remains available.
 
-### R7.5.3 current admission state — 2026-08-16
+### R7.5.3 final admission state — 2026-08-25
 
 SPNNIV3 structural integrity is implemented with complete variable-length structured history, universal deduplicated action slots, exact HU/3H geometry, exact suit/rank invariance at the neural boundary, and an action width of 10. H2 is the exact relational/history candidate; H3 adds objective poker semantics.
 
@@ -159,7 +159,9 @@ traversal-action-sampling sensitivity:                  about 0.14986 / 0.39321
 => DECK_CHANCE_DOMINANT under the frozen 1.20x rule
 ```
 
-The active primary remediation increases independent chance coverage from 64 to 256 roots per iteration while preserving the two independent training seeds, `deck_seed`, global-root semantics, scenario cycle, model/training budget and all hard gates. A mechanical zero-root reporting division in the first GitHub execution was frozen and corrected without changing the experiment; the corrected recovery is the same x4 remediation, not a new roadmap stage or extra strategic attempt.
+The primary x4 and final x16 chance-coverage remediations both completed without satisfying the unchanged cross-seed gates. The subsequent V1+ architecture reset localized the dominant feedback and variance mechanisms, closed the Monte Carlo estimator-repair path, and proved exact structural reach factorization plus incremental range-reach propagation in Phase2C0/C1.
+
+The one bounded Phase2C2 causal pilot then tested whether the structural range-reach continuation target kernel improved end-to-end model stability under a fair equal-compute control. The run was locally valid, but the primary COMMON learner worsened from `0.24397564` to `0.25056517` pooled mean TV. The control-minus-candidate bootstrap interval was `[-0.01396369, 0.00069792]`; only one heldout improved marginally; continuation depth 2+ did not improve in both heldouts; and neither heldout passed the hard stability gates. The NATIVE diagnostic improvement was only `0.00142599`, with an interval crossing zero.
 
 Finite closure is now authoritative under:
 
@@ -167,9 +169,9 @@ Finite closure is now authoritative under:
 validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
 ```
 
-R7.5.3 permits the active x4 remediation plus **at most one** final winner-independent chance-variance remediation if x4 fails. If x4 passes, one complete frozen strategic Phase-2 evaluation decides H2/H3. If the final permitted remediation also fails, R7.5.3 closes FAIL/BLOCKED rather than spawning R7.5.3D/E/F. No gate may be relaxed. If both admitted candidates remain strategically inconclusive after passing, the already-frozen smaller/faster H2 tie-break applies.
+The Phase2C2 causal-fail branch has executed exactly as frozen: `C0_V1_FROZEN_CONTROL` / SPNNIV1 is selected as the certified stable provisional fallback and the V1+ architecture reset is closed. No Phase2C3, structural x4 confirmation, larger-K tuning, seed replacement or gate relaxation is authorized. Phase2C0/C1 remain valid structural research findings; they did not establish a production successor. V1's raw physical-card identity, coarse last-32 public history and six-slot neural action head remain explicit debt for R7.5.5 rather than being relabelled as strategically optimal.
 
-Only after a provisional representation winner exists may R7.5.4 strategic action/sizing revalidation begin. Only R7.5.5 may freeze the production encoder/action abstraction.
+R7.5.4 may now begin only through a fail-closed binding audit that proves the historical action/sizing stack is still exactly bound to the selected V1 fallback and its frozen evaluator semantics. Its strategic action-abstraction evidence must then be completed before R7.5.5. Only R7.5.5 may freeze the production encoder/action abstraction.
 
 ## R8 preparation already accepted without starting official training
 
@@ -210,8 +212,8 @@ R12.9 is the only gate allowed to emit simulator readiness (`READY FOR TABLES = 
 
 ```text
 R7.4 FINAL PASS
--> R7.5.3 representation admission/selection [active; finite]
--> R7.5.4 action/sizing audit
+-> R7.5.3 representation admission/selection [closed; V1 fallback selected]
+-> R7.5.4 V1-bound action/sizing audit [next finite gate]
 -> R7.5.5 production representation/action freeze
 -> R8.0 universal simulator profile + official multiplier-variant matrix
 -> R8.2 physical Ryzen calibration under selected R7.5 architecture
