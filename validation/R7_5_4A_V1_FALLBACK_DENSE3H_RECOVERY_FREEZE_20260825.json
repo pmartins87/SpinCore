@@ -55,13 +55,33 @@
     "classification": "HOSTED_RUNNER_TIMEOUT_AFTER_VALID_ITERATION1",
     "iteration2_timeout_minutes": 350,
     "strategic_gate_was_reached": false,
-    "checkpoint_corruption_observed": false
+    "checkpoint_corruption_observed": false,
+    "recovery_attempt_1": {
+      "workflow_run_id": 32856031867,
+      "recovery_execution_sha": "48a1e188b0fb92cbe06d11b924a6a6552c834ec5",
+      "result": "MECHANICAL_HOSTED_RUNNER_TIMEOUT_DURING_FIRST_16_ROOT_CHUNK",
+      "affected_cells": 3,
+      "completed_recovered_checkpoints": 0,
+      "last_heartbeat_elapsed_seconds": 20701,
+      "strategic_gate_was_reached": false,
+      "checkpoint_corruption_observed": false
+    }
   },
   "recovery_intervention": {
     "scope": "ONLY_THE_THREE_MISSING_PF_DENSE_REFERENCE_THREE_HANDED_CELLS",
-    "iterations_to_complete": [2, 3, 4, 5],
+    "iterations_to_complete": [
+      2,
+      3,
+      4,
+      5
+    ],
     "roots_per_iteration": 32,
-    "collection_chunks_per_iteration": [16, 16],
+    "collection_chunks_per_iteration": [
+      8,
+      8,
+      8,
+      8
+    ],
     "fit_after_all_32_roots": true,
     "root_order_changed": false,
     "deck_seed_formula_changed": false,
@@ -69,7 +89,9 @@
     "reservoir_algorithm_changed": false,
     "optimizer_algorithm_changed": false,
     "training_budget_changed": false,
-    "strategic_threshold_changed": false
+    "strategic_threshold_changed": false,
+    "mechanical_repartition_reason": "A 16-root collection chunk exceeded the 350-minute hosted-runner window while all three processes remained healthy; four serialized 8-root chunks preserve exact root order and total budget.",
+    "total_roots_per_iteration_unchanged": true
   },
   "equivalence_gate": {
     "required_before_recovery_jobs": true,

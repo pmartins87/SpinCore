@@ -81,7 +81,7 @@ jobs:
               ('PF_DENSE_REFERENCE','THREE_HANDED',645939859),
               ('PF_DENSE_REFERENCE','THREE_HANDED',1311335590),
           }
-          assert p['recovery_intervention']['collection_chunks_per_iteration']==[16,16]
+          assert p['recovery_intervention']['collection_chunks_per_iteration']==[8,8,8,8]
           assert p['runtime_governance']['required_os_family']=='Linux'
           assert p['runtime_governance']['required_python']=='3.11.15'
           assert p['runtime_governance']['windows_resume_permitted'] is False
@@ -157,7 +157,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  i2c16:
+  i2c8:
     needs: gate
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -167,11 +167,29 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: 31804178848
       input_stage: original_i1
+      output_stage: i2c8
+      target_iteration: 2
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 8
+
+  i2c16:
+    needs: [gate, i2c8]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i2c8.outputs.run_id) }}
+      input_stage: i2c8
       output_stage: i2c16
       target_iteration: 2
       operation: collect
+      root_budget: 8
+      expected_roots_collected: 16
 
-  i2finish:
+  i2c24:
     needs: [gate, i2c16]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -181,11 +199,45 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i2c16.outputs.run_id) }}
       input_stage: i2c16
+      output_stage: i2c24
+      target_iteration: 2
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 24
+
+  i2c32:
+    needs: [gate, i2c24]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i2c24.outputs.run_id) }}
+      input_stage: i2c24
+      output_stage: i2c32
+      target_iteration: 2
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 32
+
+  i2finish:
+    needs: [gate, i2c32]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i2c32.outputs.run_id) }}
+      input_stage: i2c32
       output_stage: i2
       target_iteration: 2
-      operation: finish
+      operation: fit
+      root_budget: 8
+      expected_roots_collected: 32
 
-  i3c16:
+  i3c8:
     needs: [gate, i2finish]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -195,11 +247,29 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i2finish.outputs.run_id) }}
       input_stage: i2
+      output_stage: i3c8
+      target_iteration: 3
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 8
+
+  i3c16:
+    needs: [gate, i3c8]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i3c8.outputs.run_id) }}
+      input_stage: i3c8
       output_stage: i3c16
       target_iteration: 3
       operation: collect
+      root_budget: 8
+      expected_roots_collected: 16
 
-  i3finish:
+  i3c24:
     needs: [gate, i3c16]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -209,11 +279,45 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i3c16.outputs.run_id) }}
       input_stage: i3c16
+      output_stage: i3c24
+      target_iteration: 3
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 24
+
+  i3c32:
+    needs: [gate, i3c24]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i3c24.outputs.run_id) }}
+      input_stage: i3c24
+      output_stage: i3c32
+      target_iteration: 3
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 32
+
+  i3finish:
+    needs: [gate, i3c32]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i3c32.outputs.run_id) }}
+      input_stage: i3c32
       output_stage: i3
       target_iteration: 3
-      operation: finish
+      operation: fit
+      root_budget: 8
+      expected_roots_collected: 32
 
-  i4c16:
+  i4c8:
     needs: [gate, i3finish]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -223,11 +327,29 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i3finish.outputs.run_id) }}
       input_stage: i3
+      output_stage: i4c8
+      target_iteration: 4
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 8
+
+  i4c16:
+    needs: [gate, i4c8]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i4c8.outputs.run_id) }}
+      input_stage: i4c8
       output_stage: i4c16
       target_iteration: 4
       operation: collect
+      root_budget: 8
+      expected_roots_collected: 16
 
-  i4finish:
+  i4c24:
     needs: [gate, i4c16]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -237,11 +359,45 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i4c16.outputs.run_id) }}
       input_stage: i4c16
+      output_stage: i4c24
+      target_iteration: 4
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 24
+
+  i4c32:
+    needs: [gate, i4c24]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i4c24.outputs.run_id) }}
+      input_stage: i4c24
+      output_stage: i4c32
+      target_iteration: 4
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 32
+
+  i4finish:
+    needs: [gate, i4c32]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i4c32.outputs.run_id) }}
+      input_stage: i4c32
       output_stage: i4
       target_iteration: 4
-      operation: finish
+      operation: fit
+      root_budget: 8
+      expected_roots_collected: 32
 
-  i5c16:
+  i5c8:
     needs: [gate, i4finish]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -251,11 +407,29 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i4finish.outputs.run_id) }}
       input_stage: i4
+      output_stage: i5c8
+      target_iteration: 5
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 8
+
+  i5c16:
+    needs: [gate, i5c8]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i5c8.outputs.run_id) }}
+      input_stage: i5c8
       output_stage: i5c16
       target_iteration: 5
       operation: collect
+      root_budget: 8
+      expected_roots_collected: 16
 
-  i5finish:
+  i5c24:
     needs: [gate, i5c16]
     uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
     with:
@@ -265,7 +439,42 @@ jobs:
       source_training_run_id: 31804178848
       input_run_id: ${{ fromJSON(needs.i5c16.outputs.run_id) }}
       input_stage: i5c16
+      output_stage: i5c24
+      target_iteration: 5
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 24
+
+  i5c32:
+    needs: [gate, i5c24]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i5c24.outputs.run_id) }}
+      input_stage: i5c24
+      output_stage: i5c32
+      target_iteration: 5
+      operation: collect
+      root_budget: 8
+      expected_roots_collected: 32
+
+  i5finish:
+    needs: [gate, i5c32]
+    uses: ./.github/workflows/r7_5_4a_v1_fallback_dense3h_recovery_step.yml
+    with:
+      source_execution_sha: ${{ needs.gate.outputs.source_sha }}
+      recovery_execution_sha: ${{ needs.gate.outputs.recovery_sha }}
+      solver_run_id: ${{ fromJSON(needs.gate.outputs.run_id) }}
+      source_training_run_id: 31804178848
+      input_run_id: ${{ fromJSON(needs.i5c32.outputs.run_id) }}
+      input_stage: i5c32
       output_stage: final
       target_iteration: 5
-      operation: finish
+      operation: fit
+      root_budget: 8
+      expected_roots_collected: 32
       final_artifact: true
+

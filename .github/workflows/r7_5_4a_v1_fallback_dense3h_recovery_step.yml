@@ -30,6 +30,12 @@ on:
       operation:
         required: true
         type: string
+      root_budget:
+        required: true
+        type: number
+      expected_roots_collected:
+        required: true
+        type: number
       final_artifact:
         required: false
         default: false
@@ -163,7 +169,7 @@ jobs:
           MKL_NUM_THREADS: '2'
         run: |
           set -euo pipefail
-          test '${{ inputs.operation }}' = 'collect' || test '${{ inputs.operation }}' = 'finish'
+          test '${{ inputs.operation }}' = 'collect' || test '${{ inputs.operation }}' = 'fit'
           test -f input/checkpoint.pt
           test -f frozen-source/build/libspincore_solver_c.so
           python - <<'PY'
@@ -176,7 +182,7 @@ jobs:
           print('frozen recovery runtime PASS', platform.python_version(), torch.__version__, numpy.__version__)
           PY
 
-      - name: Collect first 16 roots
+      - name: Collect next durable root chunk
         if: ${{ inputs.operation == 'collect' }}
         shell: bash
         env: &runtime_env
@@ -192,7 +198,7 @@ jobs:
               --mode collect --repo-root frozen-source \
               --solver frozen-source/build/libspincore_solver_c.so \
               --training-seed '${{ matrix.seed }}' \
-              --target-iteration '${{ inputs.target_iteration }}' --root-budget 16 \
+              --target-iteration '${{ inputs.target_iteration }}' --root-budget '${{ inputs.root_budget }}' \
               --resume input/checkpoint.pt \
               --checkpoint-out output/checkpoint.pt --report-out output/report.json \
               --source-execution-sha '${{ inputs.source_execution_sha }}' \
@@ -202,35 +208,20 @@ jobs:
               --source-iteration1-artifact-digest '${{ matrix.source_artifact_digest }}' \
               --source-checkpoint-sha256 '${{ matrix.source_checkpoint_sha256 }}'
 
-      - name: Collect remaining 16 roots and run frozen fit
-        if: ${{ inputs.operation == 'finish' }}
+      - name: Run frozen fit after all 32 roots
+        if: ${{ inputs.operation == 'fit' }}
         shell: bash
         env: *runtime_env
         run: |
           set -euo pipefail
-          mkdir -p collected output
-          python tools/run_with_heartbeat.py --label 'r7.5.4a-recovery-${{ inputs.output_stage }}-collect-${{ matrix.seed }}' --interval-seconds 300 -- \
-            python tools/r7_5_4a_160_dense3h_recovery_worker.py \
-              --mode collect --repo-root frozen-source \
-              --solver frozen-source/build/libspincore_solver_c.so \
-              --training-seed '${{ matrix.seed }}' \
-              --target-iteration '${{ inputs.target_iteration }}' --root-budget 16 \
-              --resume input/checkpoint.pt \
-              --checkpoint-out collected/checkpoint.pt \
-              --report-out collected/collection_report.json \
-              --source-execution-sha '${{ inputs.source_execution_sha }}' \
-              --recovery-execution-sha '${{ inputs.recovery_execution_sha }}' \
-              --source-training-run-id '${{ inputs.source_training_run_id }}' \
-              --source-iteration1-artifact-id '${{ matrix.source_artifact_id }}' \
-              --source-iteration1-artifact-digest '${{ matrix.source_artifact_digest }}' \
-              --source-checkpoint-sha256 '${{ matrix.source_checkpoint_sha256 }}'
+          mkdir -p output
           python tools/run_with_heartbeat.py --label 'r7.5.4a-recovery-${{ inputs.output_stage }}-fit-${{ matrix.seed }}' --interval-seconds 300 -- \
             python tools/r7_5_4a_160_dense3h_recovery_worker.py \
               --mode fit --repo-root frozen-source \
               --solver frozen-source/build/libspincore_solver_c.so \
               --training-seed '${{ matrix.seed }}' \
-              --target-iteration '${{ inputs.target_iteration }}' --root-budget 16 \
-              --resume collected/checkpoint.pt \
+              --target-iteration '${{ inputs.target_iteration }}' --root-budget '${{ inputs.root_budget }}' \
+              --resume input/checkpoint.pt \
               --checkpoint-out output/checkpoint.pt --report-out output/report.json \
               --source-execution-sha '${{ inputs.source_execution_sha }}' \
               --recovery-execution-sha '${{ inputs.recovery_execution_sha }}' \
@@ -238,7 +229,6 @@ jobs:
               --source-iteration1-artifact-id '${{ matrix.source_artifact_id }}' \
               --source-iteration1-artifact-digest '${{ matrix.source_artifact_digest }}' \
               --source-checkpoint-sha256 '${{ matrix.source_checkpoint_sha256 }}'
-          cp collected/collection_report.json output/collection_report.json
 
       - name: Verify stage output contract
         shell: bash
@@ -258,10 +248,12 @@ jobs:
           assert p['recovery_execution_sha']=='${{ inputs.recovery_execution_sha }}'
           assert p['production_training_authorized'] is False
           assert p['ready_for_tables'] is False
+          assert p['mode']=='${{ inputs.operation }}'
+          assert p['root_budget']==${{ inputs.root_budget }}
+          assert p['roots_collected']==${{ inputs.expected_roots_collected }}
           if '${{ inputs.operation }}' == 'collect':
-              assert p['roots_collected']==16 and p['finalized'] is False
+              assert p['finalized'] is False
           else:
-              assert p['roots_collected']==32
               assert p['finalized'] is ('${{ inputs.final_artifact }}' == 'true')
           PY
 

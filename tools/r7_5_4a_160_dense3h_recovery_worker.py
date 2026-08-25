@@ -127,8 +127,8 @@ def main() -> int:
 
     if int(args.training_seed) not in tuple(int(x) for x in POSTFLOP_TRAINING_SEEDS):
         raise SystemExit("recovery seed is outside the frozen R7.5.4A matrix")
-    if int(args.root_budget) != 16:
-        raise SystemExit("recovery root budget is frozen at 16")
+    if int(args.root_budget) != 8:
+        raise SystemExit("mechanical recovery chunk budget is frozen at 8")
     if not args.resume.is_file():
         raise SystemExit(f"resume checkpoint missing: {args.resume}")
 
