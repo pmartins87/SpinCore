@@ -75,6 +75,16 @@
       "last_heartbeat_elapsed_seconds": 20701,
       "strategic_gate_was_reached": false,
       "checkpoint_corruption_observed": false
+    },
+    "recovery_attempt_3": {
+      "workflow_run_id": 32921083481,
+      "recovery_execution_sha": "30aab24558750fee1f5da0821ecd6fe8a8c8db2d",
+      "result": "MECHANICAL_HOSTED_RUNNER_TIMEOUT_DURING_FIRST_4_ROOT_CHUNK",
+      "affected_cells": 3,
+      "completed_recovered_checkpoints": 0,
+      "last_heartbeat_elapsed_seconds": 20701,
+      "strategic_gate_was_reached": false,
+      "checkpoint_corruption_observed": false
     }
   },
   "recovery_intervention": {
@@ -87,14 +97,22 @@
     ],
     "roots_per_iteration": 32,
     "collection_chunks_per_iteration": [
-      4,
-      4,
-      4,
-      4,
-      4,
-      4,
-      4,
-      4
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
     ],
     "fit_after_all_32_roots": true,
     "root_order_changed": false,
@@ -104,7 +122,7 @@
     "optimizer_algorithm_changed": false,
     "training_budget_changed": false,
     "strategic_threshold_changed": false,
-    "mechanical_repartition_reason": "Both 16-root and 8-root collection chunks exceeded the 350-minute hosted-runner window while all three processes remained healthy; eight serialized 4-root chunks preserve exact root order and total budget with projected runtime below the runner limit.",
+    "mechanical_repartition_reason": "The 16-root, 8-root, and 4-root collection chunks each exceeded the 350-minute hosted-runner window while all three processes remained healthy; sixteen serialized 2-root chunks preserve exact root order and total budget with projected runtime safely below the runner limit.",
     "total_roots_per_iteration_unchanged": true
   },
   "equivalence_gate": {

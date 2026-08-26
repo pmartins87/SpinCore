@@ -113,7 +113,7 @@ def main() -> int:
     parser.add_argument("--solver", type=Path, required=True)
     parser.add_argument("--training-seed", type=int, required=True)
     parser.add_argument("--target-iteration", type=int, choices=(2, 3, 4, 5), required=True)
-    parser.add_argument("--root-budget", type=int, default=4)
+    parser.add_argument("--root-budget", type=int, default=2)
     parser.add_argument("--resume", type=Path, required=True)
     parser.add_argument("--checkpoint-out", type=Path, required=True)
     parser.add_argument("--report-out", type=Path, required=True)
@@ -127,8 +127,8 @@ def main() -> int:
 
     if int(args.training_seed) not in tuple(int(x) for x in POSTFLOP_TRAINING_SEEDS):
         raise SystemExit("recovery seed is outside the frozen R7.5.4A matrix")
-    if int(args.root_budget) != 4:
-        raise SystemExit("mechanical recovery chunk budget is frozen at 4")
+    if int(args.root_budget) != 2:
+        raise SystemExit("mechanical recovery chunk budget is frozen at 2")
     if not args.resume.is_file():
         raise SystemExit(f"resume checkpoint missing: {args.resume}")
 
