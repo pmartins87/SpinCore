@@ -85,6 +85,16 @@
       "last_heartbeat_elapsed_seconds": 20701,
       "strategic_gate_was_reached": false,
       "checkpoint_corruption_observed": false
+    },
+    "recovery_attempt_4": {
+      "workflow_run_id": 32945383881,
+      "recovery_execution_sha": "a07c3e15ded1f4309ede95602a4a12307fef4820",
+      "result": "MECHANICAL_HOSTED_RUNNER_TIMEOUT_DURING_FIRST_2_ROOT_CHUNK",
+      "affected_cells": 3,
+      "completed_recovered_checkpoints": 0,
+      "last_heartbeat_elapsed_seconds": 20701,
+      "strategic_gate_was_reached": false,
+      "checkpoint_corruption_observed": false
     }
   },
   "recovery_intervention": {
@@ -97,22 +107,38 @@
     ],
     "roots_per_iteration": 32,
     "collection_chunks_per_iteration": [
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2,
-      2
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     "fit_after_all_32_roots": true,
     "root_order_changed": false,
@@ -122,8 +148,19 @@
     "optimizer_algorithm_changed": false,
     "training_budget_changed": false,
     "strategic_threshold_changed": false,
-    "mechanical_repartition_reason": "The 16-root, 8-root, and 4-root collection chunks each exceeded the 350-minute hosted-runner window while all three processes remained healthy; sixteen serialized 2-root chunks preserve exact root order and total budget with projected runtime safely below the runner limit.",
-    "total_roots_per_iteration_unchanged": true
+    "mechanical_repartition_reason": "The 16-root, 8-root, 4-root, and 2-root collection chunks each exceeded the 350-minute hosted-runner window while all three processes remained healthy. Single-root durable chunks are the minimum possible partition and preserve exact root order and total budget.",
+    "total_roots_per_iteration_unchanged": true,
+    "hosted_runner_workflow_partition": {
+      "reason": "A single workflow containing 32 one-root chunks across all four remaining iterations and all three cells would exceed GitHub Actions job-count limits.",
+      "current_recovery_iteration": 2,
+      "remaining_iterations_after_current": [
+        3,
+        4,
+        5
+      ],
+      "advancement_rule": "Advance one frozen iteration per workflow run only after all three prior-iteration artifacts pass provenance and checkpoint-contract validation.",
+      "scientific_contract_changed": false
+    }
   },
   "equivalence_gate": {
     "required_before_recovery_jobs": true,
