@@ -1,0 +1,79 @@
+{
+  "schema": "SPINCORE_R7_5_4A_V1_FALLBACK_DENSE3H_WSL2_EXECUTION_FREEZE_V1",
+  "frozen_at_utc": "2026-08-27T01:27:00Z",
+  "scientific_contract_changed": false,
+  "bound_recovery_contract": {
+    "path": "validation/R7_5_4A_V1_FALLBACK_DENSE3H_RECOVERY_FREEZE_20260825.json",
+    "recovery_execution_sha": "a7eb746b0ac32ef730568150e1e2c2757bb212d2",
+    "source_execution_sha": "457996944f76e9f1fa0475691df978f450259641",
+    "source_training_run_id": 31804178848
+  },
+  "hosted_linux_exhaustion": {
+    "final_attempt_run_id": 32977289481,
+    "result": "MECHANICAL_HOSTED_RUNNER_TIMEOUT_DURING_SINGLE_ROOT_CHUNK",
+    "root_budget": 1,
+    "affected_cells": 3,
+    "completed_recovered_checkpoints": 0,
+    "strategic_gate_was_reached": false,
+    "checkpoint_corruption_observed": false,
+    "next_partition_smaller_than_one_root_exists": false
+  },
+  "local_linux_route": {
+    "host": "RYZEN9",
+    "execution_environment": "WSL2_UBUNTU",
+    "reason": "Move the same frozen Linux recovery computation to the local Ryzen after the GitHub-hosted Linux wall-time was exhausted at the minimum one-root partition.",
+    "windows_openholdem_runtime_changed": false,
+    "compute_inside_windows_filesystem": false,
+    "required_os_family": "Linux",
+    "required_python": "3.11.15",
+    "required_torch": "2.13.0+cpu",
+    "required_numpy": "2.3.5",
+    "required_torch_threads": 2,
+    "windows_resume_permitted": false,
+    "mixed_runtime_matrix_permitted": false
+  },
+  "immutable_bootstrap": {
+    "solver": {
+      "workflow_run_id": 32977289481,
+      "artifact_id": 9610005051,
+      "artifact_name": "r7-5-4a-160-recovery-solver-a7eb746b0ac32ef730568150e1e2c2757bb212d2",
+      "artifact_sha256": "0bf6242e6842a58219ac905c88f598f7a35f521a6ab544cdcfb5b0ca434e06cd"
+    },
+    "iteration1_inputs": [
+      {
+        "training_seed": 1737995611,
+        "artifact_id": 9224957740,
+        "artifact_sha256": "44231b6e8ac00da19bcca267511f8355490205baba8e758985419214111ac75a",
+        "checkpoint_sha256": "ea598ec624ee2e4e72fc8c3780c53863d6f116d5d9baa9495bcbbfe7cfadea2c"
+      },
+      {
+        "training_seed": 645939859,
+        "artifact_id": 9225388016,
+        "artifact_sha256": "1b6ba187a83fe4f04b106dd3f7f9b8d6d1624776bc379d332114cd328e3ef7bc",
+        "checkpoint_sha256": "ba02b8a6b27da27b891c51a2e90bb437810ac2c44db6ca498375ca83be8cde09"
+      },
+      {
+        "training_seed": 1311335590,
+        "artifact_id": 9224960149,
+        "artifact_sha256": "ecbf14071085b7f1674d814cb9ff066d6d3db7f4c913dee8359822dab403db07",
+        "checkpoint_sha256": "064713c596b6e860f25240c6b649aba00126346363aa5c6790c179ddb5e2e5ac"
+      }
+    ]
+  },
+  "first_local_stage": {
+    "stage": "i2c1",
+    "target_iteration": 2,
+    "root_budget_per_seed": 1,
+    "seeds_in_parallel": 3,
+    "durable_checkpoint_after_each_seed": true,
+    "purpose": "REAL_RECOVERY_AND_LOCAL_THROUGHPUT_MEASUREMENT",
+    "throwaway_benchmark": false,
+    "advancement_rule": "Only continue i2c2..i2c32 after all three i2c1 outputs pass the frozen provenance/report contract."
+  },
+  "post_recovery_route": {
+    "required_final_checkpoint_count": 36,
+    "next_gate": "R7_5_4A_160_FROZEN_STRATEGIC_EVALUATION",
+    "production_training_authorized": false,
+    "ready_for_tables": false
+  }
+}
