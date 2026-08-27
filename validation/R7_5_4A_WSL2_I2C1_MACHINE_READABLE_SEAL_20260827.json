@@ -1,0 +1,57 @@
+{
+  "schema": "SPINCORE_R7_5_4A_WSL2_I2C1_MACHINE_READABLE_SEAL_V1",
+  "date": "2026-08-27",
+  "classification": "MECHANICAL_RECOVERY_EVIDENCE_ONLY",
+  "strategic_pass_claimed": false,
+  "recovery_finalized": false,
+  "received_summary": {
+    "sha256": "16c5e6249efdf9f46afaaf83718026d76d47d467b36c98e24e0d920da0ac813e",
+    "byte_length": 773,
+    "schema": "SPINCORE_R7_5_4A_WSL2_I2C1_SUMMARY_V1",
+    "source_execution_sha": "457996944f76e9f1fa0475691df978f450259641",
+    "recovery_execution_sha": "a7eb746b0ac32ef730568150e1e2c2757bb212d2",
+    "status": "I2C1_ALL_THREE_SEEDS_PASS",
+    "rows": [
+      {
+        "seed": 1737995611,
+        "checkpoint_sha256": "0a7e88af09b3cfd2352cdf76e3a882a416ceb8a2a6edc946b576078bbca4e172",
+        "wall_seconds": 16248.520952469002
+      },
+      {
+        "seed": 645939859,
+        "checkpoint_sha256": "1e37a635e2b763c95cc42158cf6f7ed33924eba42ad7d0c27bf2ad024a528987",
+        "wall_seconds": 34400.145772817
+      },
+      {
+        "seed": 1311335590,
+        "checkpoint_sha256": "0b356aa5eef8dc61de55509afdb9ed8fbf7c6728ea34a08b80f29ff60c873e9b",
+        "wall_seconds": 21048.721765089
+      }
+    ]
+  },
+  "verification": {
+    "json_parse": "PASS",
+    "schema_exact": "PASS",
+    "source_execution_sha_exact": "PASS",
+    "recovery_execution_sha_exact": "PASS",
+    "status_exact": "PASS",
+    "row_count_exactly_three": "PASS",
+    "seed_set_exact": "PASS",
+    "checkpoint_sha256_all_exact": "PASS",
+    "wall_seconds_all_exact": "PASS",
+    "overall": "PASS"
+  },
+  "next_frozen_stage": {
+    "stage": "i2c2",
+    "target_iteration": 2,
+    "operation": "collect",
+    "root_budget": 1,
+    "expected_roots_collected": 2
+  },
+  "governance": {
+    "production_training_authorized": false,
+    "ready_for_tables": false,
+    "do_not_delete_work_root": "/home/rz9/spincore_r754_dense3h_recovery",
+    "note": "This seal preserves the user-supplied SUMMARY.json verification result. It does not alter or admit any strategy, representation, seed, budget, threshold, root order, optimizer, policy, reservoir, or deck-seed semantics."
+  }
+}
