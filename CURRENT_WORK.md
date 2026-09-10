@@ -1,6 +1,6 @@
 # SpinCore Current Work
 
-Date: 2026-09-09
+Date: 2026-09-10
 Status: **CORRECTIVE LEGACY-FIRST AUDIT — NO HEAVY TRAINING**
 
 ## Why work is paused
@@ -49,13 +49,23 @@ The legacy DeepSpin stack also contains:
 
 The earlier DeepSpin trained continuously for roughly three months on the Ryzen and still made gross mistakes. The user's conclusion was that this was not adequately explained by insufficient training. Historical debugging also found basic semantic/hand-strength mistakes, including treating board-created made hands/two-pair structures as if they represented meaningful Hero hand strength. Therefore additional training is never the first remedy for poor play; first audit game semantics, evaluator/features, sampling distribution, traversal/objective, action mapping, and training/runtime parity.
 
+## Utility/performance decision
+
+Chip EV remains the default objective and primary policy-quality metric for ordinary winner-take-all SpinGo states. The previous suggestion to replace it wholesale with payout-aware/ICM utility is withdrawn. In winner-take-all ICM, prize equity is linear in stack, so chip delta and ICM delta rank actions identically.
+
+Payout-aware logic is only a candidate for actual multi-place payout variants, where the payout vector can change optimal decisions. Raw cash/tournament results are not the primary model-quality metric because multiplier/card variance is much noisier than controlled chip-EV comparison.
+
+One legacy detail remains under audit, not yet classified as a bug: `_terminal_value()` uses `chip_payoff / current_bb`. With a fixed 1500-chip pool this is BB-normalized utility, not literal raw chip EV. Within one state it does not change action ordering, but across blind levels it changes target/gradient scale in the shared neural approximator. Do **not** change it yet; first determine whether this normalization materially harmed late-blind learning or was useful numerical conditioning.
+
 ## Do not do next
 
 - Do not resume dense 3H i3-i5 merely to complete an old matrix.
 - Do not run the PF0-PF4 10/20-only comparison as a final selector.
 - Do not start R8 heavy training.
+- Do not replace chip EV with payout utility globally.
+- Do not change the legacy `/BB` normalization until its effect is actually established.
 - Do not add new certification/reproducibility gates unless they can materially change playing quality or catch a real correctness problem.
 
 ## Required next deliverable
 
-A concise legacy-vs-SpinCore architecture map followed by one consolidated training/runtime plan. Only after that map is complete should compute resume.
+Complete the concise legacy-vs-SpinCore architecture map, including the effect of utility normalization, feature semantics, network/buffer design, traversal, runtime parity, Crusher hardcoded material, and solver-v2 assets. Then produce one consolidated training/runtime plan. Only after that map is complete should compute resume.
