@@ -60,15 +60,23 @@ This is not a toy baseline. SpinCore changes must be evaluated as refinements of
 
 Historical code also records a repaired regret-matching fallback: the older uniform fallback, when all legal regrets were non-positive, injected grossly wrong actions. The archived traversal uses masked softmax over raw advantage values instead. This is a concrete example of knowledge that must not be lost.
 
-## 5. Utility/objective — FIRST IMPORTANT SPINCORE IMPROVEMENT IDENTIFIED
+## 5. Utility/objective — CHIP EV REMAINS THE DEFAULT; NO CHANGE WITHOUT A REAL PAYOUT REASON
 
-Legacy `ExternalSamplingTraverser._terminal_value()` reads `g.get_payoffs()` and normalizes the traverser's **single-hand chip payoff by the current BB**. The C++ `get_payoffs()` computes chips won/lost in that hand.
+Legacy `ExternalSamplingTraverser._terminal_value()` reads `g.get_payoffs()` and normalizes the traverser's single-hand chip payoff by the current BB. The C++ `get_payoffs()` computes chips won/lost in that hand.
 
-That means the archived DeepSpin training objective is hand chip-EV, not an explicit tournament continuation / payout-aware ICM objective.
+Previous audit wording prematurely called SpinCore's explicit-payout/ICM utility a likely improvement. That conclusion is withdrawn.
 
-SpinCore's exact continuation-value / explicit-payout ICM work is therefore a plausible genuine architectural improvement worth preserving, provided it is combined with the legacy realistic blind/stack scenario distribution rather than replacing that distribution.
+For a winner-take-all payout vector, ICM first-place equity is linear in chips: `equity_i = prize * stack_i / total_chips`. Therefore ranking actions by expected ICM delta is exactly the same as ranking them by expected chip delta, up to a positive constant factor. Replacing chip EV with payout/ICM in such games adds complexity without strategic gain.
 
-Decision: keep the improved tournament utility concept; restore the legacy tournament-state sampling.
+Current decision:
+
+- **chip EV is the primary training/evaluation objective for ordinary winner-take-all SpinGo states**;
+- raw monetary tournament results are not the primary quality metric because multiplier and card variance add noise unrelated to decision quality;
+- payout-aware utility is justified only for variants where more than one finishing position is actually paid and the payout vector can change optimal decisions;
+- if those multi-place variants are included, add payout awareness only for those states (condition the policy on payout vector or use a dedicated variant), rather than replacing the core chip-EV architecture wholesale;
+- no utility change is allowed merely because SpinCore already implemented one.
+
+This preserves the user's legacy design unless a concrete, strategically material counterexample shows that another objective improves the intended game.
 
 ## 6. Runtime/integration — LEGACY ASSET TO PRESERVE
 
@@ -84,15 +92,14 @@ Known from the user's history and subsequent debugging:
 - excessive complexity made defects harder to isolate;
 - basic hand/state semantic errors existed during the historical line, including made-hand/two-pair interpretation problems;
 - an earlier uniform regret fallback injected strategically absurd legal actions when positive regrets were absent;
-- version/local-patch drift made it difficult to guarantee that trainer, checkpoint, exporter and runtime represented the same semantics;
-- the archived training objective is single-hand chip-EV rather than explicit tournament continuation value.
+- version/local-patch drift made it difficult to guarantee that trainer, checkpoint, exporter and runtime represented the same semantics.
 
-These are design constraints for the new consolidated architecture.
+Chip EV itself is **not** currently classified as a historical failure cause. It remains the baseline objective unless an actual payout structure creates a demonstrated reason to depart from it.
 
 ## 8. Current synthesis
 
 Target direction, subject to the rest of this audit:
 
-**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + SpinCore exact state/traversal improvements + SpinCore payout-aware tournament utility + lean evidence-driven action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
+**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + legacy chip-EV objective by default + only demonstrated SpinCore state/traversal improvements + payout awareness only where the real payout vector requires it + lean evidence-driven action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
 
 No heavy training resumes until the remaining legacy components (buffers, networks, runtime, Crusher hardcoded material, solver-v2/184 assets) are fully mapped and the consolidated architecture is explicit.
