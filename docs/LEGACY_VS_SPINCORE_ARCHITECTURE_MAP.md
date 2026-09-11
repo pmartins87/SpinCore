@@ -2,7 +2,7 @@
 
 Status: **IN PROGRESS**
 Started: 2026-09-09
-Updated: 2026-09-10
+Updated: 2026-09-11
 Purpose: preserve multi-year legacy knowledge and identify only genuine SpinCore improvements before more heavy compute.
 
 ## 1. Scenario distribution — LEGACY STRONGER / MUST RESTORE
@@ -36,13 +36,28 @@ Legacy DeepSpin exposes seven neural actions:
 
 The C++ environment also contains legality/near-all-in pruning. SpinCore may improve this set, but must compare against this baseline under the full tournament distribution rather than inventing candidates only at 10/20.
 
-## 3. Observation/state — LEGACY RICH BUT HISTORICALLY BUG-PRONE
+## 3. Observation/state — KEEP LEGACY KNOWLEDGE, NOT THE 292-FLOAT INPUT
 
-Legacy neural observation dimension is 292. It contains raw card one-hot features plus numeric/game-state, hand-strength, draw, board-texture and other strategic features. The current archived C++ source explicitly distinguishes board-only made hands from Hero-contributed made hands in its 40-way hand-strength classification (for example, separate two-pair-on-board vs one-hole vs two-hole categories).
+The archived DeepSpin v60 observation is exactly 292 floats: 104 card one-hots, 20 numeric values, 4 street flags, 11 position flags, 40 hand-strength categories, 12 draw flags, 29 board-texture flags, 26 action-context values, 39 history values and 7 legal-action flags.
 
-Historical lesson: earlier DeepSpin training/debugging exposed semantic mistakes in this area, including board-created made-hand/two-pair structures being treated as Hero strength. The archived source appears to contain later corrective logic, so migration must preserve the repaired semantics rather than revive the faulty earlier implementation.
+That representation contains real poker knowledge, and the later archived source repaired important semantics by distinguishing board-only made hands from hands that actually use Hero's hole cards. Those definitions remain valuable as diagnostics/regression knowledge.
 
-Decision: audit feature-by-feature against SpinCore exact state/encoder. Preserve semantic knowledge; prefer exact state underneath and a neural boundary that cannot confuse board texture with Hero contribution.
+However, the 292-dimensional flat input duplicates information heavily. Cards already determine hand strength, draws and board texture; action-context/history blocks summarize information also represented by the exact betting state/history; legal actions are separately masked. Derived features can improve sample efficiency, but each hand-coded semantic feature is also another place where a bug can poison learning — exactly what happened historically with board-only/two-pair interpretation.
+
+The number 292 alone was not the main performance problem. The legacy AdvantageNet used `[1024,1024,512,512]` hidden layers (~2.14M parameters) and the PolicyNet `[1024,512,512]` (~1.09M), about 3.23M parameters combined. Merely shrinking the flat input from 292 to 128 while preserving those hidden layers would save only about 10% of model parameters.
+
+Current SpinCore V1 is materially leaner. Its neural boundary uses 7 card tokens, 16 numeric values, 8 categorical values, a legal mask and up to 32 history tokens, while the exact `CanonicalInfoset` retains cards, stacks, commitments, domain, street, blinds, blind index, statuses, pot, to-call, current bet and public history. The recovered V1 network is about 152,438 parameters per model and embeds/encodes structured inputs rather than feeding a huge flat one-hot vector.
+
+Decision for the first functional SpinCore:
+
+- do **not** restore the full 292-float vector as the neural input;
+- use compact V1 as the default neural representation;
+- preserve the legacy 292-feature definitions as a semantic checklist/diagnostic library;
+- add back a specific derived feature only if a concrete strategic weakness shows that compact V1 cannot distinguish/learn the relevant situation efficiently;
+- do not open another broad representation tournament merely to seek novelty;
+- every future added feature must be computable from the canonical exact state and identical between training and runtime.
+
+Detailed rationale is frozen in `docs/LEGACY_292_FEATURE_AUDIT.md`.
 
 ## 4. Learning algorithm — LEGACY DEEP CFR FOUNDATION IS REAL
 
@@ -104,8 +119,8 @@ Chip EV itself is **not** classified as a historical failure cause. It remains t
 
 ## 8. Current synthesis
 
-Target direction, subject to the rest of this audit:
+Target direction, subject to the remaining finite audit:
 
-**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + one WTA chip-EV policy family + only demonstrated SpinCore state/traversal improvements + corrected legacy regret fallback + lean evidence-driven action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
+**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + compact V1 exact-state neural boundary + one WTA chip-EV policy family + only demonstrated SpinCore traversal/state improvements + corrected legacy regret fallback + lean action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
 
-No heavy training resumes until the remaining legacy components (292 features, buffers/networks, runtime, Crusher hardcoded material, solver-v2/184 assets) are mapped far enough to eliminate known structural failure modes and define the first functional training path. The audit is not an excuse for exhaustive certification: once the architecture-affecting questions are resolved, training should start.
+The 292-feature question is now closed for first release: preserve its poker semantics as reference knowledge, but do not reintroduce the full flat vector. Remaining architecture-affecting questions are `/BB` utility normalization, action-set reconciliation and training/runtime parity. Crusher/hardcoded and solver-v2/184 assets are consulted only where they can improve one of those concrete decisions. Once those questions are resolved, training should start rather than opening another certification cycle.
