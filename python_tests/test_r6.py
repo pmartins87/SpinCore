@@ -10,6 +10,8 @@ def _root(seed=123):
     L=SolverLibrary(LIB);e=Episode(1500,True,0,10,20,(0,750,750),1,(0,));return L,e,L.create(e,seed)
 def test_regret_matching_normalizes_legal():
     p=regret_matching_policy([-1,2,0,0,3,0],(1,4));assert abs(p[1]-.4)<1e-12 and abs(p[4]-.6)<1e-12 and sum(p)==1
+def test_regret_matching_nonpositive_preserves_model_ranking():
+    p=regret_matching_policy([-10,-2,-5,7,9,11],(0,1,2));assert abs(sum(p)-1)<1e-12 and p[1]>p[2]>p[0] and p[3]==p[4]==p[5]==0
 def test_advantage_targets_centered():
     _,_,r=_root(777);adv=UniformReservoir(10000,1);pol=UniformReservoir(10000,2);c=ExternalSamplingCollector(policy=uniform_policy,terminal_utility=chip_delta_utility,rng=random.Random(3),advantage_memory=adv,strategy_memory=pol)
     x=c.collect_advantage(r,traverser=r.actor,iteration=1);r.close();assert x.samples_added and adv.items
