@@ -1,71 +1,53 @@
 # SpinCore Current Work
 
 Date: 2026-09-10
-Status: **CORRECTIVE LEGACY-FIRST AUDIT — NO HEAVY TRAINING**
+Status: **CORRECTIVE LEGACY-FIRST IMPLEMENTATION — NO HEAVY TRAINING YET**
 
-## Why work is paused
+## Why heavy training is paused
 
-R7.5.4 action-abstraction training/evaluation was discovered to be restricted to SB=10 / BB=20. That can be useful as localized evidence but cannot represent the full SpinGo tournament distribution and therefore cannot select the final policy or global action abstraction.
+R7.5.4 action-abstraction training/evaluation was discovered to be restricted to SB=10 / BB=20. That is useful only as localized evidence and cannot represent the full SpinGo tournament distribution or select the final global policy/action abstraction.
 
-The project had already been given a multi-year legacy archive, `Tentativas anteriores de SpinGo.zip`, containing a substantially richer SpinGo-specific foundation. The archive must now be treated as the baseline rather than as optional historical material.
+The project already had a multi-year legacy archive, `Tentativas anteriores de SpinGo.zip`, containing a substantially richer SpinGo-specific foundation. That archive is the baseline; SpinCore is an evolution of it.
 
-## Immediate task
+## Decisions now fixed for the first functional SpinCore
 
-Audit the complete legacy archive and build a preservation/migration map:
+- Restore the real legacy 3H/HU scenario distribution: nine blind levels, separate empirical blind weights, blind-conditioned stack distributions, 1500 total chips, live/dead-seat and dealer randomization.
+- Train **one winner-take-all chip-EV policy family** first.
+- Use the same WTA-trained policy initially across payout variants. Do not multiply first-release training into separate 70/30, 50/30/20, etc. runs.
+- Keep ICM support in the solver for possible later multi-place specialization, but do not spend that compute before the WTA agent is strong and functional.
+- Change legacy behavior only for a concrete correctness/quality reason.
+- Do not treat the old `/BB` payoff normalization as a bug yet; its cross-blind learning effect remains a focused audit question.
 
-- what must be preserved unchanged in semantics;
-- what was known to be defective and must not be revived;
-- what SpinCore has genuinely improved;
-- what SpinCore accidentally lost;
-- what the single consolidated final architecture should be before further heavy compute.
+## Corrections already implemented
 
-## Legacy assets already confirmed
-
-The legacy `deepspin/scenario.py` contains:
-
-- both 3-handed and true-HU episode sampling;
-- nine blind levels from 10/20 through 100/200;
-- separate empirical blind-frequency weights for 3H and HU;
-- blind-conditioned stack distributions;
-- 1500 total chips;
-- randomized live seats/dealer and one dead seat for true HU;
-- fallback approximations for sparse late-blind samples rather than silently deleting those states.
-
-The legacy DeepSpin stack also contains:
-
-- a C++ poker environment;
-- Deep CFR trainer/traversal;
-- advantage and average-policy networks;
-- seven actions (fold, check/call, B33, B50, B75, B100, all-in);
-- 292-feature neural observation;
-- reservoir buffers;
-- checkpoint/RNG continuity;
-- multiprocessing rollout workers;
-- OpenHoldem inference/runtime code;
-- Crusher Framework 5 + hardcoded C++ strategy material;
-- solver-v2 assets including the historical 184-flop abstraction.
+1. `python/spincore/legacy_scenario_data.json` preserves the legacy empirical blind/stack tables.
+2. `python/spincore/legacy_scenario.py` adapts those tables to current `Episode` objects and restores the historical sampling semantics for both `THREE_HANDED` and `TRUE_HEADS_UP`.
+3. `python/spincore/deep_cfr.py` no longer regresses to uniform play when a fitted advantage net predicts all legal advantages <= 0. It now preserves the repaired legacy behavior: stable masked softmax over raw legal advantages. The genuinely untrained zero-regret initial state remains uniform separately.
+4. `python/spincore/lean_training_scope.py` encodes `CHIP_EV_WTA_V1` and `WTA_SHARED_ACROSS_PAYOUTS_V1`; multi-place specialization is disabled for the first release.
+5. Focused regression guards were added for the restored scenario sampler, shared WTA policy family, and nonpositive-regret fallback. No broad new certification campaign is required.
 
 ## Historical failure lesson
 
-The earlier DeepSpin trained continuously for roughly three months on the Ryzen and still made gross mistakes. The user's conclusion was that this was not adequately explained by insufficient training. Historical debugging also found basic semantic/hand-strength mistakes, including treating board-created made hands/two-pair structures as if they represented meaningful Hero hand strength. Therefore additional training is never the first remedy for poor play; first audit game semantics, evaluator/features, sampling distribution, traversal/objective, action mapping, and training/runtime parity.
+The earlier DeepSpin trained continuously for roughly three months on the Ryzen and still made gross mistakes. That cannot be treated as ordinary undertraining. Known structural risks include evaluator/feature semantic errors, the historical uniform-regret fallback, excessive complexity, and trainer/runtime drift. Therefore additional training is not the remedy until these architecture-affecting failure modes are checked.
 
-## Utility/performance decision
+## Immediate remaining audit — finite, not academic
 
-Chip EV remains the default objective and primary policy-quality metric for ordinary winner-take-all SpinGo states. The previous suggestion to replace it wholesale with payout-aware/ICM utility is withdrawn. In winner-take-all ICM, prize equity is linear in stack, so chip delta and ICM delta rank actions identically.
+Only questions capable of changing the implementation remain on the critical path:
 
-Payout-aware logic is only a candidate for actual multi-place payout variants, where the payout vector can change optimal decisions. Raw cash/tournament results are not the primary model-quality metric because multiplier/card variance is much noisier than controlled chip-EV comparison.
+- 292-feature legacy observation: which features are sound, which were repaired, and whether current SpinCore lost strategically useful information;
+- `/BB` target normalization: keep or remove based on its effect on shared cross-blind learning;
+- action set: reconcile legacy 7 actions with current SpinCore action representation under the restored full tournament distribution;
+- training/runtime parity: ensure the model receives the same semantics during training and inference;
+- Crusher/hardcoded and solver-v2 assets: preserve only strategically useful knowledge, not their complexity for its own sake.
 
-One legacy detail remains under audit, not yet classified as a bug: `_terminal_value()` uses `chip_payoff / current_bb`. With a fixed 1500-chip pool this is BB-normalized utility, not literal raw chip EV. Within one state it does not change action ordering, but across blind levels it changes target/gradient scale in the shared neural approximator. Do **not** change it yet; first determine whether this normalization materially harmed late-blind learning or was useful numerical conditioning.
-
-## Do not do next
+## Do not do now
 
 - Do not resume dense 3H i3-i5 merely to complete an old matrix.
 - Do not run the PF0-PF4 10/20-only comparison as a final selector.
-- Do not start R8 heavy training.
-- Do not replace chip EV with payout utility globally.
-- Do not change the legacy `/BB` normalization until its effect is actually established.
-- Do not add new certification/reproducibility gates unless they can materially change playing quality or catch a real correctness problem.
+- Do not start old R8 heavy training.
+- Do not create separate payout-specific trainings.
+- Do not add certification/reproducibility gates unless they can materially change playing quality or catch a real correctness bug.
 
-## Required next deliverable
+## Next milestone
 
-Complete the concise legacy-vs-SpinCore architecture map, including the effect of utility normalization, feature semantics, network/buffer design, traversal, runtime parity, Crusher hardcoded material, and solver-v2 assets. Then produce one consolidated training/runtime plan. Only after that map is complete should compute resume.
+Finish the finite architecture-affecting audit above, then create the **first lean functional training runner** using the restored real scenario distribution and WTA chip-EV scope. Start with a cheap sanity run; if mechanics and learning are sane, scale directly on Ryzen instead of opening another chain of academic gates.
