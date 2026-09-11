@@ -52,16 +52,44 @@ def uniform_policy(_state, _observation, legal):
 
 
 def regret_matching_policy(advantages: Sequence[float], legal: tuple[int, ...]) -> Policy:
+    """Regret matching with the proven legacy fallback for all-nonpositive outputs.
+
+    Positive regrets retain ordinary regret matching.  If a *trained* advantage
+    approximator predicts no positive legal regret, a uniform fallback throws
+    away all ranking information and was already identified in legacy DeepSpin
+    as a source of gross actions.  Preserve that repaired behavior here by
+    applying a numerically stable softmax over raw legal advantages.
+
+    The true zero-regret initial CFR state is handled separately by
+    ``NeuralAdvantagePolicy.ready=False`` / ``uniform_policy``; this fallback is
+    therefore for fitted-network outputs, not for untrained initialization.
+    """
     if len(advantages) != NUM_ACTIONS:
         raise ValueError("six advantages required")
+    if not legal:
+        raise ValueError("empty legal set")
+
     out = [0.0] * NUM_ACTIONS
-    total = sum(max(0.0, float(advantages[action])) for action in legal)
-    if total <= 0.0:
+    positive_total = sum(max(0.0, float(advantages[action])) for action in legal)
+    if positive_total > 0.0:
+        for action in legal:
+            out[action] = max(0.0, float(advantages[action])) / positive_total
+        return tuple(out)
+
+    # Legacy DeepSpin repair: retain the model's relative ranking instead of
+    # injecting an arbitrary uniform policy when every legal output is <= 0.
+    raw = [float(advantages[action]) for action in legal]
+    if any(not math.isfinite(x) for x in raw):
+        raise ValueError("nonfinite advantage")
+    maximum = max(raw)
+    weights = [math.exp(max(-60.0, min(60.0, x - maximum))) for x in raw]
+    total = sum(weights)
+    if not math.isfinite(total) or total <= 0.0:
         for action in legal:
             out[action] = 1.0 / len(legal)
-    else:
-        for action in legal:
-            out[action] = max(0.0, float(advantages[action])) / total
+        return tuple(out)
+    for action, weight in zip(legal, weights):
+        out[action] = weight / total
     return tuple(out)
 
 
