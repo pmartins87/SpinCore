@@ -2,6 +2,7 @@
 
 Status: **IN PROGRESS**
 Started: 2026-09-09
+Updated: 2026-09-10
 Purpose: preserve multi-year legacy knowledge and identify only genuine SpinCore improvements before more heavy compute.
 
 ## 1. Scenario distribution — LEGACY STRONGER / MUST RESTORE
@@ -19,7 +20,7 @@ Legacy `deepspin/scenario.py` already models the tournament-state distribution i
 
 SpinCore R7.5.4's 10/20-only matrix is therefore a regression in scenario realism and may be used only as localized evidence.
 
-Decision: restore/adapt the legacy scenario-distribution semantics before global action-abstraction selection or final training.
+Decision: restore/adapt the legacy scenario-distribution semantics before global action-abstraction selection or final training. The exact legacy tables are now preserved in `python/spincore/legacy_scenario_data.json`, and `python/spincore/legacy_scenario.py` adapts them to current `spincore.solver.Episode` while preserving the historical sampling semantics.
 
 ## 2. Action abstraction — LEGACY ALREADY HAD A RICH PRACTICAL SET
 
@@ -58,25 +59,30 @@ Legacy stack includes:
 
 This is not a toy baseline. SpinCore changes must be evaluated as refinements of this foundation.
 
-Historical code also records a repaired regret-matching fallback: the older uniform fallback, when all legal regrets were non-positive, injected grossly wrong actions. The archived traversal uses masked softmax over raw advantage values instead. This is a concrete example of knowledge that must not be lost.
+Historical code also records a repaired regret-matching fallback: the older uniform fallback, when all legal advantages were non-positive, injected grossly wrong actions. Current SpinCore had regressed to that same uniform fallback. On 2026-09-10 it was corrected in `python/spincore/deep_cfr.py`: ordinary positive regret matching remains unchanged, but fitted-network states with no positive legal regret now use stable masked softmax over raw legal advantages, preserving the model's ranking. The true untrained zero-regret state remains uniform through `NeuralAdvantagePolicy.ready=False`.
 
-## 5. Utility/objective — CHIP EV REMAINS THE DEFAULT; NO CHANGE WITHOUT A REAL PAYOUT REASON
+## 5. Utility/objective — ONE WTA CHIP-EV POLICY FIRST; MULTIPAY SPECIALIZATION DEFERRED
 
 Legacy `ExternalSamplingTraverser._terminal_value()` reads `g.get_payoffs()` and normalizes the traverser's single-hand chip payoff by the current BB. The C++ `get_payoffs()` computes chips won/lost in that hand.
 
 Previous audit wording prematurely called SpinCore's explicit-payout/ICM utility a likely improvement. That conclusion is withdrawn.
 
-For a winner-take-all payout vector, ICM first-place equity is linear in chips: `equity_i = prize * stack_i / total_chips`. Therefore ranking actions by expected ICM delta is exactly the same as ranking them by expected chip delta, up to a positive constant factor. Replacing chip EV with payout/ICM in such games adds complexity without strategic gain.
+For a winner-take-all payout vector, ICM first-place equity is linear in chips. Therefore expected ICM delta and expected chip delta rank actions identically, up to a positive constant factor. Replacing chip EV with payout/ICM inside the WTA training problem adds no strategic information.
 
-Current decision:
+Actual GGPoker Spin & Gold does sometimes pay more than one place at high multipliers. In those 3-handed multi-place states, payout-aware utility can change optimal decisions and is theoretically more accurate. However, that does **not** imply that first-release SpinCore should multiply its already expensive training scope by payout structures.
 
-- **chip EV is the primary training/evaluation objective for ordinary winner-take-all SpinGo states**;
-- raw monetary tournament results are not the primary quality metric because multiplier and card variance add noise unrelated to decision quality;
-- payout-aware utility is justified only for variants where more than one finishing position is actually paid and the payout vector can change optimal decisions;
-- if those multi-place variants are included, add payout awareness only for those states (condition the policy on payout vector or use a dedicated variant), rather than replacing the core chip-EV architecture wholesale;
-- no utility change is allowed merely because SpinCore already implemented one.
+Current product decision:
 
-This preserves the user's legacy design unless a concrete, strategically material counterexample shows that another objective improves the intended game.
+- train the first strong functional SpinCore policy family on **winner-take-all chip EV**;
+- use that same WTA-trained policy initially for all payout variants, including rare multi-place games;
+- do not train separate 70/30, 50/30/20, or other payout-specific policies now;
+- keep the solver's ICM capability available but dormant for first-release training;
+- only revisit multi-place specialization after the WTA agent is strong and functional, and only if the estimated real-world gain justifies the added compute;
+- if specialization is later justified, first investigate cheaper transfer/fine-tuning or payout-conditioned approaches before full independent training from scratch.
+
+This decision is encoded in `python/spincore/lean_training_scope.py` as `WTA_SHARED_ACROSS_PAYOUTS_V1` with multi-pay specialization disabled.
+
+One separate legacy question remains open: the old target is `chip_payoff / current_bb`, not raw chip delta. Dividing by BB does not change action ordering within a state, but it changes target magnitude across blind levels for a shared neural approximator. Treat this as an audit hypothesis only; do not change it until its learning effect is understood.
 
 ## 6. Runtime/integration — LEGACY ASSET TO PRESERVE
 
@@ -94,12 +100,12 @@ Known from the user's history and subsequent debugging:
 - an earlier uniform regret fallback injected strategically absurd legal actions when positive regrets were absent;
 - version/local-patch drift made it difficult to guarantee that trainer, checkpoint, exporter and runtime represented the same semantics.
 
-Chip EV itself is **not** currently classified as a historical failure cause. It remains the baseline objective unless an actual payout structure creates a demonstrated reason to depart from it.
+Chip EV itself is **not** classified as a historical failure cause. It remains the first-release objective. Multi-place payout modeling is a possible later refinement, not a prerequisite for making DeepSpin/SpinCore work.
 
 ## 8. Current synthesis
 
 Target direction, subject to the rest of this audit:
 
-**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + legacy chip-EV objective by default + only demonstrated SpinCore state/traversal improvements + payout awareness only where the real payout vector requires it + lean evidence-driven action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
+**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + one WTA chip-EV policy family + only demonstrated SpinCore state/traversal improvements + corrected legacy regret fallback + lean evidence-driven action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
 
-No heavy training resumes until the remaining legacy components (buffers, networks, runtime, Crusher hardcoded material, solver-v2/184 assets) are fully mapped and the consolidated architecture is explicit.
+No heavy training resumes until the remaining legacy components (292 features, buffers/networks, runtime, Crusher hardcoded material, solver-v2/184 assets) are mapped far enough to eliminate known structural failure modes and define the first functional training path. The audit is not an excuse for exhaustive certification: once the architecture-affecting questions are resolved, training should start.
