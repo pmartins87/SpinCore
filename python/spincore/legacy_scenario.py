@@ -11,7 +11,7 @@ training/evaluation.
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -72,6 +72,10 @@ class LegacyScenarioSampler:
     - random live-seat assignment and dealer;
     - one dead seat in true HU;
     - late 3H stack-table fallback to 60/120, matching the legacy code.
+
+    ``force_domain`` is the only adapter addition; it lets current SpinCore keep
+    separate HU/3H networks while sampling each network from the same historical
+    per-domain distribution.
     """
 
     def __init__(self, *, seed: int = 0, config: LegacyScenarioConfig | None = None):
@@ -92,48 +96,61 @@ class LegacyScenarioSampler:
             a = _sample_stack_from_table(self.rng, REAL_STACK_TABLE_HU, blind_key)
             if 1 <= a <= total - 1:
                 b = total - a
-                if self.rng.random() < 0.5:
-                    a, b = b, a
-                dead = int(self.rng.integers(0, 3))
-                alive = [x for x in range(3) if x != dead]
-                alive = [int(x) for x in self.rng.permutation(alive)]
-                stacks = [0, 0, 0]
-                stacks[alive[0]], stacks[alive[1]] = int(a), int(b)
-                return tuple(stacks), (dead,)
+                if b > 0:
+                    if self.rng.random() < 0.5:
+                        a, b = b, a
+                    dead = int(self.rng.integers(0, 3))
+                    alive = [x for x in range(3) if x != dead]
+                    alive = [int(x) for x in self.rng.permutation(alive)]
+                    stacks = [0, 0, 0]
+                    stacks[alive[0]], stacks[alive[1]] = int(a), int(b)
+                    return tuple(stacks), (dead,)
+
+        # Exact historical fallback.
         a = int(self.rng.integers(1, total))
         b = total - a
-        dead = int(self.rng.integers(0, 3))
-        alive = [x for x in range(3) if x != dead]
         if self.rng.random() < 0.5:
             a, b = b, a
+        dead = int(self.rng.integers(0, 3))
+        alive = [x for x in range(3) if x != dead]
+        alive = [int(x) for x in self.rng.permutation(alive)]
         stacks = [0, 0, 0]
         stacks[alive[0]], stacks[alive[1]] = a, b
         return tuple(stacks), (dead,)
 
-    def _sample_3p_stacks(self, blind_key: str, bb: int) -> tuple[int, int, int]:
+    def _sample_3p_stacks(self, blind_key: str) -> tuple[int, int, int]:
         total = self.config.total_chips
         table_key = "60/120" if blind_key in {"80/160", "100/200"} else blind_key
+        try:
+            bb_value = int(table_key.split("/")[1])
+        except Exception:
+            bb_value = 0
+
         for _ in range(50):
             raw = [max(1, _sample_stack_from_table(self.rng, REAL_STACK_TABLE_3P, table_key)) for _ in range(3)]
             raw_sum = sum(raw)
+            if raw_sum <= 0:
+                continue
             scaled = [int(round(x * total / raw_sum)) for x in raw]
-            scaled[max(range(3), key=scaled.__getitem__)] += total - sum(scaled)
+            diff = total - sum(scaled)
+            if diff:
+                scaled[max(range(3), key=scaled.__getitem__)] += diff
             for i, value in enumerate(scaled):
                 if value <= 0:
                     donor = max(range(3), key=scaled.__getitem__)
                     if scaled[donor] > 1:
                         scaled[donor] -= 1
                         scaled[i] = 1
-            if sum(scaled) == total and min(scaled) >= bb:
+            if sum(scaled) == total and min(scaled) > 0 and (bb_value <= 0 or min(scaled) >= bb_value):
                 return tuple(int(scaled[int(i)]) for i in self.rng.permutation(3))
-        # Defensive fallback; should be rare. Keep total exact and all players alive.
-        while True:
-            a = int(self.rng.integers(bb, total - 2 * bb + 1))
-            b = int(self.rng.integers(bb, total - a - bb + 1))
-            c = total - a - b
-            if c >= bb:
-                vals = [a, b, c]
-                return tuple(int(vals[int(i)]) for i in self.rng.permutation(3))
+
+        # Exact historical fallback: preserve it rather than inventing a new
+        # distribution.  It is only reached after 50 rejected empirical draws.
+        a = int(self.rng.integers(1, total - 1))
+        b = int(self.rng.integers(1, total - a))
+        c = total - a - b
+        values = [a, b, c]
+        return tuple(int(values[int(i)]) for i in self.rng.permutation(3))
 
     def sample_episode(self, *, force_domain: str | None = None) -> Episode:
         if force_domain not in (None, "THREE_HANDED", "TRUE_HEADS_UP"):
@@ -151,7 +168,7 @@ class LegacyScenarioSampler:
             stacks, dead_players = self._sample_hu_stacks(blind_key)
             live = [i for i, stack in enumerate(stacks) if stack > 0]
         else:
-            stacks = self._sample_3p_stacks(blind_key, bb)
+            stacks = self._sample_3p_stacks(blind_key)
             dead_players = ()
             live = [0, 1, 2]
         dealer = int(self.rng.choice(live))
