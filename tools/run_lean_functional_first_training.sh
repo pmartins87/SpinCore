@@ -5,16 +5,26 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 PYTHON_RUN="${SPINCORE_LEAN_VENV:-$ROOT/.venv_lean}/bin/python"
-THREADS="${SPINCORE_TORCH_THREADS:-2}"
 BUILD_JOBS="${SPINCORE_BUILD_JOBS:-$(nproc)}"
-SELECTED_FILE="$ROOT/runs/worker_benchmark/selected_workers.txt"
+SELECTED_WORKERS_FILE="$ROOT/runs/worker_benchmark/selected_workers.txt"
+SELECTED_THREADS_FILE="$ROOT/runs/worker_benchmark/selected_torch_threads.txt"
+
 if [ -n "${SPINCORE_WORKERS:-}" ]; then
     WORKERS="$SPINCORE_WORKERS"
-elif [ -f "$SELECTED_FILE" ]; then
-    WORKERS="$(tr -d '[:space:]' < "$SELECTED_FILE")"
+elif [ -f "$SELECTED_WORKERS_FILE" ]; then
+    WORKERS="$(tr -d '[:space:]' < "$SELECTED_WORKERS_FILE")"
 else
     WORKERS="$(( $(nproc) > 1 ? $(nproc) - 1 : 1 ))"
 fi
+
+if [ -n "${SPINCORE_TORCH_THREADS:-}" ]; then
+    THREADS="$SPINCORE_TORCH_THREADS"
+elif [ -f "$SELECTED_THREADS_FILE" ]; then
+    THREADS="$(tr -d '[:space:]' < "$SELECTED_THREADS_FILE")"
+else
+    THREADS=2
+fi
+
 STAMP="$(date +%Y%m%d_%H%M%S)"
 RUN_DIR="$ROOT/runs/lean_first_training/$STAMP"
 mkdir -p "$RUN_DIR"
