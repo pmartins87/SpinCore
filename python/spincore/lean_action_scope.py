@@ -2,15 +2,19 @@ from __future__ import annotations
 
 """First functional SpinCore action scope.
 
-Start from the mature DeepSpin seven-action vocabulary instead of inventing a
-new abstraction before the full real SpinGo distribution is working.  The
-current solver already exposes a ten-slot universal action vocabulary; this
-module simply activates the seven legacy-equivalent slots and leaves the other
-three dormant.
+Preserve DeepSpin's mature seven *labels* without pretending those labels always
+mean literal pot fractions.  The lean C++ resolver reproduces the historical
+context semantics:
 
-This is intentionally a *baseline*, not a claim that seven actions are globally
-optimal.  We prune or expand it only after the functional WTA agent exists and
-only when the expected strategic gain justifies the extra branching cost.
+- preflop POT_33 label = 2 BB normal open;
+- preflop POT_75 label = isolation to 2.5 BB + 1 BB per extra limper;
+- preflop POT_50 label = 3-bet to 5 BB + 2 BB per caller after the raise;
+- limp-vs-isolation and multi-raise shove/fold restrictions are retained;
+- postflop 33/50/75/100 are true pot-after-call fractions with legacy pruning
+  and 60% near-all-in collapse.
+
+The ten-slot network carrier is retained only as infrastructure.  MIN_RAISE,
+POT_40 and POT_66 are dormant in this first functional baseline.
 """
 
 from .r7_5_action_contract import ActionCandidateSpec, universal_mask
@@ -27,9 +31,6 @@ FIRST_RELEASE_ACTION_NAMES = (
 )
 FIRST_RELEASE_ACTION_MASK = universal_mask(FIRST_RELEASE_ACTION_NAMES)
 
-# Preserve the legacy action vocabulary on every street for the first functional
-# baseline.  Preflop-specific simplification is a possible later compute saving,
-# but is not introduced without evidence because it would change strategy.
 FIRST_RELEASE_ACTION_SPEC = ActionCandidateSpec(
     candidate_id=FIRST_RELEASE_ACTION_SCOPE_ID,
     preflop_mask=FIRST_RELEASE_ACTION_MASK,
