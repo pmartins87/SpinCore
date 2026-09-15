@@ -7,6 +7,14 @@ cd "$ROOT"
 PYTHON_RUN="${SPINCORE_LEAN_VENV:-$ROOT/.venv_lean}/bin/python"
 THREADS="${SPINCORE_TORCH_THREADS:-2}"
 BUILD_JOBS="${SPINCORE_BUILD_JOBS:-$(nproc)}"
+SELECTED_FILE="$ROOT/runs/worker_benchmark/selected_workers.txt"
+if [ -n "${SPINCORE_WORKERS:-}" ]; then
+    WORKERS="$SPINCORE_WORKERS"
+elif [ -f "$SELECTED_FILE" ]; then
+    WORKERS="$(tr -d '[:space:]' < "$SELECTED_FILE")"
+else
+    WORKERS="$(( $(nproc) > 1 ? $(nproc) - 1 : 1 ))"
+fi
 STAMP="$(date +%Y%m%d_%H%M%S)"
 RUN_DIR="$ROOT/runs/lean_first_training/$STAMP"
 mkdir -p "$RUN_DIR"
@@ -25,13 +33,14 @@ then
     exit 4
 fi
 
-printf '=== SpinCore first substantive training ===\n'
+printf '=== SpinCore first substantive training — Ryzen optimized ===\n'
 printf 'repo=%s\n' "$ROOT"
 printf 'commit=%s\n' "$(git rev-parse HEAD)"
 printf 'python=%s\n' "$($PYTHON_RUN --version 2>&1)"
-printf 'torch_threads=%s build_jobs=%s\n' "$THREADS" "$BUILD_JOBS"
+printf 'parent_torch_threads=%s root_workers=%s build_jobs=%s logical_cpus=%s\n' "$THREADS" "$WORKERS" "$BUILD_JOBS" "$(nproc)"
 printf 'profile=200 iterations x 600 roots = 120000 roots\n'
 printf 'legacy-scale note: 600 roots/iteration => 1527 advantage traversals and 255 sampled-policy episodes/iteration, approximately the mature DeepSpin defaults (1536 / 256).\n'
+printf 'parallelism=independent advantage roots only; one Torch thread per worker; parent merges samples into the same authoritative reservoirs.\n'
 printf 'run_dir=%s\n' "$RUN_DIR"
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -53,6 +62,7 @@ printf '\n=== Training ===\n'
   --advantage-steps 50 \
   --policy-steps 400 \
   --batch-size 256 \
+  --workers "$WORKERS" \
   --checkpoint-every 5 \
   --checkpoint "$RUN_DIR/checkpoint.pt" \
   --report "$RUN_DIR/report.json" \
