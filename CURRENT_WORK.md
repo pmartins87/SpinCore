@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — CHECKPOINT PRESERVED; RYZEN HARDWARE TUNING NEXT; STRATEGY STRENGTH NOT YET ESTABLISHED**
+Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE MEASURED (31 WORKERS / 8 PARENT THREADS) — PAIRED STRATEGY-QUALITY EVALUATION NEXT**
 
 ## Goal
 
@@ -78,20 +78,56 @@ Compared with the tiny 1,000-root pilot, the trained policy is materially less d
 
 **Important:** this is mechanics/behavior evidence, not proof that the strategy is strong. Self-play against itself cannot establish absolute chip-EV quality or exploitability. Do not authorize more training merely because the checkpoint exists, and do not call the policy final merely because self-play passed.
 
-## Ryzen optimization is mandatory
+## Ryzen optimization — COMPLETED 2026-09-15
 
 `docs/RYZEN_OPTIMIZATION_POLICY.md` is canonical. This is also a standing user requirement beyond SpinCore: any substantial workload assigned to the user's Ryzen, in any project, must be optimized for that machine before long execution.
 
-SpinCore now parallelizes independent advantage-root collection with a persistent process pool. Each worker uses one Torch/OpenMP/BLAS thread. The parent remains authoritative for empirical scenario sampling and global reservoirs and merges returned samples in root order. Poker rules, state representation, legal-action semantics, utility and intended Deep-CFR operation are unchanged by the execution optimization.
+The measured one-time hardware benchmark completed successfully on the actual 32-logical-thread Ryzen.
 
-The parallel path already passed the dedicated GitHub lean functional benchmark with two workers. A broad legacy regression still has one stale frozen-blob-hash failure unrelated to this functional path; do not turn that certification-only hash into a workstream.
+Phase 1 — advantage-root workers:
 
-## Next milestone — ONE hardware tune, then ONE meaningful strategy decision
+- 1 worker: 33.379956 s tree time;
+- 8 workers: 5.795283 s;
+- 16 workers: 6.598084 s;
+- 24 workers: 3.832261 s;
+- **31 workers: 3.678355 s — selected**.
 
-1. Run `tools/benchmark_lean_ryzen_workers.sh` once on the actual Ryzen. It compares root workers 1/8/16/24/31 and then parent Torch threads 1/2/4/8/16. Persist the fastest safe profile.
-2. **Do not start another training run automatically.** First build/run one compact strategy-quality comparison for the completed checkpoint under the full empirical sampler using common deals and chip-EV-oriented evidence against a stable fixed baseline/opponent set.
-3. Only if that evidence says the policy is still undertrained or strategically weak should the checkpoint be extended — and any extension must use the measured Ryzen-optimized profile.
-4. If a concrete semantic/action/representation weakness appears, fix that weakness before spending more compute. Do not answer bad poker with blind extra training.
+Phase 2 — parent Torch threads while keeping 31 root workers:
+
+- 1 thread: 3.524190 s steady iteration;
+- 2 threads: 3.012554 s;
+- 4 threads: 2.898485 s;
+- **8 threads: 2.560276 s — selected**;
+- 16 threads: 3.543747 s.
+
+All 5 worker candidates and all 5 parent-thread candidates completed successfully. The persistent production profile is therefore:
+
+- **root workers = 31**;
+- **parent Torch threads = 8**;
+- worker Torch/OpenMP/BLAS threads remain 1 each.
+
+The selected values are stored locally in:
+
+- `runs/worker_benchmark/selected_workers.txt`;
+- `runs/worker_benchmark/selected_torch_threads.txt`.
+
+Do not infer that the whole training job becomes 13x faster merely from the inner benchmark. Root collection accelerated dramatically, but optimizer/final-policy work and process/model startup remain partly serial or fixed-cost. Any future long-run ETA must be measured from the optimized substantive path itself.
+
+## Strategy-quality evaluation now prepared
+
+Before any further training, run exactly one paired full-sampler chip-EV diagnostic:
+
+- tool: `tools/evaluate_lean_strategy_quality.py`;
+- one-command wrapper: `tools/run_lean_strategy_quality_eval.sh`;
+- default workload: 1,000 empirical scenarios under the full 3H/HU blind-conditioned sampler;
+- rotate the evaluated hero through every live seat;
+- compare the learned SpinCore AveragePolicy against a uniform-legal hero control on the **same scenario and deal**;
+- fixed opponent families: `UNIFORM_LEGAL`, `PASSIVE_CALLER`, `JAMMER`;
+- primary evidence: raw hero chip EV plus paired `SpinCore - uniform-control` chip-EV gain, with 95% CI clustered by scenario;
+- report overall and separately for 3H, HU and blind-level detail;
+- use the measured worker count automatically, with one Torch/OMP/MKL thread per evaluation worker to avoid oversubscription.
+
+This is a diagnostic against transparent fixed weak baselines, **not** an exploitability/GTO proof. Its purpose is to answer a concrete pre-training question: did the learned policy acquire measurable strategic value beyond an untrained legal-action policy, and does any domain show a gross red flag? If it fails this basic comparison, inspect/fix the cause before spending more compute. If it passes, move to stronger poker-specific evaluation rather than blindly extending training.
 
 ## Do not do
 
@@ -104,3 +140,7 @@ The parallel path already passed the dedicated GitHub lean functional benchmark 
 - Do not create payout-specific trainings now.
 - Do not reopen representation/action tournaments without concrete play evidence.
 - Do not knowingly run long serial/low-utilization workloads on the Ryzen when independent work can be parallelized safely.
+
+## Immediate next milestone
+
+Run `tools/run_lean_strategy_quality_eval.sh` once. Do **not** start another training run afterward. Interpret the paired chip-EV result first. Based on that evidence, either investigate a concrete strategic/semantic weakness or advance to a stronger poker-quality benchmark. Only extend training if the evidence specifically supports undertraining as the limiting factor.
