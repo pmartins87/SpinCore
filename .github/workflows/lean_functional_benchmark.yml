@@ -13,10 +13,12 @@ on:
       - 'python/spincore/lean_action_policy.py'
       - 'python/spincore/lean_solver_actions.py'
       - 'python/spincore/lean_functional_training.py'
+      - 'python/spincore/lean_functional_agent.py'
       - 'python/spincore/lean_training_scope.py'
       - 'python/spincore/legacy_scenario.py'
       - 'python/spincore/legacy_scenario_data.json'
       - 'tools/run_lean_functional_training.py'
+      - 'tools/play_lean_functional_selfplay.py'
       - 'CMakeLists.txt'
   workflow_dispatch:
 
@@ -78,3 +80,18 @@ jobs:
             --report runs/lean_functional_benchmark/report.json
           echo '--- compact report ---'
           cat runs/lean_functional_benchmark/report.json
+
+      - name: Offline 100-hand self-play
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          python tools/play_lean_functional_selfplay.py \
+            --solver build/libspincore_solver_c.so \
+            --checkpoint runs/lean_functional_benchmark/checkpoint.pt \
+            --hands 100 \
+            --seed 20260916
