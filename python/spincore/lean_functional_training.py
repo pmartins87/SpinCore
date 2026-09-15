@@ -16,10 +16,12 @@ keep for the functional agent:
 - WTA chip EV with one global /1500 numeric scale;
 - separate 3H and HU brains, trained from their own realistic conditional
   state distributions;
-- resumable checkpoints after every iteration.
+- resumable checkpoints;
+- optional root-level multiprocessing that changes execution throughput only,
+  not poker/state/action/utility semantics.
 
 It intentionally omits the old R7.5 certification ensemble, referee matrix,
-bootstrap gates and fixed 10/20 scenario cycle.  Those mechanisms do not make
+bootstrap gates and fixed 10/20 scenario cycle. Those mechanisms do not make
 the first functional agent play better.
 """
 
@@ -35,6 +37,7 @@ import torch
 
 from spincore.lean_action_policy import LeanNeuralActionAdvantagePolicy
 from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
+from spincore.lean_parallel import RootJob
 from spincore.lean_solver_actions import LeanSolverState, apply_lean
 from spincore.lean_training_scope import LeanTrainingScope
 from spincore.legacy_scenario import LegacyScenarioConfig, LegacyScenarioSampler
@@ -49,7 +52,7 @@ DOMAINS = ("THREE_HANDED", "TRUE_HEADS_UP")
 
 # Historical DeepSpin defaults were 512 advantage traversals per player and 256
 # sampled policy episodes per iteration: 3*512 / 256 = 6 advantage traversals
-# per policy episode.  Current roots traverse every live player, so preserving
+# per policy episode. Current roots traverse every live player, so preserving
 # that ratio is a natural scale-independent default.
 LEGACY_ADV_TRAVERSALS_PER_POLICY_EPISODE = 6
 
@@ -128,6 +131,27 @@ def _advantage_reset_seed(seed: int, domain: str, iteration: int) -> int:
     return (_domain_seed(seed, domain) ^ (int(iteration) * 0x45D9F3B)) & 0x7FFFFFFF
 
 
+def _root_deck_seed(seed: int, domain: str, iteration: int, local_root: int) -> int:
+    return (
+        int(seed)
+        ^ (int(iteration) * 0x9E3779B1)
+        ^ (_domain_seed(seed, domain) << 1)
+        ^ int(local_root)
+    ) & ((1 << 63) - 1)
+
+
+def _root_policy_seed(seed: int, domain: str, iteration: int, local_root: int) -> int:
+    # Parallel roots need independent sampling streams so scheduling/worker
+    # count cannot change the stochastic distribution inside a root.
+    return (
+        int(seed)
+        ^ 0xD1B54A32D192ED03
+        ^ (int(iteration) * 0x94D049BB133111EB)
+        ^ (_domain_seed(seed, domain) << 7)
+        ^ (int(local_root) * 0x9E3779B97F4A7C15)
+    ) & ((1 << 63) - 1)
+
+
 def _policy_deck_seed(seed: int, domain: str, iteration: int, episode_index: int) -> int:
     return (
         int(seed)
@@ -162,8 +186,6 @@ def _make_runtime(
         terminal_utility=scope.terminal_utility,
         device="cpu",
     )
-    # Replace only the behavior-policy adapter. The universal-action recursion
-    # stays shared; this restores the repaired DeepSpin all-nonpositive fallback.
     behavior = LeanNeuralActionAdvantagePolicy(
         bundle.advantage,
         selected_representation=REPRESENTATION,
@@ -309,12 +331,7 @@ def _collect_sampled_policy(
     sampler: LegacyScenarioSampler,
     runtime: DomainRuntime,
 ) -> dict[str, Any]:
-    """Collect average-policy targets along ordinary sampled game trajectories.
-
-    This restores the mature DeepSpin policy-memory mechanism. Opponent nodes are
-    *not* expanded exactly. Every encountered decision stores the current
-    regret-matching strategy and samples one action to continue the hand.
-    """
+    """Collect AveragePolicy targets along ordinary sampled game trajectories."""
     before = int(runtime.bundle.pol_mem.seen)
     decisions = 0
     action_counts = [0] * 10
@@ -340,8 +357,6 @@ def _collect_sampled_policy(
                         observation=observation,
                         legal=legal_mask(legal),
                         target=tuple(float(x) for x in sigma),
-                        # Keep current Deep-CFR iteration weighting while restoring
-                        # only the legacy sampled-trajectory collection mechanism.
                         weight=float(iteration),
                         iteration=int(iteration),
                     )
@@ -373,6 +388,7 @@ def run_iteration(
     config: LeanFunctionalConfig,
     sampler: LegacyScenarioSampler,
     runtimes: dict[str, DomainRuntime],
+    parallel_executor=None,
 ) -> dict[str, Any]:
     counts = config.roots_by_domain()
     policy_counts = config.policy_episodes_by_domain()
@@ -385,24 +401,45 @@ def run_iteration(
         adv_before = int(runtime.bundle.adv_mem.seen)
         pol_before = int(runtime.bundle.pol_mem.seen)
         blind_counts: dict[str, int] = {}
-        started = time.perf_counter()
+
+        # Sample scenarios in the parent so the empirical scenario stream remains
+        # authoritative and independent of worker scheduling.
+        jobs: list[RootJob] = []
         for local_root in range(roots):
             episode = sampler.sample_episode(force_domain=domain)
             key = f"{episode.small_blind}/{episode.big_blind}"
             blind_counts[key] = blind_counts.get(key, 0) + 1
-            deck_seed = (
-                int(seed)
-                ^ (int(iteration) * 0x9E3779B1)
-                ^ (_domain_seed(seed, domain) << 1)
-                ^ int(local_root)
-            ) & ((1 << 63) - 1)
-            runtime.session.collect_root(
-                episode,
+            jobs.append(
+                RootJob(
+                    root_index=int(local_root),
+                    episode=episode,
+                    deck_seed=_root_deck_seed(seed, domain, iteration, local_root),
+                    policy_seed=_root_policy_seed(seed, domain, iteration, local_root),
+                )
+            )
+
+        if parallel_executor is not None:
+            parallel_stats = parallel_executor.collect(
+                domain=domain,
+                bundle=runtime.bundle,
                 iteration=int(iteration),
                 exact_opponent_levels=int(config.exact_opponent_levels),
-                deck_seed=deck_seed,
+                jobs=jobs,
             )
-        tree_seconds = time.perf_counter() - started
+            tree_seconds = float(parallel_stats["seconds"])
+            execution_mode = f"parallel_{parallel_executor.workers}x1"
+        else:
+            started = time.perf_counter()
+            # Historical single-process path retained for portability/CI.
+            for job in jobs:
+                runtime.session.collect_root(
+                    job.episode,
+                    iteration=int(iteration),
+                    exact_opponent_levels=int(config.exact_opponent_levels),
+                    deck_seed=int(job.deck_seed),
+                )
+            tree_seconds = time.perf_counter() - started
+            execution_mode = "serial"
 
         fit_started = time.perf_counter()
         runtime.session.reset_advantage_network(
@@ -431,6 +468,7 @@ def run_iteration(
             "strategy_samples": int(runtime.bundle.pol_mem.seen) - pol_before,
             "tree_seconds": float(tree_seconds),
             "seconds_per_root": float(tree_seconds / roots),
+            "execution_mode": execution_mode,
             "advantage_fit_seconds": float(fit_seconds),
             "advantage_loss_last": float(adv_losses[-1]) if adv_losses else None,
             "blind_counts": blind_counts,
