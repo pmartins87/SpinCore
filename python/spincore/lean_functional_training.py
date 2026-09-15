@@ -7,9 +7,11 @@ keep for the functional agent:
 
 - the legacy empirical SpinGo scenario distribution (3H + HU, all blind levels);
 - compact SPNNIV1 exact-state observation;
-- the mature legacy seven-action vocabulary represented inside the current
-  ten-slot universal resolver;
+- the mature legacy seven-action vocabulary with its context-sensitive action
+  semantics;
 - external-sampling Deep CFR (exact_opponent_levels=0 by default);
+- legacy-style sampled average-policy collection rather than exact opponent
+  expansion;
 - repaired all-nonpositive advantage fallback;
 - WTA chip EV with one global /1500 numeric scale;
 - separate 3H and HU brains, trained from their own realistic conditional
@@ -23,20 +25,20 @@ the first functional agent play better.
 
 from dataclasses import asdict, dataclass
 import json
+import math
 import os
 from pathlib import Path
-import random
 import time
 from typing import Any
 
-import numpy as np
 import torch
 
 from spincore.lean_action_policy import LeanNeuralActionAdvantagePolicy
 from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
+from spincore.lean_solver_actions import LeanSolverState, apply_lean
 from spincore.lean_training_scope import LeanTrainingScope
 from spincore.legacy_scenario import LegacyScenarioConfig, LegacyScenarioSampler
-from spincore.r7_5_action_cfr import UniversalPartialExactCollector
+from spincore.r7_5_action_cfr import ActionStrategySample, legal_mask, sample_action
 from spincore.r7_5_action_training import ActionDeepCFRSession, make_action_bundle
 from spincore.solver import SolverLibrary
 from spincore_nn.reservoir import UniformReservoir
@@ -44,6 +46,12 @@ from spincore_nn.reservoir import UniformReservoir
 SCHEMA = "SPINCORE_LEAN_FUNCTIONAL_TRAINING_V1"
 REPRESENTATION = "C0_V1_FROZEN_CONTROL"
 DOMAINS = ("THREE_HANDED", "TRUE_HEADS_UP")
+
+# Historical DeepSpin defaults were 512 advantage traversals per player and 256
+# sampled policy episodes per iteration: 3*512 / 256 = 6 advantage traversals
+# per policy episode.  Current roots traverse every live player, so preserving
+# that ratio is a natural scale-independent default.
+LEGACY_ADV_TRAVERSALS_PER_POLICY_EPISODE = 6
 
 
 @dataclass(frozen=True)
@@ -80,6 +88,31 @@ class LeanFunctionalConfig:
             "THREE_HANDED": self.roots_per_iteration - hu,
         }
 
+    def policy_episodes_by_domain(self) -> dict[str, int]:
+        roots = self.roots_by_domain()
+        return {
+            "THREE_HANDED": max(
+                1,
+                int(
+                    math.ceil(
+                        roots["THREE_HANDED"]
+                        * 3
+                        / LEGACY_ADV_TRAVERSALS_PER_POLICY_EPISODE
+                    )
+                ),
+            ),
+            "TRUE_HEADS_UP": max(
+                1,
+                int(
+                    math.ceil(
+                        roots["TRUE_HEADS_UP"]
+                        * 2
+                        / LEGACY_ADV_TRAVERSALS_PER_POLICY_EPISODE
+                    )
+                ),
+            ),
+        }
+
 
 @dataclass
 class DomainRuntime:
@@ -93,6 +126,16 @@ def _domain_seed(seed: int, domain: str) -> int:
 
 def _advantage_reset_seed(seed: int, domain: str, iteration: int) -> int:
     return (_domain_seed(seed, domain) ^ (int(iteration) * 0x45D9F3B)) & 0x7FFFFFFF
+
+
+def _policy_deck_seed(seed: int, domain: str, iteration: int, episode_index: int) -> int:
+    return (
+        int(seed)
+        ^ 0x6A09E667
+        ^ (int(iteration) * 0xBB67AE85)
+        ^ (_domain_seed(seed, domain) << 1)
+        ^ int(episode_index)
+    ) & ((1 << 63) - 1)
 
 
 def _make_runtime(
@@ -119,8 +162,8 @@ def _make_runtime(
         terminal_utility=scope.terminal_utility,
         device="cpu",
     )
-    # Replace only the behavior-policy adapter.  The audited universal-action
-    # recursion remains unchanged; this restores the repaired legacy fallback.
+    # Replace only the behavior-policy adapter. The universal-action recursion
+    # stays shared; this restores the repaired DeepSpin all-nonpositive fallback.
     behavior = LeanNeuralActionAdvantagePolicy(
         bundle.advantage,
         selected_representation=REPRESENTATION,
@@ -257,6 +300,72 @@ def new_run(
     return sampler, runtimes
 
 
+def _collect_sampled_policy(
+    *,
+    seed: int,
+    iteration: int,
+    domain: str,
+    episodes: int,
+    sampler: LegacyScenarioSampler,
+    runtime: DomainRuntime,
+) -> dict[str, Any]:
+    """Collect average-policy targets along ordinary sampled game trajectories.
+
+    This restores the mature DeepSpin policy-memory mechanism. Opponent nodes are
+    *not* expanded exactly. Every encountered decision stores the current
+    regret-matching strategy and samples one action to continue the hand.
+    """
+    before = int(runtime.bundle.pol_mem.seen)
+    decisions = 0
+    action_counts = [0] * 10
+    blind_counts: dict[str, int] = {}
+    started = time.perf_counter()
+
+    for episode_index in range(int(episodes)):
+        episode = sampler.sample_episode(force_domain=domain)
+        blind_key = f"{episode.small_blind}/{episode.big_blind}"
+        blind_counts[blind_key] = blind_counts.get(blind_key, 0) + 1
+        raw = runtime.session.solver_library.create(
+            episode,
+            _policy_deck_seed(seed, domain, iteration, episode_index),
+        )
+        state = LeanSolverState(raw)
+        try:
+            while not state.terminal:
+                active_mask, legal = runtime.session.collector._active_and_legal(state)
+                observation = runtime.session.collector._observation(state)
+                sigma = runtime.session.behavior(state, observation, legal)
+                runtime.bundle.pol_mem.add(
+                    ActionStrategySample(
+                        observation=observation,
+                        legal=legal_mask(legal),
+                        target=tuple(float(x) for x in sigma),
+                        # Keep current Deep-CFR iteration weighting while restoring
+                        # only the legacy sampled-trajectory collection mechanism.
+                        weight=float(iteration),
+                        iteration=int(iteration),
+                    )
+                )
+                decisions += 1
+                action = sample_action(sigma, legal, runtime.bundle.batch_rng)
+                action_counts[int(action)] += 1
+                apply_lean(state.inner, active_mask, action)
+        finally:
+            state.close()
+
+    added = int(runtime.bundle.pol_mem.seen) - before
+    if added != decisions:
+        raise RuntimeError("sampled policy accounting drift")
+    runtime.bundle.counters["strategy_samples"] += added
+    return {
+        "episodes": int(episodes),
+        "samples": int(added),
+        "seconds": float(time.perf_counter() - started),
+        "action_counts": action_counts,
+        "blind_counts": blind_counts,
+    }
+
+
 def run_iteration(
     *,
     seed: int,
@@ -266,6 +375,7 @@ def run_iteration(
     runtimes: dict[str, DomainRuntime],
 ) -> dict[str, Any]:
     counts = config.roots_by_domain()
+    policy_counts = config.policy_episodes_by_domain()
     report: dict[str, Any] = {"iteration": int(iteration), "domains": {}}
 
     for domain in DOMAINS:
@@ -305,6 +415,15 @@ def run_iteration(
         )
         fit_seconds = time.perf_counter() - fit_started
 
+        policy_report = _collect_sampled_policy(
+            seed=seed,
+            iteration=iteration,
+            domain=domain,
+            episodes=int(policy_counts[domain]),
+            sampler=sampler,
+            runtime=runtime,
+        )
+
         report["domains"][domain] = {
             "roots": roots,
             "nodes": int(runtime.bundle.counters["nodes"]) - nodes_before,
@@ -315,6 +434,7 @@ def run_iteration(
             "advantage_fit_seconds": float(fit_seconds),
             "advantage_loss_last": float(adv_losses[-1]) if adv_losses else None,
             "blind_counts": blind_counts,
+            "sampled_policy": policy_report,
         }
     return report
 
@@ -354,6 +474,8 @@ def compact_report(
         "schema": "SPINCORE_LEAN_FUNCTIONAL_REPORT_V1",
         "seed": int(seed),
         "config": asdict(config),
+        "roots_by_domain": config.roots_by_domain(),
+        "policy_episodes_by_domain": config.policy_episodes_by_domain(),
         "representation": REPRESENTATION,
         "action_scope": FIRST_RELEASE_ACTION_SPEC.candidate_id,
         "utility_id": LeanTrainingScope().utility_id,
