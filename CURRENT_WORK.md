@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE MEASURED (31 WORKERS / 8 PARENT THREADS) — POKER-QUALITY EVALUATION NEXT**
+Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE MEASURED (31 WORKERS / 8 PARENT THREADS) — STRATEGY EVAL RUNNING; DEEPCRUSHER BENCHMARK UNDER CONSTRUCTION**
 
 ## Goal
 
@@ -9,7 +9,7 @@ Make the multi-year DeepSpin project actually work as SpinCore. Preserve mature 
 
 A product-quality acceptance metric is now explicit: **SpinCore must beat DeepCrusher in extensive fair offline simulation under common game semantics.** DeepCrusher is a mandatory reference opponent, not the sole training teacher and not the definition of optimal play. The benchmark must use common deals where possible, seat rotation, the realistic blind/stack distribution, enough volume to suppress card variance, and poker outcomes reported overall and by HU/3H/blind/position. Direct HU is the cleanest first head-to-head comparison; 3H must use balanced/mirrored lineups. A future continuous-tournament simulator should add full-match/tournament win rate once the tournament transition schedule is explicitly defined.
 
-Poker-level explanation of what SpinCore is learning and the DeepCrusher benchmark contract is canonical in `docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md`.
+Poker-level explanation of what SpinCore is learning is canonical in `docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md`. The direct head-to-head benchmark contract is canonical in `docs/DEEPC_RUSHER_BENCHMARK_SPEC.md`.
 
 ## First functional SpinCore — decisions closed
 
@@ -117,7 +117,7 @@ The selected values are stored locally in:
 
 Do not infer that the whole training job becomes 13x faster merely from the inner benchmark. Root collection accelerated dramatically, but optimizer/final-policy work and process/model startup remain partly serial or fixed-cost. Any future long-run ETA must be measured from the optimized substantive path itself.
 
-## Strategy-quality evaluation now prepared
+## Strategy-quality evaluation now prepared/running
 
 Before any further training, run exactly one paired full-sampler chip-EV diagnostic:
 
@@ -133,26 +133,43 @@ Before any further training, run exactly one paired full-sampler chip-EV diagnos
 
 This is a diagnostic against transparent fixed weak baselines, **not** an exploitability/GTO proof and not a replacement for the mandatory DeepCrusher benchmark. Its purpose is to answer a concrete pre-training question: did the learned policy acquire measurable strategic value beyond an untrained legal-action policy, and does any domain show a gross red flag? If it fails this basic comparison, inspect/fix the cause before spending more compute. If it passes, advance to stronger poker-specific evaluation, including direct DeepCrusher head-to-head rather than blindly extending training.
 
-## Mandatory DeepCrusher acceptance benchmark
+## Mandatory DeepCrusher acceptance benchmark — BUILDING NOW
 
-A major target is for SpinCore to **beat DeepCrusher over extensive offline simulation**. The benchmark design must be fair and poker-oriented:
+Canonical specification: `docs/DEEPC_RUSHER_BENCHMARK_SPEC.md`.
 
-- common cards/deals where possible;
-- seat and position swaps;
-- full realistic blind/stack distribution, not 10/20 only;
-- direct HU head-to-head as the cleanest comparison;
-- balanced/mirrored three-handed compositions;
-- total chip EV and edge per hand, broken down by domain/blind/position;
-- enough volume and uncertainty reporting that card variance is not a credible explanation;
-- later, once a continuous tournament blind-transition model is fixed, complete Spin & Go match/tournament win rate as a second layer.
+Frozen first opponent is the DeepCrusher R8 v22 good/stable baseline from `pmartins87/DeepCrusher`, branch `r8-v22-stable-20260914`:
 
-Beating DeepCrusher is necessary as a reference-quality milestone but insufficient by itself: do not optimize SpinCore into a narrow DeepCrusher counter-strategy at the expense of general poker strength.
+- operational OpenHoldem file SHA256 `0113badc99727a7dd47c02448d4d042b5e008534cd63fd79a461a72b24eeb68d`;
+- strategic recovered file SHA256 `9fc2d00aacc915f3c265429f764056f3c6270df616244026aac22e455c803ee9`.
+
+Already implemented in SpinCore:
+
+- exact source/hash pin and source-preflight contract;
+- additive solver API to apply an external policy's exact Fold/Check/Call/BetTo/RaiseTo/AllIn action without quantizing DeepCrusher into SpinCore sizes;
+- HU paired same-deal seat swap;
+- 3H six-game AAB/ABB balanced block: each strategy receives exactly nine player-seat exposures and exactly three exposures in every logical seat per sampled state/deal;
+- zero-sum strategy aggregation;
+- unit tests for HU/3H pairing and exact-action bridge;
+- OpenPPL section/dependency inventory for the frozen DeepCrusher source.
+
+The main remaining implementation is the **DeepCrusher decision oracle**: given one exact offline SpinCore simulator state, it must return the same action and exact bet size as the frozen OpenPPL strategy. Do not shortcut this by inventing a simplified imitation. The oracle must be validated against real OpenHoldem reference decisions before an extensive result can be called canonical.
+
+Benchmark stages are frozen as:
+
+1. DC0 source/runtime parity for the DeepCrusher oracle;
+2. DC1 1k–5k paired-state smoke for mechanics/fairness;
+3. DC2 extensive paired empirical-sampler chip-EV benchmark, initially >=100k states and then adaptive CI stopping;
+4. DC3 complete Spin & Go tournament win rate after continuous blind/dealer/elimination progression is explicitly frozen.
+
+Primary DC2 acceptance: overall `SpinCore - DeepCrusher` chip EV > 0 with 95% CI lower bound > 0, without the result being carried by one isolated blind/position while another major domain collapses. DeepCrusher remains a reference opponent, not the sole definition of optimal play.
 
 ## Do not do
 
 - Do not discard or overwrite the completed 120k checkpoint.
 - Do not immediately extend it just because training completed.
 - Do not use self-play PASS as proof of poker strength.
+- Do not use an approximate/caricature DeepCrusher oracle for a canonical head-to-head claim.
+- Do not quantize DeepCrusher bet sizes into SpinCore's seven-action abstraction during the head-to-head.
 - Do not resume Dense-reference i3-i5 merely to complete an old matrix.
 - Do not use fixed-10/20 PF0-PF4 evidence as the final global selector.
 - Do not restart the old R8/gate chain.
@@ -162,4 +179,4 @@ Beating DeepCrusher is necessary as a reference-quality milestone but insufficie
 
 ## Immediate next milestone
 
-Run `tools/run_lean_strategy_quality_eval.sh` once. Do **not** start another training run afterward. Interpret the paired chip-EV result first. If it passes the basic sanity gate, the next poker-quality work is to build/run the fair DeepCrusher head-to-head benchmark. Only extend training if the evidence specifically supports undertraining as the limiting factor.
+Let the currently running `tools/run_lean_strategy_quality_eval.sh` finish; do **not** start another training run. In parallel, continue implementing the DeepCrusher oracle and validate the new exact-action/pairing infrastructure in CI. Once the strategy sanity result is available, interpret it while continuing DC0 rather than waiting to start benchmark construction.
