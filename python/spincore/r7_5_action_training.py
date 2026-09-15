@@ -105,7 +105,15 @@ class ActionDeepCFRSession:
             device=device,
             ready=bool(bundle.counters.get("advantage_ready", 0)),
         )
-        self.collector = UniversalPartialExactCollector(
+        collector_cls = UniversalPartialExactCollector
+        # The lean functional candidate intentionally uses a parallel action
+        # resolver that reproduces the mature DeepSpin preflop/postflop action
+        # semantics. Historical R7.5 candidates remain on the generic resolver.
+        if action_spec.candidate_id == "LEGACY_7_ACTION_BASELINE_V1":
+            from spincore.lean_solver_actions import LeanLegacyActionCollector
+
+            collector_cls = LeanLegacyActionCollector
+        self.collector = collector_cls(
             action_spec=action_spec,
             selected_representation=bundle.selected_representation,
             policy=self.behavior,
