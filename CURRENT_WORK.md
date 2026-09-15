@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FUNCTIONAL PATH VALIDATED — RYZEN PARALLEL OPTIMIZATION IMPLEMENTED, LOCAL WORKER BENCHMARK NEXT**
+Status: **FUNCTIONAL PATH VALIDATED — RYZEN PARALLEL OPTIMIZATION IMPLEMENTED, LOCAL HARDWARE TUNING NEXT**
 
 ## Goal
 
@@ -34,7 +34,7 @@ Relevant optimization files:
 - `tools/run_lean_functional_first_training.sh`
 - `tools/resume_latest_lean_training_optimized.sh`
 
-The parallel path has passed GitHub CI with two workers. The actual Ryzen must now benchmark 1/8/16/24/31 workers once. Failed oversubscribed configurations are skipped; the fastest successful root-collection profile is persisted to `runs/worker_benchmark/selected_workers.txt` and automatically reused by future substantive/resume scripts.
+The parallel path has passed GitHub CI with two workers. The actual Ryzen now runs one two-phase hardware benchmark: first root workers **1/8/16/24/31**, then parent Torch threads **1/2/4/8/16** using the selected worker count. Failed oversubscribed configurations are skipped. The fastest successful settings are persisted to `runs/worker_benchmark/selected_workers.txt` and `selected_torch_threads.txt`; future substantive/resume scripts consume both automatically.
 
 ## Ryzen pilot evidence — 2026-09-15
 
@@ -44,7 +44,7 @@ The finalized checkpoint passed 100-hand offline self-play with no illegal actio
 
 ## First substantive profile
 
-Once the selected Ryzen worker count is known, the same intended training profile is:
+Once the selected Ryzen worker/thread profile is known, the same intended training profile is:
 
 - 200 iterations;
 - 600 roots/iteration = 120,000 roots;
@@ -62,7 +62,7 @@ The checkpoint is resumable and may be extended rather than discarded.
 
 ## Active serial run started before optimization
 
-If the user already started the older serial 120k script, do **not** waste completed work. Prefer to stop immediately after the next printed `CHECKPOINT .../checkpoint.pt` line, then pull the optimized code, run the short worker benchmark, and resume the newest checkpoint with `tools/resume_latest_lean_training_optimized.sh`. Stopping between periodic checkpoints can lose up to the unsaved iterations since the prior checkpoint but does not corrupt the last durable checkpoint.
+If the user already started the older serial 120k script, do **not** waste completed work. Prefer to stop immediately after the next printed `CHECKPOINT .../checkpoint.pt` line, then pull the optimized code, run the short hardware benchmark, and resume the newest checkpoint with `tools/resume_latest_lean_training_optimized.sh`. Stopping between periodic checkpoints can lose up to the unsaved iterations since the prior checkpoint but does not corrupt the last durable checkpoint.
 
 ## Historical failure lesson
 
@@ -79,4 +79,4 @@ The earlier DeepSpin trained for roughly three months and still made gross mista
 
 ## Immediate next milestone
 
-Stop any pre-optimization serial substantive run at the next durable checkpoint, run the one-time Ryzen worker-count benchmark, then resume that same checkpoint using the selected optimized worker count. Only after measured parallel throughput is known should the remaining duration of the first substantive training be accepted.
+Stop any pre-optimization serial substantive run at the next durable checkpoint, run the one-time Ryzen hardware benchmark (root workers + parent Torch threads), then resume that same checkpoint using the selected optimized profile. Only after measured parallel throughput is known should the remaining duration of the first substantive training be accepted.
