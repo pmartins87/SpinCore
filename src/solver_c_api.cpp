@@ -4,6 +4,7 @@
 #include "spincore/neural_encoder_v2.hpp"
 #include "spincore/neural_encoder_v3.hpp"
 #include "spincore/action_abstraction_v2.hpp"
+#include "spincore/lean_action_abstraction.hpp"
 #include "spincore/game_topology.hpp"
 
 #include <algorithm>
@@ -286,6 +287,71 @@ int32_t spincore_solver_state_resolve_universal_exact(
         });
         if (it == actions.end()) {
             throw std::invalid_argument("universal action is inactive, illegal, or state-local alias");
+        }
+        *out_type = static_cast<int32_t>(it->exact.type);
+        *out_amount_to = it->exact.amount_to;
+        return 0;
+    }, -1);
+}
+
+uint32_t spincore_solver_state_lean_legal_mask(
+    const spincore_solver_state* s,
+    uint32_t active_mask
+) {
+    return guard([&]() {
+        if (!s || s->impl.terminal()) return 0u;
+        const auto active = decode_universal_mask(active_mask);
+        const auto actions = spincore::resolve_lean_legacy_actions_v1(s->impl.hand().betting(), active);
+        uint32_t m = 0;
+        for (const auto& a : actions) m |= 1u << static_cast<uint32_t>(a.slot);
+        return m;
+    }, 0u);
+}
+
+int32_t spincore_solver_state_apply_lean(
+    spincore_solver_state* s,
+    uint32_t active_mask,
+    int32_t action_slot
+) {
+    return guard([&]() {
+        if (!s || s->impl.terminal() || action_slot < 0 ||
+            action_slot >= static_cast<int32_t>(spincore::kUniversalActionCountV2)) {
+            throw std::invalid_argument("bad lean action");
+        }
+        const auto active = decode_universal_mask(active_mask);
+        const auto actions = spincore::resolve_lean_legacy_actions_v1(s->impl.hand().betting(), active);
+        const auto wanted = static_cast<UniversalActionSlotV2>(action_slot);
+        const auto it = std::find_if(actions.begin(), actions.end(), [&](const auto& a) {
+            return a.slot == wanted;
+        });
+        if (it == actions.end()) {
+            throw std::invalid_argument("lean action is inactive, illegal, or state-local alias");
+        }
+        s->impl.apply_exact(it->exact);
+        return 0;
+    }, -1);
+}
+
+int32_t spincore_solver_state_resolve_lean_exact(
+    const spincore_solver_state* s,
+    uint32_t active_mask,
+    int32_t action_slot,
+    int32_t* out_type,
+    int32_t* out_amount_to
+) {
+    return guard([&]() {
+        if (!s || s->impl.terminal() || !out_type || !out_amount_to || action_slot < 0 ||
+            action_slot >= static_cast<int32_t>(spincore::kUniversalActionCountV2)) {
+            throw std::invalid_argument("bad lean exact-resolution arguments");
+        }
+        const auto active = decode_universal_mask(active_mask);
+        const auto actions = spincore::resolve_lean_legacy_actions_v1(s->impl.hand().betting(), active);
+        const auto wanted = static_cast<UniversalActionSlotV2>(action_slot);
+        const auto it = std::find_if(actions.begin(), actions.end(), [&](const auto& a) {
+            return a.slot == wanted;
+        });
+        if (it == actions.end()) {
+            throw std::invalid_argument("lean action is inactive, illegal, or state-local alias");
         }
         *out_type = static_cast<int32_t>(it->exact.type);
         *out_amount_to = it->exact.amount_to;
