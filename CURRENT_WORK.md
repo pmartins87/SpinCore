@@ -1,13 +1,13 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE MEASURED (31 WORKERS / 8 PARENT THREADS) — STRATEGY EVAL RUNNING; DEEPCRUSHER BENCHMARK UNDER CONSTRUCTION**
+Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE 31/8 — STRATEGY SANITY PARTIAL PASS WITH HU/EXPLOIT RED FLAGS — DEEPCRUSHER BENCHMARK UNDER CONSTRUCTION**
 
 ## Goal
 
 Make the multi-year DeepSpin project actually work as SpinCore. Preserve mature legacy knowledge; replace only components with a concrete correctness, learning-quality, or compute-efficiency reason.
 
-A product-quality acceptance metric is now explicit: **SpinCore must beat DeepCrusher in extensive fair offline simulation under common game semantics.** DeepCrusher is a mandatory reference opponent, not the sole training teacher and not the definition of optimal play. The benchmark must use common deals where possible, seat rotation, the realistic blind/stack distribution, enough volume to suppress card variance, and poker outcomes reported overall and by HU/3H/blind/position. Direct HU is the cleanest first head-to-head comparison; 3H must use balanced/mirrored lineups. A future continuous-tournament simulator should add full-match/tournament win rate once the tournament transition schedule is explicitly defined.
+A product-quality acceptance metric is explicit: **SpinCore must beat DeepCrusher in extensive fair offline simulation under common game semantics.** DeepCrusher is a mandatory reference opponent, not the sole training teacher and not the definition of optimal play. The benchmark must use common deals where possible, seat rotation, the realistic blind/stack distribution, enough volume to suppress card variance, and poker outcomes reported overall and by HU/3H/blind/position. Direct HU is the cleanest first head-to-head comparison; 3H must use balanced/mirrored lineups. A future continuous-tournament simulator should add full-match/tournament win rate once the tournament transition schedule is explicitly defined.
 
 Poker-level explanation of what SpinCore is learning is canonical in `docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md`. The direct head-to-head benchmark contract is canonical in `docs/DEEPC_RUSHER_BENCHMARK_SPEC.md`.
 
@@ -117,21 +117,52 @@ The selected values are stored locally in:
 
 Do not infer that the whole training job becomes 13x faster merely from the inner benchmark. Root collection accelerated dramatically, but optimizer/final-policy work and process/model startup remain partly serial or fixed-cost. Any future long-run ETA must be measured from the optimized substantive path itself.
 
-## Strategy-quality evaluation now prepared/running
+## Strategy-quality diagnostic — COMPLETED 2026-09-15
 
-Before any further training, run exactly one paired full-sampler chip-EV diagnostic:
+Run: 1,000 empirical scenarios under the full sampler; 535 3H and 465 true HU scenario clusters; hero rotated across live seats; same scenario/deal used for SpinCore and the uniform-legal hero control; 31 evaluation workers.
 
-- tool: `tools/evaluate_lean_strategy_quality.py`;
-- one-command wrapper: `tools/run_lean_strategy_quality_eval.sh`;
-- default workload: 1,000 empirical scenarios under the full 3H/HU blind-conditioned sampler;
-- rotate the evaluated hero through every live seat;
-- compare the learned SpinCore AveragePolicy against a uniform-legal hero control on the **same scenario and deal**;
-- fixed opponent families: `UNIFORM_LEGAL`, `PASSIVE_CALLER`, `JAMMER`;
-- primary evidence: raw hero chip EV plus paired `SpinCore - uniform-control` chip-EV gain, with 95% CI clustered by scenario;
-- report overall and separately for 3H, HU and blind-level detail;
-- use the measured worker count automatically, with one Torch/OMP/MKL thread per evaluation worker to avoid oversubscription.
+Result against `UNIFORM_LEGAL` opponents:
 
-This is a diagnostic against transparent fixed weak baselines, **not** an exploitability/GTO proof and not a replacement for the mandatory DeepCrusher benchmark. Its purpose is to answer a concrete pre-training question: did the learned policy acquire measurable strategic value beyond an untrained legal-action policy, and does any domain show a gross red flag? If it fails this basic comparison, inspect/fix the cause before spending more compute. If it passes, advance to stronger poker-specific evaluation, including direct DeepCrusher head-to-head rather than blindly extending training.
+- ALL SpinCore absolute cEV: **+10.836 chips/hand**, CI95 `[-1.637,+23.309]`;
+- ALL paired gain over uniform-control Hero: **+19.581**, CI95 `[+7.066,+32.097]` — significant;
+- 3H paired gain: **+19.811**, CI95 `[+4.945,+34.678]` — significant;
+- HU paired gain: **+19.317**, CI95 `[-1.481,+40.115]` — positive point estimate but not significant;
+- HU absolute cEV: **+20.534**, CI95 `[-0.276,+41.345]` — near, but not beyond, the 95% zero boundary.
+
+Result against `PASSIVE_CALLER` opponents:
+
+- ALL SpinCore absolute cEV: **-2.402**, CI95 `[-11.613,+6.809]`;
+- paired gain over uniform-control Hero: **+4.661**, CI95 `[-6.707,+16.028]` — not significant;
+- 3H paired gain: **+1.412**, CI95 `[-13.993,+16.817]` — not significant;
+- HU absolute cEV: **-9.473**, CI95 `[-23.727,+4.781]`;
+- HU paired gain: **+8.399**, CI95 `[-8.449,+25.247]` — not significant.
+
+Result against `JAMMER` opponents:
+
+- ALL SpinCore absolute cEV: **-5.498**, CI95 `[-15.637,+4.641]`;
+- ALL paired gain over uniform-control Hero: **+15.040**, CI95 `[+2.349,+27.730]` — significant;
+- 3H paired gain: **+17.895**, CI95 `[+1.430,+34.360]` — significant;
+- HU absolute cEV: **-14.465**, CI95 `[-30.569,+1.640]`;
+- HU paired gain: **+11.754**, CI95 `[-7.908,+31.416]` — not significant.
+
+### Interpretation
+
+This is a **partial sanity pass, not a strength pass**.
+
+What is positively established: the learned policy is not merely random. Overall and in 3H it produces statistically measurable paired gains over an untrained uniform-legal control against both uniform opponents and a shove-heavy opponent family. That is real evidence that the 120k training acquired some poker-relevant structure.
+
+What is not established: the policy has no statistically demonstrated edge against the passive calling-station family, and HU has no paired comparison whose 95% CI is wholly above zero. Point estimates versus `PASSIVE_CALLER` and `JAMMER` are especially concerning in HU because the absolute SpinCore cEV is negative, although uncertainty still includes zero. A genuinely strong general Spin & Go strategy should ultimately handle such simple fixed opponents convincingly.
+
+Poker-level hypotheses to investigate only if stronger evaluation confirms them:
+
+- over-bluffing / excessive thin aggression versus callers who do not fold enough;
+- weak bluff-catching / shove-calling thresholds versus the jammer;
+- insufficiently mature HU average policy;
+- simply insufficient sample size for these high-variance HU comparisons.
+
+Do **not** choose one of these explanations yet. The current 465-HU-cluster sample is too noisy to diagnose mechanism confidently, and this result does not justify blindly adding training compute.
+
+Decision: preserve the 120k checkpoint unchanged; do not extend training yet. Continue the stronger DeepCrusher benchmark/oracle work and use that direct poker benchmark to decide whether the limiting issue is broad strategy quality, HU specifically, or merely diagnostic noise.
 
 ## Mandatory DeepCrusher acceptance benchmark — BUILDING NOW
 
@@ -149,8 +180,9 @@ Already implemented in SpinCore:
 - HU paired same-deal seat swap;
 - 3H six-game AAB/ABB balanced block: each strategy receives exactly nine player-seat exposures and exactly three exposures in every logical seat per sampled state/deal;
 - zero-sum strategy aggregation;
-- unit tests for HU/3H pairing and exact-action bridge;
-- OpenPPL section/dependency inventory for the frozen DeepCrusher source.
+- unit/integration tests for HU/3H pairing, exact-action bridge and identical-policy neutrality;
+- OpenPPL section/dependency inventory for the frozen DeepCrusher source;
+- observable-state bridge carrying exact cards/board relations, position/topology, blind/stack/pot/to-call geometry, legal actions and complete public action history for the DeepCrusher decision adapter.
 
 The main remaining implementation is the **DeepCrusher decision oracle**: given one exact offline SpinCore simulator state, it must return the same action and exact bet size as the frozen OpenPPL strategy. Do not shortcut this by inventing a simplified imitation. The oracle must be validated against real OpenHoldem reference decisions before an extensive result can be called canonical.
 
@@ -166,7 +198,7 @@ Primary DC2 acceptance: overall `SpinCore - DeepCrusher` chip EV > 0 with 95% CI
 ## Do not do
 
 - Do not discard or overwrite the completed 120k checkpoint.
-- Do not immediately extend it just because training completed.
+- Do not extend it merely because the weak-baseline diagnostic was mixed.
 - Do not use self-play PASS as proof of poker strength.
 - Do not use an approximate/caricature DeepCrusher oracle for a canonical head-to-head claim.
 - Do not quantize DeepCrusher bet sizes into SpinCore's seven-action abstraction during the head-to-head.
@@ -179,4 +211,4 @@ Primary DC2 acceptance: overall `SpinCore - DeepCrusher` chip EV > 0 with 95% CI
 
 ## Immediate next milestone
 
-Let the currently running `tools/run_lean_strategy_quality_eval.sh` finish; do **not** start another training run. In parallel, continue implementing the DeepCrusher oracle and validate the new exact-action/pairing infrastructure in CI. Once the strategy sanity result is available, interpret it while continuing DC0 rather than waiting to start benchmark construction.
+Do not run another training job. Continue DC0: finish the exact DeepCrusher decision oracle and validate it against frozen R8 v22/OpenHoldem reference decisions. Once DC0 parity is good enough, run the first balanced SpinCore-vs-DeepCrusher smoke before committing to any extra training compute.
