@@ -63,6 +63,21 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def _save_with_metrics(path: Path, save_fn) -> dict[str, float | int | str]:
+    started = time.perf_counter()
+    save_fn()
+    seconds = float(time.perf_counter() - started)
+    size_bytes = int(path.stat().st_size) if path.exists() else -1
+    metrics = {
+        "path": str(path),
+        "seconds": seconds,
+        "size_bytes": size_bytes,
+        "size_gib": float(size_bytes / (1024 ** 3)) if size_bytes >= 0 else -1.0,
+    }
+    print("CHECKPOINT_METRICS " + json.dumps(metrics, sort_keys=True), flush=True)
+    return metrics
+
+
 def main() -> int:
     args = parse_args()
     if not args.solver.exists():
@@ -137,6 +152,7 @@ def main() -> int:
 
     executor = ParallelRootExecutor(args.solver, workers) if workers > 1 else None
     overall_started = time.perf_counter()
+    checkpoint_metrics: list[dict[str, float | int | str]] = []
     try:
         for iteration in range(completed + 1, config.iterations + 1):
             print(f"ITERATION {iteration}/{config.iterations} collect+fit", flush=True)
@@ -155,16 +171,21 @@ def main() -> int:
                 or completed == int(config.iterations)
             )
             if should_checkpoint:
-                save_checkpoint(
+                metrics = _save_with_metrics(
                     args.checkpoint,
-                    seed=seed,
-                    config=config,
-                    completed_iteration=completed,
-                    sampler=sampler,
-                    runtimes=runtimes,
-                    history=history,
-                    finalized=False,
+                    lambda: save_checkpoint(
+                        args.checkpoint,
+                        seed=seed,
+                        config=config,
+                        completed_iteration=completed,
+                        sampler=sampler,
+                        runtimes=runtimes,
+                        history=history,
+                        finalized=False,
+                    ),
                 )
+                metrics["iteration"] = int(completed)
+                checkpoint_metrics.append(metrics)
                 print(f"CHECKPOINT {args.checkpoint}", flush=True)
             print("ITERATION_REPORT " + json.dumps(report, sort_keys=True), flush=True)
     finally:
@@ -176,17 +197,23 @@ def main() -> int:
     report = compact_report(seed=seed, config=config, history=history, final=final)
     report["wall_seconds"] = float(time.perf_counter() - overall_started)
     report["execution_workers"] = int(workers)
+    report["checkpoint_metrics"] = checkpoint_metrics
     write_json_report(args.report, report)
-    save_checkpoint(
+    final_ckpt = _save_with_metrics(
         args.checkpoint,
-        seed=seed,
-        config=config,
-        completed_iteration=completed,
-        sampler=sampler,
-        runtimes=runtimes,
-        history=history,
-        finalized=True,
+        lambda: save_checkpoint(
+            args.checkpoint,
+            seed=seed,
+            config=config,
+            completed_iteration=completed,
+            sampler=sampler,
+            runtimes=runtimes,
+            history=history,
+            finalized=True,
+        ),
     )
+    final_ckpt["iteration"] = int(completed)
+    final_ckpt["finalized"] = True
     print("FINAL_REPORT " + json.dumps(report, sort_keys=True), flush=True)
     print(f"PASS report={args.report} checkpoint={args.checkpoint}", flush=True)
     return 0
