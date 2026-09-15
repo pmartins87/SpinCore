@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-"""Core contracts for the offline SpinCore-vs-DeepCrusher benchmark.
+"""Core contracts and match engine for the offline SpinCore-vs-DeepCrusher benchmark.
 
-This module deliberately separates *match fairness* from the still-being-built
-DeepCrusher decision oracle.  The benchmark must never force DeepCrusher through
-SpinCore's seven-action abstraction: DeepCrusher keeps its own exact OpenPPL bet
-sizes and those exact actions are applied directly to the SpinCore simulator.
+The benchmark must never force DeepCrusher through SpinCore's seven-action
+abstraction: DeepCrusher keeps its own exact OpenPPL bet sizes and those exact
+actions are applied directly to the SpinCore simulator.
 
-Nothing here connects to a live poker client.  It is an offline simulator/test
+Nothing here connects to a live poker client. It is an offline simulator/test
 contract only.
 """
 
@@ -15,6 +14,7 @@ from dataclasses import dataclass
 import ctypes as C
 import hashlib
 from pathlib import Path
+import random
 from typing import Iterable, Protocol, Sequence
 
 
@@ -40,7 +40,7 @@ EXACT_ACTION_NAMES = {
 
 @dataclass(frozen=True, order=True)
 class ExternalExactAction:
-    """One exact poker action produced by an external reference strategy."""
+    """One exact poker action produced by an offline benchmark strategy."""
 
     action_type: int
     amount_to: int = 0
@@ -63,8 +63,45 @@ class OfflineDecisionPolicy(Protocol):
 
     policy_id: str
 
-    def choose_exact(self, state, *, seat: int) -> ExternalExactAction:
+    def choose_exact(
+        self,
+        state,
+        *,
+        seat: int,
+        rng: random.Random,
+    ) -> ExternalExactAction:
         ...
+
+
+class SpinCoreCheckpointPolicy:
+    """Expose a trained AveragePolicy through the exact-action benchmark API."""
+
+    policy_id = SPINCORE_POLICY_ID
+
+    def __init__(self, agent) -> None:
+        self.agent = agent
+
+    def choose_exact(
+        self,
+        state,
+        *,
+        seat: int,
+        rng: random.Random,
+    ) -> ExternalExactAction:
+        del seat  # Agent observation is already actor-relative.
+        from spincore.lean_solver_actions import resolve_lean_exact
+
+        active_mask, legal, probs = self.agent.distribution(state)
+        x = rng.random()
+        cumulative = 0.0
+        slot = int(legal[-1])
+        for candidate in legal:
+            cumulative += float(probs[candidate])
+            if x < cumulative:
+                slot = int(candidate)
+                break
+        action_type, amount_to = resolve_lean_exact(state, active_mask, slot)
+        return ExternalExactAction(int(action_type), int(amount_to))
 
 
 @dataclass(frozen=True)
@@ -91,12 +128,15 @@ class MatchObservation:
     blind: str
     lineup: Lineup
     chip_delta: tuple[int, int, int]
+    decisions: int = 0
 
     def __post_init__(self) -> None:
         if len(self.chip_delta) != 3:
             raise ValueError("chip_delta requires three seats")
         if sum(int(x) for x in self.chip_delta) != 0:
             raise ValueError("match observation must be zero-sum")
+        if int(self.decisions) < 0:
+            raise ValueError("decisions must be nonnegative")
 
 
 def balanced_hu_lineups(dead_seat: int) -> tuple[Lineup, Lineup]:
@@ -114,18 +154,7 @@ def balanced_hu_lineups(dead_seat: int) -> tuple[Lineup, Lineup]:
 
 
 def balanced_three_handed_lineups() -> tuple[Lineup, ...]:
-    """Six-game AAB/ABB block with exact seat/composition balance.
-
-    For the same sampled scenario/deal:
-      - 3 games contain 2 SpinCore + 1 DeepCrusher, rotating the single
-        DeepCrusher through BTN/SB/BB logical seats;
-      - 3 games contain 1 SpinCore + 2 DeepCrusher, rotating the single
-        SpinCore through every seat.
-
-    Across the complete block each policy occupies every seat exactly three
-    times and has nine seat-exposures total.  Therefore no policy receives a
-    seat-count or majority-count advantage in the aggregate.
-    """
+    """Six-game AAB/ABB block with exact seat/composition balance."""
     out: list[Lineup] = []
     for singleton_seat in range(3):
         seats = [SPINCORE_POLICY_ID] * 3
@@ -158,6 +187,115 @@ def aggregate_policy_chip_delta(rows: Iterable[MatchObservation]) -> dict[str, i
     if totals[SPINCORE_POLICY_ID] + totals[DEEPC_RUSHER_POLICY_ID] != 0:
         raise ValueError("policy aggregate must remain zero-sum")
     return totals
+
+
+def _mix64(*values: int) -> int:
+    x = 0x9E3779B97F4A7C15
+    mask = (1 << 64) - 1
+    for value in values:
+        y = int(value) & mask
+        x ^= (y + 0x9E3779B97F4A7C15 + ((x << 6) & mask) + (x >> 2)) & mask
+        x &= mask
+    return x
+
+
+class OfflineHeadToHeadEngine:
+    """Play exact paired hands between two offline policies on one solver."""
+
+    def __init__(
+        self,
+        solver_library,
+        *,
+        spincore_policy: OfflineDecisionPolicy,
+        deepcrusher_policy: OfflineDecisionPolicy,
+        master_seed: int = 20260915,
+        max_decisions: int = 200,
+    ) -> None:
+        if spincore_policy.policy_id != SPINCORE_POLICY_ID:
+            raise ValueError("spincore_policy has wrong policy_id")
+        if deepcrusher_policy.policy_id != DEEPC_RUSHER_POLICY_ID:
+            raise ValueError("deepcrusher_policy has wrong policy_id")
+        self.solver = solver_library
+        self.policies = {
+            SPINCORE_POLICY_ID: spincore_policy,
+            DEEPC_RUSHER_POLICY_ID: deepcrusher_policy,
+        }
+        self.master_seed = int(master_seed)
+        self.max_decisions = int(max_decisions)
+        if self.max_decisions <= 0:
+            raise ValueError("max_decisions must be positive")
+
+    def play_hand(
+        self,
+        episode,
+        *,
+        deal_seed: int,
+        scenario_index: int,
+        lineup: Lineup,
+        lineup_index: int = 0,
+    ) -> MatchObservation:
+        live = {seat for seat, stack in enumerate(episode.stacks) if int(stack) > 0}
+        for seat in range(3):
+            if seat in live and lineup.seats[seat] == "DEAD":
+                raise ValueError("live episode seat cannot have DEAD lineup policy")
+            if seat not in live and lineup.seats[seat] != "DEAD":
+                raise ValueError("dead episode seat must have DEAD lineup policy")
+
+        state = self.solver.create(episode, int(deal_seed))
+        rngs = {
+            seat: random.Random(_mix64(self.master_seed, scenario_index, lineup_index, seat, 0xDCC0))
+            for seat in live
+        }
+        decisions = 0
+        try:
+            while not state.terminal:
+                actor = int(state.actor)
+                policy_id = lineup.seats[actor]
+                if policy_id == "DEAD":
+                    raise RuntimeError("solver selected dead seat as actor")
+                policy = self.policies[policy_id]
+                action = policy.choose_exact(state, seat=actor, rng=rngs[actor])
+                apply_external_exact(state, action)
+                decisions += 1
+                if decisions > self.max_decisions:
+                    raise RuntimeError("benchmark hand exceeded max_decisions")
+            delta = tuple(int(x) for x in state.terminal_chip_delta())
+            return MatchObservation(
+                scenario_index=int(scenario_index),
+                domain="TRUE_HEADS_UP" if bool(episode.game_is_hu) else "THREE_HANDED",
+                blind=f"{int(episode.small_blind)}/{int(episode.big_blind)}",
+                lineup=lineup,
+                chip_delta=delta,
+                decisions=decisions,
+            )
+        finally:
+            state.close()
+
+    def play_balanced_block(
+        self,
+        episode,
+        *,
+        deal_seed: int,
+        scenario_index: int,
+    ) -> tuple[MatchObservation, ...]:
+        if bool(episode.game_is_hu):
+            dead = [seat for seat, stack in enumerate(episode.stacks) if int(stack) <= 0]
+            if len(dead) != 1:
+                raise ValueError("HU episode must contain exactly one dead seat")
+            lineups: Sequence[Lineup] = balanced_hu_lineups(dead[0])
+        else:
+            lineups = balanced_three_handed_lineups()
+            validate_three_handed_balance(lineups)
+        return tuple(
+            self.play_hand(
+                episode,
+                deal_seed=deal_seed,
+                scenario_index=scenario_index,
+                lineup=lineup,
+                lineup_index=index,
+            )
+            for index, lineup in enumerate(lineups)
+        )
 
 
 def sha256_file(path: str | Path) -> str:
