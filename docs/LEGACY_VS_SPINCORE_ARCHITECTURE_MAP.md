@@ -1,126 +1,98 @@
 # Legacy DeepSpin vs SpinCore — Architecture Map
 
-Status: **IN PROGRESS**
+Status: **FIRST FUNCTIONAL ARCHITECTURE SELECTED**
 Started: 2026-09-09
-Updated: 2026-09-11
-Purpose: preserve multi-year legacy knowledge and identify only genuine SpinCore improvements before more heavy compute.
+Updated: 2026-09-15
+Purpose: preserve multi-year legacy knowledge and change only what has a concrete reason to improve correctness, strategic quality or compute efficiency.
 
-## 1. Scenario distribution — LEGACY STRONGER / MUST RESTORE
+## 1. Scenario distribution — RESTORED FROM LEGACY
 
-Legacy `deepspin/scenario.py` already models the tournament-state distribution instead of a single fixed blind:
+Legacy `deepspin/scenario.py` models the real tournament-state distribution:
 
-- 3-handed and true-HU sampled separately;
-- blind ladder: 10/20, 15/30, 20/40, 30/60, 40/80, 50/100, 60/120, 80/160, 100/200;
-- separate empirical blind-frequency weights for 3H and HU;
+- 3-handed and true HU separately;
+- blinds 10/20 through 100/200;
+- empirical blind weights by mode;
 - blind-conditioned empirical stack distributions;
 - 1500 total chips;
-- random dead seat/live-seat permutation for HU;
-- random dealer among live seats;
-- sparse late levels approximated from nearest useful empirical level instead of silently removed.
+- random live/dead seats and dealer.
 
-SpinCore R7.5.4's 10/20-only matrix is therefore a regression in scenario realism and may be used only as localized evidence.
+This is restored in `python/spincore/legacy_scenario_data.json` and `python/spincore/legacy_scenario.py`. Fixed-10/20 R7.5.4 work is localized evidence only.
 
-Decision: restore/adapt the legacy scenario-distribution semantics before global action-abstraction selection or final training. The exact legacy tables are now preserved in `python/spincore/legacy_scenario_data.json`, and `python/spincore/legacy_scenario.py` adapts them to current `spincore.solver.Episode` while preserving the historical sampling semantics.
+## 2. Action abstraction — LEGACY SEVEN-ACTION BASELINE
 
-## 2. Action abstraction — LEGACY ALREADY HAD A RICH PRACTICAL SET
+Legacy DeepSpin used:
 
-Legacy DeepSpin exposes seven neural actions:
+`fold`, `check/call`, 33% pot, 50% pot, 75% pot, 100% pot, all-in.
 
-- fold;
-- check/call;
-- bet/raise 33% pot;
-- 50% pot;
-- 75% pot;
-- 100% pot;
-- all-in.
+Decision: use exactly that mature seven-action vocabulary for the first functional SpinCore. `python/spincore/lean_action_scope.py` activates the equivalent seven slots inside the current ten-slot universal resolver. The authoritative C++ resolver clamps fractional targets to the legal min/max raise range, converts stack-capped targets to all-in and deduplicates aliases, so the neural tree does not pay twice for two labels that resolve to the same exact action.
 
-The C++ environment also contains legality/near-all-in pruning. SpinCore may improve this set, but must compare against this baseline under the full tournament distribution rather than inventing candidates only at 10/20.
+Do not reopen a broad action-abstraction tournament before a functional baseline exists. Prune or expand only when measured strategic gain or branching-cost reduction justifies it under the full real scenario distribution.
 
 ## 3. Observation/state — KEEP LEGACY KNOWLEDGE, NOT THE 292-FLOAT INPUT
 
-The archived DeepSpin v60 observation is exactly 292 floats: 104 card one-hots, 20 numeric values, 4 street flags, 11 position flags, 40 hand-strength categories, 12 draw flags, 29 board-texture flags, 26 action-context values, 39 history values and 7 legal-action flags.
+The archived DeepSpin observation was 292 floats and included useful poker semantics, but also large redundancy and a wide surface for semantic bugs. Its old networks were about 3.23M parameters combined.
 
-That representation contains real poker knowledge, and the later archived source repaired important semantics by distinguishing board-only made hands from hands that actually use Hero's hole cards. Those definitions remain valuable as diagnostics/regression knowledge.
+Decision: first functional SpinCore uses compact SPNNIV1: structured card tokens, numeric/categorical exact-state-derived fields, legal mask and public-history tokens. The canonical state underneath remains exact. The recovered V1 model is about 152k parameters per network.
 
-However, the 292-dimensional flat input duplicates information heavily. Cards already determine hand strength, draws and board texture; action-context/history blocks summarize information also represented by the exact betting state/history; legal actions are separately masked. Derived features can improve sample efficiency, but each hand-coded semantic feature is also another place where a bug can poison learning — exactly what happened historically with board-only/two-pair interpretation.
+Legacy hand-strength/draw/board features remain a semantic checklist. Reintroduce only a specific derived feature when a concrete strategic weakness demonstrates that it is worth the complexity. Detailed rationale: `docs/LEGACY_292_FEATURE_AUDIT.md`.
 
-The number 292 alone was not the main performance problem. The legacy AdvantageNet used `[1024,1024,512,512]` hidden layers (~2.14M parameters) and the PolicyNet `[1024,512,512]` (~1.09M), about 3.23M parameters combined. Merely shrinking the flat input from 292 to 128 while preserving those hidden layers would save only about 10% of model parameters.
+## 4. Learning algorithm — KEEP DEEP CFR, REMOVE CERTIFICATION OVERHEAD
 
-Current SpinCore V1 is materially leaner. Its neural boundary uses 7 card tokens, 16 numeric values, 8 categorical values, a legal mask and up to 32 history tokens, while the exact `CanonicalInfoset` retains cards, stacks, commitments, domain, street, blinds, blind index, statuses, pot, to-call, current bet and public history. The recovered V1 network is about 152,438 parameters per model and embeds/encodes structured inputs rather than feeding a huge flat one-hot vector.
+Useful legacy/current foundation retained:
 
-Decision for the first functional SpinCore:
+- external-sampling Deep CFR;
+- advantage + average-policy networks;
+- reservoir memories;
+- exact cloneable C++ game state;
+- resumable checkpoints;
+- separate 3H/HU domains.
 
-- do **not** restore the full 292-float vector as the neural input;
-- use compact V1 as the default neural representation;
-- preserve the legacy 292-feature definitions as a semantic checklist/diagnostic library;
-- add back a specific derived feature only if a concrete strategic weakness shows that compact V1 cannot distinguish/learn the relevant situation efficiently;
-- do not open another broad representation tournament merely to seek novelty;
-- every future added feature must be computable from the canonical exact state and identical between training and runtime.
+For the first functional path, opponent actions are sampled (`exact_opponent_levels=0`) while traverser actions are expanded exactly. This returns to the practical external-sampling foundation and avoids the huge branching cost introduced by later partial-exact certification experiments.
 
-Detailed rationale is frozen in `docs/LEGACY_292_FEATURE_AUDIT.md`.
+A historical defect is permanently repaired on the functional path: when a **fitted** advantage network predicts every legal advantage <= 0, use stable masked softmax over raw advantages rather than arbitrary uniform play. Truly untrained initialization remains uniform. The universal-action implementation is `python/spincore/lean_action_policy.py`.
 
-## 4. Learning algorithm — LEGACY DEEP CFR FOUNDATION IS REAL
+## 5. Utility/objective — WTA CHIP EV, CONSTANT GLOBAL SCALE
 
-Legacy stack includes:
+Chip EV remains the first-release strategic objective. Multi-place payout specialization is deferred; one WTA-trained policy family is initially reused for all payout variants.
 
-- external-sampling traversal;
-- per-player advantage networks;
-- average-policy networks;
-- reservoir buffers;
-- clone-based C++ traversal fast path;
-- deterministic episode reconstruction fallback;
-- checkpointing of Python/NumPy/Torch/scenario RNG state;
-- multiprocessing rollout workers.
+Legacy DeepSpin used `chip_delta / current_bb`. That does not alter action ordering inside one state, but it changes the relative target magnitude supplied to a shared neural approximator across blind levels. With the restored full blind ladder, there is no strategic reason to make one chip worth 10x less to the learning target simply because the current BB is 200 instead of 20.
 
-This is not a toy baseline. SpinCore changes must be evaluated as refinements of this foundation.
+Decision: `python/spincore/lean_training_scope.py` uses `chip_delta / 1500`, one global positive constant because the tournament has 1500 total chips. This is mathematically the same chip-EV objective up to a constant scale and therefore cannot change exact action ordering, while keeping targets numerically bounded without blind-dependent reweighting.
 
-Historical code also records a repaired regret-matching fallback: the older uniform fallback, when all legal advantages were non-positive, injected grossly wrong actions. Current SpinCore had regressed to that same uniform fallback. On 2026-09-10 it was corrected in `python/spincore/deep_cfr.py`: ordinary positive regret matching remains unchanged, but fitted-network states with no positive legal regret now use stable masked softmax over raw legal advantages, preserving the model's ranking. The true untrained zero-regret state remains uniform through `NeuralAdvantagePolicy.ready=False`.
+Important distinction: state inputs such as `stack / BB` and `pot / BB` remain normalized by BB because they describe strategically meaningful relative stack/pot geometry. Only the **utility target** stops using a state-dependent BB divisor.
 
-## 5. Utility/objective — ONE WTA CHIP-EV POLICY FIRST; MULTIPAY SPECIALIZATION DEFERRED
+## 6. Domain allocation — SEPARATE BRAINS, REALISTIC PREVALENCE
 
-Legacy `ExternalSamplingTraverser._terminal_value()` reads `g.get_payoffs()` and normalizes the traverser's single-hand chip payoff by the current BB. The C++ `get_payoffs()` computes chips won/lost in that hand.
+The first functional path retains separate `THREE_HANDED` and `TRUE_HEADS_UP` brains. Training root budget is split according to the legacy empirical HU prevalence (~45.48%), while each domain independently samples its real conditional blind/stack distribution.
 
-Previous audit wording prematurely called SpinCore's explicit-payout/ICM utility a likely improvement. That conclusion is withdrawn.
+This avoids forcing one network to reconcile materially different 3H and HU strategy while still spending compute roughly where real games spend hands.
 
-For a winner-take-all payout vector, ICM first-place equity is linear in chips. Therefore expected ICM delta and expected chip delta rank actions identically, up to a positive constant factor. Replacing chip EV with payout/ICM inside the WTA training problem adds no strategic information.
+## 7. Runtime/integration — PRESERVE LEGACY INTEGRATION KNOWLEDGE, CHANGE THE CONTRACT
 
-Actual GGPoker Spin & Gold does sometimes pay more than one place at high multipliers. In those 3-handed multi-place states, payout-aware utility can change optimal decisions and is theoretically more accurate. However, that does **not** imply that first-release SpinCore should multiply its already expensive training scope by payout structures.
+Legacy `user_deepspin.cpp` is substantial OpenHoldem integration work and remains a design/reference asset. It cannot be dropped in unchanged because it expects the old 292-feature/7-output neural contract.
 
-Current product decision:
+The first functional runtime must reconstruct the exact same SPNNIV1 semantics used during training and map the seven active universal slots to the same exact action resolver. Training/runtime semantic identity is the only remaining architecture-affecting blocker before table use.
 
-- train the first strong functional SpinCore policy family on **winner-take-all chip EV**;
-- use that same WTA-trained policy initially for all payout variants, including rare multi-place games;
-- do not train separate 70/30, 50/30/20, or other payout-specific policies now;
-- keep the solver's ICM capability available but dormant for first-release training;
-- only revisit multi-place specialization after the WTA agent is strong and functional, and only if the estimated real-world gain justifies the added compute;
-- if specialization is later justified, first investigate cheaper transfer/fine-tuning or payout-conditioned approaches before full independent training from scratch.
+## 8. Why historical DeepSpin failed
 
-This decision is encoded in `python/spincore/lean_training_scope.py` as `WTA_SHARED_ACROSS_PAYOUTS_V1` with multi-pay specialization disabled.
+Known constraints from the multi-year work:
 
-One separate legacy question remains open: the old target is `chip_payoff / current_bb`, not raw chip delta. Dividing by BB does not change action ordering within a state, but it changes target magnitude across blind levels for a shared neural approximator. Treat this as an audit hypothesis only; do not change it until its learning effect is understood.
+- roughly three months of Ryzen training still produced gross errors, so ordinary undertraining is not an adequate explanation;
+- earlier hand/evaluator semantics sometimes confused board-created made hands with Hero-contributed strength;
+- an earlier all-nonpositive regret fallback injected uniform, strategically absurd actions;
+- representation/runtime complexity and version drift made semantic parity difficult;
+- later experimental work expanded compute/certification complexity without first preserving the real tournament-state sampler.
 
-## 6. Runtime/integration — LEGACY ASSET TO PRESERVE
+The response is not 'train longer'. It is: correct semantics + real scenarios + leaner representation + repaired regret behavior + practical external sampling + runtime parity.
 
-Legacy archive includes `user_deepspin.cpp`, a substantial OpenHoldem inference/runtime implementation with neural-brain loading, dimension/action checks, state construction, decision routing and logging.
+## 9. Implemented first functional training path
 
-Decision: do not rebuild runtime from zero. Audit training/runtime observation identity and action mapping, preserve mature integration pieces, and replace only where SpinCore has a demonstrated correctness advantage.
+`python/spincore/lean_functional_training.py` and `tools/run_lean_functional_training.py` now combine:
 
-## 7. Why the historical trained agent failed
+**real legacy SpinGo scenarios + compact V1 + legacy seven actions + external-sampling Deep CFR + repaired regret fallback + WTA chip EV /1500 + separate 3H/HU brains + resumable iteration checkpoints.**
 
-Known from the user's history and subsequent debugging:
+The old four-member uncertainty ensemble, fixed-10/20 matrix, referee completion, bootstrap certification and homologation gates are deliberately not part of this first functional path.
 
-- roughly three months of continuous Ryzen training still produced gross strategic errors, ruling out 'simply train longer' as the default diagnosis;
-- excessive complexity made defects harder to isolate;
-- basic hand/state semantic errors existed during the historical line, including made-hand/two-pair interpretation problems;
-- an earlier uniform regret fallback injected strategically absurd legal actions when positive regrets were absent;
-- version/local-patch drift made it difficult to guarantee that trainer, checkpoint, exporter and runtime represented the same semantics.
+## 10. Next step
 
-Chip EV itself is **not** classified as a historical failure cause. It remains the first-release objective. Multi-place payout modeling is a possible later refinement, not a prerequisite for making DeepSpin/SpinCore work.
-
-## 8. Current synthesis
-
-Target direction, subject to the remaining finite audit:
-
-**legacy realistic SpinGo scenario distribution + repaired legacy poker semantics + compact V1 exact-state neural boundary + one WTA chip-EV policy family + only demonstrated SpinCore traversal/state improvements + corrected legacy regret fallback + lean action-abstraction selection + preserved/reconciled OpenHoldem runtime.**
-
-The 292-feature question is now closed for first release: preserve its poker semantics as reference knowledge, but do not reintroduce the full flat vector. Remaining architecture-affecting questions are `/BB` utility normalization, action-set reconciliation and training/runtime parity. Crusher/hardcoded and solver-v2/184 assets are consulted only where they can improve one of those concrete decisions. Once those questions are resolved, training should start rather than opening another certification cycle.
+Run a two-root local smoke only to prove mechanics and measure true throughput. If it works, choose a meaningful training budget from measured seconds/root and scale on the Ryzen. Do not open another architecture tournament unless actual play or learning evidence identifies a concrete weakness.
