@@ -22,6 +22,7 @@ public:
  [[nodiscard]] Street street() const noexcept{return street_;}
  [[nodiscard]] std::int32_t actor() const noexcept{return actor_;}
  [[nodiscard]] std::int32_t current_bet() const noexcept{return current_bet_;}
+ [[nodiscard]] std::int32_t big_blind() const noexcept{return scenario_.state.big_blind;}
  [[nodiscard]] std::int32_t pot() const noexcept;
  [[nodiscard]] const std::vector<ActionEvent>& history() const noexcept{return history_;}
  [[nodiscard]] bool street_complete() const noexcept{return street_complete_;}
