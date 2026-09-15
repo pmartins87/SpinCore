@@ -1,7 +1,12 @@
 from __future__ import annotations
 
 from spincore.legacy_scenario import BLIND_LEVELS, LegacyScenarioSampler
-from spincore.lean_training_scope import FIRST_RELEASE_POLICY_FAMILY, LeanTrainingScope
+from spincore.lean_training_scope import (
+    FIRST_RELEASE_POLICY_FAMILY,
+    FIRST_RELEASE_TOTAL_CHIPS,
+    LeanTrainingScope,
+    constant_scaled_chip_delta_utility,
+)
 
 
 def test_legacy_scenario_sampler_covers_real_blind_ladder_and_domains():
@@ -33,3 +38,17 @@ def test_first_release_uses_one_wta_policy_family_for_every_payout():
     assert scope.policy_family_for_payout((1.0, 0.0, 0.0)) == FIRST_RELEASE_POLICY_FAMILY
     assert scope.policy_family_for_payout((0.7, 0.3, 0.0)) == FIRST_RELEASE_POLICY_FAMILY
     assert scope.policy_family_for_payout((0.5, 0.3, 0.2)) == FIRST_RELEASE_POLICY_FAMILY
+
+
+def test_first_release_chip_ev_scale_is_global_not_blind_dependent():
+    class Terminal:
+        @staticmethod
+        def terminal_chip_delta():
+            return (300.0, -100.0, -200.0)
+
+    assert constant_scaled_chip_delta_utility(Terminal()) == (
+        300.0 / FIRST_RELEASE_TOTAL_CHIPS,
+        -100.0 / FIRST_RELEASE_TOTAL_CHIPS,
+        -200.0 / FIRST_RELEASE_TOTAL_CHIPS,
+    )
+    assert LeanTrainingScope().terminal_utility is constant_scaled_chip_delta_utility
