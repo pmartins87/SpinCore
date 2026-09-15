@@ -1,11 +1,15 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE MEASURED (31 WORKERS / 8 PARENT THREADS) — PAIRED STRATEGY-QUALITY EVALUATION NEXT**
+Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — RYZEN PROFILE MEASURED (31 WORKERS / 8 PARENT THREADS) — POKER-QUALITY EVALUATION NEXT**
 
 ## Goal
 
 Make the multi-year DeepSpin project actually work as SpinCore. Preserve mature legacy knowledge; replace only components with a concrete correctness, learning-quality, or compute-efficiency reason.
+
+A product-quality acceptance metric is now explicit: **SpinCore must beat DeepCrusher in extensive fair offline simulation under common game semantics.** DeepCrusher is a mandatory reference opponent, not the sole training teacher and not the definition of optimal play. The benchmark must use common deals where possible, seat rotation, the realistic blind/stack distribution, enough volume to suppress card variance, and poker outcomes reported overall and by HU/3H/blind/position. Direct HU is the cleanest first head-to-head comparison; 3H must use balanced/mirrored lineups. A future continuous-tournament simulator should add full-match/tournament win rate once the tournament transition schedule is explicitly defined.
+
+Poker-level explanation of what SpinCore is learning and the DeepCrusher benchmark contract is canonical in `docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md`.
 
 ## First functional SpinCore — decisions closed
 
@@ -127,7 +131,22 @@ Before any further training, run exactly one paired full-sampler chip-EV diagnos
 - report overall and separately for 3H, HU and blind-level detail;
 - use the measured worker count automatically, with one Torch/OMP/MKL thread per evaluation worker to avoid oversubscription.
 
-This is a diagnostic against transparent fixed weak baselines, **not** an exploitability/GTO proof. Its purpose is to answer a concrete pre-training question: did the learned policy acquire measurable strategic value beyond an untrained legal-action policy, and does any domain show a gross red flag? If it fails this basic comparison, inspect/fix the cause before spending more compute. If it passes, move to stronger poker-specific evaluation rather than blindly extending training.
+This is a diagnostic against transparent fixed weak baselines, **not** an exploitability/GTO proof and not a replacement for the mandatory DeepCrusher benchmark. Its purpose is to answer a concrete pre-training question: did the learned policy acquire measurable strategic value beyond an untrained legal-action policy, and does any domain show a gross red flag? If it fails this basic comparison, inspect/fix the cause before spending more compute. If it passes, advance to stronger poker-specific evaluation, including direct DeepCrusher head-to-head rather than blindly extending training.
+
+## Mandatory DeepCrusher acceptance benchmark
+
+A major target is for SpinCore to **beat DeepCrusher over extensive offline simulation**. The benchmark design must be fair and poker-oriented:
+
+- common cards/deals where possible;
+- seat and position swaps;
+- full realistic blind/stack distribution, not 10/20 only;
+- direct HU head-to-head as the cleanest comparison;
+- balanced/mirrored three-handed compositions;
+- total chip EV and edge per hand, broken down by domain/blind/position;
+- enough volume and uncertainty reporting that card variance is not a credible explanation;
+- later, once a continuous tournament blind-transition model is fixed, complete Spin & Go match/tournament win rate as a second layer.
+
+Beating DeepCrusher is necessary as a reference-quality milestone but insufficient by itself: do not optimize SpinCore into a narrow DeepCrusher counter-strategy at the expense of general poker strength.
 
 ## Do not do
 
@@ -143,4 +162,4 @@ This is a diagnostic against transparent fixed weak baselines, **not** an exploi
 
 ## Immediate next milestone
 
-Run `tools/run_lean_strategy_quality_eval.sh` once. Do **not** start another training run afterward. Interpret the paired chip-EV result first. Based on that evidence, either investigate a concrete strategic/semantic weakness or advance to a stronger poker-quality benchmark. Only extend training if the evidence specifically supports undertraining as the limiting factor.
+Run `tools/run_lean_strategy_quality_eval.sh` once. Do **not** start another training run afterward. Interpret the paired chip-EV result first. If it passes the basic sanity gate, the next poker-quality work is to build/run the fair DeepCrusher head-to-head benchmark. Only extend training if the evidence specifically supports undertraining as the limiting factor.
