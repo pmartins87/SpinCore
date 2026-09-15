@@ -1,0 +1,80 @@
+name: SpinCore lean functional smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/lean_functional_smoke.yml'
+      - 'include/spincore/lean_action_abstraction.hpp'
+      - 'src/lean_action_abstraction.cpp'
+      - 'include/spincore/solver_c_api.h'
+      - 'src/solver_c_api.cpp'
+      - 'python/spincore/lean_action_scope.py'
+      - 'python/spincore/lean_action_policy.py'
+      - 'python/spincore/lean_solver_actions.py'
+      - 'python/spincore/lean_functional_training.py'
+      - 'python/spincore/lean_training_scope.py'
+      - 'python/spincore/legacy_scenario.py'
+      - 'python/spincore/legacy_scenario_data.json'
+      - 'tools/run_lean_functional_training.py'
+      - 'CMakeLists.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-lean-functional-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install runtime dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0+cpu
+          python -m pip install numpy==2.3.5
+
+      - name: Build solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2 --target spincore_solver_c
+
+      - name: Two-root functional smoke
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+          SPINCORE_TORCH_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          rm -rf runs/lean_functional_smoke
+          /usr/bin/time -v python tools/run_lean_functional_training.py \
+            --solver build/libspincore_solver_c.so \
+            --seed 20260915 \
+            --iterations 1 \
+            --roots-per-iteration 2 \
+            --exact-opponent-levels 0 \
+            --advantage-steps 1 \
+            --policy-steps 1 \
+            --batch-size 64 \
+            --checkpoint runs/lean_functional_smoke/checkpoint.pt \
+            --report runs/lean_functional_smoke/report.json
+          echo '--- compact report ---'
+          cat runs/lean_functional_smoke/report.json
