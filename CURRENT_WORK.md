@@ -1,64 +1,60 @@
 # SpinCore Current Work
 
-Date: 2026-09-11
-Status: **CORRECTIVE LEGACY-FIRST IMPLEMENTATION — NO HEAVY TRAINING YET**
+Date: 2026-09-15
+Status: **LEAN FUNCTIONAL PATH IMPLEMENTED — RUN CHEAP SMOKE BEFORE SCALING**
 
-## Why heavy training is paused
+## Goal
 
-R7.5.4 action-abstraction training/evaluation was discovered to be restricted to SB=10 / BB=20. That is useful only as localized evidence and cannot represent the full SpinGo tournament distribution or select the final global policy/action abstraction.
+Make the multi-year DeepSpin project actually work as SpinCore. Preserve mature legacy knowledge; replace only components with a concrete correctness, learning-quality, or compute-efficiency reason.
 
-The project already had a multi-year legacy archive, `Tentativas anteriores de SpinGo.zip`, containing a substantially richer SpinGo-specific foundation. That archive is the baseline; SpinCore is an evolution of it.
+## First functional SpinCore — decisions now closed
 
-## Decisions now fixed for the first functional SpinCore
+- **Scenario distribution:** restore the legacy real SpinGo model: 3-handed + true HU, nine blind levels from 10/20 to 100/200, separate empirical blind weights, blind-conditioned stack distributions, 1500 total chips, random dealer/live/dead seats.
+- **Payout scope:** train one winner-take-all policy family first and reuse it initially across payout variants. No separate 70/30, 50/30/20 training now.
+- **Utility:** chip EV remains the strategic objective. Legacy state-dependent `chip_delta / current_bb` target scaling is replaced on the functional path by one global positive scale `chip_delta / 1500`. This preserves chip-EV action ordering while avoiding blind-dependent target magnitudes in the shared neural approximator. Input features such as stack/BB and pot/BB remain normalized by BB because those describe strategically scale-relative state; that is a separate issue from utility scaling.
+- **Representation:** compact SPNNIV1 exact-state-derived neural boundary. Do not restore the full legacy 292-float vector. Preserve its semantic definitions as diagnostic/reference knowledge and add a specific semantic helper only if a concrete weakness justifies it.
+- **Action scope:** start from the mature legacy seven-action vocabulary rather than invent another abstraction: `FOLD`, `CHECK_CALL`, `POT_33`, `POT_50`, `POT_75`, `POT_100`, `ALL_IN`. The current ten-slot universal resolver already maps these to exact legal actions, clamps to min/max raise, deduplicates aliases, and maps near-stack raises to all-in. Same seven-action baseline is allowed preflop and postflop initially; prune/expand later only for evidence-backed strategic or compute gain.
+- **Deep CFR traversal:** use standard external sampling for the first functional path (`exact_opponent_levels=0` by default). This preserves exact expansion at the traverser's choices while sampling opponent actions, avoiding the enormous branching cost of the later partial-exact certification experiments.
+- **Regret fallback:** fitted advantage networks with all legal outputs <= 0 use stable masked softmax over raw advantages, preserving ranking. Uniform behavior is reserved for the genuinely untrained initial state.
+- **Domains:** separate `THREE_HANDED` and `TRUE_HEADS_UP` brains remain, but roots are budgeted according to the observed legacy HU/3H prevalence and each brain samples its own empirical blind/stack distribution.
 
-- Restore the real legacy 3H/HU scenario distribution: nine blind levels, separate empirical blind weights, blind-conditioned stack distributions, 1500 total chips, live/dead-seat and dealer randomization.
-- Train **one winner-take-all chip-EV policy family** first.
-- Use the same WTA-trained policy initially across payout variants. Do not multiply first-release training into separate 70/30, 50/30/20, etc. runs.
-- Keep ICM support in the solver for possible later multi-place specialization, but do not spend that compute before the WTA agent is strong and functional.
-- Use the compact exact-state-derived **V1 neural representation** for first release rather than restoring the legacy 292-float flat vector. Preserve the legacy 292 feature definitions as poker-semantic diagnostic/reference knowledge and restore only a specific derived feature if a concrete weakness justifies it.
-- Change legacy behavior only for a concrete correctness/quality reason.
-- Do not treat the old `/BB` payoff normalization as a bug yet; its cross-blind learning effect remains a focused audit question.
+## Implemented functional path
 
-## Corrections already implemented
+- `python/spincore/legacy_scenario_data.json`
+- `python/spincore/legacy_scenario.py`
+- `python/spincore/lean_training_scope.py`
+- `python/spincore/lean_representation_scope.py`
+- `python/spincore/lean_action_scope.py`
+- `python/spincore/lean_action_policy.py`
+- `python/spincore/lean_functional_training.py`
+- `tools/run_lean_functional_training.py`
 
-1. `python/spincore/legacy_scenario_data.json` preserves the legacy empirical blind/stack tables.
-2. `python/spincore/legacy_scenario.py` adapts those tables to current `Episode` objects and restores the historical sampling semantics for both `THREE_HANDED` and `TRUE_HEADS_UP`.
-3. `python/spincore/deep_cfr.py` no longer regresses to uniform play when a fitted advantage net predicts all legal advantages <= 0. It now preserves the repaired legacy behavior: stable masked softmax over raw legal advantages. The genuinely untrained zero-regret initial state remains uniform separately.
-4. `python/spincore/lean_training_scope.py` encodes `CHIP_EV_WTA_V1` and `WTA_SHARED_ACROSS_PAYOUTS_V1`; multi-place specialization is disabled for the first release.
-5. `docs/LEGACY_292_FEATURE_AUDIT.md` closes the first-release representation question: do not reintroduce the full 292-float input; keep compact V1 and preserve legacy feature semantics as reference knowledge.
-
-## Why the 292-feature vector is not being restored wholesale
-
-The legacy vector contains useful poker knowledge, but it is highly redundant: 104 raw-card one-hots plus 81 hand/draw/board semantic dimensions plus 65 action-context/history dimensions. More importantly, the old networks were extremely wide: about 2.14M parameters for AdvantageNet and 1.09M for PolicyNet. Shrinking only the 292 input would reduce that total only modestly; the large hidden layers and traversal volume were the main compute burden.
-
-Current V1 instead keeps the exact canonical game state underneath and presents the model with structured card tokens, numeric/categorical state and public-history tokens. The recovered V1 network is about 152k parameters per model. This substantially reduces model cost and the semantic bug surface without throwing away the exact game state.
+The functional trainer is resumable after each iteration and intentionally omits the old four-member uncertainty ensemble, referee matrix, bootstrap gates, fixed-10/20 scenario cycle and homologation-style machinery.
 
 ## Historical failure lesson
 
-The earlier DeepSpin trained continuously for roughly three months on the Ryzen and still made gross mistakes. That cannot be treated as ordinary undertraining. Known structural risks include evaluator/feature semantic errors, the historical uniform-regret fallback, excessive complexity, and trainer/runtime drift. Therefore additional training is not the remedy until these architecture-affecting failure modes are checked.
+The earlier DeepSpin trained for roughly three months on the Ryzen and still made gross mistakes. Do not answer bad play with 'train longer' before checking game/evaluator semantics, state representation, sampling, regret behavior, action mapping, and training/runtime parity. Known historical defects included board-only made-hand interpretation and a uniform all-nonpositive regret fallback.
 
-## Immediate remaining audit — finite, not academic
+## What remains before a long Ryzen run
 
-Only questions capable of changing the first functional implementation remain on the critical path:
+Only one architecture-affecting item remains on the critical path: **training/runtime parity**. Legacy `user_deepspin.cpp` is useful integration material but cannot be reused unchanged because it expects the old 292-feature/7-output contract. The new OpenHoldem runtime must produce the same SPNNIV1 semantics and seven-active-slot universal action mapping used during training.
 
-- `/BB` target normalization: keep or remove based on its effect on shared cross-blind learning;
-- action set: reconcile legacy 7 actions with current SpinCore action representation under the restored full tournament distribution;
-- training/runtime parity: ensure the model receives the same semantics during training and inference;
-- Crusher/hardcoded and solver-v2 assets: consult only where they can materially improve one of the three questions above, not as independent audit projects.
+This runtime work does **not** block a cheap local training smoke, because the smoke's purpose is only to prove the newly consolidated training mechanics execute on the real scenario distribution and to measure actual roots/second. It does block calling a long-trained model table-ready.
+
+Crusher/hardcoded and solver-v2/184 remain reference assets, not independent audit gates.
 
 ## CI note
 
-The latest broad `main_regression` run had 384 Python tests pass and one failure caused by an old frozen Git-blob hash for `r7_5_representation_v3_final_policy.py`. C++ regression passed. That failure is a stale historical-freeze/certification contract, not evidence that the restored sampler, WTA scope or V1 decision is broken. Do not spend a new validation campaign on it; demote/reconcile the stale freeze when cleaning the critical CI path.
+A broad historical regression previously had 384 Python tests pass and one failure caused only by a stale frozen Git-blob hash for an intentionally evolved R7.5 representation file. C++ regression passed. Do not turn that historical certification hash into a new workstream.
 
-## Do not do now
+## Do not do
 
-- Do not resume dense 3H i3-i5 merely to complete an old matrix.
-- Do not run the PF0-PF4 10/20-only comparison as a final selector.
-- Do not start old R8 heavy training.
-- Do not create separate payout-specific trainings.
-- Do not launch another broad representation tournament.
-- Do not add certification/reproducibility gates unless they can materially change playing quality or catch a real correctness bug.
+- Do not resume Dense-reference i3-i5 just to complete an old matrix.
+- Do not use fixed-10/20 PF0-PF4 evidence as the final global selector.
+- Do not restart the old R8/gate chain.
+- Do not launch another representation/action tournament before the functional baseline exists.
+- Do not create payout-specific trainings now.
 
-## Next milestone
+## Immediate next milestone
 
-Close `/BB`, action-set reconciliation and training/runtime parity, then create the **first lean functional training runner** using the restored real scenario distribution, compact V1 representation and WTA chip-EV scope. Start with one cheap sanity run; if mechanics and learning are sane, scale directly on Ryzen instead of opening another chain of academic gates.
+Run the two-root lean smoke (one effective root budget for each domain), inspect only whether mechanics are correct and how long a root actually takes, then choose the first meaningful Ryzen training budget from measured throughput. No weeks-long run is authorized before that measurement.
