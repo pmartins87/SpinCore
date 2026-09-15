@@ -1,77 +1,76 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FIRST FUNCTIONAL OFFLINE AGENT WORKS — READY FOR RYZEN THROUGHPUT PILOT**
+Status: **FUNCTIONAL PATH VALIDATED ON RYZEN — FIRST SUBSTANTIVE TRAINING READY**
 
 ## Goal
 
 Make the multi-year DeepSpin project actually work as SpinCore. Preserve mature legacy knowledge; replace only components with a concrete correctness, learning-quality, or compute-efficiency reason.
 
-## First functional SpinCore — decisions now closed
+## First functional SpinCore — decisions closed
 
 - **Scenario distribution:** restored legacy real SpinGo model: 3-handed + true HU, nine blind levels from 10/20 to 100/200, separate empirical blind weights, blind-conditioned stack distributions, 1500 total chips, random dealer/live/dead seats.
 - **Payout scope:** one winner-take-all policy family first, reused initially across payout variants. No separate 70/30, 50/30/20 training now.
-- **Utility:** chip EV remains the strategic objective. Legacy state-dependent `chip_delta / current_bb` target scaling is replaced by one global positive scale `chip_delta / 1500`. This preserves chip-EV action ordering without blind-dependent target weighting. State inputs such as stack/BB and pot/BB remain BB-relative because that geometry is strategically meaningful.
-- **Representation:** compact SPNNIV1 exact-state-derived neural boundary. Do not restore the full legacy 292-float vector. Preserve its semantic definitions as diagnostic/reference knowledge and add a specific derived feature only if a concrete weakness justifies it.
-- **Action scope:** preserve the mature DeepSpin seven labels: `FOLD`, `CHECK_CALL`, `POT_33`, `POT_50`, `POT_75`, `POT_100`, `ALL_IN`, but with their actual historical context semantics rather than naïvely treating every label as the same pot fraction on every street. Preflop uses the legacy 2BB open, 2.5BB+ isolation, 5BB+ 3-bet families and limp/multi-raise restrictions; postflop uses 33/50/75/100% pot-after-call plus legacy near-all-in collapse. A dedicated lean C++ resolver implements this without modifying historical R7.5 experiments.
-- **Deep CFR traversal:** standard external sampling (`exact_opponent_levels=0`) for the functional path: branch all traverser choices, sample opponent choices.
-- **Average-policy memory:** restored the mature DeepSpin mechanism: ordinary sampled game trajectories after the advantage fit. The old R7.5 exact-opponent strategy-memory expansion was generating tens of thousands of unnecessary policy samples and severe compute blow-up in 3H; it is not used by the lean candidate.
-- **Regret fallback:** fitted advantage networks with all legal outputs <= 0 use stable masked softmax over raw advantages, preserving ranking. Uniform behavior is reserved for genuinely untrained initialization.
-- **Domains:** separate `THREE_HANDED` and `TRUE_HEADS_UP` brains remain. Roots are budgeted using the restored HU/3H prevalence and each brain samples its own empirical blind/stack distribution.
+- **Utility:** chip EV remains the strategic objective. Legacy state-dependent `chip_delta / current_bb` target scaling is replaced by one global positive scale `chip_delta / 1500`. State inputs such as stack/BB and pot/BB remain BB-relative because that geometry is strategically meaningful.
+- **Representation:** compact SPNNIV1 exact-state-derived neural boundary. Do not restore the full legacy 292-float vector.
+- **Action scope:** preserve the mature DeepSpin seven labels with their actual historical context semantics. Preflop uses 2BB open, 2.5BB+ isolation, 5BB+ 3-bet families and limp/multi-raise restrictions; postflop uses 33/50/75/100% pot-after-call plus legacy near-all-in collapse.
+- **Deep CFR traversal:** standard external sampling (`exact_opponent_levels=0`).
+- **Average-policy memory:** ordinary sampled game trajectories after advantage fitting, matching the mature DeepSpin mechanism and avoiding R7.5 exact-expansion blow-up.
+- **Regret fallback:** fitted advantage networks with all legal outputs <= 0 use masked softmax over raw advantages; uniform is reserved for genuinely untrained initialization.
+- **Domains:** separate `THREE_HANDED` and `TRUE_HEADS_UP` brains with realistic per-domain sampling.
 
-## Implemented functional path
+## Functional path
 
-- `python/spincore/legacy_scenario_data.json`
-- `python/spincore/legacy_scenario.py`
-- `python/spincore/lean_training_scope.py`
-- `python/spincore/lean_representation_scope.py`
-- `python/spincore/lean_action_scope.py`
-- `python/spincore/lean_action_policy.py`
-- `include/spincore/lean_action_abstraction.hpp`
-- `src/lean_action_abstraction.cpp`
-- `python/spincore/lean_solver_actions.py`
-- `python/spincore/lean_functional_training.py`
-- `tools/run_lean_functional_training.py`
-- `python/spincore/lean_functional_agent.py`
-- `tools/play_lean_functional_selfplay.py`
+Core files now include the restored scenario sampler, lean utility/representation/action scopes, legacy-faithful C++ action resolver, Deep-CFR trainer, resumable checkpoints, offline inference agent and self-play runner.
 
-The trainer is resumable after every iteration. The offline inference agent loads the finalized AveragePolicy checkpoint and uses the same SPNNIV1 input contract and the same lean C++ legal/exact action resolver as training.
+The trainer now also supports:
 
-## Functional evidence that matters
+- sparse periodic checkpoints via `--checkpoint-every`;
+- extending an existing finalized checkpoint with `--resume --additional-iterations N` so useful training is not thrown away merely because an initial budget finished.
 
-The cheap two-root smoke passed on Linux/Python 3.11/Torch 2.13 CPU/NumPy 2.3.5.
+## Ryzen evidence — 2026-09-15
 
-A five-iteration benchmark then trained 1000 realistic roots total (545 3H + 455 HU) with fitted advantage policies and sampled policy-memory collection. It completed in about 64 seconds of trainer wall time on a 2-thread GitHub CPU runner, with approximately 400 MB maximum resident memory. The strategy reservoir grew to 1101 3H samples and 395 HU samples instead of the old exact-expansion explosion.
+The user's Ryzen pilot completed successfully from commit `e3f5d318c0bdc97c207742dc4d5a81f380b87357` using Python 3.12.3, Torch 2.13.0+cpu, NumPy 2.3.5 and two Torch threads.
 
-The finalized checkpoint then played 100 complete offline self-play hands through the same solver/action contract with **PASS**: 403 decisions, 68 3H hands, 32 HU hands, decisions on preflop/flop/turn/river, no illegal action, no non-zero-sum terminal result, and all seven active legacy-equivalent action slots represented where legal.
+Five iterations / 1000 roots completed in **28.8 s trainer wall time**, versus about 63.6 s on the 2-thread GitHub runner. Peak RSS was about **389 MB**. The process used about **193% CPU**, confirming that the current path is effectively using about two cores and still leaves substantial Ryzen parallel capacity available if we later need it.
 
-This proves mechanics and training/inference semantic parity inside the SpinCore simulator. It does **not** prove strategic strength: 1000 roots is deliberately far too little to call the agent strong.
+The run produced 545 3H roots + 455 HU roots, 68,860 3H nodes + 42,323 HU nodes, 12,598 3H advantage samples + 8,906 HU, and 1,081 3H strategy samples + 390 HU. The real blind distribution was exercised, including late HU levels through 80/160.
+
+The finalized pilot checkpoint also passed 100-hand offline self-play: 68 3H + 32 HU hands, 325 decisions, no illegal action and successful end-to-end inference. This particular tiny trained policy ended almost every hand preflop/flop (310 preflop, 15 flop, no turn/river), largely because 1000 roots is far too little and its learned policy still shoves/folds excessively. This is not accepted as strategy quality evidence; the earlier GitHub 1000-root seed realization did reach all streets, showing the simulator itself is not structurally preventing later streets.
+
+## Why the first substantive profile is 600 roots/iteration
+
+This is deliberately legacy-first rather than arbitrary. With the restored HU prevalence, 600 roots/iteration split to about 327 3H and 273 HU roots. Because each root traverses every live player, that yields about **1527 advantage traversals per iteration**. The sampled-policy rule yields about **255 policy episodes per iteration**.
+
+The mature DeepSpin defaults were 3 x 512 = **1536 advantage traversals** and **256 policy episodes** per iteration. Therefore 600 current roots/iteration almost exactly preserves the old proven per-iteration sampling scale while using the repaired modern state/action/training path.
+
+## First substantive training profile
+
+`tools/run_lean_functional_first_training.sh` runs:
+
+- 200 iterations;
+- 600 roots/iteration = **120,000 roots** total;
+- external sampling (`exact_opponent_levels=0`);
+- 100,000-sample reservoir capacity per memory;
+- 50 advantage optimizer steps/iteration, batch 256;
+- 400 final average-policy steps, batch 256;
+- checkpoint every 5 iterations;
+- 5000-hand offline self-play after training.
+
+At measured Ryzen throughput, this should be an order-of-one-hour job, not a days/weeks experiment. The checkpoint can be extended later without restarting training from zero.
 
 ## Historical failure lesson
 
-The earlier DeepSpin trained for roughly three months on the Ryzen and still made gross mistakes. Do not answer bad play with 'train longer' before checking game/evaluator semantics, state representation, sampling, regret behavior, action mapping, and inference parity. Known historical defects included board-only made-hand interpretation, a uniform all-nonpositive regret fallback, and architecture/runtime drift.
-
-## What remains before serious quality training
-
-The architecture is now coherent enough to measure the user's Ryzen directly. The next run is a **throughput pilot**, not another architecture tournament. Its purpose is to determine how much strategically useful Deep-CFR work the Ryzen can perform per hour with the corrected functional path, then choose the first substantial training budget accordingly.
-
-Parallel root collection from the mature legacy worker design remains a possible later acceleration because extra throughput can directly buy more strategy quality. Do not implement multiprocessing merely for elegance; use the Ryzen pilot to determine whether single-process throughput is already sufficient or whether worker restoration has high value.
-
-External real-money client attachment is not part of this milestone. The current functional target is the offline SpinCore simulator/inference contract.
-
-## CI note
-
-The lean C++ action semantics and Python path compile and run. The broad historical regression still has one known stale frozen-Git-blob hash failure for an intentionally evolved R7.5 representation file; that certification hash is unrelated to poker correctness and remains non-blocking.
+The earlier DeepSpin trained for roughly three months and still made gross mistakes. Do not answer bad play with 'train longer' before checking game/evaluator semantics, state representation, sampling, regret behavior, action mapping and inference parity. Known historical defects included board-only made-hand interpretation, a uniform all-nonpositive regret fallback and architecture/runtime drift.
 
 ## Do not do
 
 - Do not resume Dense-reference i3-i5 merely to complete an old matrix.
 - Do not use fixed-10/20 PF0-PF4 evidence as the final global selector.
 - Do not restart the old R8/gate chain.
-- Do not launch another representation/action tournament before actual strategic evidence identifies a weakness.
 - Do not create payout-specific trainings now.
-- Do not launch a days/weeks-long Ryzen run before measuring the corrected functional path locally.
+- Do not reopen representation/action tournaments without concrete play evidence.
 
 ## Immediate next milestone
 
-Run the corrected five-iteration / 1000-root benchmark once on the Ryzen, including the 100-hand offline self-play. Use the measured local wall time to size the first substantial training run. If the Ryzen is materially underused, restore root-level parallel workers before spending a long training budget.
+Run the 120k-root first substantive training on the Ryzen. After it finishes, evaluate whether the policy has actually moved away from the 1000-root shove/fold-heavy behavior and then perform one direct strategic comparison before deciding whether to extend this same checkpoint. Do not open another architecture audit unless the resulting play exposes a concrete defect.
