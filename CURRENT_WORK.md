@@ -115,6 +115,8 @@ The selected values are stored locally in:
 - `runs/worker_benchmark/selected_workers.txt`;
 - `runs/worker_benchmark/selected_torch_threads.txt`.
 
+The later strategy-quality wrapper printed `logical_cpus=1` even though the machine still exposed 32 logical CPUs. This was a **display bug only**: the wrapper exported `OMP_NUM_THREADS=1` before invoking GNU `nproc`, and `nproc` honored that OpenMP limit. The worker count itself came from `selected_workers.txt`, so the completed strategy evaluation still used **31 worker processes**. The wrapper was corrected to capture the machine CPU count before setting per-worker OpenMP limits. Local confirmation after the run: `nproc = 32`, online CPUs `0-31`. No rerun is required for this reason.
+
 Do not infer that the whole training job becomes 13x faster merely from the inner benchmark. Root collection accelerated dramatically, but optimizer/final-policy work and process/model startup remain partly serial or fixed-cost. Any future long-run ETA must be measured from the optimized substantive path itself.
 
 ## Strategy-quality diagnostic — COMPLETED 2026-09-15
