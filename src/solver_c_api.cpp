@@ -19,6 +19,8 @@
 using spincore::AbstractActionSlot;
 using spincore::Card;
 using spincore::EpisodeScenario;
+using spincore::ExactAction;
+using spincore::ExactActionType;
 using spincore::PayoutProfile;
 using spincore::SpinTraversalState;
 using spincore::StrategyDomain;
@@ -225,6 +227,25 @@ int32_t spincore_solver_state_apply_abstract(spincore_solver_state* s, int32_t a
     return guard([&]() {
         if (!s || a < 0 || a > 5) throw std::invalid_argument("bad action");
         s->impl.apply(static_cast<AbstractActionSlot>(a));
+        return 0;
+    }, -1);
+}
+
+int32_t spincore_solver_state_apply_exact(
+    spincore_solver_state* s,
+    int32_t action_type,
+    int32_t amount_to
+) {
+    return guard([&]() {
+        if (!s || s->impl.terminal() || action_type < 0 || action_type > 5 || amount_to < 0) {
+            throw std::invalid_argument("bad exact action");
+        }
+        ExactAction action{};
+        action.type = static_cast<ExactActionType>(action_type);
+        action.amount_to = (action.type == ExactActionType::BetTo || action.type == ExactActionType::RaiseTo)
+            ? amount_to
+            : 0;
+        s->impl.apply_exact(action);
         return 0;
     }, -1);
 }
