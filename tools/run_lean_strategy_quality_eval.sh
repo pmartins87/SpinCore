@@ -6,12 +6,17 @@ cd "$ROOT"
 PYTHON_RUN="${SPINCORE_LEAN_VENV:-$ROOT/.venv_lean}/bin/python"
 SELECTED_WORKERS_FILE="$ROOT/runs/worker_benchmark/selected_workers.txt"
 
+# Capture machine availability before constraining numerical libraries inside
+# evaluation workers. GNU nproc honors OpenMP limits, so calling it after
+# OMP_NUM_THREADS=1 misleadingly prints 1 even on the 32-thread Ryzen.
+LOGICAL_CPUS="$(nproc)"
+
 if [ -n "${SPINCORE_EVAL_WORKERS:-}" ]; then
     WORKERS="$SPINCORE_EVAL_WORKERS"
 elif [ -f "$SELECTED_WORKERS_FILE" ]; then
     WORKERS="$(tr -d '[:space:]' < "$SELECTED_WORKERS_FILE")"
 else
-    WORKERS="$(( $(nproc) > 1 ? $(nproc) - 1 : 1 ))"
+    WORKERS="$(( LOGICAL_CPUS > 1 ? LOGICAL_CPUS - 1 : 1 ))"
 fi
 
 SCENARIOS="${SPINCORE_EVAL_SCENARIOS:-1000}"
@@ -28,7 +33,7 @@ REPORT="$RUN_DIR/report.json"
 LOG="$RUN_DIR/eval.log"
 
 export PYTHONPATH="$ROOT/python"
-# Each evaluation worker owns one policy copy and one solver instance.  Keep
+# Each evaluation worker owns one policy copy and one solver instance. Keep
 # numerical libraries single-threaded inside workers to avoid 31x oversubscription.
 export SPINCORE_TORCH_THREADS=1
 export OMP_NUM_THREADS=1
@@ -36,7 +41,7 @@ export MKL_NUM_THREADS=1
 
 printf '=== SpinCore strategy-quality evaluation ===\n'
 printf 'checkpoint=%s\n' "$CHECKPOINT"
-printf 'workers=%s scenarios=%s logical_cpus=%s\n' "$WORKERS" "$SCENARIOS" "$(nproc)"
+printf 'workers=%s scenarios=%s logical_cpus=%s\n' "$WORKERS" "$SCENARIOS" "$LOGICAL_CPUS"
 printf 'opponents=UNIFORM_LEGAL,PASSIVE_CALLER,JAMMER\n'
 printf 'control=uniform-legal hero on paired scenario/deal\n\n'
 
