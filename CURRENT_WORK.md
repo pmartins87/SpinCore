@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-15
-Status: **FUNCTIONAL PATH VALIDATED — RYZEN PARALLEL OPTIMIZATION IMPLEMENTED, LOCAL HARDWARE TUNING NEXT**
+Status: **FIRST SUBSTANTIVE TRAINING COMPLETED — CHECKPOINT PRESERVED; RYZEN HARDWARE TUNING NEXT; STRATEGY STRENGTH NOT YET ESTABLISHED**
 
 ## Goal
 
@@ -19,64 +19,88 @@ Make the multi-year DeepSpin project actually work as SpinCore. Preserve mature 
 - **Regret fallback:** fitted advantage networks with all legal outputs <= 0 use masked softmax over raw advantages; uniform is reserved for genuinely untrained initialization.
 - **Domains:** separate `THREE_HANDED` and `TRUE_HEADS_UP` brains with realistic per-domain sampling.
 
+## First substantive serial baseline — COMPLETED 2026-09-15
+
+The pre-optimization run that had already started was allowed to finish rather than discarding nearly completed work.
+
+Training contract:
+
+- commit used to launch: `85ef4b970e88b78346d0cf306320681bff2cdb94`;
+- 200 iterations;
+- 600 roots/iteration = **120,000 roots**;
+- 65,400 3H roots + 54,600 HU roots;
+- 50 advantage optimizer steps/iteration, batch 256;
+- 400 final AveragePolicy steps;
+- reservoir capacity 100,000;
+- external sampling, `exact_opponent_levels=0`;
+- WTA chip EV `/1500`;
+- checkpoint every 5 iterations.
+
+Final aggregate learning workload:
+
+- **20,838,215 traversal nodes**;
+- **3,806,986 advantage samples seen** (2,022,140 3H + 1,784,846 HU);
+- **213,935 AveragePolicy samples seen** (156,299 3H + 57,636 HU);
+- final policy losses: 1.071089 (3H), 1.179489 (HU).
+
+The empirical sampler was genuinely active across the blind ladder. Rare HU late levels including 100/200 occurred in training; this was not a fixed-10/20 run.
+
+Local durable artifacts:
+
+- run dir: `/home/rz9/spincore_lean_functional/runs/lean_first_training/20260915_131133`;
+- checkpoint: `.../checkpoint.pt`;
+- report: `.../report.json`;
+- self-play: `.../selfplay.json`.
+
+Execution baseline on the Ryzen:
+
+- external elapsed time: **1:25:39**;
+- process CPU: **198%**, i.e. roughly two logical CPUs on the 32-thread machine;
+- peak RSS: about **1.04 GiB**;
+- swaps: 0;
+- exit status: 0.
+
+This serial throughput is now a baseline only. It must not be used as the production Ryzen execution profile.
+
+## 5,000-hand offline self-play after training — PASS
+
+The finalized checkpoint completed 5,000 sampled hands with:
+
+- 21,131 decisions;
+- 2,770 3H / 2,230 HU hands;
+- no illegal selected action;
+- zero-sum terminal chip accounting on every hand;
+- maximum 17 decisions in one hand;
+- street decisions: **15,333 preflop / 3,485 flop / 1,546 turn / 767 river**;
+- action counts: `[2928, 8630, 0, 1753, 0, 1053, 0, 828, 272, 5667]`.
+
+Compared with the tiny 1,000-root pilot, the trained policy is materially less degenerate behaviorally: the pilot had 310/325 decisions preflop, no turn/river and 115/325 all-ins; the 120k checkpoint reaches every street and all-in frequency is substantially lower.
+
+**Important:** this is mechanics/behavior evidence, not proof that the strategy is strong. Self-play against itself cannot establish absolute chip-EV quality or exploitability. Do not authorize more training merely because the checkpoint exists, and do not call the policy final merely because self-play passed.
+
 ## Ryzen optimization is mandatory
 
-`docs/RYZEN_OPTIMIZATION_POLICY.md` is canonical. Substantial workloads on the user's 32-logical-thread Ryzen must be optimized for that machine before long execution. The proven DeepPot precedent is many independent worker processes with one Torch/OMP/MKL thread per worker, normally leaving one logical CPU to the parent/OS.
+`docs/RYZEN_OPTIMIZATION_POLICY.md` is canonical. This is also a standing user requirement beyond SpinCore: any substantial workload assigned to the user's Ryzen, in any project, must be optimized for that machine before long execution.
 
-The original functional pilot and the first 120k script revision were serial root collectors with two Torch threads. The pilot reported about **193% process CPU**, i.e. approximately two fully used logical CPUs, explaining the user's ~7% Task Manager total CPU reading. That serial configuration was useful for functional measurement but is **not accepted as the production Ryzen configuration**.
+SpinCore now parallelizes independent advantage-root collection with a persistent process pool. Each worker uses one Torch/OpenMP/BLAS thread. The parent remains authoritative for empirical scenario sampling and global reservoirs and merges returned samples in root order. Poker rules, state representation, legal-action semantics, utility and intended Deep-CFR operation are unchanged by the execution optimization.
 
-SpinCore now parallelizes only independent **advantage-root collection** with a persistent process pool. Each worker uses one Torch/OpenMP/BLAS thread. The parent remains authoritative for empirical scenario sampling and the global reservoirs and merges returned samples in root order. Poker rules, state representation, legal-action semantics, utility and Deep-CFR node logic are unchanged by this execution optimization.
+The parallel path already passed the dedicated GitHub lean functional benchmark with two workers. A broad legacy regression still has one stale frozen-blob-hash failure unrelated to this functional path; do not turn that certification-only hash into a workstream.
 
-Relevant optimization files:
+## Next milestone — ONE hardware tune, then ONE meaningful strategy decision
 
-- `python/spincore/lean_parallel.py`
-- `tools/benchmark_lean_ryzen_workers.sh`
-- `tools/run_lean_functional_first_training.sh`
-- `tools/resume_latest_lean_training_optimized.sh`
-
-The parallel path has passed GitHub CI with two workers. The actual Ryzen now runs one two-phase hardware benchmark: first root workers **1/8/16/24/31**, then parent Torch threads **1/2/4/8/16** using the selected worker count. Failed oversubscribed configurations are skipped. The fastest successful settings are persisted to `runs/worker_benchmark/selected_workers.txt` and `selected_torch_threads.txt`; future substantive/resume scripts consume both automatically.
-
-## Ryzen pilot evidence — 2026-09-15
-
-The pilot completed 5 iterations / 1000 roots in **28.8 s trainer wall time**, peak RSS about **389 MB**, using ~193% CPU. It produced 545 3H + 455 HU roots, 68,860 3H nodes + 42,323 HU nodes, 12,598 3H advantage samples + 8,906 HU, and 1,081 3H strategy samples + 390 HU. Real blind sampling reached late HU levels through 80/160.
-
-The finalized checkpoint passed 100-hand offline self-play with no illegal action. That tiny policy was still excessively shove/fold-heavy (310 preflop decisions, only 15 flop, no turn/river) and is not strategy-quality evidence.
-
-## First substantive profile
-
-Once the selected Ryzen worker/thread profile is known, the same intended training profile is:
-
-- 200 iterations;
-- 600 roots/iteration = 120,000 roots;
-- about 327 3H + 273 HU roots/iteration;
-- about 1527 advantage traversals/iteration, nearly the mature DeepSpin 1536;
-- about 255 sampled-policy episodes/iteration, nearly the mature DeepSpin 256;
-- external sampling (`exact_opponent_levels=0`);
-- reservoir capacity 100,000;
-- 50 advantage optimizer steps/iteration, batch 256;
-- 400 final AveragePolicy optimizer steps, batch 256;
-- checkpoint every 5 iterations;
-- 5,000-hand offline self-play after training.
-
-The checkpoint is resumable and may be extended rather than discarded.
-
-## Active serial run started before optimization
-
-If the user already started the older serial 120k script, do **not** waste completed work. Prefer to stop immediately after the next printed `CHECKPOINT .../checkpoint.pt` line, then pull the optimized code, run the short hardware benchmark, and resume the newest checkpoint with `tools/resume_latest_lean_training_optimized.sh`. Stopping between periodic checkpoints can lose up to the unsaved iterations since the prior checkpoint but does not corrupt the last durable checkpoint.
-
-## Historical failure lesson
-
-The earlier DeepSpin trained for roughly three months and still made gross mistakes. Do not answer bad play with 'train longer' before checking game/evaluator semantics, state representation, sampling, regret behavior, action mapping and inference parity. Known historical defects included board-only made-hand interpretation, a uniform all-nonpositive regret fallback and architecture/runtime drift.
+1. Run `tools/benchmark_lean_ryzen_workers.sh` once on the actual Ryzen. It compares root workers 1/8/16/24/31 and then parent Torch threads 1/2/4/8/16. Persist the fastest safe profile.
+2. **Do not start another training run automatically.** First build/run one compact strategy-quality comparison for the completed checkpoint under the full empirical sampler using common deals and chip-EV-oriented evidence against a stable fixed baseline/opponent set.
+3. Only if that evidence says the policy is still undertrained or strategically weak should the checkpoint be extended — and any extension must use the measured Ryzen-optimized profile.
+4. If a concrete semantic/action/representation weakness appears, fix that weakness before spending more compute. Do not answer bad poker with blind extra training.
 
 ## Do not do
 
+- Do not discard or overwrite the completed 120k checkpoint.
+- Do not immediately extend it just because training completed.
+- Do not use self-play PASS as proof of poker strength.
 - Do not resume Dense-reference i3-i5 merely to complete an old matrix.
 - Do not use fixed-10/20 PF0-PF4 evidence as the final global selector.
 - Do not restart the old R8/gate chain.
 - Do not create payout-specific trainings now.
 - Do not reopen representation/action tournaments without concrete play evidence.
 - Do not knowingly run long serial/low-utilization workloads on the Ryzen when independent work can be parallelized safely.
-
-## Immediate next milestone
-
-Stop any pre-optimization serial substantive run at the next durable checkpoint, run the one-time Ryzen hardware benchmark (root workers + parent Torch threads), then resume that same checkpoint using the selected optimized profile. Only after measured parallel throughput is known should the remaining duration of the first substantive training be accepted.
