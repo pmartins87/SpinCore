@@ -44,9 +44,24 @@ def make_action_bundle(
     action_spec: ActionCandidateSpec,
     device: str = "cpu",
     reservoir_capacity: int = 100000,
+    advantage_reservoir_capacity: int | None = None,
+    policy_reservoir_capacity: int | None = None,
     lr: float = 0.001,
 ) -> ActionDomainBundle:
     seed = int(seed)
+    default_capacity = int(reservoir_capacity)
+    adv_capacity = (
+        default_capacity
+        if advantage_reservoir_capacity is None
+        else int(advantage_reservoir_capacity)
+    )
+    pol_capacity = (
+        default_capacity
+        if policy_reservoir_capacity is None
+        else int(policy_reservoir_capacity)
+    )
+    if adv_capacity <= 0 or pol_capacity <= 0:
+        raise ValueError("action reservoir capacities must be positive")
     config, advantage, policy = make_action_models(
         selected_representation,
         device=device,
@@ -65,8 +80,8 @@ def make_action_bundle(
         policy=policy,
         adv_opt=adv_opt,
         pol_opt=pol_opt,
-        adv_mem=UniformReservoir(int(reservoir_capacity), seed ^ 0xA5A5A5A5),
-        pol_mem=UniformReservoir(int(reservoir_capacity), seed ^ 0x5A5A5A5A),
+        adv_mem=UniformReservoir(adv_capacity, seed ^ 0xA5A5A5A5),
+        pol_mem=UniformReservoir(pol_capacity, seed ^ 0x5A5A5A5A),
         batch_rng=random.Random(seed ^ 0xC0FFEE),
         counters={
             "iteration": 0,
