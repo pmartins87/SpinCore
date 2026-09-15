@@ -3,13 +3,14 @@ from __future__ import annotations
 """Source-level OpenPPL inventory used by the DeepCrusher offline oracle.
 
 This is intentionally a parser/inventory layer, not yet a claim of full
-OpenHoldem semantic parity.  It gives the benchmark a deterministic view of the
+OpenHoldem semantic parity. It gives the benchmark a deterministic view of the
 frozen DeepCrusher sections, hand lists and transitive f$ dependencies so the
 portable decision oracle can be implemented and validated in bounded pieces.
 """
 
 from dataclasses import dataclass
 from pathlib import Path
+import bisect
 import re
 from typing import Iterable
 
@@ -39,7 +40,7 @@ class OpenPPLSection:
 
     @property
     def f_dependencies(self) -> tuple[str, ...]:
-        return tuple(sorted(set(F_REF_RE.findall(_without_comments(self.body)))) )
+        return tuple(sorted(set(F_REF_RE.findall(_without_comments(self.body)))))
 
     @property
     def hand_dependencies(self) -> tuple[str, ...]:
@@ -159,7 +160,6 @@ def parse_openppl_source(path: str | Path) -> OpenPPLSource:
         line_starts.append(match.end())
 
     def line_number(offset: int) -> int:
-        import bisect
         return bisect.bisect_right(line_starts, offset)
 
     for index, match in enumerate(matches):
