@@ -4,15 +4,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 PYTHON_RUN="${SPINCORE_LEAN_VENV:-$ROOT/.venv_lean}/bin/python"
-THREADS="${SPINCORE_TORCH_THREADS:-2}"
-SELECTED_FILE="$ROOT/runs/worker_benchmark/selected_workers.txt"
+SELECTED_WORKERS_FILE="$ROOT/runs/worker_benchmark/selected_workers.txt"
+SELECTED_THREADS_FILE="$ROOT/runs/worker_benchmark/selected_torch_threads.txt"
 
 if [ -n "${SPINCORE_WORKERS:-}" ]; then
     WORKERS="$SPINCORE_WORKERS"
-elif [ -f "$SELECTED_FILE" ]; then
-    WORKERS="$(tr -d '[:space:]' < "$SELECTED_FILE")"
+elif [ -f "$SELECTED_WORKERS_FILE" ]; then
+    WORKERS="$(tr -d '[:space:]' < "$SELECTED_WORKERS_FILE")"
 else
     WORKERS="$(( $(nproc) > 1 ? $(nproc) - 1 : 1 ))"
+fi
+
+if [ -n "${SPINCORE_TORCH_THREADS:-}" ]; then
+    THREADS="$SPINCORE_TORCH_THREADS"
+elif [ -f "$SELECTED_THREADS_FILE" ]; then
+    THREADS="$(tr -d '[:space:]' < "$SELECTED_THREADS_FILE")"
+else
+    THREADS=2
 fi
 
 CHECKPOINT="$(find "$ROOT/runs/lean_first_training" -type f -name checkpoint.pt -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2-)"
