@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 from pathlib import Path
 import sys
@@ -39,6 +40,18 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--checkpoint", type=Path, default=ROOT / "runs" / "lean_functional" / "checkpoint.pt")
     p.add_argument("--report", type=Path, default=ROOT / "runs" / "lean_functional" / "report.json")
     p.add_argument("--resume", action="store_true")
+    p.add_argument(
+        "--additional-iterations",
+        type=int,
+        default=0,
+        help="when resuming, extend the loaded run by this many iterations; works even from a finalized checkpoint",
+    )
+    p.add_argument(
+        "--checkpoint-every",
+        type=int,
+        default=1,
+        help="save an in-progress checkpoint every N completed iterations (final checkpoint is always saved)",
+    )
     return p.parse_args()
 
 
@@ -46,6 +59,10 @@ def main() -> int:
     args = parse_args()
     if not args.solver.exists():
         raise SystemExit(f"solver not found: {args.solver}")
+    if int(args.checkpoint_every) <= 0:
+        raise SystemExit("--checkpoint-every must be positive")
+    if int(args.additional_iterations) < 0:
+        raise SystemExit("--additional-iterations must be nonnegative")
     solver = SolverLibrary(args.solver)
 
     if args.resume:
@@ -54,14 +71,25 @@ def main() -> int:
         seed, config, completed, sampler, runtimes, history, finalized = load_checkpoint(
             args.checkpoint, solver=solver
         )
-        if finalized:
-            print("checkpoint already finalized; nothing to resume", flush=True)
+        if int(args.additional_iterations) > 0:
+            config = replace(
+                config,
+                iterations=int(completed) + int(args.additional_iterations),
+            )
+            finalized = False
+        elif finalized:
+            print(
+                "checkpoint already finalized; use --resume --additional-iterations N to extend it",
+                flush=True,
+            )
             return 0
         print(
             f"RESUME seed={seed} completed_iteration={completed}/{config.iterations}",
             flush=True,
         )
     else:
+        if int(args.additional_iterations) != 0:
+            raise SystemExit("--additional-iterations is valid only with --resume")
         seed = int(args.seed)
         config = LeanFunctionalConfig(
             iterations=int(args.iterations),
@@ -85,6 +113,7 @@ def main() -> int:
                     "config": config.__dict__,
                     "roots_by_domain": config.roots_by_domain(),
                     "solver": str(args.solver),
+                    "checkpoint_every": int(args.checkpoint_every),
                 },
                 sort_keys=True,
             ),
@@ -103,18 +132,23 @@ def main() -> int:
         )
         history.append(report)
         completed = iteration
-        save_checkpoint(
-            args.checkpoint,
-            seed=seed,
-            config=config,
-            completed_iteration=completed,
-            sampler=sampler,
-            runtimes=runtimes,
-            history=history,
-            finalized=False,
+        should_checkpoint = (
+            completed % int(args.checkpoint_every) == 0
+            or completed == int(config.iterations)
         )
+        if should_checkpoint:
+            save_checkpoint(
+                args.checkpoint,
+                seed=seed,
+                config=config,
+                completed_iteration=completed,
+                sampler=sampler,
+                runtimes=runtimes,
+                history=history,
+                finalized=False,
+            )
+            print(f"CHECKPOINT {args.checkpoint}", flush=True)
         print("ITERATION_REPORT " + json.dumps(report, sort_keys=True), flush=True)
-        print(f"CHECKPOINT {args.checkpoint}", flush=True)
 
     print("FINALIZE average-policy", flush=True)
     final = finalize(config=config, runtimes=runtimes)
