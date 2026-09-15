@@ -5,6 +5,19 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/lean_functional_benchmark.yml'
+      - 'include/spincore/lean_action_abstraction.hpp'
+      - 'src/lean_action_abstraction.cpp'
+      - 'include/spincore/solver_c_api.h'
+      - 'src/solver_c_api.cpp'
+      - 'python/spincore/lean_action_scope.py'
+      - 'python/spincore/lean_action_policy.py'
+      - 'python/spincore/lean_solver_actions.py'
+      - 'python/spincore/lean_functional_training.py'
+      - 'python/spincore/lean_training_scope.py'
+      - 'python/spincore/legacy_scenario.py'
+      - 'python/spincore/legacy_scenario_data.json'
+      - 'tools/run_lean_functional_training.py'
+      - 'CMakeLists.txt'
   workflow_dispatch:
 
 permissions:
