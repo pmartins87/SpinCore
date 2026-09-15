@@ -42,7 +42,7 @@ jobs:
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build -j2 --target spincore_solver_c
 
-      - name: 200-root realistic benchmark
+      - name: Five-iteration fitted-policy benchmark
         shell: bash
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -55,7 +55,7 @@ jobs:
           /usr/bin/time -v python tools/run_lean_functional_training.py \
             --solver build/libspincore_solver_c.so \
             --seed 20260915 \
-            --iterations 1 \
+            --iterations 5 \
             --roots-per-iteration 200 \
             --exact-opponent-levels 0 \
             --advantage-steps 50 \
