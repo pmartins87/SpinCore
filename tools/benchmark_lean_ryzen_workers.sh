@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -u -o pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -15,8 +15,10 @@ if [ ! -x "$PYTHON_RUN" ]; then
     exit 3
 fi
 
+set -e
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release >/dev/null
 cmake --build build -j"$BUILD_JOBS" --target spincore_solver_c >/dev/null
+set +e
 
 export PYTHONPATH="$ROOT/python"
 export SPINCORE_TORCH_THREADS="$THREADS"
@@ -25,17 +27,33 @@ export MKL_NUM_THREADS="$THREADS"
 
 LOGICAL="$(nproc)"
 CANDIDATES=(1 8 16 24)
-if [ "$LOGICAL" -ge 31 ]; then CANDIDATES+=(31); else CANDIDATES+=("$((LOGICAL>1 ? LOGICAL-1 : 1))"); fi
+if [ "$LOGICAL" -ge 32 ]; then
+    CANDIDATES+=(31)
+elif [ "$LOGICAL" -gt 1 ]; then
+    CANDIDATES+=("$((LOGICAL-1))")
+fi
+
+# Deduplicate candidates while preserving order and never request more than
+# logical_cpus-1 parallel workers.
+FILTERED=()
+for W in "${CANDIDATES[@]}"; do
+    if [ "$W" -gt "$LOGICAL" ]; then continue; fi
+    DUP=0
+    for X in "${FILTERED[@]:-}"; do [ "$X" = "$W" ] && DUP=1; done
+    [ "$DUP" -eq 0 ] && FILTERED+=("$W")
+done
 
 printf '=== SpinCore Ryzen worker benchmark ===\n'
 printf 'logical_cpus=%s parent_torch_threads=%s\n' "$LOGICAL" "$THREADS"
-printf 'candidates=%s\n' "${CANDIDATES[*]}"
-printf 'metric=iteration-2 advantage-tree seconds (same 300-root profile)\n\n'
+printf 'candidates=%s\n' "${FILTERED[*]}"
+printf 'metric=iteration-2 advantage-tree seconds (same 300-root profile)\n'
+printf 'note=failed worker counts are skipped, not fatal\n\n'
 
 RESULTS="$OUT/results.tsv"
-printf 'workers\ttree_seconds\twall_seconds\n' > "$RESULTS"
+printf 'workers\ttree_seconds\twall_seconds\tstatus\n' > "$RESULTS"
+SUCCESS=0
 
-for W in "${CANDIDATES[@]}"; do
+for W in "${FILTERED[@]}"; do
     RUN="$OUT/w${W}"
     rm -rf "$RUN"
     mkdir -p "$RUN"
@@ -55,6 +73,13 @@ for W in "${CANDIDATES[@]}"; do
       --checkpoint "$RUN/checkpoint.pt" \
       --report "$RUN/report.json" \
       > "$RUN/run.log" 2>&1
+    RC=$?
+
+    if [ "$RC" -ne 0 ] || [ ! -s "$RUN/report.json" ]; then
+        printf 'workers=%s FAILED rc=%s (see %s)\n' "$W" "$RC" "$RUN/run.log"
+        printf '%s\t\t\tFAILED\n' "$W" >> "$RESULTS"
+        continue
+    fi
 
     read -r TREE WALL < <("$PYTHON_RUN" - "$RUN/report.json" <<'PY'
 import json, sys
@@ -65,12 +90,18 @@ print(f"{tree:.6f} {float(r['wall_seconds']):.6f}")
 PY
     )
     printf 'workers=%s tree_seconds=%s wall_seconds=%s\n' "$W" "$TREE" "$WALL"
-    printf '%s\t%s\t%s\n' "$W" "$TREE" "$WALL" >> "$RESULTS"
+    printf '%s\t%s\t%s\tPASS\n' "$W" "$TREE" "$WALL" >> "$RESULTS"
+    SUCCESS=$((SUCCESS+1))
 done
+
+if [ "$SUCCESS" -eq 0 ]; then
+    printf '\nRYZEN_WORKER_BENCHMARK_FAILED: no candidate completed.\n' >&2
+    exit 5
+fi
 
 SELECTED="$($PYTHON_RUN - "$RESULTS" <<'PY'
 import csv, sys
-rows=list(csv.DictReader(open(sys.argv[1], encoding='utf-8'), delimiter='\t'))
+rows=[r for r in csv.DictReader(open(sys.argv[1], encoding='utf-8'), delimiter='\t') if r['status']=='PASS']
 best=min(rows, key=lambda r: float(r['tree_seconds']))
 print(best['workers'])
 PY
@@ -79,5 +110,6 @@ printf '%s\n' "$SELECTED" > "$OUT/selected_workers.txt"
 
 printf '\nRYZEN_WORKER_BENCHMARK_PASS\n'
 printf 'selected_workers=%s\n' "$SELECTED"
+printf 'successful_candidates=%s/%s\n' "$SUCCESS" "${#FILTERED[@]}"
 printf 'results=%s\n' "$RESULTS"
 printf 'selected_file=%s\n' "$OUT/selected_workers.txt"
