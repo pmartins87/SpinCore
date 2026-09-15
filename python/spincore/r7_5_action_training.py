@@ -152,18 +152,26 @@ class ActionDeepCFRSession:
                 root.close()
             nodes += int(result.nodes)
             advantage_added += int(result.samples_added)
-        for player in live:
-            root = self.solver_library.create(episode, int(deck_seed))
-            try:
-                strategy_added += int(
-                    self.collector.collect_strategy_own_reach(
-                        root,
-                        target_player=int(player),
-                        iteration=int(iteration),
+
+        # Historical R7.5 used a separate exact-opponent strategy-memory walk.
+        # Mature DeepSpin instead collected average-policy targets from ordinary
+        # sampled games.  The first functional lean candidate restores that
+        # cheaper and more practical behavior in lean_functional_training.py;
+        # do not duplicate it here.  All historical R7.5 candidates keep their
+        # original semantics unchanged.
+        if self.action_spec.candidate_id != "LEGACY_7_ACTION_BASELINE_V1":
+            for player in live:
+                root = self.solver_library.create(episode, int(deck_seed))
+                try:
+                    strategy_added += int(
+                        self.collector.collect_strategy_own_reach(
+                            root,
+                            target_player=int(player),
+                            iteration=int(iteration),
+                        )
                     )
-                )
-            finally:
-                root.close()
+                finally:
+                    root.close()
 
         counters = self.bundle.counters
         counters["iteration"] = max(int(counters["iteration"]), int(iteration))
