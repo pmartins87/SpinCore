@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import replace
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -21,6 +22,7 @@ from spincore.lean_functional_training import (  # noqa: E402
     save_checkpoint,
     write_json_report,
 )
+from spincore.lean_parallel import ParallelRootExecutor, recommended_ryzen_workers  # noqa: E402
 from spincore.solver import SolverLibrary  # noqa: E402
 
 
@@ -37,6 +39,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--batch-size", type=int, default=64)
     p.add_argument("--learning-rate", type=float, default=0.001)
     p.add_argument("--heads-up-prob", type=float, default=0.4548)
+    p.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="root-collection worker processes; 0=auto (logical CPUs minus one), 1=serial",
+    )
     p.add_argument("--checkpoint", type=Path, default=ROOT / "runs" / "lean_functional" / "checkpoint.pt")
     p.add_argument("--report", type=Path, default=ROOT / "runs" / "lean_functional" / "report.json")
     p.add_argument("--resume", action="store_true")
@@ -63,6 +71,12 @@ def main() -> int:
         raise SystemExit("--checkpoint-every must be positive")
     if int(args.additional_iterations) < 0:
         raise SystemExit("--additional-iterations must be nonnegative")
+    if int(args.workers) < 0:
+        raise SystemExit("--workers must be >= 0")
+
+    workers = int(args.workers)
+    if workers == 0:
+        workers = recommended_ryzen_workers(os.cpu_count())
     solver = SolverLibrary(args.solver)
 
     if args.resume:
@@ -84,7 +98,7 @@ def main() -> int:
             )
             return 0
         print(
-            f"RESUME seed={seed} completed_iteration={completed}/{config.iterations}",
+            f"RESUME seed={seed} completed_iteration={completed}/{config.iterations} workers={workers}",
             flush=True,
         )
     else:
@@ -114,46 +128,54 @@ def main() -> int:
                     "roots_by_domain": config.roots_by_domain(),
                     "solver": str(args.solver),
                     "checkpoint_every": int(args.checkpoint_every),
+                    "workers": workers,
                 },
                 sort_keys=True,
             ),
             flush=True,
         )
 
+    executor = ParallelRootExecutor(args.solver, workers) if workers > 1 else None
     overall_started = time.perf_counter()
-    for iteration in range(completed + 1, config.iterations + 1):
-        print(f"ITERATION {iteration}/{config.iterations} collect+fit", flush=True)
-        report = run_iteration(
-            seed=seed,
-            iteration=iteration,
-            config=config,
-            sampler=sampler,
-            runtimes=runtimes,
-        )
-        history.append(report)
-        completed = iteration
-        should_checkpoint = (
-            completed % int(args.checkpoint_every) == 0
-            or completed == int(config.iterations)
-        )
-        if should_checkpoint:
-            save_checkpoint(
-                args.checkpoint,
+    try:
+        for iteration in range(completed + 1, config.iterations + 1):
+            print(f"ITERATION {iteration}/{config.iterations} collect+fit", flush=True)
+            report = run_iteration(
                 seed=seed,
+                iteration=iteration,
                 config=config,
-                completed_iteration=completed,
                 sampler=sampler,
                 runtimes=runtimes,
-                history=history,
-                finalized=False,
+                parallel_executor=executor,
             )
-            print(f"CHECKPOINT {args.checkpoint}", flush=True)
-        print("ITERATION_REPORT " + json.dumps(report, sort_keys=True), flush=True)
+            history.append(report)
+            completed = iteration
+            should_checkpoint = (
+                completed % int(args.checkpoint_every) == 0
+                or completed == int(config.iterations)
+            )
+            if should_checkpoint:
+                save_checkpoint(
+                    args.checkpoint,
+                    seed=seed,
+                    config=config,
+                    completed_iteration=completed,
+                    sampler=sampler,
+                    runtimes=runtimes,
+                    history=history,
+                    finalized=False,
+                )
+                print(f"CHECKPOINT {args.checkpoint}", flush=True)
+            print("ITERATION_REPORT " + json.dumps(report, sort_keys=True), flush=True)
+    finally:
+        if executor is not None:
+            executor.close()
 
     print("FINALIZE average-policy", flush=True)
     final = finalize(config=config, runtimes=runtimes)
     report = compact_report(seed=seed, config=config, history=history, final=final)
     report["wall_seconds"] = float(time.perf_counter() - overall_started)
+    report["execution_workers"] = int(workers)
     write_json_report(args.report, report)
     save_checkpoint(
         args.checkpoint,
