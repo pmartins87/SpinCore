@@ -1,11 +1,15 @@
 # SpinCore Current Work
 
 Date: 2026-09-16
-Status: **LT1 1.2M ROOTS COMPLETE — CHECKPOINT PRESERVED — NEURAL FIT DOMINATES — LT2 EXECUTION REVIEW NEXT**
+Status: **LT1 1.2M ROOTS COMPLETE — CHECKPOINT PRESERVED — FIT CANDIDATE VALIDATED LOCALLY — RYZEN MEASUREMENT NEXT**
 
 ## Current authoritative update — 2026-09-16
 
 Read [LT1 completion review](docs/LT1_COMPLETION_REVIEW_20260916.md) before new compute. LT1 completed 2,000 iterations / 1.2M roots with finalization and exit 0. Preserve its checkpoint at `/home/rz9/spincore_lean_functional/runs/long_training_lt1/20260915_181249/checkpoint.pt`. Advantage fitting accounts for 71.08% of reported wall time. Optimize that phase with a bounded resume/throughput comparison before a long extension; do not restart learning. Both policy reservoirs remain below capacity, so the full 8M-slot memory peak is unproven. Final-save telemetry and conflicting elapsed clocks remain explicit limitations. Earlier sections below retain LT0 history; the immediate milestone at the end is updated.
+
+## Fit optimization prepared — 2026-09-16
+
+See `docs/LT1_FIT_OPTIMIZATION_20260916.md`. Optional vectorized batches preserve LT1 semantics and reference remains default. Targeted tests and a local load/next-iteration smoke passed. Next physical action: `bash tools/benchmark_lean_lt1_fit.sh` in WSL. It reads the LT1 checkpoint without overwriting it, compares ten fixed fit cases at the real batch/step settings, verifies same-thread parity, executes one disposable resumed iteration, writes a report and stops within a 20-minute timeout. No LT2 auto-launch and no claimed Ryzen speedup yet.
 
 ## Goal
 

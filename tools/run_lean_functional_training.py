@@ -9,6 +9,8 @@ from pathlib import Path
 import sys
 import time
 
+import torch
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
 
@@ -48,6 +50,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--checkpoint", type=Path, default=ROOT / "runs" / "lean_functional" / "checkpoint.pt")
     p.add_argument("--report", type=Path, default=ROOT / "runs" / "lean_functional" / "report.json")
     p.add_argument("--resume", action="store_true")
+    p.add_argument("--batch-mode", choices=("reference", "vectorized"), default="reference")
     p.add_argument(
         "--additional-iterations",
         type=int,
@@ -150,6 +153,11 @@ def main() -> int:
             flush=True,
         )
 
+    for runtime in runtimes.values():
+        runtime.session.batch_mode = args.batch_mode
+    if "SPINCORE_TORCH_THREADS" in os.environ:
+        torch.set_num_threads(int(os.environ["SPINCORE_TORCH_THREADS"]))
+    print(f"FIT_RUNTIME threads={torch.get_num_threads()} batch_mode={args.batch_mode}", flush=True)
     executor = ParallelRootExecutor(args.solver, workers) if workers > 1 else None
     overall_started = time.perf_counter()
     checkpoint_metrics: list[dict[str, float | int | str]] = []
@@ -198,7 +206,6 @@ def main() -> int:
     report["wall_seconds"] = float(time.perf_counter() - overall_started)
     report["execution_workers"] = int(workers)
     report["checkpoint_metrics"] = checkpoint_metrics
-    write_json_report(args.report, report)
     final_ckpt = _save_with_metrics(
         args.checkpoint,
         lambda: save_checkpoint(
@@ -214,7 +221,13 @@ def main() -> int:
     )
     final_ckpt["iteration"] = int(completed)
     final_ckpt["finalized"] = True
-    print("FINAL_REPORT " + json.dumps(report, sort_keys=True), flush=True)
+    checkpoint_metrics.append(final_ckpt)
+    report["wall_seconds"] = float(time.perf_counter() - overall_started)
+    report["wall_scope"] = "iterations_through_final_checkpoint_excludes_initial_load"
+    report["batch_mode"] = args.batch_mode
+    report["torch_threads"] = torch.get_num_threads()
+    write_json_report(args.report, report)
+    print("FINAL_SUMMARY " + json.dumps(report["final"], sort_keys=True), flush=True)
     print(f"PASS report={args.report} checkpoint={args.checkpoint}", flush=True)
     return 0
 

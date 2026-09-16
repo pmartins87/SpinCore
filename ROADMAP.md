@@ -6,6 +6,8 @@ The active work is tracked in `CURRENT_WORK.md`, `docs/LONG_TRAINING_PLAN.md`, a
 
 The older R0–R12 roadmap below is retained as historical engineering evidence. Where it conflicts with the active legacy-first functional path or mandates certification-only work, `AGENTS.md`, the mandatory legacy/quality and Ryzen policies, and the active work documents take precedence. No old gate silently restarts a closed research branch.
 
+Fit candidate status (2026-09-16): vectorized batching and fit-subphase telemetry implemented; 13 local tests and bounded single-worker resume smoke passed. Physical Ryzen comparison is the next single action; see `docs/LT1_FIT_OPTIMIZATION_20260916.md`.
+
 ## Historical roadmap snapshot — 2026-08-25
 
 Final endpoint: **ready for offline 3-Max simulator tables**. The product target is a simulator using GGPoker Spin & Gold rules as a reference, not attachment to or play in a real-money GGPoker client. The legacy `READY FOR TABLES` flag now means simulator-table release only and remains `NO` until every required gate through R12 passes and every release debt, including deferred R7.3 exact reproducibility, is closed.

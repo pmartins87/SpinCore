@@ -1,7 +1,11 @@
 # SpinCore — Long-Training Plan
 
 Status: **CANONICAL TRAINING DIRECTION**
-Date: 2026-09-15
+Date: 2026-09-16
+
+## Latest execution state
+
+LT1 completed 1.2M roots; see `LT1_COMPLETION_REVIEW_20260916.md`. Fit optimization is implemented but awaits the bounded actual-Ryzen comparison described in `LT1_FIT_OPTIMIZATION_20260916.md`. Preserve LT1 and do not rerun the fresh launcher. The active next action is the read-only-checkpoint fit benchmark; afterward extend into a separate LT2 directory.
 
 ## Purpose
 

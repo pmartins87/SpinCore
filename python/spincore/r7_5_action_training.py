@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import random
+import time
 
 import torch
 
@@ -114,6 +115,8 @@ class ActionDeepCFRSession:
         self.action_spec = action_spec
         self.terminal_utility = terminal_utility
         self.device = device
+        self.batch_mode = "reference"
+        self.last_fit_profile = {}
         self.behavior = NeuralActionAdvantagePolicy(
             bundle.advantage,
             selected_representation=bundle.selected_representation,
@@ -201,6 +204,13 @@ class ActionDeepCFRSession:
         }
 
     def _batch(self, samples):
+        if self.batch_mode == "vectorized":
+            if self.bundle.selected_representation != "C0_V1_FROZEN_CONTROL":
+                raise ValueError("vectorized batching requires SPNNIV1")
+            from spincore_nn.lean_batch import vectorized_batch
+            return vectorized_batch(samples, self.device)
+        if self.batch_mode != "reference":
+            raise ValueError("unknown batch mode")
         batch = collate_action_observations(
             self.bundle.selected_representation,
             [sample.observation for sample in samples],
@@ -219,10 +229,18 @@ class ActionDeepCFRSession:
         if steps and not memory.items:
             raise ValueError("empty action-training memory")
         losses = []
+        profile = dict(sample_seconds=0.0, batch_seconds=0.0, optimizer_seconds=0.0)
         for _ in range(int(steps)):
+            started = time.perf_counter()
             samples = memory.sample(min(int(batch_size), len(memory.items)), self.bundle.batch_rng)
+            sampled = time.perf_counter()
             batch, target, weights = self._batch(samples)
+            batched = time.perf_counter()
             losses.append(train_step(model, optimizer, batch, target, weights, kind))
+            profile["sample_seconds"] += sampled - started
+            profile["batch_seconds"] += batched - sampled
+            profile["optimizer_seconds"] += time.perf_counter() - batched
+        self.last_fit_profile = dict(profile, steps=len(losses), batch_size=int(batch_size), batch_mode=self.batch_mode)
         return losses
 
     def train_advantage(self, *, steps: int, batch_size: int):

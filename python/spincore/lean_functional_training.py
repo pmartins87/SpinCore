@@ -470,6 +470,7 @@ def run_iteration(
             "seconds_per_root": float(tree_seconds / roots),
             "execution_mode": execution_mode,
             "advantage_fit_seconds": float(fit_seconds),
+            "advantage_fit_profile": dict(runtime.session.last_fit_profile),
             "advantage_loss_last": float(adv_losses[-1]) if adv_losses else None,
             "blind_counts": blind_counts,
             "sampled_policy": policy_report,
