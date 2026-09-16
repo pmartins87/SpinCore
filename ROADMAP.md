@@ -1,4 +1,12 @@
-# SpinCore finite roadmap — canonical state 2026-08-25
+# SpinCore roadmap — active LT1 update 2026-09-16
+
+## Active legacy-first training path
+
+The active work is tracked in `CURRENT_WORK.md`, `docs/LONG_TRAINING_PLAN.md`, and `docs/LT1_COMPLETION_REVIEW_20260916.md`. LT0 is complete; LT1 completed 1.2M roots and finalization successfully. Preserve LT1 and address the measured neural-fit bottleneck before a bounded resume/throughput check and LT2 continuation. Do not start fresh or treat LT1 completion as a strength verdict. Policy reservoirs are not yet full, and final-save telemetry/clock discrepancy remain open.
+
+The older R0–R12 roadmap below is retained as historical engineering evidence. Where it conflicts with the active legacy-first functional path or mandates certification-only work, `AGENTS.md`, the mandatory legacy/quality and Ryzen policies, and the active work documents take precedence. No old gate silently restarts a closed research branch.
+
+## Historical roadmap snapshot — 2026-08-25
 
 Final endpoint: **ready for offline 3-Max simulator tables**. The product target is a simulator using GGPoker Spin & Gold rules as a reference, not attachment to or play in a real-money GGPoker client. The legacy `READY FOR TABLES` flag now means simulator-table release only and remains `NO` until every required gate through R12 passes and every release debt, including deferred R7.3 exact reproducibility, is closed.
 
