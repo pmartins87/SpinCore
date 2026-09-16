@@ -1,12 +1,14 @@
-# SpinCore roadmap — active LT1 update 2026-09-16
+# SpinCore roadmap — active LT2 Stage A update 2026-09-16
 
 ## Active legacy-first training path
 
-The active work is tracked in `CURRENT_WORK.md`, `docs/LONG_TRAINING_PLAN.md`, and `docs/LT1_COMPLETION_REVIEW_20260916.md`. LT0 is complete; LT1 completed 1.2M roots and finalization successfully. Preserve LT1 and address the measured neural-fit bottleneck before a bounded resume/throughput check and LT2 continuation. Do not start fresh or treat LT1 completion as a strength verdict. Policy reservoirs are not yet full, and final-save telemetry/clock discrepancy remain open.
+The active work is tracked in `CURRENT_WORK.md`, `docs/LONG_TRAINING_PLAN.md`, `docs/LT1_COMPLETION_REVIEW_20260916.md`, and `docs/LT1_FIT_BENCHMARK_RESULT_20260916.md`. LT0 is complete; LT1 completed 1.2M roots and finalization successfully. The bounded physical Ryzen neural-fit gate also passed: 8 parent Torch threads + vectorized batching beat the 8-thread/reference baseline by 1.1643x in fit throughput, same-thread model/loss parity passed, a disposable 31-worker iteration 2001 completed with exactly 600 roots, and the preserved LT1 checkpoint remained unchanged. Do not start fresh, rerun the closed matrix, or treat LT1 as a strength verdict.
+
+The immediate finite gate is **LT2 Stage A**: continue the preserved LT1 state in a separate run directory for exactly 1,000 additional iterations / 600,000 roots using 31 root workers, 8 parent Torch threads, vectorized batches and checkpoints every 100 iterations. Record WSL memory/swap telemetry and stop after iteration 3000 for reservoir/checkpoint review before any larger block. The 3H policy reservoir is expected to reach its 2M capacity during this stage; that transition is the reason for the bounded stop.
 
 The older R0–R12 roadmap below is retained as historical engineering evidence. Where it conflicts with the active legacy-first functional path or mandates certification-only work, `AGENTS.md`, the mandatory legacy/quality and Ryzen policies, and the active work documents take precedence. No old gate silently restarts a closed research branch.
 
-Fit candidate status (2026-09-16): vectorized batching and fit-subphase telemetry implemented; 13 local tests and bounded single-worker resume smoke passed. Physical Ryzen comparison is the next single action; see `docs/LT1_FIT_OPTIMIZATION_20260916.md`.
+Fit optimization status (2026-09-16): **PHYSICAL PASS**. Frozen next-stage execution profile is 31 root workers, 8 parent Torch threads, worker Torch/OpenMP/BLAS threads 1, and `batch_mode=vectorized`. See `docs/LT1_FIT_BENCHMARK_RESULT_20260916.md`. Canonical next launcher: `tools/run_long_training_lt2_stage_a.sh`.
 
 ## Historical roadmap snapshot — 2026-08-25
 
