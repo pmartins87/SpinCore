@@ -1,7 +1,11 @@
 # SpinCore Current Work
 
-Date: 2026-09-15
-Status: **LT0 CALIBRATION COMPLETE — RYZEN PROFILE 31/8 MEASURED — LONG TRAINING IS THE MAIN PATH — DEEPCRUSHER BENCHMARK BUILT IN PARALLEL**
+Date: 2026-09-16
+Status: **LT1 1.2M ROOTS COMPLETE — CHECKPOINT PRESERVED — NEURAL FIT DOMINATES — LT2 EXECUTION REVIEW NEXT**
+
+## Current authoritative update — 2026-09-16
+
+Read [LT1 completion review](docs/LT1_COMPLETION_REVIEW_20260916.md) before new compute. LT1 completed 2,000 iterations / 1.2M roots with finalization and exit 0. Preserve its checkpoint at `/home/rz9/spincore_lean_functional/runs/long_training_lt1/20260915_181249/checkpoint.pt`. Advantage fitting accounts for 71.08% of reported wall time. Optimize that phase with a bounded resume/throughput comparison before a long extension; do not restart learning. Both policy reservoirs remain below capacity, so the full 8M-slot memory peak is unproven. Final-save telemetry and conflicting elapsed clocks remain explicit limitations. Earlier sections below retain LT0 history; the immediate milestone at the end is updated.
 
 ## Goal
 
@@ -49,7 +53,7 @@ Training contract:
 
 The serial launch took about **1h25m** because it used only about two logical CPUs. That was a process mistake; it is not the production execution profile.
 
-## Ryzen optimization — COMPLETED
+## Ryzen optimization — root profile measured; LT1 neural-fit review open
 
 Standing rule across all projects: any substantial workload assigned to the user's Ryzen must be optimized for that machine before long execution.
 
@@ -140,4 +144,4 @@ Old DeepSpin trained for roughly three months and still made gross errors. There
 
 ## Immediate next milestone
 
-The main path is now **long-training readiness**, not benchmark verdicts. Finish reservoir/checkpoint scaling and run LT1 under the measured 31-worker / 8-parent-thread Ryzen profile. In parallel, continue DC0 oracle construction so DeepCrusher is ready as a later learning-curve/acceptance opponent. Do not require the current LT0 policy to pass DeepCrusher before serious training begins.
+Follow the finite next step in `docs/LT1_COMPLETION_REVIEW_20260916.md`: inspect and optimize neural fitting, validate resume and throughput on an isolated checkpoint copy, then extend the same LT1 learning state into LT2 with memory monitoring. No fresh LT1 rerun, repeated certification matrix, or early DeepCrusher verdict is required.
