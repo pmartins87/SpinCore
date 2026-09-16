@@ -48,6 +48,15 @@ if [ "$SOURCE_SHA256" != "$EXPECTED_SOURCE_SHA256" ]; then
     exit 8
 fi
 
+# Generated run artifacts are intentionally untracked. Fail only on changes to
+# tracked source/index content, and do this before creating the new run directory.
+GIT_COMMIT="$(git rev-parse HEAD)"
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "ERROR: tracked source/index changes present; LT2 Stage A requires tracked code to match HEAD." >&2
+    git status --short --untracked-files=no >&2
+    exit 10
+fi
+
 STAMP="$(date +%Y%m%d_%H%M%S)"
 RUN_DIR="$ROOT/runs/long_training_lt2/$STAMP"
 mkdir -p "$RUN_DIR"
@@ -63,14 +72,6 @@ COPY_SHA256="$(sha256sum "$CHECKPOINT" | awk '{print $1}')"
 if [ "$COPY_SHA256" != "$SOURCE_SHA256" ]; then
     echo "ERROR: copied checkpoint hash mismatch." >&2
     exit 9
-fi
-
-GIT_COMMIT="$(git rev-parse HEAD)"
-GIT_STATUS="$(git status --porcelain)"
-if [ -n "$GIT_STATUS" ]; then
-    echo "ERROR: tracked/untracked worktree changes present; LT2 Stage A requires a clean checkout." >&2
-    printf '%s\n' "$GIT_STATUS" >&2
-    exit 10
 fi
 
 cat > "$PROVENANCE" <<EOF
@@ -118,6 +119,7 @@ monitor_memory() {
 printf '=== SpinCore LT2 Stage A ===\n'
 printf 'source=%s\n' "$SOURCE"
 printf 'source_sha256=%s\n' "$SOURCE_SHA256"
+printf 'git_commit=%s\n' "$GIT_COMMIT"
 printf 'run_dir=%s\n' "$RUN_DIR"
 printf 'continuation=iteration 2001 -> 3000 (%d additional iterations / 600000 roots)\n' "$ADDITIONAL_ITERATIONS"
 printf 'workers=%d parent_torch_threads=%d batch_mode=%s checkpoint_every=%d\n' "$WORKERS" "$THREADS" "$BATCH_MODE" "$CHECKPOINT_EVERY"
