@@ -1,15 +1,15 @@
 # SpinCore Current Work
 
 Date: 2026-09-16
-Status: **LT1 1.2M ROOTS COMPLETE — CHECKPOINT PRESERVED — FIT CANDIDATE VALIDATED LOCALLY — RYZEN MEASUREMENT NEXT**
+Status: **LT1 1.2M ROOTS COMPLETE — RYZEN FIT GATE PASS — LT2 STAGE A READY**
 
 ## Current authoritative update — 2026-09-16
 
-Read [LT1 completion review](docs/LT1_COMPLETION_REVIEW_20260916.md) before new compute. LT1 completed 2,000 iterations / 1.2M roots with finalization and exit 0. Preserve its checkpoint at `/home/rz9/spincore_lean_functional/runs/long_training_lt1/20260915_181249/checkpoint.pt`. Advantage fitting accounts for 71.08% of reported wall time. Optimize that phase with a bounded resume/throughput comparison before a long extension; do not restart learning. Both policy reservoirs remain below capacity, so the full 8M-slot memory peak is unproven. Final-save telemetry and conflicting elapsed clocks remain explicit limitations. Earlier sections below retain LT0 history; the immediate milestone at the end is updated.
+Read [LT1 completion review](docs/LT1_COMPLETION_REVIEW_20260916.md) and [LT1 physical fit benchmark result](docs/LT1_FIT_BENCHMARK_RESULT_20260916.md) before new compute. LT1 completed 2,000 iterations / 1.2M roots with finalization and exit 0. Preserve its checkpoint at `/home/rz9/spincore_lean_functional/runs/long_training_lt1/20260915_181249/checkpoint.pt`, SHA256 `beef9bee9439de8d9153450d190e62b0388a678b0778c4185108361f626b4337`. The bounded physical Ryzen benchmark passed: 8 parent Torch threads + vectorized batching reduced combined 3H/HU fit time from 7.66390 s to 6.58244 s, a 1.1643x fit speedup, with same-thread loss/model parity and a successful disposable 31-worker resume iteration. Do not repeat the matrix. The next finite compute gate is LT2 Stage A: continue the preserved LT1 state for exactly 1,000 more iterations / 600,000 roots in a separate run directory using `tools/run_long_training_lt2_stage_a.sh`, then stop for memory/reservoir/checkpoint review before any larger block.
 
-## Fit optimization prepared — 2026-09-16
+## Fit optimization — PHYSICAL PASS 2026-09-16
 
-See `docs/LT1_FIT_OPTIMIZATION_20260916.md`. Optional vectorized batches preserve LT1 semantics and reference remains default. Targeted tests and a local load/next-iteration smoke passed. Next physical action: `bash tools/benchmark_lean_lt1_fit.sh` in WSL. It reads the LT1 checkpoint without overwriting it, compares ten fixed fit cases at the real batch/step settings, verifies same-thread parity, executes one disposable resumed iteration, writes a report and stops within a 20-minute timeout. No LT2 auto-launch and no claimed Ryzen speedup yet.
+See `docs/LT1_FIT_OPTIMIZATION_20260916.md` for the implementation contract and `docs/LT1_FIT_BENCHMARK_RESULT_20260916.md` for the physical result. The winner is frozen for the next stage at 31 root workers, 8 parent Torch threads and `batch_mode=vectorized`. The benchmark source checkpoint remained unchanged, iteration 2001 completed with exactly 600 roots, and no long training was started by the benchmark. LT2 Stage A exists specifically to cross the first policy-reservoir saturation transition under the optimized execution path before authorizing tens of millions of roots.
 
 ## Goal
 
@@ -57,17 +57,18 @@ Training contract:
 
 The serial launch took about **1h25m** because it used only about two logical CPUs. That was a process mistake; it is not the production execution profile.
 
-## Ryzen optimization — root profile measured; LT1 neural-fit review open
+## Ryzen optimization — physical fit profile closed
 
 Standing rule across all projects: any substantial workload assigned to the user's Ryzen must be optimized for that machine before long execution.
 
-Measured 32-logical-thread profile:
+Frozen next-stage profile:
 
 - root workers: **31**;
 - parent Torch threads: **8**;
-- each worker Torch/OpenMP/BLAS threads: **1**.
+- each worker Torch/OpenMP/BLAS threads: **1**;
+- neural batch construction: **vectorized**.
 
-Measured root-tree time fell from 33.38 s with one worker to 3.68 s with 31 workers. Parent fitting was fastest at 8 threads; 16 was worse.
+Measured root-tree time previously fell from 33.38 s with one worker to 3.68 s with 31 workers. The LT1 physical fit benchmark then confirmed 8 threads as the best tested parent count at the real 100-step × 1024-batch workload: vectorized 8-thread fit took 6.58244 s combined across 3H/HU, versus 8.47159 s at 16 threads and 14.88826 s at one thread. The same-thread reference/vectorized winner preserved final losses and model hashes.
 
 The later `logical_cpus=1` line in the weak-baseline evaluation was only a display bug caused by calling `nproc` after setting `OMP_NUM_THREADS=1`. Local confirmation: `nproc=32`, CPUs online `0-31`. The evaluation still used 31 workers.
 
@@ -83,26 +84,19 @@ Do not use this diagnostic as a gate against starting serious training.
 
 Canonical plan: `docs/LONG_TRAINING_PLAN.md`.
 
-### LT1 — optimized scale validation
+### LT1 — optimized scale validation — COMPLETE
 
-Before committing the Ryzen for weeks/months, run one production-shaped optimized block whose purpose is infrastructure measurement, not strategy judgment. Measure:
+LT1 completed 2,000 iterations / 1.2M roots. It established the production-shaped large-reservoir line, measured checkpoint cost and exposed neural fitting as the dominant measured phase. The subsequent physical benchmark closed the immediate fit bottleneck screen without changing learning semantics.
 
-- real optimized throughput;
-- RAM growth;
-- reservoir behavior;
-- checkpoint size and save time;
-- restart/resume safety;
-- whether root collection or fitting/checkpointing becomes the next bottleneck.
+### Reservoir requirement entering LT2
 
-### Reservoir requirement before LT2
+The LT1 reservoir capacity is 2M per memory per domain. Both advantage memories reached capacity. Policy memories ended at 1,485,285 3H and 544,490 HU samples, so LT1 did not yet measure the fully occupied four-memory state. LT2 Stage A is deliberately sized so the 3H policy memory should reach capacity during the block, allowing memory/checkpoint behavior to be reviewed at the first saturation transition.
 
-The 100k reservoir used in LT0 was acceptable for calibration, but it must not silently become the months-scale limit. LT0 already saw millions of samples, so before sustained training we must measure whether 100k retains enough diversity and whether the current Python-object storage wastes RAM/checkpoint bandwidth.
-
-If needed, increase capacity or compact the reservoir representation before LT2. Do not sacrifice long-run learning quality merely to avoid this engineering step.
+Do not shrink the 2M reservoirs merely to simplify runtime. If serialization or Python-object overhead becomes the bottleneck, prefer a compact representation/checkpoint engineering step.
 
 ### LT2 — sustained serious training
 
-Once LT1 is safe, begin continuous resumable training measured in **millions to tens/hundreds of millions of roots**, potentially weeks/months. The final total is not fixed in advance; continue while meaningful strategic improvement remains and resource behavior is healthy.
+LT2 begins by extending the **same LT1 learning state**, not by restarting. Stage A is fixed at +1,000 iterations / +600,000 roots and must stop for review. If memory, swap, checkpoint serialization and throughput remain healthy, continue the same LT2 checkpoint through larger resumable blocks measured in millions and eventually tens/hundreds of millions of roots while meaningful strategic improvement continues.
 
 Checkpoints must be frequent enough to avoid large losses from interruption, but sparse enough not to become a throughput bottleneck.
 
@@ -140,12 +134,13 @@ Old DeepSpin trained for roughly three months and still made gross errors. There
 
 - Do not call the 120k policy final or expect it to beat DeepCrusher already.
 - Do not let the weak-baseline diagnostic block serious training.
-- Do not launch months-scale training before LT1 proves reservoir/checkpoint/memory stability.
+- Do not restart LT1 or rerun the closed fit matrix.
+- Do not jump directly to tens of millions of roots before LT2 Stage A reviews the first policy-reservoir saturation transition.
 - Do not accept a tiny 100k reservoir by default if it compromises long-run diversity.
 - Do not run long low-utilization workloads on the Ryzen.
 - Do not use an approximate DeepCrusher oracle for canonical claims.
-- Do not discard the LT0 checkpoint; preserve it as the first learning-curve baseline.
+- Do not discard LT0 or the preserved LT1 checkpoint.
 
 ## Immediate next milestone
 
-Follow the finite next step in `docs/LT1_COMPLETION_REVIEW_20260916.md`: inspect and optimize neural fitting, validate resume and throughput on an isolated checkpoint copy, then extend the same LT1 learning state into LT2 with memory monitoring. No fresh LT1 rerun, repeated certification matrix, or early DeepCrusher verdict is required.
+Run `tools/run_long_training_lt2_stage_a.sh` on the Ryzen after pulling `main`. It verifies the exact preserved LT1 checkpoint hash, copies it into a separate `runs/long_training_lt2/<timestamp>/` directory, continues iterations 2001–3000 with 31 workers / 8 Torch threads / vectorized batches, records one-minute WSL memory/swap telemetry, saves every 100 iterations and stops. After `LT2_STAGE_A_PASS`, review `report.json`, `memory.log` and checkpoint metrics before authorizing any larger LT2 block.
