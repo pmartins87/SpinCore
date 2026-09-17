@@ -47,5 +47,15 @@ export SPINCORE_TORCH_THREADS=8
   --threads 8 \
   --out "$OUT"
 
+REPORT="$OUT/report.json"
+WIN_DEST="/mnt/c/Users/Rz9/Downloads/SpinCore_LT2_production_concurrent_iteration_parity.json"
+if [ -d "/mnt/c/Users/Rz9/Downloads" ]; then
+    cp "$REPORT" "$WIN_DEST"
+    printf '\nCopied report to Windows Downloads:\n%s\n' "$WIN_DEST"
+    if command -v explorer.exe >/dev/null 2>&1; then
+        explorer.exe /select,"$(wslpath -w "$WIN_DEST")" >/dev/null 2>&1 || true
+    fi
+fi
+
 printf '\nSTOP HERE. Do not start LT2 Stage B yet.\n'
-printf 'Send this file to ChatGPT:\n%s\n' "$OUT/report.json"
+printf 'Send this file to ChatGPT:\n%s\n' "$REPORT"
