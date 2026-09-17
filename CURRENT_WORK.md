@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-17
-Status: **LT2 STAGE A PASS — 1.8M ROOTS — PRODUCTION CONCURRENT-FIT PARITY PASS — LT2 STAGE B READY**
+Status: **LT2 STAGE A PASS — 1.8M ROOTS — PRODUCTION CONCURRENT-FIT PARITY PASS — SHORT THROUGHPUT TUNING GATE BEFORE STAGE B**
 
 ## Active source of truth
 
@@ -14,126 +14,91 @@ Read before new compute:
 
 The active learning line is LT1 -> LT2. Preserve the finalized LT2 Stage A checkpoint and continue from it; do not restart LT0/LT1.
 
-## Preserved checkpoints
+## Preserved source
 
-- LT0 calibration: 200 iterations / 120k roots, `runs/lean_first_training/20260915_131133/checkpoint.pt`.
-- LT1: 2000 iterations / 1.2M roots, `runs/long_training_lt1/20260915_181249/checkpoint.pt`, SHA256 `beef9bee9439de8d9153450d190e62b0388a678b0778c4185108361f626b4337`.
-- LT2 Stage A: 3000 iterations / **1.8M roots total**, `/home/rz9/spincore_lean_functional/runs/long_training_lt2/20260916_015559/checkpoint.pt`, SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
+LT2 Stage A is finalized at iteration 3000 / 1.8M roots:
 
-The Stage A checkpoint is the read-only source for Stage B and must remain preserved.
+`/home/rz9/spincore_lean_functional/runs/long_training_lt2/20260916_015559/checkpoint.pt`
 
-## LT2 Stage A — PASS
+SHA256:
 
-Stage A added 600k roots with 31 root workers, 8 parent Torch threads and vectorized batching.
+`e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`
 
-Resource result:
+This checkpoint remains read-only for all tuning gates and for the eventual Stage B continuation.
 
-- trainer wall scope about 2h55m47s;
-- minimum observed WSL `MemAvailable` about 10.67 GiB;
-- maximum swap used 0 GiB;
-- process max RSS about 16.3 GiB;
-- final checkpoint size 2.235843 GiB;
-- finalized save about 54.5 s.
+## Evidence through Stage A
 
-Reservoir state at iteration 3000:
+Stage A used 31 root workers, 8 parent Torch threads and vectorized batching. It completed with no swap use, minimum WSL MemAvailable about 10.67 GiB, process max RSS about 16.3 GiB, and a 2.236 GiB final checkpoint. Both Advantage reservoirs and the 3H AveragePolicy reservoir are saturated; HU AveragePolicy is 820,667/2M.
 
-- 3H Advantage saturated at 2M capacity;
-- HU Advantage saturated at 2M capacity;
-- 3H AveragePolicy seen 2,216,393 and in replacement regime;
-- HU AveragePolicy seen 820,667 and still below capacity.
+The weak-baseline learning curve remains positive overall and especially 3H. HU is still noisy/flat and is the principal strategic signal to re-check after HU AveragePolicy reaches capacity.
 
-Checkpoint growth slowed sharply after 3H policy saturation, so there is no runaway serialization/memory signal.
+## Production concurrent fit — ADMITTED
 
-## Learning evidence through 1.8M roots
+The repeated fit benchmark gave a 1.312188x speedup for 8-thread concurrent 3H/HU Advantage fitting versus sequential 8-thread fitting, with exact same-thread model/loss/RNG parity.
 
-The fixed-seed weak-baseline diagnostic remains positive overall and especially 3H:
-
-- uniform overall cEV: +10.836 -> +15.873 -> +17.015;
-- uniform 3H cEV: +2.407 -> +8.898 -> +12.769;
-- passive-caller overall cEV: -2.402 -> -0.553 -> -0.064;
-- jammer overall cEV: -5.498 -> -2.719 -> -1.298;
-- jammer 3H cEV: +2.295 -> +4.045 -> +7.422.
-
-HU is the tracked warning. LT1 -> LT2-A HU point estimates were flat/slightly worse across the weak families, but intervals are wide and the HU policy reservoir is only 820,667/2M. This is not yet evidence of a ceiling.
-
-## Concurrent-fit optimization — ADMITTED FOR PRODUCTION
-
-The repeated fit microbenchmark showed that overlapping the independent 3H/HU Advantage optimizer loops at 8 Torch threads reduced median combined fit wall from 7.1461 s to 5.4460 s:
-
-- fit speedup: 1.312188x;
-- fit-wall reduction: about 23.79%;
-- exact same-thread model hashes, final losses and batch RNG states.
-
-The full-iteration concept gate then passed exact semantic parity at iteration 3001.
-
-The corrected **production** gate also passed:
-
-`LT2_PRODUCTION_CONCURRENT_ITERATION_PARITY_PASS`
-
-Evidence:
+The production iteration gate then passed exact semantic parity at iteration 3001:
 
 - `semantic_parity=true`;
 - `source_unchanged=true`;
 - `first_difference=null`;
 - reference wall 11.3933 s;
-- production candidate wall 11.0136 s;
-- one-shot whole-iteration speedup 1.03448x.
+- production concurrent candidate wall 11.0136 s.
 
-Reference and candidate matched exactly for models, optimizers, sampler/domain RNGs, counters, reservoir RNGs, added Advantage/Policy sample streams and all non-timing report semantics. See `docs/LT2_PRODUCTION_CONCURRENT_PARITY_RESULT_20260917.md`.
+Production `--iteration-mode concurrent_fit` is therefore admitted. Sequential remains the default compatibility path.
 
-The production trainer now exposes `--iteration-mode concurrent_fit`. `sequential` remains the default path.
+## Why one more short tuning gate is justified
 
-## LT2 Stage B — READY
+Before committing roughly half a day to Stage B, the user asked whether the Ryzen execution can be shortened further.
 
-Canonical launcher:
+Stage-A fit profiles show that within each 100-step Advantage fit the optimizer/kernel work dominates: typical `optimizer_seconds` is about 3.1–3.3 s while batch construction is only about 0.18–0.22 s and reservoir sampling about 0.07 s. Further Python/batch micro-optimization therefore has little remaining room; the meaningful exact-semantics knobs are execution topology and checkpoint cadence.
 
-`tools/run_long_training_lt2_stage_b.sh`
+Changing Torch thread count is not an exact-parity knob because different intra-op thread counts can change floating-point reduction order. Keep the admitted 8-thread fit contract for this line unless a separate numerical-drift study is explicitly opened.
 
-Stage B contract:
+Root worker count *is* an execution-only knob because root results are deterministically sorted and merged. It has not yet been production-shaped benchmarked for this SpinCore workload.
 
-- source: exact preserved iteration-3000 checkpoint above;
-- target: iteration **7500**;
+## Immediate finite gate — Stage B worker-count benchmark
+
+Run exactly once:
+
+`tools/benchmark_lt2_stage_b_worker_count.sh`
+
+It tests workers `31,16,20,24,28`, always with:
+
+- 8 parent Torch threads;
+- vectorized batches;
+- production concurrent-fit iterations;
+- the exact preserved iteration-3000 checkpoint;
+- one warmup + five timed iterations per worker count;
+- each worker-count case in a fresh Python process;
+- no checkpoint saves and no finalization.
+
+Acceptance for changing away from 31 workers:
+
+- exact final semantic signature across all worker counts;
+- source checkpoint unchanged;
+- >=3% median whole-iteration gain over workers=31.
+
+If no candidate clears 3%, retain 31 workers and stop tuning this knob.
+
+## Checkpoint cadence decision
+
+Stage A checkpoint saves were roughly 45–55 seconds each. At Stage B's current every-250 cadence there would be 18 intermediate saves across 4500 iterations. Moving to every 500 would roughly halve that serialization count and likely save on the order of 8–10 minutes while doubling maximum restart loss from about one 250-iteration block to one 500-iteration block.
+
+This is a modest but safe semantics-preserving gain. Final Stage B cadence will be set after the worker-count benchmark; do not remove the final checkpoint/finalization.
+
+Memory telemetry and iteration logging are negligible compared with neural optimizer and tree work and should not be removed for speed.
+
+## Stage B target after tuning gate
+
+Continue the same LT2 state from iteration 3000 to approximately iteration 7500:
+
 - +4500 iterations;
 - +2.7M roots;
-- **4.5M roots total**;
-- 31 root workers;
-- 8 parent Torch threads;
-- worker numerical threads 1;
-- vectorized batches;
-- production `concurrent_fit` iteration mode;
-- checkpoint every **250 iterations**;
-- one-minute WSL RAM/swap telemetry;
-- isolated Stage B run directory;
-- final AveragePolicy fit and finalized checkpoint required.
+- 4.5M roots total;
+- HU AveragePolicy expected to cross 2M near iteration 7.3k.
 
-The 250-iteration cadence reduces serialization overhead relative to Stage A while limiting maximum restart loss to one 250-iteration interval. Stage A source is never overwritten.
-
-Why iteration 7500: the Stage-A HU policy-sample rate projects HU AveragePolicy reaching the 2M reservoir capacity around iteration 7.3k. Iteration 7500 gives a bounded margin to observe the all-four-reservoir saturated/replacement regime.
-
-## Stop condition after Stage B
-
-After `LT2_STAGE_B_PASS`, do **not** extend farther automatically. Review:
-
-- final HU policy seen/length and whether 2M was crossed;
-- memory/swap with all four reservoirs saturated or near saturated;
-- checkpoint size/save time and growth;
-- actual throughput with concurrent fit;
-- 3H learning continuation;
-- HU learning continuation/regression using a fresh diagnostic;
-- DeepCrusher direct benchmark if the faithful oracle is ready.
-
-Only then decide the next multi-million-root block.
-
-## DeepCrusher
-
-The faithful DeepCrusher R8 v22 oracle remains a parallel engineering track and future product-strength reference. Weak baselines are regression/learning sentinels, not the final acceptance target.
+After Stage B, stop and review memory/swap, checkpoint behavior, actual throughput, 3H learning, and HU learning before any larger extension.
 
 ## Immediate user action
 
-Pull `main` and run exactly:
-
-```bash
-bash tools/run_long_training_lt2_stage_b.sh
-```
-
-Let Stage B run until it prints either `LT2_STAGE_B_PASS` or `LT2_STAGE_B_FAIL`. Do not stop it merely because Task Manager CPU utilization oscillates; the measured execution profile is intentional. On PASS, send `SpinCore_LT2_STAGE_B_report.json` and `SpinCore_LT2_STAGE_B_memory.log` from Windows Downloads before doing any further training. On FAIL, do not restart automatically; send the terminal output and generated logs.
+Do **not** start `run_long_training_lt2_stage_b.sh` yet. Pull `main`, run `bash tools/benchmark_lt2_stage_b_worker_count.sh`, and send `SpinCore_LT2_STAGE_B_worker_benchmark.json`. The benchmark is bounded and should take minutes, not hours. Also report the `windows_power_scheme=` line printed at the start; if Windows is on Balanced/Power Saver we can decide whether a host power-plan change is worthwhile before the long run.
