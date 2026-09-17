@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
-Date: 2026-09-16
-Status: **LT2 STAGE A PASS — 1.8M ROOTS — LEARNING CURVE POSITIVE OVERALL/3H — CONCURRENT FIT CONCEPT PARITY PASS — FINAL PRODUCTION PARITY GATE NEXT**
+Date: 2026-09-17
+Status: **LT2 STAGE A PASS — 1.8M ROOTS — LEARNING CURVE POSITIVE OVERALL/3H — CONCURRENT FIT CONCEPT PARITY PASS — PRODUCTION PARITY GATE FIXED AND MUST BE RERUN**
 
 ## Active source of truth
 
@@ -38,11 +38,11 @@ The read-only fit microbenchmark compared sequential/concurrent 3H+HU Advantage 
 
 A full iteration-3001 concept gate then compared canonical sequential execution with the staged concurrent candidate. Exact semantic parity passed for model/optimizer state, sampler/domain RNGs, counters, reservoir RNGs, added-sample streams and non-timing report fields. Source checkpoint remained unchanged. One-shot whole-iteration timing was 11.4179 s reference versus 11.1143 s candidate; this single timing is diagnostic only, while the repeated fit benchmark is the timing evidence.
 
-Because the concept validator contained its own staged candidate, production integration is not yet authorized solely by that result.
+Because the concept validator contained its own staged candidate, production integration still requires the production-function gate.
 
-## Production concurrent function added
+## Production concurrent function and gate
 
-The production implementation now exists at:
+Production implementation:
 
 - `python/spincore/lean_concurrent_iteration.py`
 - `tools/validate_lt2_production_concurrent_iteration.py`
@@ -50,9 +50,15 @@ The production implementation now exists at:
 
 It preserves canonical shared-sampler order by pre-sampling root and policy episodes in the original call order, collecting both root batches with their pre-fit domain models, resetting models sequentially, overlapping only the two independent Advantage optimizer loops, and replaying policy trajectories in canonical domain order.
 
+The first production-gate execution on 2026-09-17 returned `LT2_PRODUCTION_CONCURRENT_ITERATION_PARITY_FAIL`. Code review found a validator defect: the concurrent implementation emits top-level `concurrent_fit_wall_seconds`, which is timing telemetry, but the production validator compared it as semantic state because the shared timing-strip helper did not remove that candidate-only field. That makes the gate fail even when poker/training state is equal.
+
+The validator is now corrected to remove only this explicitly non-semantic timing field before comparison. It also emits `first_difference` if any real mismatch remains. The wrapper now copies `report.json` to Windows Downloads even when the Python gate returns nonzero, so a future real failure will be inspectable without hunting in WSL.
+
+This is a diagnosed validator false-negative, not authorization to assume production parity. The corrected gate must run once. If it still fails, stop and inspect the reported first difference; do not weaken any semantic comparison.
+
 ## Immediate finite gate
 
-Run exactly once:
+Pull current `main` and run exactly once:
 
 ```bash
 bash tools/validate_lt2_production_concurrent_iteration.sh
@@ -64,11 +70,11 @@ Required result:
 LT2_PRODUCTION_CONCURRENT_ITERATION_PARITY_PASS
 ```
 
-This is a read-only gate against the preserved iteration-3000 checkpoint. Do not start Stage B until the report is reviewed.
+This is read-only against the preserved iteration-3000 checkpoint. Do not start Stage B until the corrected report is reviewed.
 
 ## Stage B after production parity
 
-If the production parity gate passes, continue the same LT2 learning state toward approximately iteration 7500 (+4500 iterations / +2.7M roots, 4.5M roots total). At the observed HU strategy-sample rate, the HU AveragePolicy reservoir should cross 2M near iteration 7.3k. That is the next natural bounded milestone for full four-reservoir saturation and a new 3H/HU learning-curve review.
+If the corrected production parity gate passes, continue the same LT2 learning state toward approximately iteration 7500 (+4500 iterations / +2.7M roots, 4.5M roots total). At the observed HU strategy-sample rate, the HU AveragePolicy reservoir should cross 2M near iteration 7.3k. That is the next natural bounded milestone for full four-reservoir saturation and a new 3H/HU learning-curve review.
 
 The Stage B launcher must preserve the iteration-3000 checkpoint, use 31 root workers, 8 Torch threads, vectorized batches, the admitted production concurrent-fit path, memory telemetry and resumable checkpoints. Do not launch it manually before the parity gate result is reviewed.
 
@@ -78,4 +84,4 @@ The faithful DeepCrusher R8 v22 oracle remains a parallel engineering track and 
 
 ## Immediate user action
 
-Pull current `main`, run `bash tools/validate_lt2_production_concurrent_iteration.sh`, and send the generated `report.json`. **Do not start LT2 Stage B yet.**
+Pull current `main`, rerun `bash tools/validate_lt2_production_concurrent_iteration.sh`, and send the generated `SpinCore_LT2_production_concurrent_iteration_parity.json`. **Do not start LT2 Stage B yet.**
