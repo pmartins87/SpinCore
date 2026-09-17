@@ -8,21 +8,22 @@
 - LT2 Stage A — **PASS**: 1.8M roots.
 - Concurrent-fit production parity — **PASS**.
 - LT2 Stage B — **PASS**: 4.5M roots / iteration 7500.
-- Stage B resource gate — **PASS**: all four 2M memories in replacement regime, zero swap.
-- Stage A -> Stage B policy drift — **MATERIAL MOVEMENT CONFIRMED**.
-- Checkpoint cross-play 3000 + independent 9000 scenarios — **SIGN-UNSTABLE / NO REPRODUCIBLE ORDERING**.
-- 30k multi-seed weak-baseline variance gate — **COMPLETE; PRECISION TARGET MET; HU JAMMER CONFIRMED NEGATIVE**.
-- Training-dynamics fit audit — **NEXT**.
-- DeepCrusher — **DEFERRED TO LATER ADVANCED BENCHMARK; NOT CURRENT GATE**.
+- Stage B resource gate — **PASS**.
+- Policy drift Stage A -> Stage B — **MATERIAL MOVEMENT CONFIRMED**.
+- Checkpoint cross-play — **NO REPRODUCIBLE ORDERING**.
+- 30k weak-baseline gate — **COMPLETE; PRECISION TARGET MET; HU JAMMER NEGATIVE**.
+- Read-only stored-target fit audit — **COMPLETE; LARGE APPROXIMATION BURDEN OBSERVED, BUT BUDGET SUFFICIENCY UNRESOLVED**.
+- Held-out Stage-B optimizer-budget sweep — **NEXT**.
+- Root training beyond iteration 7500 — **PAUSED**.
+- DeepCrusher — **DEFERRED TO LATER ADVANCED BENCHMARK**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
-- `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
+- `docs/LT2_TRAINING_DYNAMICS_FIT_RESULT_20260917.md`
 - `docs/LT2_TRAINING_DYNAMICS_FIT_AUDIT_20260917.md`
+- `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
-- `docs/LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`
-- `docs/LT2_POLICY_DRIFT_REVIEW_20260917.md`
 
 ## Preserved checkpoints
 
@@ -32,68 +33,62 @@ Stage B: iteration 7500 / 4.5M roots, SHA256 `3463aa1dccac2c9f26cb45753b69490cfa
 
 Keep both unchanged.
 
-## Weak-baseline gate result
+## Why roots remain paused
 
-The 30k evaluation used six independent 5000-scenario seed blocks per checkpoint and met the predeclared simultaneous precision target: maximum primary family-wise 95% half-width `4.963` chips/hand.
+The powered weak-baseline evaluation established a specific failure mode rather than a variance-only artifact:
 
-Stage B primary simultaneous family-wise 95% results:
+- Stage B HU Jammer raw EV `-5.141`, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
+- Stage B minus Stage A HU Jammer `-1.682`, simultaneous six-claim CI approximately `[-3.143,-0.222]`.
 
-- uniform legal 3H: `+20.102`, CI `[+16.372,+23.831]` — positive;
-- uniform legal HU: `+21.484`, CI `[+16.521,+26.447]` — positive;
-- passive caller 3H: `+4.030`, CI `[+0.977,+7.082]` — positive;
-- passive caller HU: `-0.996`, CI `[-4.435,+2.442]` — unresolved;
-- jammer 3H: `+0.859`, CI `[-2.628,+4.347]` — unresolved;
-- jammer HU: `-5.141`, CI `[-9.078,-1.204]` — **negative**.
+Training changed the policy but made this cell worse. Therefore another long block cannot be justified by root count alone.
 
-The small-pilot HU-Jammer weakness was therefore not merely variance.
+## What the fit audit added
 
-The paired Stage-B-minus-Stage-A HU-Jammer delta is `-1.682` chips/hand. Using the same six-claim Bonferroni correction, its simultaneous interval remains negative at approximately `[-3.143,-0.222]`. Thus the extra Stage-A -> Stage-B training measurably worsened this particular weak-opponent cell, even though other parts of the policy changed without a resolved strength ordering.
+The read-only audit sampled 25k items from each Stage A/B Advantage and AveragePolicy reservoir.
 
-## Why more roots are paused
+Stage B weighted fit diagnostics:
 
-The policy is moving materially, so the problem is not simple stagnation. But more samples did not uniformly improve weak-opponent strength, and one HU failure mode became statistically worse. Another long root block would therefore confound sample quantity with approximation quality.
+- 3H Advantage: only `9.98%` of zero-predictor MSE removed; induced-policy TV `0.5969`;
+- HU Advantage: `14.17%` removed; TV `0.6058`;
+- 3H AveragePolicy: `12.98%` of uniform-to-target CE gap closed; KL `0.6323`, TV `0.4286`;
+- HU AveragePolicy: `16.27%` gap closed; KL `0.6387`, TV `0.4318`.
 
-Current mechanics worth testing rather than assuming faulty:
+These residuals are large, but they cannot be labeled optimizer underfit directly because external-sampling targets and historical AveragePolicy targets contain irreducible conditional variation.
 
-- Advantage network reset every iteration;
-- 100 Advantage optimizer steps per domain per iteration;
-- 4000 AveragePolicy optimizer steps only at milestone finalization;
-- 2M-capacity reservoirs with iteration-weighted losses.
+Mechanics also matter: Advantage resets each iteration and receives only 100 x 1024 sample draws from a 2M reservoir; AveragePolicy has 12,000 cumulative optimizer steps at Stage B, with +4000 per milestone finalization.
 
-## Immediate gate — read-only fit audit
+## Immediate gate — fixed held-out budget curves
 
-Run `tools/run_lt2_training_dynamics_fit_audit.sh`.
+Launcher: `tools/run_lt2_stage_b_fit_budget_sweep.sh`.
 
-It samples stored Stage A/B Advantage and AveragePolicy memories and measures model fit to stored targets, separately for 3H/HU. It performs no training and does not mutate checkpoints.
+Design:
 
-Important metrics include:
+- Stage B only;
+- no roots and no checkpoint mutation;
+- deterministic 25k held-out set per memory;
+- held-out items excluded from optimization sampling;
+- both 3H and HU.
 
-- Advantage MSE versus a zero predictor;
-- Advantage regret-matching policy TV and argmax agreement;
-- AveragePolicy target entropy, cross-entropy, excess KL, TV and argmax agreement;
-- reservoir seen counts and sampled iteration-age distribution;
-- optimizer/reset counters.
+Advantage: fresh deterministic reset, cumulative budgets `0,25,50,100,200,400,800,1600`; canonical production point = 100.
 
-There is no arbitrary PASS threshold. The observed mechanism determines the next bounded experiment.
+AveragePolicy: continue stored Stage-B model+optimizer, cumulative **additional** budgets `0,1000,2000,4000,8000`; canonical finalization increment = +4000.
 
-## Branch after fit audit
+There is no fixed strength cutoff. The diagnostic question is the shape of the held-out curve.
 
-If Stage B HU Advantage fit is clearly poor, run a controlled optimizer-budget sweep on the preserved Stage-B memory before collecting new roots.
+## Branch after budget sweep
 
-If AveragePolicy fit is poor, run a controlled policy-fit budget sweep from the preserved checkpoint, again without new roots.
+If held-out Advantage fit continues improving strongly after 100 steps, optimizer budget is causally implicated. The next experiment will be a small isolated continuation using a larger Advantage budget, benchmarked against the preserved Stage B before any long run.
 
-If both fits are already strong, investigate target generation, reservoir weighting/age, state/action concentration and HU-specific learning semantics rather than increasing fit budgets blindly.
+If held-out AveragePolicy fit improves strongly with extra fitting, create an isolated policy-refit candidate without collecting new roots and test it against the same weak-baseline suite.
 
-Only after the current weak-opponent failure is understood and corrected should a new bounded root block be admitted.
+If a curve plateaus early while residual fit remains poor, optimizer budget is not the dominant constraint; inspect capacity, SPNNIV1 representation, target variance/aliasing, reservoir weighting and HU state/action concentration.
 
-## DeepCrusher placement
-
-DeepCrusher remains a later advanced reference. A literal C++ transcription can be useful for speed/auditability but is not logically required for eventual benchmarking. It is not a dependency for the present diagnosis.
+If both curves plateau early, move directly to target-generation/representation diagnostics rather than root scaling.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_training_dynamics_fit_audit.sh
+bash tools/run_lt2_stage_b_fit_budget_sweep.sh
 ```
 
-Do not resume long training beyond iteration 7500 until the fit-audit report is reviewed.
+Do not resume root training until the resulting held-out curves are reviewed.
