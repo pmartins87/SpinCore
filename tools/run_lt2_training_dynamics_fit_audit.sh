@@ -39,8 +39,9 @@ export SPINCORE_TORCH_THREADS="$THREADS"
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
-printf '=== SpinCore LT2 training-dynamics fit audit ===\n'
+printf '=== SpinCore LT2 training-dynamics fit audit V2 ===\n'
 printf 'mode=READ ONLY; NO TRAINING; NO CHECKPOINT MUTATION\n'
+printf 'advantage policy metric semantics=production lean RM + softmax all-nonpositive fallback\n'
 printf 'samples_per_memory=%s batch=%s torch_threads=%s\n' "$SAMPLES" "$BATCH" "$THREADS"
 
 "$PYTHON_RUN" tools/audit_lt2_checkpoint_fit.py \
@@ -56,7 +57,8 @@ printf 'samples_per_memory=%s batch=%s torch_threads=%s\n' "$SAMPLES" "$BATCH" "
 import json, sys
 from pathlib import Path
 p=Path(sys.argv[1]); d=json.loads(p.read_text())
-assert d.get('schema') == 'SPINCORE_LT2_TRAINING_FIT_AUDIT_V1'
+assert d.get('schema') == 'SPINCORE_LT2_TRAINING_FIT_AUDIT_V2'
+assert 'softmax' in d['method']['advantage_policy_semantics']
 for stage in ('stage_a','stage_b'):
     assert set(d[stage]['domains']) == {'THREE_HANDED','TRUE_HEADS_UP'}
     for domain in d[stage]['domains'].values():
@@ -67,7 +69,7 @@ PY
 
 DEST="/mnt/c/Users/Rz9/Downloads"
 if [ -d "$DEST" ]; then
-  cp "$REPORT" "$DEST/SpinCore_LT2_training_fit_audit.json"
+  cp "$REPORT" "$DEST/SpinCore_LT2_training_fit_audit_v2.json"
 fi
 
 printf '\nLT2_TRAINING_DYNAMICS_FIT_AUDIT_PASS\n'
