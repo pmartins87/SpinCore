@@ -12,19 +12,17 @@
 - Checkpoint cross-play — **NO REPRODUCIBLE ORDERING**.
 - 30k weak-baseline gate — **COMPLETE; PRECISION TARGET MET; HU JAMMER NEGATIVE**.
 - Stored-target fit audit — **COMPLETE**.
-- First held-out fit-budget sweep — **COMPLETE**.
-- AveragePolicy extra-budget hypothesis — **NOT SUPPORTED BY HELD-OUT CE CURVE**.
-- Advantage 100-step sufficiency — **NOT STRICTLY PLATEAUED IN MSE; BEHAVIOR EFFECT UNRESOLVED**.
-- First Advantage policy-TV/argmax diagnostic — **INVALID FOR PRODUCTION SEMANTICS DUE HISTORICAL UNIFORM FALLBACK IN AUDIT HELPER**.
-- Corrected production-semantics multi-seed Advantage budget sweep V2 — **NEXT**.
+- AveragePolicy extra-budget hypothesis — **NOT SUPPORTED**.
+- Advantage budget sweep V2 — **COMPLETE; MSE IMPROVES, PRODUCTION-POLICY TV DOES NOT**.
+- Advantage value-sensitivity audit — **NEXT**.
 - Root training beyond iteration 7500 — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
-- `docs/LT2_FIT_BUDGET_SWEEP_RESULT_20260917.md`
-- `docs/LT2_TRAINING_DYNAMICS_FIT_RESULT_20260917.md`
+- `docs/LT2_ADVANTAGE_BUDGET_SWEEP_V2_RESULT_20260917.md`
+- `docs/LT2_ADVANTAGE_VALUE_SENSITIVITY_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -43,72 +41,70 @@ The powered weak-baseline evaluation established:
 - Stage B HU Jammer `-5.141`, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
 - Stage B minus Stage A HU Jammer `-1.682`, simultaneous six-claim CI approximately `[-3.143,-0.222]`.
 
-The policy changed materially but this weak-opponent HU cell became worse. Root count alone is therefore not a justified next intervention.
+The policy changed materially but this weak-opponent HU cell became worse. Root count alone is not a justified intervention.
 
-## What the first budget sweep established
+## Fit-budget findings
 
 ### AveragePolicy
 
-Additional optimizer budget did not improve held-out CE in either domain.
+Additional fitting from the stored Stage-B policy does not improve held-out cross-entropy in either domain. More policy optimizer steps are therefore not the active fix.
 
-3H: stored `1.089719`; +4000 `1.090321`; +8000 `1.092875`.
+### Advantage V2
 
-HU: stored `1.116161`; +4000 `1.117772`; +8000 `1.119875`.
+The corrected three-replicate sweep uses exact functional-production positive-regret matching plus masked-softmax all-nonpositive fallback.
 
-This rejects the simple hypothesis that the current problem is mainly insufficient AveragePolicy optimizer steps. It does not reject architecture/representation/target limitations.
+3H, 100 -> 1600 steps:
 
-### Advantage MSE
+- MSE `0.03194285 -> 0.03073128` (`~3.79%` lower);
+- TV `0.604686 -> 0.602978` (essentially flat);
+- argmax `31.78% -> 37.18%`;
+- target all-nonpositive `32.13%`, prediction at 1600 `10.10%`.
 
-The MSE curve continues to improve after the canonical 100 steps, but slowly.
+HU, 100 -> 1600 steps:
 
-3H: `0.031933` at 100 -> `0.031279` at 1600, about 2.0% relative reduction.
+- MSE `0.04608811 -> 0.04447139` (`~3.51%` lower);
+- TV `0.587335 -> 0.604104` (worse);
+- argmax `28.64% -> 34.52%`;
+- target all-nonpositive `37.11%`, prediction at 1600 `4.05%`.
 
-HU: `0.045925` at 100 -> `0.044057` at 1600, about 4.1% relative reduction.
+Thus more optimizer work improves regression loss but does not reproducibly improve the policy distribution that the trainer actually uses. A 16x budget increase is not admitted from these curves.
 
-So 100 is not a strict MSE plateau, especially in HU. Whether that extra MSE reduction translates into better behavior remains unresolved.
+## Immediate gate — decision-value sensitivity
 
-## Diagnostic correction
+Launcher: `tools/run_lt2_advantage_value_sensitivity.sh`.
 
-The first fit-audit helper converted Advantage vectors to policies with the old `regret_matching_policy()` semantics: uniform legal fallback when all legal advantages were non-positive.
+The audit is read only and uses 100k stored Advantage samples per domain. It converts target and prediction through the exact production policy mapping and measures target-value consequences in chip-equivalent units.
 
-Functional production SpinCore instead installs `LeanNeuralActionAdvantagePolicy`, whose fallback is a stable masked softmax over raw legal advantages. The first release training specification requires this repaired behavior.
+Primary diagnostic quantities:
 
-Therefore:
+- target action-value span;
+- model-policy and target-policy regret to the best target action;
+- signed and positive target-policy/model-policy value gap;
+- branch mismatch between positive-regret and all-nonpositive fallback regimes;
+- supporting TV and argmax.
 
-- Advantage MSE metrics from the first audit/sweep are valid;
-- AveragePolicy metrics are valid;
-- Advantage-derived TV/argmax metrics from those reports are not canonical production-policy metrics and must not drive decisions.
+Breakdowns:
 
-This mismatch was in the diagnostic only; current production training already uses the repaired Lean adapter.
+- target all-nonpositive vs target has positive regret;
+- preflop/flop/turn/river;
+- target span `<1`, `1-5`, `5-20`, `20-100`, `100+` chips.
 
-## Immediate gate — V2 Advantage budget sweep
+These bins are descriptive and are not gates.
 
-Launcher: `tools/run_lt2_stage_b_advantage_budget_sweep_v2.sh`.
+## Branch after value-sensitivity audit
 
-Design:
+If high TV corresponds to low target-value regret concentrated in near-indifferent states, do not treat TV as evidence for a global architecture change. Move to the confirmed HU-Jammer failure directly with a targeted state/action audit.
 
-- Stage B checkpoint read only;
-- no roots;
-- fixed 25k holdout per domain, excluded from optimization;
-- cumulative budgets `0,25,50,100,200,400,800,1600`;
-- production Lean positive-regret + all-nonpositive masked-softmax semantics;
-- three independent deterministic reset/training replicates;
-- per-replicate and aggregate MSE, zero-gap fraction, production-policy TV, argmax and all-nonpositive frequency.
+If model target-value regret is substantial and branch mismatch dominates it, run a bounded regret-sign/fallback calibration experiment before any roots.
 
-This is intentionally multi-seed so a budget decision is not made from one network initialization.
+If regret is concentrated on specific streets or large target spans, inspect representation/target generation for those states.
 
-## Branch after V2
-
-If production-policy TV/argmax improves reproducibly beyond 100 along with MSE, test a larger Advantage budget in a small isolated continuation; compare it against preserved Stage B using the existing powered weak-baseline design before scaling roots.
-
-If MSE improves but production-policy metrics do not, do not spend more optimizer budget blindly. Move to target-noise/conditional-variance, SPNNIV1 aliasing/capacity and regret-objective sensitivity diagnostics.
-
-If the corrected curve plateaus early on both loss and behavior metrics, optimizer budget is not the main bottleneck; investigate representation and target generation directly.
+Only after a mechanism produces measurable improvement may a small isolated continuation be admitted.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_stage_b_advantage_budget_sweep_v2.sh
+bash tools/run_lt2_advantage_value_sensitivity.sh
 ```
 
-Do not resume root training until the V2 curve is reviewed.
+Do not resume root training until the report is reviewed.
