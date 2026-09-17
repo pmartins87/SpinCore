@@ -5,7 +5,7 @@ from __future__ import annotations
 
 Runs iteration 3001 twice from the same finalized LT2-A checkpoint: once through
 the canonical sequential function and once through the production
-`run_iteration_concurrent_fit`.  The source checkpoint is read-only.  Exact
+`run_iteration_concurrent_fit`. The source checkpoint is read-only. Exact
 semantic parity is required for models, optimizers, RNG/counters, reservoir RNG
 states, added sample streams, sampler RNG state and non-timing report fields.
 """
@@ -18,6 +18,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
@@ -38,6 +39,45 @@ def digest_file(path: Path) -> str:
         for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
             h.update(block)
     return h.hexdigest()
+
+
+def _signature_report(report: dict[str, Any]) -> dict[str, Any]:
+    """Remove candidate-only wall telemetry before semantic comparison.
+
+    `concurrent_fit_wall_seconds` is intentionally emitted only by the concurrent
+    implementation. It is timing telemetry, not poker/training state. The shared
+    semantic helper already strips per-domain timing fields; this gate must also
+    strip this top-level candidate-only timing field or it produces a false FAIL.
+    """
+    out = dict(report)
+    out.pop("concurrent_fit_wall_seconds", None)
+    return out
+
+
+def _first_diff(a: Any, b: Any, path: str = "$") -> str | None:
+    if type(a) is not type(b):
+        return f"{path}: type {type(a).__name__} != {type(b).__name__}"
+    if isinstance(a, dict):
+        ak = set(a)
+        bk = set(b)
+        if ak != bk:
+            return f"{path}: keys only_reference={sorted(ak-bk)} only_candidate={sorted(bk-ak)}"
+        for key in sorted(ak):
+            diff = _first_diff(a[key], b[key], f"{path}.{key}")
+            if diff:
+                return diff
+        return None
+    if isinstance(a, (list, tuple)):
+        if len(a) != len(b):
+            return f"{path}: length {len(a)} != {len(b)}"
+        for i, (av, bv) in enumerate(zip(a, b)):
+            diff = _first_diff(av, bv, f"{path}[{i}]")
+            if diff:
+                return diff
+        return None
+    if a != b:
+        return f"{path}: {a!r} != {b!r}"
+    return None
 
 
 def run_once(*, source: Path, solver_path: Path, workers: int, threads: int, candidate: bool):
@@ -75,7 +115,12 @@ def run_once(*, source: Path, solver_path: Path, workers: int, threads: int, can
                 parallel_executor=executor,
             )
         wall = float(time.perf_counter() - started)
-        signature = semantic_signature(sampler, runtimes, traces, report)
+        signature = semantic_signature(
+            sampler,
+            runtimes,
+            traces,
+            _signature_report(report),
+        )
         return {"wall_seconds": wall, "signature": signature}
     finally:
         if executor is not None:
@@ -116,9 +161,10 @@ def main() -> int:
     )
 
     source_unchanged = digest_file(source) == source_hash
-    semantic_parity = reference["signature"] == candidate["signature"]
+    first_difference = _first_diff(reference["signature"], candidate["signature"])
+    semantic_parity = first_difference is None
     result = {
-        "schema": "LT2_PRODUCTION_CONCURRENT_ITERATION_PARITY_V1",
+        "schema": "LT2_PRODUCTION_CONCURRENT_ITERATION_PARITY_V2",
         "source": str(source),
         "source_sha256": source_hash,
         "source_iteration": 3000,
@@ -131,6 +177,7 @@ def main() -> int:
         "candidate_speedup": float(reference["wall_seconds"] / candidate["wall_seconds"]),
         "semantic_parity": bool(semantic_parity),
         "source_unchanged": bool(source_unchanged),
+        "first_difference": first_difference,
         "reference_signature": reference["signature"],
         "candidate_signature": candidate["signature"],
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
@@ -147,6 +194,7 @@ def main() -> int:
         raise RuntimeError("source checkpoint changed")
     if not semantic_parity:
         print("LT2_PRODUCTION_CONCURRENT_ITERATION_PARITY_FAIL", flush=True)
+        print(f"first_difference={first_difference}", flush=True)
         print(f"report={report}", flush=True)
         return 2
 
