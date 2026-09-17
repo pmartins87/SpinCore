@@ -10,19 +10,19 @@
 - Stage B resource gate — **PASS**.
 - Policy drift Stage A -> Stage B — **MATERIAL MOVEMENT CONFIRMED**.
 - Checkpoint cross-play — **NO REPRODUCIBLE ORDERING**.
-- 30k weak-baseline gate — **COMPLETE; PRECISION TARGET MET; HU JAMMER NEGATIVE**.
-- Stored-target fit audit — **COMPLETE**.
+- 30k weak-baseline gate — **COMPLETE; HU JAMMER NEGATIVE**.
 - AveragePolicy extra-budget hypothesis — **NOT SUPPORTED**.
-- Advantage budget sweep V2 — **COMPLETE; MSE IMPROVES, PRODUCTION-POLICY TV DOES NOT**.
-- Advantage value-sensitivity audit — **NEXT**.
+- Advantage budget sweep V2 — **COMPLETE; MSE IMPROVES BUT PRODUCTION-POLICY TV DOES NOT**.
+- 100k Advantage value-sensitivity — **COMPLETE; HIGH-SPAN SAMPLED-TARGET DISAGREEMENT CONFIRMED**.
+- Repeated-state target variance / exact-level-1 audit — **NEXT**.
 - Root training beyond iteration 7500 — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
-- `docs/LT2_ADVANTAGE_BUDGET_SWEEP_V2_RESULT_20260917.md`
-- `docs/LT2_ADVANTAGE_VALUE_SENSITIVITY_20260917.md`
+- `docs/LT2_ADVANTAGE_VALUE_SENSITIVITY_RESULT_20260917.md`
+- `docs/LT2_REPEATED_TARGET_VARIANCE_AUDIT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -36,75 +36,70 @@ Keep both unchanged.
 
 ## Why roots remain paused
 
-The powered weak-baseline evaluation established:
+The powered weak-baseline gate established a real practical failure:
 
-- Stage B HU Jammer `-5.141`, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
-- Stage B minus Stage A HU Jammer `-1.682`, simultaneous six-claim CI approximately `[-3.143,-0.222]`.
+- Stage B HU Jammer `-5.141` chips/hand, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
+- Stage B minus Stage A HU Jammer `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
 
-The policy changed materially but this weak-opponent HU cell became worse. Root count alone is not a justified intervention.
+Extra Stage-A -> Stage-B training measurably worsened this cell.
 
-## Fit-budget findings
+## What optimizer diagnostics established
 
-### AveragePolicy
+AveragePolicy extra fitting does not improve held-out cross-entropy. More policy steps are not the current fix.
 
-Additional fitting from the stored Stage-B policy does not improve held-out cross-entropy in either domain. More policy optimizer steps are therefore not the active fix.
+Advantage 100 -> 1600 steps lowers MSE modestly but does not reproducibly improve the production policy mapping. More optimizer budget is therefore not a justified global intervention.
 
-### Advantage V2
+## What value sensitivity established
 
-The corrected three-replicate sweep uses exact functional-production positive-regret matching plus masked-softmax all-nonpositive fallback.
+The 100k-per-domain stored-target audit rejected the idea that policy TV ~0.6 is mostly harmless disagreement on nearly tied actions.
 
-3H, 100 -> 1600 steps:
+Overall sampled-target diagnostics:
 
-- MSE `0.03194285 -> 0.03073128` (`~3.79%` lower);
-- TV `0.604686 -> 0.602978` (essentially flat);
-- argmax `31.78% -> 37.18%`;
-- target all-nonpositive `32.13%`, prediction at 1600 `10.10%`.
+- 3H mean target span `398.3` chips-equivalent; model-policy regret `154.0`; signed target-policy-minus-model-policy gap `+101.4`;
+- HU mean target span `494.8`; model-policy regret `180.0`; signed gap `+114.2`.
 
-HU, 100 -> 1600 steps:
+The `100+ chip` target-span bucket accounts for about `98.6%` of the 3H signed gap and `99.4%` of HU. Near-zero-span states contribute essentially nothing.
 
-- MSE `0.04608811 -> 0.04447139` (`~3.51%` lower);
-- TV `0.587335 -> 0.604104` (worse);
-- argmax `28.64% -> 34.52%`;
-- target all-nonpositive `37.11%`, prediction at 1600 `4.05%`.
+However the all-nonpositive fallback branch is not the dominant source of net sampled-target loss. Target-has-positive states dominate the positive gap. Therefore do not perform a fallback-only calibration next.
 
-Thus more optimizer work improves regression loss but does not reproducibly improve the policy distribution that the trainer actually uses. A 16x budget increase is not admitted from these curves.
+HU action mass is directionally concerning: target-induced FOLD `36.5%` vs model-induced `6.6%`, CHECK_CALL `28.5%` vs `40.1%`, ALL_IN `22.3%` vs `41.2%`. Within HU target-has-positive states FOLD is `47.7%` target-induced vs `7.0%` model-induced.
 
-## Immediate gate — decision-value sensitivity
+These quantities are **not realized poker EV**. Individual Advantage targets are noisy external-sampling realizations, while final benchmark play uses AveragePolicy. They identify a serious approximation/target problem but not its cause.
 
-Launcher: `tools/run_lt2_advantage_value_sensitivity.sh`.
+## Immediate gate — repeated-state target variance
 
-The audit is read only and uses 100k stored Advantage samples per domain. It converts target and prediction through the exact production policy mapping and measures target-value consequences in chip-equivalent units.
+Launcher: `tools/run_lt2_repeated_target_variance_audit.sh`.
 
-Primary diagnostic quantities:
+Design:
 
-- target action-value span;
-- model-policy and target-policy regret to the best target action;
-- signed and positive target-policy/model-policy value gap;
-- branch mismatch between positive-regret and all-nonpositive fallback regimes;
-- supporting TV and argmax.
+- Stage B checkpoint read only;
+- no optimizer steps and no training-memory writes;
+- 64 independently selected states per domain per street;
+- first decision reached on each street under current Stage-B Advantage behavior;
+- 8 repeated target traversals from the exact same solver state/deal;
+- compare `exact_opponent_levels=0` versus `1` on the same states;
+- exact legal-action MSE decomposition: sampled-target MSE = within-repeat target variance + model MSE to repeat mean;
+- chip-equivalent RMSE, model/repeat-mean policy TV and target-value gap;
+- node-cost multiplier for exact level 1.
 
-Breakdowns:
+Repeated-state variance isolates opponent-action Monte-Carlo noise for a fixed hidden deal and future board. It does **not** measure across-deal chance/hidden-card variance, so it is a lower bound on total target variance.
 
-- target all-nonpositive vs target has positive regret;
-- preflop/flop/turn/river;
-- target span `<1`, `1-5`, `5-20`, `20-100`, `100+` chips.
+## Decision branches after target-variance audit
 
-These bins are descriptive and are not gates.
+If within-repeat noise is a large fraction of target MSE and exact level 1 reduces it substantially at reasonable node cost, create a small isolated exact-level candidate and evaluate it against preserved Stage B before long training.
 
-## Branch after value-sensitivity audit
+If model MSE to repeat-mean targets dominates, inspect SPNNIV1 representation/capacity and per-action sign calibration, especially HU FOLD versus CHECK_CALL/ALL_IN.
 
-If high TV corresponds to low target-value regret concentrated in near-indifferent states, do not treat TV as evidence for a global architecture change. Move to the confirmed HU-Jammer failure directly with a targeted state/action audit.
+If opponent-action noise is large but exact level 1 barely reduces it, investigate chance/hidden-state target variance and representation generalization instead of increasing exact branching blindly.
 
-If model target-value regret is substantial and branch mismatch dominates it, run a bounded regret-sign/fallback calibration experiment before any roots.
+If street/domain results differ materially, interventions remain localized.
 
-If regret is concentrated on specific streets or large target spans, inspect representation/target generation for those states.
-
-Only after a mechanism produces measurable improvement may a small isolated continuation be admitted.
+Any candidate must pass a predeclared statistically powered weak-baseline comparison before root scaling resumes.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_advantage_value_sensitivity.sh
+bash tools/run_lt2_repeated_target_variance_audit.sh
 ```
 
-Do not resume root training until the report is reviewed.
+Wait for `LT2_REPEATED_TARGET_VARIANCE_AUDIT_PASS` and review `SpinCore_LT2_repeated_target_variance.json`. Do not resume root training first.
