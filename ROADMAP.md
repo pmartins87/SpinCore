@@ -12,94 +12,89 @@ This file tracks the active legacy-first functional training path. Historical sn
 - LT2 Stage B — **PASS**: iteration 7500 / 4.5M roots.
 - LT2 Stage B resource/postvalidation — **PASS**: zero swap; finalized checkpoint valid; all four 2M reservoirs saturated/replacement.
 - Stage A -> Stage B paired weak-baseline review — **COMPLETE: NO DETECTABLE IMPROVEMENT OR REGRESSION**.
-- Stage A -> Stage B policy-drift review — **COMPLETE: MATERIAL POLICY MOVEMENT, ESPECIALLY HU POST-STREET-0**.
-- Stage A -> Stage B contemporary checkpoint cross-play — **NEXT**.
+- Stage A -> Stage B policy-drift review — **COMPLETE: MATERIAL POLICY MOVEMENT**.
+- Initial Stage A -> Stage B contemporary cross-play (3000 scenarios) — **COMPLETE: BORDERLINE / MIXED; NO STAGE-B ADVANTAGE DEMONSTRATED**.
+- Higher-power fresh-seed contemporary cross-play (9000 scenarios) — **NEXT**.
 - DeepCrusher faithful oracle — **BUILD IN PARALLEL**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
 - `docs/LONG_TRAINING_PLAN.md`
+- `docs/LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`
 - `docs/LT2_POLICY_DRIFT_REVIEW_20260917.md`
 - `docs/LT2_STAGE_B_LEARNING_REVIEW_20260917.md`
 - `docs/LT2_STAGE_B_RESOURCE_REVIEW_20260917.md`
 
-## Completed milestones
+## Preserved LT2 milestones
 
-### LT0 / LT1 / Stage A
+Stage A:
 
-LT0 proved the repaired pipeline. LT1 established the production-shaped large-reservoir line. Stage A reached 1.8M roots; 3H AveragePolicy had crossed 2M while HU remained 820,667. Weak-baseline learning was positive overall/3H and noisy/flat HU.
+- iteration 3000 / 1.8M roots;
+- SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
 
-### LT2 Stage B
+Stage B:
 
-4.5M roots / iteration 7500. Preserve:
+- iteration 7500 / 4.5M roots;
+- SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`;
+- all four 2M memories in replacement regime;
+- resource gate healthy with zero swap.
 
-`/home/rz9/spincore_lean_functional/runs/long_training_lt2_stage_b/20260917_004911/checkpoint.pt`
+## Evidence after Stage B
 
-SHA256:
+### Weak fixed opponents
 
-`3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`
+No statistically distinguishable Stage-B-minus-Stage-A improvement or regression across nine ALL/3H/HU comparisons against uniform-legal, passive-caller and jammer families.
 
-Final policy seen counts:
+### Decision-level policy drift
 
-- 3H 5,549,800;
-- HU 2,072,704.
+Material movement is present: overall mean TV 0.041395 and argmax disagreement 12.10%, with much larger postflop/HU movement. Therefore weak-baseline flatness is not equivalent to policy stagnation.
 
-All four 2M memories are in replacement regime. Resource gate passed with 0 swap and min observed WSL MemAvailable 7.473 GiB.
+### Contemporary cross-play — first pass
 
-## Weak-baseline checkpoint delta
+3000 fresh scenarios, seed 20260918.
 
-Stage A and Stage B were evaluated on the same 1000 empirical scenarios/deals against uniform-legal, passive-caller and jammer families. All nine Stage-B-minus-Stage-A 95% CIs included zero.
+Primary Stage-B-minus-Stage-A hero delta against the identical deterministic 50/50 A/B opponent mixture:
 
-Conclusion: no statistically distinguishable gain or regression under the weak fixed-opponent sentinel. This is not an exploitability or GTO result.
+- ALL: -1.8129 chips/hand, 95% CI [-3.9564,+0.3306];
+- 3H: -1.9760, CI [-4.3207,+0.3687];
+- HU: -1.6162, CI [-5.4070,+2.1747].
 
-## Policy-drift result
+All primary point estimates favor Stage A, but all intervals still include zero. ALL and 3H are borderline.
 
-The two finalized policies were then queried on 11,040 identical states from 3000 checkpoint-independent probe scenarios.
+Additional diagnostics are inconsistent with a simple regression conclusion:
 
-Overall movement:
+- HU direct B-vs-A: -0.6165, CI [-10.7519,+9.5188];
+- 3H invasion difference: +2.8894, CI [-1.2160,+6.9949].
 
-- mean TV 0.041395;
-- median TV 0.032119;
-- p95 TV 0.108574;
-- 26.77% of decisions TV >= 0.05;
-- 12.10% argmax disagreement.
+Therefore the correct classification is **borderline/mixed**, not Stage-B improvement and not proven Stage-B regression.
 
-HU has a heavier tail than 3H: HU p95 TV 0.147864 and 12.34% of HU decisions exceed TV 0.10.
+## Immediate decision gate
 
-The movement is strongly concentrated after street 0. HU street 1/2/3 mean TV is approximately 0.095 / 0.115 / 0.122, with argmax disagreement approximately 31% / 34% / 25%.
+Do **not** resume training beyond iteration 7500.
 
-Therefore the weak-baseline flatness cannot be treated as policy stagnation. The AveragePolicy moved materially while the weak opponents did not resolve an EV difference.
+Run the exact contemporary cross-play at higher power on an independent seed:
 
-## Immediate decision gate — contemporary checkpoint cross-play
+```bash
+SPINCORE_CROSSPLAY_SCENARIOS=9000 SPINCORE_CROSSPLAY_SEED=20260919 bash tools/run_lt2_checkpoint_crossplay.sh
+```
 
-Do **not** auto-extend beyond iteration 7500.
+Interpret the new run independently rather than informally pooling the two reports.
 
-Run `tools/run_lt2_checkpoint_crossplay.sh`.
+Decision logic:
 
-The primary comparison holds the opponent environment fixed to the exact same deterministic 50/50 Stage-A/Stage-B mixture and changes only the hero checkpoint. It reports paired Stage-B-minus-Stage-A chip EV for ALL, 3H and HU.
-
-Additional diagnostics:
-
-- direct seat-balanced HU Stage B vs Stage A;
-- 3H invasion: B singleton vs A/A and A singleton vs B/B.
-
-Interpretation:
-
-- coherent Stage-B advantage -> weak baselines were insensitive; current training line remains plausibly productive and can be considered for another bounded block after DeepCrusher/cross-play review;
-- no relative advantage despite material drift -> evidence of strategic cycling/neutral movement under the current regime; investigate training dynamics before more roots;
-- mixed/borderline result -> increase only the targeted read-only evaluation sample, not training compute.
-
-Cross-play remains relative evidence only. Faithful DeepCrusher R8 v22 is still required for canonical strength claims.
+- repeated coherent Stage-B disadvantage with ALL/3H confidence intervals excluding zero -> investigate training dynamics / AveragePolicy approximation before further roots;
+- no disadvantage or reversal -> relative checkpoint evidence remains unresolved, so move emphasis to faithful DeepCrusher / richer external evaluation rather than architecture changes;
+- only HU remains unresolved -> run targeted HU evaluation rather than more training.
 
 ## Product strength path
 
-Future product evidence must include faithful DeepCrusher paired chip-EV, HU/3H separately, then blind/stack/position breakdowns and later full-tournament performance.
+Faithful DeepCrusher R8 v22 remains required for canonical strength claims, with HU/3H and later blind/stack/position breakdowns.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_checkpoint_crossplay.sh
+SPINCORE_CROSSPLAY_SCENARIOS=9000 SPINCORE_CROSSPLAY_SEED=20260919 bash tools/run_lt2_checkpoint_crossplay.sh
 ```
 
-Wait for `LT2_CHECKPOINT_CROSSPLAY_PASS`, send `SpinCore_LT2A_to_LT2B_crossplay.json`, and do not start further training first.
+Wait for `LT2_CHECKPOINT_CROSSPLAY_PASS`, send the resulting cross-play JSON, and do not start additional training first.
