@@ -1,243 +1,104 @@
-# SpinCore roadmap — active LT2 Stage A update 2026-09-16
-
-## Active legacy-first training path
-
-The active work is tracked in `CURRENT_WORK.md`, `docs/LONG_TRAINING_PLAN.md`, `docs/LT1_COMPLETION_REVIEW_20260916.md`, and `docs/LT1_FIT_BENCHMARK_RESULT_20260916.md`. LT0 is complete; LT1 completed 1.2M roots and finalization successfully. The bounded physical Ryzen neural-fit gate also passed: 8 parent Torch threads + vectorized batching beat the 8-thread/reference baseline by 1.1643x in fit throughput, same-thread model/loss parity passed, a disposable 31-worker iteration 2001 completed with exactly 600 roots, and the preserved LT1 checkpoint remained unchanged. Do not start fresh, rerun the closed matrix, or treat LT1 as a strength verdict.
-
-The immediate finite gate is **LT2 Stage A**: continue the preserved LT1 state in a separate run directory for exactly 1,000 additional iterations / 600,000 roots using 31 root workers, 8 parent Torch threads, vectorized batches and checkpoints every 100 iterations. Record WSL memory/swap telemetry and stop after iteration 3000 for reservoir/checkpoint review before any larger block. The 3H policy reservoir is expected to reach its 2M capacity during this stage; that transition is the reason for the bounded stop.
-
-The older R0–R12 roadmap below is retained as historical engineering evidence. Where it conflicts with the active legacy-first functional path or mandates certification-only work, `AGENTS.md`, the mandatory legacy/quality and Ryzen policies, and the active work documents take precedence. No old gate silently restarts a closed research branch.
-
-Fit optimization status (2026-09-16): **PHYSICAL PASS**. Frozen next-stage execution profile is 31 root workers, 8 parent Torch threads, worker Torch/OpenMP/BLAS threads 1, and `batch_mode=vectorized`. See `docs/LT1_FIT_BENCHMARK_RESULT_20260916.md`. Canonical next launcher: `tools/run_long_training_lt2_stage_a.sh`.
-
-## Historical roadmap snapshot — 2026-08-25
-
-Final endpoint: **ready for offline 3-Max simulator tables**. The product target is a simulator using GGPoker Spin & Gold rules as a reference, not attachment to or play in a real-money GGPoker client. The legacy `READY FOR TABLES` flag now means simulator-table release only and remains `NO` until every required gate through R12 passes and every release debt, including deferred R7.3 exact reproducibility, is closed.
-
-## Canonical roadmap status
-
-- R0 Foundation / canonical repository — **PASS REBUILT**
-- R1 Complete poker engine — **PASS REBUILT**
-- R2 Canonical infoset + neural encoder — **PASS REBUILT; V1 SELECTED AS PROVISIONAL R7.5 FALLBACK AFTER V1+ CLOSURE, NOT PRODUCTION FREEZE**
-- R3 Tournament continuation value (`ICM_EXACT_V1`, explicit payout) — **PASS REBUILT**
-- R4 Neural infrastructure — **PASS REBUILT**
-- R5 CFR correctness oracle — **PASS REBUILT**
-- R6 Deep CFR integration on authoritative `SpinTraversalState` — **PASS REBUILT**
-- R7 Pilot / performance / statistical stability — **R7.4 PASS; REPRESENTATION REVIEW ADDED BEFORE PRODUCTION**
-  - R7.0 approximation metrics / full-reservoir audit — **PASS REBUILT**
-  - R7.1 native own-reach frontier — **PASS REBUILT**
-  - R7.2 LCFR weighting / checkpoint+resume infrastructure / fresh-process worker — **PASS REBUILT**
-  - R7.3 selected strategy quality at 640 roots/seed — **PASS FOR PROVISIONAL ADVANCEMENT**
-  - R7.3 exact fresh-process reproducibility — **OPEN RELEASE/CERTIFICATION DEBT; NOT PASS**
-  - R7.4 SPINRULESET-4 source invariance — **PASS**
-  - R7.4 structural HU/3H preflight — **PASS**
-  - R7.4 staged-resume equivalence — **PASS EXACT**
-  - R7.4 held-out HU 640 — **PASS**
-  - R7.4 held-out 3H 320 screen — **PASS**
-  - R7.4 held-out 3H 640 confirmation — **PASS**
-  - R7.4 final gate — **PASS; READY TO ADVANCE TO R8 ENGINEERING**
-- R7.5 Strategic representation & action abstraction — **IN PROGRESS; V1+ RESET CLOSED, V1 FALLBACK SELECTED, R7.5.4 NEXT**
-  - R7.5.0 legacy evidence + architecture precommit — **PASS AS DESIGN PRECOMMIT ONLY**
-  - R7.5.1 recover/regenerate + audit flop mappings — **PASS AS DIAGNOSTIC/STRUCTURAL INPUT; LEGACY 184 DEFECT ESTABLISHED; SPNNIV3 SUCCESSOR IMPLEMENTED**
-  - R7.5.2 representation semantics/integration — **SPNNIV3 STRUCTURAL/SEMANTIC INTEGRITY IMPLEMENTED; V2 IS NOT THE PRODUCTION MIGRATION TARGET**
-  - R7.5.3 frozen representation admission/selection — **CLOSED; SPNNIV3/V1+ SUCCESSOR NOT ADMITTED; CERTIFIED STABLE V1 FALLBACK SELECTED**
-  - R7.5.4 frozen action-abstraction ablation — **UNBLOCKED FOR V1 FALLBACK BINDING AUDIT; STRATEGIC REVALIDATION NOT STARTED**
-  - R7.5.5 production representation/action freeze — **PENDING**
-- R8 Simulator production training — **BLOCKED UNTIL R7.5.5 FINAL + OFFICIAL VARIANT MATRIX + R8.2 PHYSICAL CALIBRATION**
-  - R8.0 universal 3-Max simulator profile — **CONTRACT PASS; STAKE-INVARIANT POLICY IDENTITY PASS; OFFICIAL MULTIPLIER-VARIANT MATRIX INGESTION PENDING AS PROJECT-OWNED ENGINEERING**
-  - R8.1 deterministic production infrastructure — **PASS INFRASTRUCTURE**
-  - R8.2 Ryzen calibration selector/precommit — **PASS INFRASTRUCTURE; GENERIC FROZEN LOCAL-RUN EVIDENCE WRAPPER ADDED; PHYSICAL CALIBRATION NOT RUN**
-  - R8.3–R8.5 official simulator training/freeze — **BLOCKED BY R7.5.5 + R8.0 VARIANT MATRIX + R8.2**
-- R9 Strategic audit — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R8.5**
-- R10 offline simulator/inference runtime (historical OpenHoldem gate name) — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R9 PASS; LIVE REAL-MONEY CLIENT ATTACHMENT FORBIDDEN**
-- R11 Safe exploitation — **FINITE GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R10 PASS**
-- R12 Operational homologation — **FINITE FINAL GATE DESIGN FROZEN; EXECUTION BLOCKED UNTIL R11 PASS**
-
-No intermediate success authorizes simulator release or any real-money client integration.
-
-## Frozen R7.3/R7.4 strategic contract
-
-```text
-selected behavior = size4_uncertainty_s175
-behavior semantic = SPINCORE_R7_3_UNCERTAINTY_POLICY_MIXTURE_V1
-ensemble size = 4
-epsilon scale = 1.75
-epsilon cap = 0.50
-
-Advantage weighted NRMSE <= 0.75
-AveragePolicy weighted mean TV <= 0.12
-cross-seed mean TV <= 0.15
-cross-seed p95 TV <= 0.35
-
-R7.3 selection seeds = 20260829, 20260807
-R7.4 held-out seeds = 1954132610, 372483540
-deck_seed = seed * 1_000_003 + global_root * 97 + iteration
-global_root continuous across iterations
-partial-exact opponent level = 2
-primary RNG = one persistent live bundle.batch_rng
-production utility = ICM_EXACT_V1 explicit payout delta
-thread contract = SOURCE_WORKFLOW_NO_EXPLICIT_THREAD_OVERRIDE
-```
+# SpinCore Roadmap — active state 2026-09-16
 
-No R7.3/R7.4 strategic threshold has been relaxed. R7.5 does not retroactively reinterpret those gates; it determines whether the recovered V1 representation/action abstraction is suitable for production or should be replaced before official training.
+This file tracks the active legacy-first functional training path. Detailed historical R0–R12 engineering snapshots remain preserved in Git history and in the validation/docs tree; they do not silently override the current training plan.
 
-## R7.3 exact-reproducibility debt
+## Active status
 
-The frozen strategy-quality evidence passed, including the provisional 640 roots/seed bridge, but strict fresh-process exact reproduction remains unresolved:
+- LT0 calibration — **DONE**: 120k roots.
+- LT1 production-shaped milestone — **DONE**: 1.2M roots.
+- LT1 physical fit optimization — **PASS**: 31 root workers, 8 parent Torch threads, vectorized batching.
+- LT2 Stage A — **PASS**: iteration 3000 / 1.8M roots total.
+- LT2 Stage A resource gate — **PASS**: no swap, min WSL MemAvailable about 10.67 GiB, final checkpoint 2.236 GiB.
+- LT2 Stage A first policy-reservoir saturation transition — **PASS**: 3H AveragePolicy crossed 2M; HU remains at 820,667.
+- Weak-baseline learning curve — **POSITIVE OVERALL/3H; HU STILL NOISY/FLAT**.
+- Immediate gate — **one bounded read-only concurrent-fit benchmark**.
+- LT2 Stage B — **PENDING fit-screen result**.
+- DeepCrusher faithful oracle — **build in parallel**.
 
-```text
-fresh_process_reproducible = false
-difference_count = 734 report fields
-numeric tolerance = 1e-9
-strict run = 31565565329
-```
+Canonical current files:
 
-This remains explicit debt, not PASS. It does not block controlled R7.5/R8 engineering, but **must be resolved before R12 can emit `READY FOR TABLES = YES`**. No tolerance, seed, gate or thread hack may be used to relabel the debt.
+- `CURRENT_WORK.md`
+- `docs/LONG_TRAINING_PLAN.md`
+- `docs/LT2_STAGE_A_REVIEW_20260916.md`
+- `docs/LT1_COMPLETION_REVIEW_20260916.md`
+- `docs/LT1_FIT_BENCHMARK_RESULT_20260916.md`
 
-## R7.4 final physical evidence — PASS
+## Learning milestones
 
-Final gate:
+### LT0 — calibration
 
-```text
-validation/R7_4_FINAL_GATE.json
-r7_4_pass = true
-r7_4_ready_to_advance_to_r8 = true
-ready_for_tables = false
-```
+Purpose: prove the repaired pipeline trains, saves, resumes and plays complete 3H/HU hands. It is not a final-strength run.
 
-Held-out evidence:
+### LT1 — production-shaped scale milestone
 
-```text
-HU640: PASS
-3H320: PASS
-3H640: PASS
-```
+Purpose: establish large reservoirs, realistic sampler pressure, checkpoint cost and a measured Ryzen execution profile.
 
-3H640 confirmation used 640 roots/seed and passed all unchanged per-seed/coverage gates. Cross-seed confirmation:
+Result: 2000 iterations / 1.2M roots completed and preserved.
 
-```text
-mean TV = 0.08999575674533844    PASS
-p95 TV  = 0.20019790530204773    PASS
-max TV  = 0.4369678199291229     diagnostic only
-all scenarios exercised          PASS
-```
+### LT2 Stage A — first saturation gate
 
-R7.4 authorizes further engineering only. It does not prove that the current neural representation/action abstraction is the best production design and never authorizes simulator release.
+Purpose: continue the exact LT1 state until the first policy reservoir reaches the 2M cap, then review memory/checkpoint behavior before longer runs.
 
-## R7.5 — strategic representation & action abstraction
+Result: 3000 iterations / 1.8M roots completed. 3H AveragePolicy crossed 2M; HU is 820,667. No swap or runaway checkpoint growth. See `docs/LT2_STAGE_A_REVIEW_20260916.md`.
 
-Legacy Spin & Go attempts were audited before production training. Canonical evidence includes the historical audits plus the SPNNIV3 integrity/admission chain. The old 184/V2 investigations are evidence feeding R7.5; they are not additional permanent roadmap branches.
+Weak-baseline learning trend from 120k -> 1.2M -> 1.8M:
 
-Key frozen decisions:
+- uniform overall cEV: +10.836 -> +15.873 -> +17.015;
+- uniform 3H cEV: +2.407 -> +8.898 -> +12.769;
+- passive-caller overall cEV: -2.402 -> -0.553 -> -0.064;
+- jammer overall cEV: -5.498 -> -2.719 -> -1.298;
+- jammer 3H cEV: +2.295 -> +4.045 -> +7.422.
 
-```text
-- exact poker/traversal state stays exact;
-- lossy compression is allowed only at neural-observation boundary;
-- NeuralInputV1 is control/fallback, not a production freeze;
-- V2 is an intermediate attempt, not the current production migration target;
-- SPNNIV3 is the intended successor lineage;
-- H2 and H3 are the current SPNNIV3 admission candidates;
-- exact stack/pot/SPR facts remain available;
-- actor-aware and sizing-aware complete action history is required;
-- richer postflop action sets must justify every extra branch by strategic gain vs Ryzen cost.
-```
+HU did not improve from LT1 to LT2-A on the fixed-seed point estimates. That remains a tracked warning, not a stop signal, because HU intervals are wide and its policy reservoir is still far below capacity.
 
-### Recovered 184 mapping and ontology evidence
+## Immediate execution gate
 
-The missing historical `184Flops.json` was recovered. It covered all 22,100 physical flops and 184 representatives, but 40 exact suit-isomorphic classes were split by legacy suit spelling, so the historical map is not eligible unchanged. This defect is preserved as evidence; SPNNIV3 no longer relies on that map as its primary representation.
+Run `tools/benchmark_lean_lt2_concurrent_fit.sh` exactly once.
 
-The regression-proven C++ postflop ontology scaffold decomposes semantic lines such as c-bet, donk, probe, float, delayed lines and raises into compositional state facts rather than copying old strategy rules. Exact continuous geometry remains available.
+Purpose: determine whether overlapping the independent 3H/HU Advantage optimizer loops can recover meaningful Ryzen throughput without changing fit results.
 
-### R7.5.3 final admission state — 2026-08-25
+Acceptance to justify full-iteration integration:
 
-SPNNIV3 structural integrity is implemented with complete variable-length structured history, universal deduplicated action slots, exact HU/3H geometry, exact suit/rank invariance at the neural boundary, and an action width of 10. H2 is the exact relational/history candidate; H3 adds objective poker semantics.
+- exact same-thread sequential/concurrent model hashes;
+- exact final losses;
+- exact per-domain batch RNG states;
+- source checkpoint unchanged;
+- >=5% median fit-wall improvement versus sequential 8-thread fitting.
 
-The frozen Phase-2 local training gates passed for all eight H2/H3 × HU/3H × training-seed cells. The first complete strategic admission did **not** pass because every required cross-seed policy-stability row exceeded the unchanged `mean TV <= 0.15` and `p95 TV <= 0.35` gates. Independent parity auditing reproduced that failure and ruled out the covered evaluator/state/action identity mismatch path.
+If this screen fails, stop tuning and retain 31 workers / 8 threads / vectorized batches. If it passes, build one disposable full-iteration candidate and prove exact learning-state parity before using concurrency in production.
 
-Winner-independent decomposition then isolated the dominant variance source without selecting H2/H3:
+## LT2 Stage B
 
-```text
-same strategy memory / different final-policy learner: about 0.107 mean TV / 0.282 p95 TV
+Once the execution path is cleared, continue the same iteration-3000 LT2 checkpoint to approximately iteration **7500**:
 
-different strategy memory / common final learner:     about 0.243 mean TV / 0.624 p95 TV
-=> upstream strategy-memory generation dominant
+- +4500 iterations;
+- +2.7M roots;
+- 4.5M roots total.
 
-learning/memory RNG sensitivity:                       about 0.148 / 0.401
-sampling/traversal RNG sensitivity:                     about 0.239 / 0.629
-=> sampling/traversal family dominant
+Why 7500: the Stage-A HU AveragePolicy sample rate projects the 2M HU reservoir crossing near iteration 7.3k. This makes ~7500 the next natural bounded training milestone where all four 2M reservoirs should effectively be in saturation/replacement regime.
 
-deck/chance sensitivity:                               0.239170 / 0.624240
-traversal-action-sampling sensitivity:                  about 0.14986 / 0.39321
-=> DECK_CHANCE_DOMINANT under the frozen 1.20x rule
-```
+At Stage B completion, stop and review:
 
-The primary x4 and final x16 chance-coverage remediations both completed without satisfying the unchanged cross-seed gates. The subsequent V1+ architecture reset localized the dominant feedback and variance mechanisms, closed the Monte Carlo estimator-repair path, and proved exact structural reach factorization plus incremental range-reach propagation in Phase2C0/C1.
+- memory/swap with all large reservoirs saturated;
+- checkpoint size/save time;
+- throughput;
+- 3H learning continuation;
+- HU learning trend;
+- weak-opponent regressions;
+- DeepCrusher head-to-head if the faithful oracle is ready.
 
-The one bounded Phase2C2 causal pilot then tested whether the structural range-reach continuation target kernel improved end-to-end model stability under a fair equal-compute control. The run was locally valid, but the primary COMMON learner worsened from `0.24397564` to `0.25056517` pooled mean TV. The control-minus-candidate bootstrap interval was `[-0.01396369, 0.00069792]`; only one heldout improved marginally; continuation depth 2+ did not improve in both heldouts; and neither heldout passed the hard stability gates. The NATIVE diagnostic improvement was only `0.00142599`, with an interval crossing zero.
+## Strength tracking
 
-Finite closure is now authoritative under:
+Weak fixed opponents are regression sentinels, not the final target. Product acceptance ultimately requires a faithful, balanced SpinCore-vs-DeepCrusher benchmark under common game semantics, followed later by full tournament progression once that simulator is frozen.
 
-```text
-validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
-```
+Do not use a simplified DeepCrusher imitation for canonical claims.
 
-The Phase2C2 causal-fail branch has executed exactly as frozen: `C0_V1_FROZEN_CONTROL` / SPNNIV1 is selected as the certified stable provisional fallback and the V1+ architecture reset is closed. No Phase2C3, structural x4 confirmation, larger-K tuning, seed replacement or gate relaxation is authorized. Phase2C0/C1 remain valid structural research findings; they did not establish a production successor. V1's raw physical-card identity, coarse last-32 public history and six-slot neural action head remain explicit debt for R7.5.5 rather than being relabelled as strategically optimal.
+## Persistent rules
 
-R7.5.4 may now begin only through a fail-closed binding audit that proves the historical action/sizing stack is still exactly bound to the selected V1 fallback and its frozen evaluator semantics. Its strategic action-abstraction evidence must then be completed before R7.5.5. Only R7.5.5 may freeze the production encoder/action abstraction.
-
-## R8 preparation already accepted without starting official training
-
-R8.0 now has a fail-closed universal 3-Max simulator profile. Nominal buy-in, currency, displayed multiplier, rake and skin are presentation/accounting metadata and cannot select a policy. Policy identity is determined by effective stack, hands-based blind schedule, normalized payout vector, game rules and strategy domain. The former `SPINCORE_R8_PRODUCTION_PROFILE_V3` selected-state capture path is retained as historical evidence but is not the active product contract and requires no user-supplied captures. Exact public GGPoker multiplier-variant rows remain a project-owned ingestion task; pilot constants remain forbidden substitutes.
-
-R8.1 production infrastructure has accepted deterministic independent-stream scheduling, central Algorithm-R state, durable scheduler checkpoints and integrated semantic transactions. Same-stream root-level parallelism remains forbidden because it would alter the persistent live RNG contract.
-
-R8.2 has an accepted calibration selector/precommit. Candidate concurrency is eligible only if it reproduces the exact validated R8.1 transaction-generation identities; among semantically exact error-free candidates, highest throughput wins and exact ties prefer lower concurrency. CPU utilization is telemetry, not an acceptance target. **Physical Ryzen calibration has not run and is not marked PASS.**
-
-Heavy CPU-bound experiments and official training are now assigned to the Ryzen when their scale makes GitHub runner chaining inefficient. GitHub remains the frozen-contract/referee/certification environment. `tools/spincore_ryzen_frozen_runner.py` records exact commit, tracked-worktree state, contracts, runtime, command/log and SHA-256 artifact inventory for future heavy local executions; this infrastructure does not itself authorize R8 training.
-
-Official public multiplier-variant ingestion and other non-strategic engineering may proceed while R7.5 executes. R8.3/R8.4 simulator training may not start until R7.5.5 is frozen, the official variant matrix is bound to the universal profile and R8.2 physical calibration passes. This dependency belongs to the project, not the user.
-
-## Strategic sentinels and finite downstream gates
-
-Action-level sentinel infrastructure is accepted:
-
-```text
-python/spincore/strategic_sentinel.py
-python/spincore/sentinel_state_catalog.py
-validation/STRATEGIC_ACTION_SENTINEL_GATE_DESIGN_20260812.md
-```
-
-This is infrastructure only. The production sentinel set, exact integrity baselines and numerical strategic plausibility bounds are not substitutes for the R7.5 representation/action selection.
-
-Finite downstream gate designs remain:
-
-```text
-validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md
-validation/R10_OPENHOLDEM_RUNTIME_GATE_DESIGN_20260812.md
-validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md
-validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md
-```
-
-R12.9 is the only gate allowed to emit simulator readiness (`READY FOR TABLES = YES` as a legacy alias), and only after all earlier gates pass and all release debts — specifically including R7.3 exact reproducibility — are closed. It can never authorize a real-money GGPoker client integration.
-
-## Remaining finite path to table use
-
-```text
-R7.4 FINAL PASS
--> R7.5.3 representation admission/selection [closed; V1 fallback selected]
--> R7.5.4 V1-bound action/sizing audit [next finite gate]
--> R7.5.5 production representation/action freeze
--> R8.0 universal simulator profile + official multiplier-variant matrix
--> R8.2 physical Ryzen calibration under selected R7.5 architecture
--> R8.3 official HU training
--> R8.4 official 3H training
--> R8.5 immutable production-policy freeze
--> R9 strategic audit
--> R10 offline simulator/inference runtime integration (no live client attachment)
--> R11 safe exploitation
--> R12 operational homologation
--> close every release debt including R7.3 exact reproducibility
--> R12.9 READY FOR OFFLINE SIMULATOR TABLES gate
-```
-
-`READY FOR TABLES = NO` (legacy simulator-release alias). `READY FOR SIMULATOR TABLES = NO`.
+- Continue the same LT1/LT2 learning state; do not restart without concrete evidence.
+- Preserve LT0, LT1 and milestone LT2 checkpoints.
+- Do not shrink 2M reservoirs just to make infrastructure easier.
+- CPU utilization is telemetry, not a target by itself; only adopt optimizations that improve wall time while preserving learning semantics.
+- Do not rerun closed tuning matrices absent a materially changed workload.
+- Do not judge architecture ceiling from early weak-baseline results.
+- Stop larger training blocks at meaningful evidence checkpoints rather than training indefinitely without measurement.
