@@ -4,24 +4,27 @@
 
 - LT0 calibration — **DONE**: 120k roots.
 - LT1 production-shaped milestone — **DONE**: 1.2M roots.
-- LT1 physical fit optimization — **PASS**: 31 root workers, 8 parent Torch threads, vectorized batching.
+- LT1 physical fit optimization — **PASS**.
 - LT2 Stage A — **PASS**: 1.8M roots.
-- Concurrent-fit production parity — **PASS**.
 - LT2 Stage B — **PASS**: 4.5M roots / iteration 7500.
 - Stage B resource gate — **PASS**.
 - Policy drift Stage A -> Stage B — **MATERIAL MOVEMENT CONFIRMED**.
 - Checkpoint cross-play — **NO REPRODUCIBLE ORDERING**.
 - 30k weak-baseline gate — **COMPLETE; PRECISION TARGET MET; HU JAMMER NEGATIVE**.
-- Read-only stored-target fit audit — **COMPLETE; LARGE APPROXIMATION BURDEN OBSERVED, BUT BUDGET SUFFICIENCY UNRESOLVED**.
-- Held-out Stage-B optimizer-budget sweep — **NEXT**.
+- Stored-target fit audit — **COMPLETE**.
+- First held-out fit-budget sweep — **COMPLETE**.
+- AveragePolicy extra-budget hypothesis — **NOT SUPPORTED BY HELD-OUT CE CURVE**.
+- Advantage 100-step sufficiency — **NOT STRICTLY PLATEAUED IN MSE; BEHAVIOR EFFECT UNRESOLVED**.
+- First Advantage policy-TV/argmax diagnostic — **INVALID FOR PRODUCTION SEMANTICS DUE HISTORICAL UNIFORM FALLBACK IN AUDIT HELPER**.
+- Corrected production-semantics multi-seed Advantage budget sweep V2 — **NEXT**.
 - Root training beyond iteration 7500 — **PAUSED**.
-- DeepCrusher — **DEFERRED TO LATER ADVANCED BENCHMARK**.
+- DeepCrusher — **DEFERRED**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
+- `docs/LT2_FIT_BUDGET_SWEEP_RESULT_20260917.md`
 - `docs/LT2_TRAINING_DYNAMICS_FIT_RESULT_20260917.md`
-- `docs/LT2_TRAINING_DYNAMICS_FIT_AUDIT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -35,60 +38,77 @@ Keep both unchanged.
 
 ## Why roots remain paused
 
-The powered weak-baseline evaluation established a specific failure mode rather than a variance-only artifact:
+The powered weak-baseline evaluation established:
 
-- Stage B HU Jammer raw EV `-5.141`, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
+- Stage B HU Jammer `-5.141`, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
 - Stage B minus Stage A HU Jammer `-1.682`, simultaneous six-claim CI approximately `[-3.143,-0.222]`.
 
-Training changed the policy but made this cell worse. Therefore another long block cannot be justified by root count alone.
+The policy changed materially but this weak-opponent HU cell became worse. Root count alone is therefore not a justified next intervention.
 
-## What the fit audit added
+## What the first budget sweep established
 
-The read-only audit sampled 25k items from each Stage A/B Advantage and AveragePolicy reservoir.
+### AveragePolicy
 
-Stage B weighted fit diagnostics:
+Additional optimizer budget did not improve held-out CE in either domain.
 
-- 3H Advantage: only `9.98%` of zero-predictor MSE removed; induced-policy TV `0.5969`;
-- HU Advantage: `14.17%` removed; TV `0.6058`;
-- 3H AveragePolicy: `12.98%` of uniform-to-target CE gap closed; KL `0.6323`, TV `0.4286`;
-- HU AveragePolicy: `16.27%` gap closed; KL `0.6387`, TV `0.4318`.
+3H: stored `1.089719`; +4000 `1.090321`; +8000 `1.092875`.
 
-These residuals are large, but they cannot be labeled optimizer underfit directly because external-sampling targets and historical AveragePolicy targets contain irreducible conditional variation.
+HU: stored `1.116161`; +4000 `1.117772`; +8000 `1.119875`.
 
-Mechanics also matter: Advantage resets each iteration and receives only 100 x 1024 sample draws from a 2M reservoir; AveragePolicy has 12,000 cumulative optimizer steps at Stage B, with +4000 per milestone finalization.
+This rejects the simple hypothesis that the current problem is mainly insufficient AveragePolicy optimizer steps. It does not reject architecture/representation/target limitations.
 
-## Immediate gate — fixed held-out budget curves
+### Advantage MSE
 
-Launcher: `tools/run_lt2_stage_b_fit_budget_sweep.sh`.
+The MSE curve continues to improve after the canonical 100 steps, but slowly.
+
+3H: `0.031933` at 100 -> `0.031279` at 1600, about 2.0% relative reduction.
+
+HU: `0.045925` at 100 -> `0.044057` at 1600, about 4.1% relative reduction.
+
+So 100 is not a strict MSE plateau, especially in HU. Whether that extra MSE reduction translates into better behavior remains unresolved.
+
+## Diagnostic correction
+
+The first fit-audit helper converted Advantage vectors to policies with the old `regret_matching_policy()` semantics: uniform legal fallback when all legal advantages were non-positive.
+
+Functional production SpinCore instead installs `LeanNeuralActionAdvantagePolicy`, whose fallback is a stable masked softmax over raw legal advantages. The first release training specification requires this repaired behavior.
+
+Therefore:
+
+- Advantage MSE metrics from the first audit/sweep are valid;
+- AveragePolicy metrics are valid;
+- Advantage-derived TV/argmax metrics from those reports are not canonical production-policy metrics and must not drive decisions.
+
+This mismatch was in the diagnostic only; current production training already uses the repaired Lean adapter.
+
+## Immediate gate — V2 Advantage budget sweep
+
+Launcher: `tools/run_lt2_stage_b_advantage_budget_sweep_v2.sh`.
 
 Design:
 
-- Stage B only;
-- no roots and no checkpoint mutation;
-- deterministic 25k held-out set per memory;
-- held-out items excluded from optimization sampling;
-- both 3H and HU.
+- Stage B checkpoint read only;
+- no roots;
+- fixed 25k holdout per domain, excluded from optimization;
+- cumulative budgets `0,25,50,100,200,400,800,1600`;
+- production Lean positive-regret + all-nonpositive masked-softmax semantics;
+- three independent deterministic reset/training replicates;
+- per-replicate and aggregate MSE, zero-gap fraction, production-policy TV, argmax and all-nonpositive frequency.
 
-Advantage: fresh deterministic reset, cumulative budgets `0,25,50,100,200,400,800,1600`; canonical production point = 100.
+This is intentionally multi-seed so a budget decision is not made from one network initialization.
 
-AveragePolicy: continue stored Stage-B model+optimizer, cumulative **additional** budgets `0,1000,2000,4000,8000`; canonical finalization increment = +4000.
+## Branch after V2
 
-There is no fixed strength cutoff. The diagnostic question is the shape of the held-out curve.
+If production-policy TV/argmax improves reproducibly beyond 100 along with MSE, test a larger Advantage budget in a small isolated continuation; compare it against preserved Stage B using the existing powered weak-baseline design before scaling roots.
 
-## Branch after budget sweep
+If MSE improves but production-policy metrics do not, do not spend more optimizer budget blindly. Move to target-noise/conditional-variance, SPNNIV1 aliasing/capacity and regret-objective sensitivity diagnostics.
 
-If held-out Advantage fit continues improving strongly after 100 steps, optimizer budget is causally implicated. The next experiment will be a small isolated continuation using a larger Advantage budget, benchmarked against the preserved Stage B before any long run.
-
-If held-out AveragePolicy fit improves strongly with extra fitting, create an isolated policy-refit candidate without collecting new roots and test it against the same weak-baseline suite.
-
-If a curve plateaus early while residual fit remains poor, optimizer budget is not the dominant constraint; inspect capacity, SPNNIV1 representation, target variance/aliasing, reservoir weighting and HU state/action concentration.
-
-If both curves plateau early, move directly to target-generation/representation diagnostics rather than root scaling.
+If the corrected curve plateaus early on both loss and behavior metrics, optimizer budget is not the main bottleneck; investigate representation and target generation directly.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_stage_b_fit_budget_sweep.sh
+bash tools/run_lt2_stage_b_advantage_budget_sweep_v2.sh
 ```
 
-Do not resume root training until the resulting held-out curves are reviewed.
+Do not resume root training until the V2 curve is reviewed.
