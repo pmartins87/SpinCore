@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — HU-JAMMER FAILURE CONFIRMED — SAME-INPUT CONDITIONAL-TARGET AUDIT ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — HU-JAMMER FAILURE CONFIRMED — TARGETED HU-PREFLOP CONDITIONAL RESAMPLING ACTIVE**
 Date: 2026-09-17
 
 ## Current state
@@ -16,12 +16,12 @@ The continuous learning line has reached:
 - 30k weak-baseline precision gate complete;
 - Stage B HU Jammer is statistically negative and worsened relative to Stage A;
 - AveragePolicy extra fitting does not improve held-out CE;
-- larger Advantage budgets reduce MSE modestly but do not improve production-policy TV;
-- high-span sampled-target disagreement is real;
-- repeated-state audit shows material opponent-action target noise and strong variance reduction from exact level 1;
-- immediate next experiment is same-input conditional-target variance, not more roots.
+- larger Advantage budgets reduce MSE modestly but do not improve production-policy behavior;
+- fixed-state repeats show material opponent-action target variance and strong variance reduction from exact level 1;
+- complete-reservoir exact-input duplicates are too sparse for a representative conditional-variance estimate;
+- immediate next experiment is targeted HU-preflop conditional resampling, not more roots.
 
-Read `LT2_REPEATED_TARGET_VARIANCE_RESULT_20260917.md` and `LT2_SAME_INPUT_TARGET_VARIANCE_AUDIT_20260917.md` first.
+Read `LT2_SAME_INPUT_TARGET_VARIANCE_RESULT_20260917.md` and `LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_20260917.md` first.
 
 ## Core training contract
 
@@ -40,7 +40,7 @@ Current functional line:
 - 100 Advantage optimizer steps per domain per iteration;
 - batch size 1024;
 - 4000 AveragePolicy optimizer steps per milestone finalization;
-- production behavior uses positive-regret matching and a masked-softmax fallback when all legal predicted advantages are non-positive;
+- production behavior uses positive-regret matching and masked-softmax fallback when all legal predicted advantages are non-positive;
 - production `exact_opponent_levels=0`;
 - 31 root workers, one worker numerical thread, 8 parent Torch threads, vectorized batching, production concurrent-fit mode.
 
@@ -54,121 +54,96 @@ LT2 Stage B: 4.5M roots / iteration 7500, SHA256 `3463aa1dccac2c9f26cb45753b6949
 
 Keep all preserved milestones unchanged.
 
-## Strength result that freezes root scaling
+## Strength gate freezing root scaling
 
-The statistically powered 30k gate established:
+Stage B HU Jammer is `-5.141` chips/hand with simultaneous family-wise 95% CI `[-9.078,-1.204]`.
 
-- Stage B HU Jammer `-5.141` chips/hand, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
-- Stage B minus Stage A HU Jammer `-1.682`, simultaneous six-claim interval about `[-3.143,-0.222]`.
+Stage B minus Stage A HU Jammer is `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
 
-More roots cannot be admitted merely because policy continues to move.
+Policy movement without practical strength improvement is not sufficient to admit more roots.
 
-## Optimizer diagnostics already closed
+## Diagnostics already closed
 
-AveragePolicy: increasing finalization fitting does not improve held-out CE.
+More AveragePolicy optimizer steps are not supported.
 
-Advantage: 100 -> 1600 steps reduces held-out MSE by only about 3.5–3.8% and does not reproducibly improve production-policy TV. Do not multiply the production optimizer budget from this evidence.
+A 16x Advantage optimizer increase is not supported: 100 -> 1600 steps modestly improves MSE but not the production policy mapping.
 
-## High-span sampled-target result
+The large Advantage target-policy disagreement is not mostly caused by near-tied actions and is not dominated by the all-nonpositive fallback branch.
 
-The 100k-per-domain audit showed that the large policy disagreement is not a near-tie artifact. The `100+ chip` target-span bucket carries about 86% of state weight and essentially all of the signed sampled-target value gap.
+## Opponent-action target variance
 
-HU target-induced action mass was far more fold-heavy than model-induced action mass, directionally compatible with the HU-Jammer weakness. But one stored target is not a gold-standard target because external sampling is noisy and the final deployed checkpoint uses AveragePolicy.
+At fixed exact hidden deal:
 
-## Repeated-state target-variance result
+- production exact level 0 opponent-action noise explains about 35.1% of sampled-target MSE in 3H and 36.7% in HU;
+- exact level 1 reduces that measured component by about 78.0% and 80.5%;
+- node cost rises about 2.27x and 2.31x.
 
-The next audit fixed each selected hidden deal and future board and repeated the target traversal eight times.
+Exact level 1 therefore remains a serious candidate variance-reduction mechanism.
 
-### Production exact level 0
+It is not yet a production-training choice because fixed-deal residual error also contains hidden-card/future-board effects absent from the neural information set.
 
-3H:
+## Same-input reservoir audit
 
-- sampled-target MSE `0.0141184`;
-- within-repeat opponent-action variance `0.00496045`;
-- decomposition-by-means noise fraction `35.13%`.
+Scanning all stored Stage-B Advantage memories found very low exact-input repeat coverage.
 
-HU:
+HU preflop is the best case, but only 527 of 224,491 stored items (0.2348%) are in duplicate exact-input groups and max group size is 3.
 
-- sampled-target MSE `0.0211958`;
-- within-repeat opponent-action variance `0.00776946`;
-- decomposition-by-means noise fraction `36.66%`.
+The sparse HU-preflop subset yields:
+- within-same-input target variance 36.9%;
+- model-to-same-input-mean error 63.1%;
+- policy TV 0.620;
+- target FOLD 38.2% vs model 16.6%;
+- target CHECK_CALL 23.7% vs model 44.8%;
+- target ALL_IN 23.2% vs model 36.4%.
 
-Thus opponent-action external sampling is a material noise source even before counting hidden-card and future-chance variance.
+Those values are suggestive, not representative, because coverage is too low.
 
-### Exact level 1
+## Active targeted conditional audit
 
-3H:
+The next audit creates its own controlled repeated conditional samples instead of waiting for reservoir collisions.
 
-- within-repeat MSE `0.00109172`;
-- reduction `77.99%`;
-- node multiplier `2.268x`.
+HU preflop only:
 
-HU:
+- 16 root anchors;
+- 32 continuation-1 anchors;
+- 16 continuation-2+ anchors;
+- hero cards/public state/action history held fixed;
+- all 2450 ordered opponent hands enumerated;
+- current Stage-B opponent behavior used to compute exact hand-posterior reach weights for the observed public path;
+- 16 stratified posterior hand draws per anchor;
+- 4 future boards per hand;
+- 4 target repeats per exact hidden deal;
+- target collection uses exact opponent level 1.
 
-- within-repeat MSE `0.00151854`;
-- reduction `80.45%`;
-- node multiplier `2.306x`.
+Balanced nested decomposition:
 
-For this isolated variance source, `variance ratio × node-cost ratio` is approximately `0.499` in 3H and `0.451` in HU. Therefore level 1 provides about `2.00x` and `2.22x` better statistical efficiency per node for suppressing opponent-action sampling noise.
+`sample-target MSE`
+`= within-deal action-sampling variance`
+`+ future-board variance`
+`+ opponent-hand posterior variance`
+`+ current-model MSE to conditional mean`.
 
-This makes exact level 1 a serious candidate mechanism, but not yet an admitted long-training setting.
-
-## Why the fixed-deal residual is not network error
-
-After exact level 1, model MSE to the fixed-deal repeat mean is still about `88.6%` of aggregate sampled-target MSE in 3H and `89.1%` in HU.
-
-That does **not** mean the network is responsible for 89% of the error.
-
-The fixed-deal repeat mean is conditioned on opponent private cards and future board cards that SPNNIV1 intentionally does not expose. Consequently the residual mixes:
-
-- hidden-card/future-chance target variance;
-- historical target/policy drift for repeated encoded inputs;
-- representation/capacity error;
-- optimization error.
-
-The next gate separates empirical same-input variance from conditional-mean model error under the actual stored reservoir.
-
-## Immediate same-input audit
-
-Launcher: `tools/run_lt2_same_input_target_variance.sh`.
-
-Design:
-
-- Stage B checkpoint read only and SHA-checked;
-- complete stored Advantage reservoirs scanned;
-- no roots, no optimizer steps, no memory writes;
-- exact grouping key = SPNNIV1 observation bytes + 10-action legal mask;
-- duplicate sensitivity tiers >=2, >=4 and >=8 observations;
-- explicit duplicate coverage by domain and street;
-- training-weight proxy decomposition:
-
-`sample-target MSE = within-same-input target variance + model MSE to weighted same-input mean`.
-
-A deterministic model with the current input cannot fit the within-same-input component. The second component is the learnable conditional-mean error on the covered groups.
-
-Supporting diagnostics retain target/model action mass, TV, argmax, branch mismatch and chip-equivalent value gap.
+This is the first current-line diagnostic that directly separates hidden/chance conditional variance from model conditional-mean error on deliberately repeated observable HU preflop states.
 
 ## Decision branches
 
-If within-same-input variance dominates on well-covered groups, prioritize target-generation variance reduction, weighting, or legitimate observable representation improvements. Larger networks alone cannot fit that component.
+If hidden-hand/future-board variance dominates, architecture growth alone is the wrong intervention. Focus on lower-variance, information-set-correct target estimation.
 
-If current-model error to the same-input mean dominates, then representation/capacity/per-action calibration becomes a justified branch, especially in HU preflop.
+If model error to the conditional mean dominates, test representation/capacity/per-action calibration in a small HU-preflop candidate before any long training. Localize FOLD/CHECK_CALL/ALL_IN and FACING_ALL_IN states.
 
-If duplicate coverage is inadequate on a street, do not generalize from another street; build a targeted conditional resampling experiment.
+If residual within-deal action noise stays large even at exact level 1, test deeper bounded exact branching.
 
-Exact level 1 remains live. A bounded exact-level training candidate is admitted only after the same-input audit shows how much of the remaining objective is learnable under the present input.
-
-Any candidate must then beat preserved Stage B on a statistically powered practical weak-baseline comparison before root scaling resumes.
+Every candidate must beat preserved Stage B on the powered weak-baseline suite before root scaling resumes.
 
 ## DeepCrusher placement
 
-DeepCrusher remains deferred until the weak-opponent curriculum is strong and stable. It is not a current dependency.
+DeepCrusher remains deferred until the weak-opponent curriculum is strong and stable.
 
 ## Immediate direction
 
 1. Preserve Stage A and Stage B.
 2. Keep root training stopped at iteration 7500.
-3. Run `bash tools/run_lt2_same_input_target_variance.sh`.
-4. Review `SpinCore_LT2_same_input_target_variance.json`.
-5. Choose target-variance reduction versus representation/capacity from the measured conditional decomposition.
+3. Run `bash tools/run_lt2_hu_preflop_conditional_resampling.sh`.
+4. Review `SpinCore_LT2_hu_preflop_conditional_resampling.json`.
+5. Select one bounded causal intervention from the measured decomposition.
 6. Do not scale roots or move to DeepCrusher yet.
