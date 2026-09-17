@@ -1,100 +1,68 @@
 # SpinCore — LT2 Stage A -> Stage B checkpoint cross-play review
 
 Date: 2026-09-17
-Status: **TWO INDEPENDENT CROSS-PLAY RUNS COMPLETE — NO REPRODUCIBLE STAGE-B ADVANTAGE OR REGRESSION — EXTERNAL DEEPCRUSHER BENCHMARK NEXT**
+Status: **TWO INDEPENDENT RUNS COMPLETE — SIGN-UNSTABLE / NO REPRODUCIBLE ORDERING — WEAK-BASELINE VARIANCE GATE NEXT**
 
 ## Inputs
 
-Stage A:
+Stage A: iteration 3000 / 1.8M roots, SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
 
-- iteration 3000 / 1.8M roots;
-- checkpoint SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
+Stage B: iteration 7500 / 4.5M roots, SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-Stage B:
+Both evaluations were read-only and paired scenario/deal/hero-seat/per-seat RNG streams.
 
-- iteration 7500 / 4.5M roots;
-- checkpoint SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
+## Run 1 — 3000 scenarios, seed 20260918
 
-Both evaluations were read-only, used 31 workers, paired scenario/deal/hero-seat/per-seat RNG streams, and changed only the hero checkpoint in the primary deterministic 50/50 Stage-A/Stage-B opponent-mixture test.
+Primary B-minus-A:
 
-## Initial cross-play — 3000 scenarios
-
-Seed `20260918`; 1640 3H / 1360 HU scenarios.
-
-Primary Stage-B-minus-Stage-A result:
-
-| Domain | B - A chips/hand | 95% CI |
-|---|---:|---:|
-| ALL | -1.8129 | [-3.9564, +0.3306] |
-| 3H | -1.9760 | [-4.3207, +0.3687] |
-| HU | -1.6162 | [-5.4070, +2.1747] |
+- ALL `-1.8129`, CI `[-3.9564,+0.3306]`;
+- 3H `-1.9760`, CI `[-4.3207,+0.3687]`;
+- HU `-1.6162`, CI `[-5.4070,+2.1747]`.
 
 Additional diagnostics:
 
-- HU direct B-vs-A: `-0.6165`, CI `[-10.7519,+9.5188]`;
-- 3H invasion difference B-vs-AA minus A-vs-BB: `+2.8894`, CI `[-1.2160,+6.9949]`.
+- HU direct `-0.6165`, CI `[-10.7519,+9.5188]`;
+- 3H invasion `+2.8894`, CI `[-1.2160,+6.9949]`.
 
-The primary point estimates all favored Stage A, but every interval included zero and the 3H invasion diagnostic pointed the opposite way. This was classified borderline/mixed and triggered an independent higher-power confirmation.
+## Run 2 — 9000 scenarios, independent seed 20260919
 
-## Fresh-seed confirmation — 9000 scenarios
+Primary B-minus-A:
 
-Seed `20260919`; 4918 3H / 4082 HU scenarios.
-
-Primary Stage-B-minus-Stage-A result:
-
-| Domain | B - A chips/hand | 95% CI |
-|---|---:|---:|
-| ALL | +0.8625 | [-0.4085, +2.1335] |
-| 3H | +0.9152 | [-0.5940, +2.4244] |
-| HU | +0.7990 | [-1.3337, +2.9317] |
+- ALL `+0.8625`, CI `[-0.4085,+2.1335]`;
+- 3H `+0.9152`, CI `[-0.5940,+2.4244]`;
+- HU `+0.7990`, CI `[-1.3337,+2.9317]`.
 
 Additional diagnostics:
 
-- HU direct B-vs-A: `+1.5503`, CI `[-4.2649,+7.3656]`;
-- 3H invasion difference B-vs-AA minus A-vs-BB: `-2.2202`, CI `[-4.4860,+0.0456]`.
+- HU direct `+1.5503`, CI `[-4.2649,+7.3656]`;
+- 3H invasion `-2.2202`, CI `[-4.4860,+0.0456]`.
 
-The primary estimates reversed sign relative to the first run and now mildly favor Stage B, but all confidence intervals again include zero. The 3H invasion diagnostic also reversed direction and is nearly negative-significant, while HU direct remains broad.
+All primary signs reversed relative to run 1. Neither run excluded zero.
 
-## Row-level sensitivity observation
+## Variance interpretation
 
-The 9000-scenario row evidence explains why checkpoint cross-play is noisy despite material policy drift:
+The 9000-scenario rows contained 22,918 primary seat-runs, but only about 4.19% had a non-zero paired terminal B-minus-A delta. Most common-random-number trajectories therefore cancel exactly; a small minority of divergent sampled actions carry large positive or negative terminal outcomes.
 
-- 22,918 primary mixture hero seat-runs were evaluated;
-- only about 4.19% had a non-zero Stage-B-minus-Stage-A terminal chip delta;
-- about 10.31% of scenario-cluster means were non-zero;
-- 3H seat-run non-zero fraction was about 4.36%;
-- HU seat-run non-zero fraction was about 3.90%.
+This does not invalidate the cross-play design. It shows that checkpoint ordering is a sparse-difference, high-variance question under this stochastic evaluator.
 
-Thus the paired design cancels most trajectories exactly, while a relatively small set of divergent sampled actions produces large positive/negative terminal deltas. This is useful variance reduction, but it also means the remaining strength signal is sparse and unstable across independent seeds.
+A formal inverse-variance combination of the two ALL estimates is close to zero rather than favoring either checkpoint. The sign reversal means the first negative result cannot be interpreted as a confirmed Stage-B regression.
 
-This observation does not invalidate the evaluator; it explains why simply repeating the same A-vs-B stochastic cross-play has diminishing value.
+## Conclusion
 
-## Interpretation
+The cross-play evidence establishes neither Stage-B improvement nor Stage-B regression.
 
-The independent 9000-scenario confirmation **did not reproduce** the initial Stage-B disadvantage. It reversed the primary ALL/3H/HU point estimates, yet still failed to establish a statistically distinguishable Stage-B advantage.
+What is established independently is that Stage B's action distribution moved materially relative to Stage A. Thus “no learning” is also unsupported.
 
-Combined with prior evidence:
+The correct next question is more basic and more appropriate for the current maturity of SpinCore: **does Stage B actually beat the transparent weak curriculum opponents with adequate statistical precision?**
 
-- weak fixed opponents: no detectable Stage-B improvement/regression;
-- policy drift: material decision-distribution movement, especially postflop/HU;
-- cross-play run 1: mild/borderline Stage-A direction;
-- cross-play run 2: mild Stage-B direction;
-- direct/invasion diagnostics: broad and directionally unstable.
+## Next gate
 
-Therefore the correct conclusion is **relative checkpoint strength unresolved**, not Stage-B regression and not Stage-B improvement.
+Use `tools/run_lt2_weak_baseline_variance_review.sh`.
 
-The policies are moving materially, but contemporary self-play has not shown that the movement is systematically beneficial.
+It evaluates Stage A and Stage B on six independent seed blocks totaling 30,000 scenarios per checkpoint, then gives simultaneous family-wise 95% confidence intervals for Stage-B raw chip EV against uniform legal, passive caller and jammer in 3H and HU.
 
-## Training decision
-
-Pause same-regime SpinCore training at iteration 7500 / 4.5M roots.
-
-Do not chase significance by repeatedly rerunning the same checkpoint-vs-checkpoint cross-play, and do not change architecture from this evidence alone.
-
-The next higher-value gate is the faithful external DeepCrusher R8 v22 benchmark. Benchmark **both Stage A and Stage B** against the same admitted oracle instead of assuming the latest checkpoint is stronger.
-
-See `docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`.
+This replaces the premature DeepCrusher-next direction. DeepCrusher remains a later advanced benchmark after weak-opponent strength is established.
 
 ## Stop condition
 
-Do not resume SpinCore training beyond iteration 7500 until the faithful DeepCrusher benchmark is available and reviewed, or until a separately justified bounded training-dynamics experiment is explicitly admitted.
+Do not resume training beyond iteration 7500 until the 30k weak-baseline variance gate is reviewed.
