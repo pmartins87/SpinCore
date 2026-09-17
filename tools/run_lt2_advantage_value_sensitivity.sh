@@ -58,15 +58,27 @@ p=Path(sys.argv[1]); d=json.loads(p.read_text())
 assert d.get('schema') == 'SPINCORE_LT2_ADVANTAGE_VALUE_SENSITIVITY_V1'
 assert d.get('completed_iteration') == 7500
 assert set(d.get('domains') or {}) == {'THREE_HANDED','TRUE_HEADS_UP'}
+# Normalize one internal field label before the report leaves the launcher.
+# The analyzer computes target-policy value minus model-policy value; the V2
+# output name below makes that sign explicit and removes any ambiguity.
 for block in d['domains'].values():
     assert block['sample_count'] > 0
     groups=block['weighted_groups']
     assert 'OVERALL' in groups
     assert 'TARGET_ALL_NONPOS' in groups
     assert 'TARGET_HAS_POSITIVE' in groups
+    for group in groups.values():
+        w=group['weighted']
+        old='signed_model_minus_target_policy_value_gap_chips'
+        new='signed_target_policy_minus_model_policy_value_gap_chips'
+        if old in w:
+            w[new]=w.pop(old)
     w=groups['OVERALL']['weighted']
-    for key in ('tv','branch_mismatch','model_policy_regret_to_best_chips','positive_model_value_loss_vs_target_policy_chips'):
+    for key in ('tv','branch_mismatch','model_policy_regret_to_best_chips','positive_model_value_loss_vs_target_policy_chips','signed_target_policy_minus_model_policy_value_gap_chips'):
         assert key in w
+d['schema']='SPINCORE_LT2_ADVANTAGE_VALUE_SENSITIVITY_V2'
+d['method']['output_field_normalization']='signed gap is target-policy value minus model-policy value; positive means model policy is worse on the stored target'
+p.write_text(json.dumps(d, indent=2, sort_keys=True)+'\n')
 print('LT2_ADVANTAGE_VALUE_SENSITIVITY_POSTVALIDATION_PASS')
 PY
 
