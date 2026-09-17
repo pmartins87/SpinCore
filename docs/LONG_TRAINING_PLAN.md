@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — TRAINING FROZEN AT 4.5M ROOTS — MATERIAL POLICY DRIFT BUT NO REPRODUCIBLE CHECKPOINT STRENGTH ORDERING — DEEPCRUSHER EXTERNAL GATE NEXT**
+Status: **LT2 STAGE B PASS — TRAINING PAUSED AT 4.5M ROOTS — VARIANCE-FIRST WEAK-BASELINE GATE ACTIVE**
 Date: 2026-09-17
 
 ## Current state
@@ -9,15 +9,14 @@ The continuous learning line has reached:
 
 - LT0: 120k roots — calibration;
 - LT1: 1.2M roots — production-shaped milestone;
-- LT2 Stage A: 1.8M roots — first policy-reservoir saturation gate;
-- LT2 Stage B: 4.5M roots / iteration 7500 — all four 2M memories saturated/replacement;
-- paired weak-baseline checkpoint delta — flat/inconclusive;
-- policy-drift gate — material movement confirmed;
-- contemporary Stage-A/Stage-B cross-play run 1 — mild Stage-A direction, inconclusive;
-- independent 9000-scenario cross-play confirmation — sign reversal to mild Stage-B direction, still inconclusive;
-- next gate — faithful DeepCrusher R8 v22 external benchmark of both preserved checkpoints.
+- LT2 Stage A: 1.8M roots;
+- LT2 Stage B: 4.5M roots / iteration 7500;
+- all four 2M reservoirs in replacement regime;
+- Stage A -> Stage B policy movement is material;
+- existing weak-baseline and checkpoint-strength evaluations are too noisy to justify another long block or an architecture change;
+- immediate next gate is a 30k multi-seed weak-baseline evaluation with explicit uncertainty control.
 
-Read `LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`, `DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`, `LT2_POLICY_DRIFT_REVIEW_20260917.md`, `LT2_STAGE_B_LEARNING_REVIEW_20260917.md` and `LT2_STAGE_B_RESOURCE_REVIEW_20260917.md`.
+Read `LT2_VARIANCE_AND_WEAK_BASELINE_GATE_20260917.md` first.
 
 ## Core training contract
 
@@ -27,22 +26,15 @@ Current functional line:
 - WTA chip-EV utility scaled by 1500;
 - SPNNIV1 frozen-control representation;
 - mature legacy action vocabulary;
-- external-sampling Deep CFR with repaired all-nonpositive regret fallback;
+- external-sampling Deep CFR;
 - separate 3H and HU brains;
 - sampled AveragePolicy trajectories;
 - 2,000,000-sample reservoir capacity per memory per domain;
 - 600 roots per iteration;
 - 100 Advantage optimizer steps per domain per iteration;
 - batch size 1024;
-- 4000 AveragePolicy optimizer steps per domain at milestone finalization.
-
-Admitted Ryzen execution profile:
-
-- 31 root workers;
-- one numerical-library thread per root worker;
-- 8 parent Torch threads;
-- vectorized batch construction;
-- production `concurrent_fit` iteration mode.
+- 4000 AveragePolicy optimizer steps per domain at milestone finalization;
+- 31 root workers, one worker numerical thread, 8 parent Torch threads, vectorized batching, production concurrent-fit mode.
 
 ## Preserved milestones
 
@@ -61,119 +53,74 @@ Stage B final sample state:
 - 3H AveragePolicy seen 5,549,800;
 - HU AveragePolicy seen 2,072,704.
 
-All four 2M memories are in replacement regime. Resource gate passed with zero swap and minimum observed WSL MemAvailable 7.473 GiB.
+Resource gate passed with zero swap and minimum observed WSL MemAvailable 7.473 GiB.
 
-Preserve Stage A and Stage B. Do not assume Stage B is stronger simply because it is later.
+## Statistical correction
 
-## Weak-baseline learning review
+The earlier 1000-scenario weak-baseline review was useful as a pilot, not as a decisive gate. Its Stage-B raw chip-EV confidence intervals were wide: approximate 95% half-widths ranged from about 9 to 20 chips/hand across baseline/domain cells. Apparent HU negatives against passive caller and jammer were therefore not resolved.
 
-Stage A and Stage B were compared on the same 1000 scenarios/deals against uniform-legal, passive-caller and jammer families. All nine paired checkpoint-delta 95% CIs crossed zero. The extra 2.7M roots therefore produced no statistically distinguishable gain or regression under those weak fixed opponents.
+Similarly, checkpoint cross-play is seed-sensitive. A 3000-scenario run mildly favored Stage A; an independent 9000-scenario run reversed all primary signs to mildly favor Stage B. Neither established a strength ordering.
 
-## Policy drift
+Policy drift, however, is clearly nontrivial: mean TV 0.041395, p95 0.108574, argmax disagreement 12.10%, with stronger HU postflop movement. Thus training is changing the policy, but existing strength estimators have not told us whether the movement is useful.
 
-The policies differ materially at the decision-distribution level. Overall mean TV is 0.041395 with 12.10% argmax disagreement across 11,040 identical probe states. Movement is particularly large postflop in HU.
+## Immediate 30k weak-baseline gate
 
-Therefore weak-baseline flatness cannot be treated as policy stagnation.
+The next experiment evaluates both preserved checkpoints against the transparent weak curriculum opponents using six independent 5000-scenario seed blocks.
 
-## Contemporary checkpoint cross-play — run 1
+Primary Stage-B claims:
 
-3000 scenarios, seed `20260918`.
+- uniform legal 3H and HU;
+- passive caller 3H and HU;
+- jammer 3H and HU.
 
-Primary Stage-B-minus-Stage-A delta against the identical deterministic 50/50 A/B opponent mixture:
+The six claims use a Bonferroni simultaneous family-wise 95% confidence interval. There is no arbitrary strength score. A cell is positive only if its simultaneous lower bound is above zero, negative only if its upper bound is below zero, otherwise unresolved.
 
-- ALL `-1.8129`, CI `[-3.9564,+0.3306]`;
-- 3H `-1.9760`, CI `[-4.3207,+0.3687]`;
-- HU `-1.6162`, CI `[-5.4070,+2.1747]`.
+Why 30k: using the observed pilot variance, the worst cell would require about 29.4k total scenarios to target an approximately 5-chip/hand simultaneous half-width. The 5-chip figure is a precision target selected to resolve the pilot's apparent ~8 to ~12 chip HU losses, not a pass threshold.
 
-Additional diagnostics:
+Launcher:
 
-- HU direct `-0.6165`, CI `[-10.7519,+9.5188]`;
-- 3H invasion difference `+2.8894`, CI `[-1.2160,+6.9949]`.
+`tools/run_lt2_weak_baseline_variance_review.sh`
 
-The primary point estimates favored Stage A, but all intervals included zero and the invasion diagnostic pointed the opposite way.
+Analysis:
 
-## Contemporary checkpoint cross-play — independent confirmation
+`tools/analyze_lt2_weak_baseline_multiseed.py`
 
-9000 scenarios, seed `20260919`; 4918 3H / 4082 HU.
+## Training-dynamics hypotheses to test only if needed
 
-Primary Stage-B-minus-Stage-A delta:
+If weak-baseline strength is negative or near-zero after adequate precision, do not merely add roots. Run bounded diagnostics first.
 
-- ALL `+0.8625`, CI `[-0.4085,+2.1335]`;
-- 3H `+0.9152`, CI `[-0.5940,+2.4244]`;
-- HU `+0.7990`, CI `[-1.3337,+2.9317]`.
+The first hypothesis is Advantage-network fit sufficiency. The trainer resets each domain's Advantage network every iteration and then trains it for 100 optimizer steps from the accumulated reservoir. This follows the current Deep-CFR design, but whether 100 steps are enough at a 2M reservoir is an empirical question. Measure held-out loss for the canonical 100-step fit versus larger controlled budgets before changing anything.
 
-Additional diagnostics:
+The second hypothesis is AveragePolicy approximation. Finalization trains the policy network for 4000 optimizer steps over the 2M policy reservoir. Measure held-out strategy loss/calibration and whether longer fitting materially changes policy quality before assuming the learned average strategy itself is correct.
 
-- HU direct `+1.5503`, CI `[-4.2649,+7.3656]`;
-- 3H invasion difference `-2.2202`, CI `[-4.4860,+0.0456]`.
+Other bounded checks:
 
-The higher-power independent run reversed all three primary signs relative to run 1 and still did not exclude zero. The invasion diagnostic also reversed direction.
+- reservoir age/composition and iteration weighting;
+- 3H/HU-specific fit differences;
+- blind/street concentration of errors;
+- sensitivity to network capacity only after fit-budget sufficiency is known.
 
-Row-level evidence shows only about 4.19% of 22,918 primary seat-runs produced a non-zero paired terminal chip delta. The paired common-random-number design cancels most trajectories exactly, but the remaining rare divergent trajectories carry large positive/negative outcomes. That makes further repetitions of the same A-vs-B stochastic cross-play a low-value use of evaluation compute.
+## DeepCrusher placement
 
-## Training decision
+DeepCrusher is deferred. It is a sophisticated advanced rules strategy and should be used later, after SpinCore has demonstrated statistically stable superiority over weak transparent opponents.
 
-Freeze same-regime extension beyond iteration 7500 / 4.5M roots.
+A literal C++ translation is not logically required for future DeepCrusher benchmarking. It may be useful for speed, auditability, or exact structural comparison, but any future benchmark can use another execution path if that path is shown faithful to the original strategy and relevant OpenPPL/library semantics.
 
-Evidence now supports all of the following simultaneously:
+## Decision branches
 
-- training continues to move the AveragePolicy materially;
-- weak fixed opponents do not resolve whether that movement helps;
-- contemporary checkpoint cross-play does not provide a reproducible A/B strength ordering across independent seeds;
-- there is no defensible basis yet for either more blind root count or an architecture change.
+If all six weak-baseline cells are clearly positive with adequate precision, consider another bounded continuation from Stage B, then repeat the same statistically defined curriculum gate.
 
-Do not spend another multi-million-root block merely because resources are healthy. Do not repeatedly rerun the same cross-play seeking significance.
+If any cell is clearly negative, run the training-dynamics audit before more roots.
 
-## Next product-strength gate — faithful DeepCrusher R8 v22
+If cells remain unresolved but the precision target is met, the edge is practically close enough to zero that training dynamics should still be investigated before more long compute.
 
-The DeepCrusher oracle must pass source-faithfulness admission before use:
-
-- structural OpenPPL rule ordering/priority preserved;
-- all relevant library symbols implemented from their real definitions, including functions such as `AmountToCall`;
-- action sizing/all-in conversion semantics preserved;
-- representative parity probes against the frozen source pass;
-- intentional divergences documented.
-
-After admission, benchmark **both Stage A and Stage B** against the exact same DeepCrusher policy with paired empirical scenarios, deal seeds, hero-seat rotation and row-level evidence.
-
-Required primary outputs:
-
-- Stage A vs DeepCrusher chip EV;
-- Stage B vs DeepCrusher chip EV;
-- paired Stage-B-minus-Stage-A external-reference delta;
-- 3H and HU separated wherever DeepCrusher faithfully supports them;
-- scenario-clustered uncertainty.
-
-Then add blind/effective-stack/position breakdowns only after the primary result is stable.
-
-Decision logic:
-
-- Stage B clearly stronger than Stage A vs DeepCrusher -> consider another bounded continuation from Stage B and re-evaluate afterward;
-- Stage A clearly stronger -> investigate AveragePolicy/training dynamics before more roots;
-- externally indistinguishable -> investigate representation/capacity/optimizer/reservoir dynamics only through bounded controlled experiments, not another long blind run.
-
-See `docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`.
-
-## Reservoir policy
-
-Do not shrink or enlarge the 2M reservoirs on intuition alone. Stage B established a healthy saturated operating point with zero swap.
-
-## Operational files
-
-- `tools/run_long_training_lt2_stage_b.sh` — completed Stage B launcher;
-- `tools/audit_completed_lt2_stage_b.sh` — Stage B postvalidation PASS;
-- `tools/run_lt2_stage_b_learning_review.sh` — completed paired weak-baseline review;
-- `tools/run_lt2_policy_drift_review.sh` — completed policy-drift gate;
-- `tools/evaluate_lt2_checkpoint_crossplay.py` — contemporary policy cross-play evaluator;
-- `tools/run_lt2_checkpoint_crossplay.sh` — completed cross-play launcher with scenario/seed overrides;
-- `tools/run_lean_functional_training.py` — authoritative trainer.
+Do not use DeepCrusher as a pass/fail requirement for this stage.
 
 ## Immediate direction
 
-1. Preserve Stage A and Stage B checkpoints.
-2. Keep SpinCore training stopped at iteration 7500 / 4.5M roots.
-3. Do not spend more evaluation compute on repeated A-vs-B stochastic cross-play by default.
-4. Finish the faithful DeepCrusher R8 v22 C++/OpenPPL-library parity work.
-5. Admit DeepCrusher only after representative source-parity checks pass.
-6. Benchmark both Stage A and Stage B against the same external oracle.
-7. Use that result to decide whether to continue Stage B, investigate training dynamics, or run bounded architecture/optimization experiments.
+1. Preserve Stage A and Stage B.
+2. Keep training stopped at iteration 7500.
+3. Run `bash tools/run_lt2_weak_baseline_variance_review.sh`.
+4. Review the 30k multi-seed report.
+5. Only then decide between bounded continuation and training-dynamics diagnostics.
+6. DeepCrusher remains later, not the current dependency.
