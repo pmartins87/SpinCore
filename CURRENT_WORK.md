@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-17
-Status: **LT2 STAGE A PASS — 1.8M ROOTS — PRODUCTION CONCURRENT-FIT PARITY PASS — SHORT THROUGHPUT TUNING GATE BEFORE STAGE B**
+Status: **LT2 STAGE A PASS — 1.8M ROOTS — PRODUCTION CONCURRENT-FIT PARITY PASS — LT2 STAGE B READY WITH 31 WORKERS**
 
 ## Active source of truth
 
@@ -24,7 +24,7 @@ SHA256:
 
 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`
 
-This checkpoint remains read-only for all tuning gates and for the eventual Stage B continuation.
+This checkpoint remains read-only for Stage B.
 
 ## Evidence through Stage A
 
@@ -36,7 +36,7 @@ The weak-baseline learning curve remains positive overall and especially 3H. HU 
 
 The repeated fit benchmark gave a 1.312188x speedup for 8-thread concurrent 3H/HU Advantage fitting versus sequential 8-thread fitting, with exact same-thread model/loss/RNG parity.
 
-The production iteration gate then passed exact semantic parity at iteration 3001:
+The production iteration gate passed exact semantic parity at iteration 3001:
 
 - `semantic_parity=true`;
 - `source_unchanged=true`;
@@ -44,61 +44,52 @@ The production iteration gate then passed exact semantic parity at iteration 300
 - reference wall 11.3933 s;
 - production concurrent candidate wall 11.0136 s.
 
-Production `--iteration-mode concurrent_fit` is therefore admitted. Sequential remains the default compatibility path.
+Production `--iteration-mode concurrent_fit` is admitted. Sequential remains the default compatibility path.
 
-## Why one more short tuning gate is justified
+## Worker-count decision
 
-Before committing roughly half a day to Stage B, the user asked whether the Ryzen execution can be shortened further.
+A short worker-count benchmark was prepared to test whether 16/20/24/28 workers could outperform the proven 31-worker topology. The user explicitly declined this extra benchmark and chose to keep **31 workers** for Stage B.
 
-Stage-A fit profiles show that within each 100-step Advantage fit the optimizer/kernel work dominates: typical `optimizer_seconds` is about 3.1–3.3 s while batch construction is only about 0.18–0.22 s and reservoir sampling about 0.07 s. Further Python/batch micro-optimization therefore has little remaining room; the meaningful exact-semantics knobs are execution topology and checkpoint cadence.
+Therefore the worker-count tuning gate is closed without execution. Do not block Stage B on it and do not change the canonical worker count away from 31 without a future explicit decision.
 
-Changing Torch thread count is not an exact-parity knob because different intra-op thread counts can change floating-point reduction order. Keep the admitted 8-thread fit contract for this line unless a separate numerical-drift study is explicitly opened.
+## Checkpoint cadence
 
-Root worker count *is* an execution-only knob because root results are deterministically sorted and merged. It has not yet been production-shaped benchmarked for this SpinCore workload.
+The canonical Stage B launcher remains at checkpoint every 250 iterations. This preserves the already-reviewed restart-risk/serialization tradeoff. A wider cadence such as 500 could save only several additional minutes, but it is not required for Stage B and is not being changed as part of the worker-count decision.
 
-## Immediate finite gate — Stage B worker-count benchmark
+## LT2 Stage B — READY
 
-Run exactly once:
+Canonical launcher:
 
-`tools/benchmark_lt2_stage_b_worker_count.sh`
+`tools/run_long_training_lt2_stage_b.sh`
 
-It tests workers `31,16,20,24,28`, always with:
+Stage B contract:
 
-- 8 parent Torch threads;
-- vectorized batches;
-- production concurrent-fit iterations;
-- the exact preserved iteration-3000 checkpoint;
-- one warmup + five timed iterations per worker count;
-- each worker-count case in a fresh Python process;
-- no checkpoint saves and no finalization.
-
-Acceptance for changing away from 31 workers:
-
-- exact final semantic signature across all worker counts;
-- source checkpoint unchanged;
-- >=3% median whole-iteration gain over workers=31.
-
-If no candidate clears 3%, retain 31 workers and stop tuning this knob.
-
-## Checkpoint cadence decision
-
-Stage A checkpoint saves were roughly 45–55 seconds each. At Stage B's current every-250 cadence there would be 18 intermediate saves across 4500 iterations. Moving to every 500 would roughly halve that serialization count and likely save on the order of 8–10 minutes while doubling maximum restart loss from about one 250-iteration block to one 500-iteration block.
-
-This is a modest but safe semantics-preserving gain. Final Stage B cadence will be set after the worker-count benchmark; do not remove the final checkpoint/finalization.
-
-Memory telemetry and iteration logging are negligible compared with neural optimizer and tree work and should not be removed for speed.
-
-## Stage B target after tuning gate
-
-Continue the same LT2 state from iteration 3000 to approximately iteration 7500:
-
-- +4500 iterations;
-- +2.7M roots;
+- source: preserved iteration-3000 LT2 Stage A checkpoint;
+- target: iteration 7500;
+- +4500 iterations / +2.7M roots;
 - 4.5M roots total;
-- HU AveragePolicy expected to cross 2M near iteration 7.3k.
+- **31 root workers**;
+- 8 parent Torch threads;
+- worker numerical threads 1;
+- vectorized batches;
+- production `concurrent_fit` iteration mode;
+- checkpoint every 250 iterations;
+- one-minute WSL RAM/swap telemetry;
+- isolated Stage B run directory;
+- final AveragePolicy fit and finalized checkpoint required.
 
-After Stage B, stop and review memory/swap, checkpoint behavior, actual throughput, 3H learning, and HU learning before any larger extension.
+Why iteration 7500: the Stage-A HU policy-sample rate projects HU AveragePolicy reaching the 2M reservoir capacity around iteration 7.3k. Iteration 7500 gives a bounded margin to observe the all-four-reservoir saturated/replacement regime.
+
+## Stop condition after Stage B
+
+After `LT2_STAGE_B_PASS`, do not extend farther automatically. Review final HU policy saturation, memory/swap, checkpoint size/save time, actual throughput, 3H learning, HU learning, and DeepCrusher comparison if the faithful oracle is ready.
 
 ## Immediate user action
 
-Do **not** start `run_long_training_lt2_stage_b.sh` yet. Pull `main`, run `bash tools/benchmark_lt2_stage_b_worker_count.sh`, and send `SpinCore_LT2_STAGE_B_worker_benchmark.json`. The benchmark is bounded and should take minutes, not hours. Also report the `windows_power_scheme=` line printed at the start; if Windows is on Balanced/Power Saver we can decide whether a host power-plan change is worthwhile before the long run.
+Pull current `main` and run:
+
+```bash
+bash tools/run_long_training_lt2_stage_b.sh
+```
+
+Let it run until `LT2_STAGE_B_PASS` or `LT2_STAGE_B_FAIL`. On PASS, send `SpinCore_LT2_STAGE_B_report.json` and `SpinCore_LT2_STAGE_B_memory.log` from Windows Downloads. On FAIL, do not restart automatically; send the terminal output and generated logs.
