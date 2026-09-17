@@ -191,6 +191,10 @@ if [ ! -f "$REPORT" ]; then
     exit 12
 fi
 
+# Preserve evidence before post-validation too, so a validator defect can never
+# hide a successfully completed expensive run from Windows Downloads.
+copy_evidence_to_windows
+
 "$PYTHON_RUN" - "$REPORT" "$TARGET_ITERATION" "$EXPECTED_TOTAL_ROOTS" <<'PY'
 import json
 import sys
@@ -208,7 +212,10 @@ if data.get("batch_mode") != "vectorized":
     raise SystemExit("Stage B batch-mode mismatch")
 if data.get("iteration_mode") != "concurrent_fit":
     raise SystemExit("Stage B iteration-mode mismatch")
-roots = sum(int(domain["roots"]) for domain in data["final"].values())
+final_domains = (data.get("final") or {}).get("domains") or {}
+if set(final_domains) != {"THREE_HANDED", "TRUE_HEADS_UP"}:
+    raise SystemExit("Stage B final-domain set mismatch")
+roots = sum(int(domain["roots"]) for domain in final_domains.values())
 if roots != expected_roots:
     raise SystemExit(f"Stage B total-root mismatch: {roots} != {expected_roots}")
 metrics = data.get("checkpoint_metrics") or []
