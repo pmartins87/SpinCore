@@ -1,124 +1,116 @@
 # SpinCore Current Work
 
 Date: 2026-09-17
-Status: **LT2 STAGE B PASS — 4.5M ROOTS — ALL FOUR 2M RESERVOIRS SATURATED/REPLACEMENT — LEARNING REVIEW NEXT**
+Status: **LT2 STAGE B PASS — 4.5M ROOTS — PAIRED LEARNING REVIEW FLAT/INCONCLUSIVE — POLICY-DRIFT GATE NEXT**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_STAGE_B_LEARNING_REVIEW_20260917.md`
 - `docs/LT2_STAGE_B_RESOURCE_REVIEW_20260917.md`
 - `docs/LT2_STAGE_A_REVIEW_20260916.md`
 - `docs/LT2_PRODUCTION_CONCURRENT_PARITY_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
-The active learning line is continuous LT1 -> LT2. Do not restart any completed stage and do not continue beyond iteration 7500 until the Stage A -> Stage B learning review is complete.
+The active learning line is continuous LT1 -> LT2. Preserve all completed checkpoints. Do not continue beyond iteration 7500 until the policy-drift gate below is interpreted.
 
 ## Preserved checkpoints
 
-LT2 Stage A source:
+LT2 Stage A:
 
 - iteration 3000 / 1.8M roots;
 - `/home/rz9/spincore_lean_functional/runs/long_training_lt2/20260916_015559/checkpoint.pt`;
 - SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
 
-LT2 Stage B milestone:
+LT2 Stage B:
 
 - iteration 7500 / 4.5M roots;
 - `/home/rz9/spincore_lean_functional/runs/long_training_lt2_stage_b/20260917_004911/checkpoint.pt`;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-Both checkpoints are preserved. Stage B is the current continuation state if further training is later authorized.
+Stage B is the current continuation state only if further training is later authorized.
 
 ## LT2 Stage B — PASS
 
-The expensive computation completed successfully and the independent postvalidation also passed:
+The expensive computation and independent postvalidation both passed.
 
-`LT2_STAGE_B_POSTVALIDATION_PASS`
+Final state:
 
-Validated milestone:
-
-- target iteration 7500;
 - 4,500,000 total roots;
 - 3H roots 2,452,500;
 - HU roots 2,047,500;
-- 31 root workers;
-- 8 parent Torch threads;
-- vectorized batching;
-- admitted production `concurrent_fit` path;
-- checkpoint every 250 iterations;
-- finalized AveragePolicy fit and checkpoint present;
-- preserved Stage A source unchanged.
-
-Final policy sample counts:
-
-- 3H AveragePolicy seen: 5,549,800;
-- HU AveragePolicy seen: 2,072,704.
-
-The HU AveragePolicy reservoir therefore crossed its 2M capacity during Stage B. Both Advantage reservoirs and both AveragePolicy reservoirs are now in saturation/replacement regime.
-
-## Resource result
-
-Postvalidation evidence:
-
-- final checkpoint size 2.623474 GiB;
+- 3H AveragePolicy seen 5,549,800;
+- HU AveragePolicy seen 2,072,704;
+- all four 2M reservoirs in saturation/replacement regime;
+- final checkpoint 2.623474 GiB;
 - finalized save 72.938 s;
-- minimum observed WSL `MemAvailable` 7.473 GiB;
-- maximum observed swap used 0 GiB;
-- process max RSS from `/usr/bin/time`: 20,638,976 KiB;
-- kernel swaps: 0.
+- min observed WSL MemAvailable 7.473 GiB;
+- max observed swap 0 GiB.
 
-Resource status remains healthy. Memory consumption increased versus Stage A, as expected after the HU policy memory filled, but there was still substantial available memory and no swap.
+Resource status is healthy. The historical `KeyError: 'roots'` was a closed post-run launcher bug and did not invalidate training.
 
-Two wall-time sources disagree and must remain separate rather than averaged:
+## Stage A -> Stage B paired learning review — COMPLETE
 
-- trainer report `wall_seconds`: 41,375.819 s;
-- `/usr/bin/time` elapsed: 10:50:23.
+The read-only review compared Stage A (1.8M) and Stage B (4.5M) on the same 1000 fixed-seed empirical scenarios/deals and preserved row-level pairing. The direct Stage-B-minus-Stage-A deltas were:
 
-This is a telemetry discrepancy only; it does not affect the milestone state or checkpoint integrity.
+| Opponent | Domain | Delta chips/hand | 95% CI |
+|---|---|---:|---:|
+| Uniform legal | ALL | +0.425 | [-3.592, +4.442] |
+| Uniform legal | 3H | -1.020 | [-6.285, +4.245] |
+| Uniform legal | HU | +2.087 | [-4.074, +8.248] |
+| Passive caller | ALL | -0.795 | [-4.506, +2.917] |
+| Passive caller | 3H | -2.115 | [-6.778, +2.548] |
+| Passive caller | HU | +0.725 | [-5.187, +6.636] |
+| Jammer | ALL | +1.073 | [-2.428, +4.574] |
+| Jammer | 3H | +2.974 | [-2.431, +8.380] |
+| Jammer | HU | -1.115 | [-5.356, +3.126] |
 
-## Historical wrapper error — CLOSED
+All nine paired 95% confidence intervals include zero. Point estimates are mixed rather than directionally coherent.
 
-The original Stage B launcher raised `KeyError: 'roots'` after training because its post-run validator read `report["final"]` instead of `report["final"]["domains"]`.
+Conclusion: the extra 2.7M roots did **not produce a statistically distinguishable improvement or regression under the fixed weak-baseline diagnostic**.
 
-The computation had already completed, finalized and written the report/checkpoint. The launcher was corrected and `tools/audit_completed_lt2_stage_b.sh` independently validated the completed run. Do not rerun Stage B because of that closed wrapper defect.
+The earlier reason for deferring the HU warning is now exhausted: HU AveragePolicy crossed its 2M capacity, yet a measurable weak-baseline HU gain still did not emerge.
 
-## Strategic question now
+This does not prove game-theoretic convergence or failure. Weak fixed opponents may simply have become insensitive to strategically different policies. Therefore do not spend another multi-million-root block and do not alter architecture yet without distinguishing policy stagnation from evaluator insensitivity.
 
-Before Stage B, weak-baseline evidence improved overall and in 3H, while HU was flat/noisy from LT1 -> LT2-A. At Stage A the HU AveragePolicy reservoir was only 820,667/2M, so the flat HU result was not treated as a ceiling.
+See `docs/LT2_STAGE_B_LEARNING_REVIEW_20260917.md`.
 
-Stage B has now crossed HU policy saturation. The next decision must therefore be based on learning evidence, especially HU, rather than more blind compute.
-
-## Immediate finite gate — Stage A -> Stage B paired learning review
+## Immediate finite gate — decision-level policy drift
 
 Run:
 
-`tools/run_lt2_stage_b_learning_review.sh`
+`tools/run_lt2_policy_drift_review.sh`
 
-This is **read-only evaluation, not training**. It evaluates the exact Stage A and Stage B policies on the same 1000 fixed-seed empirical scenarios/deals/opponent families and preserves row-level results so a direct paired checkpoint-delta CI can be computed.
+This is read-only and performs no training. It exports compact finalized policies for Stage A and Stage B and probes them on identical solver states generated by a checkpoint-independent uniform-legal trajectory policy.
 
-It produces:
+It reports:
 
-- `SpinCore_LT2A_learning_report.json`;
-- `SpinCore_LT2B_learning_report.json`;
-- `SpinCore_LT2A_to_LT2B_checkpoint_delta.json`.
+- total-variation distance between Stage A and Stage B action distributions;
+- argmax-action disagreement rate;
+- entropy and max-probability movement;
+- overall, 3H/HU and street-level breakdowns.
 
-The checkpoint-delta CI is the missing statistic from the earlier learning-curve review. It directly addresses whether 4.5M roots improved or regressed 3H/HU against uniform-legal, passive-caller and jammer families.
+Purpose:
+
+- **tiny policy drift + flat EV** -> evidence of practical stagnation/convergence under the current training dynamics; investigate architecture/training before more roots;
+- **material policy drift + flat weak-baseline EV** -> evidence that the weak-baseline sentinel has become insensitive; prioritize faithful DeepCrusher / richer cross-play before changing training;
+- intermediate result -> inspect domain/street concentration before deciding.
+
+The drift diagnostic is not a strength test.
 
 ## Stop condition
 
-Do not continue training beyond iteration 7500 until the paired learning review is inspected.
+Do not continue training beyond iteration 7500 until policy drift is reviewed together with the paired checkpoint-delta evidence.
 
-If Stage B shows continued meaningful improvement with healthy resources, authorize a larger continuation from the exact Stage B checkpoint. If HU materially regresses or the learning curve stalls, investigate architecture/training dynamics before spending another multi-million-root block.
-
-DeepCrusher remains the future product-strength reference; weak baselines are learning/regression sentinels, not the final acceptance target.
+DeepCrusher remains the future product-strength reference and should continue in parallel.
 
 ## Immediate user action
 
 Pull current `main` and run:
 
 ```bash
-bash tools/run_lt2_stage_b_learning_review.sh
+bash tools/run_lt2_policy_drift_review.sh
 ```
 
-Wait for `LT2_STAGE_B_LEARNING_REVIEW_EVAL_PASS`, then send the three JSON files copied to Windows Downloads. Do not start any additional training while this evaluation is pending.
+Wait for `LT2_POLICY_DRIFT_REVIEW_PASS`, then send `SpinCore_LT2A_to_LT2B_policy_drift.json` from Windows Downloads. Do not start additional training first.
