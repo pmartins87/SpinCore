@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — TRAINING PAUSED AT 4.5M ROOTS — VARIANCE-FIRST WEAK-BASELINE GATE ACTIVE**
+Status: **LT2 STAGE B PASS — TRAINING PAUSED AT 4.5M ROOTS — HU-JAMMER FAILURE CONFIRMED — FIT AUDIT ACTIVE**
 Date: 2026-09-17
 
 ## Current state
@@ -13,10 +13,11 @@ The continuous learning line has reached:
 - LT2 Stage B: 4.5M roots / iteration 7500;
 - all four 2M reservoirs in replacement regime;
 - Stage A -> Stage B policy movement is material;
-- existing weak-baseline and checkpoint-strength evaluations are too noisy to justify another long block or an architecture change;
-- immediate next gate is a 30k multi-seed weak-baseline evaluation with explicit uncertainty control.
+- 30k multi-seed weak-baseline precision gate is complete;
+- Stage B is statistically negative versus HU Jammer;
+- another blind long-training block is not admitted until training-dynamics diagnostics are reviewed.
 
-Read `LT2_VARIANCE_AND_WEAK_BASELINE_GATE_20260917.md` first.
+Read `LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md` and `LT2_TRAINING_DYNAMICS_FIT_AUDIT_20260917.md` first.
 
 ## Core training contract
 
@@ -55,72 +56,85 @@ Stage B final sample state:
 
 Resource gate passed with zero swap and minimum observed WSL MemAvailable 7.473 GiB.
 
-## Statistical correction
+## What the 30k gate established
 
-The earlier 1000-scenario weak-baseline review was useful as a pilot, not as a decisive gate. Its Stage-B raw chip-EV confidence intervals were wide: approximate 95% half-widths ranged from about 9 to 20 chips/hand across baseline/domain cells. Apparent HU negatives against passive caller and jammer were therefore not resolved.
+The earlier 1000-scenario weak-baseline run was only a pilot. The powered review used six independent 5000-scenario seed blocks per checkpoint, common-random Stage A/B pairing, and Bonferroni simultaneous family-wise 95% intervals across the six primary Stage-B domain/opponent claims.
 
-Similarly, checkpoint cross-play is seed-sensitive. A 3000-scenario run mildly favored Stage A; an independent 9000-scenario run reversed all primary signs to mildly favor Stage B. Neither established a strength ordering.
+The predeclared precision target was achieved: maximum primary simultaneous half-width `4.963` chips/hand.
 
-Policy drift, however, is clearly nontrivial: mean TV 0.041395, p95 0.108574, argmax disagreement 12.10%, with stronger HU postflop movement. Thus training is changing the policy, but existing strength estimators have not told us whether the movement is useful.
+Stage B:
 
-## Immediate 30k weak-baseline gate
+- uniform legal 3H: `+20.102`, simultaneous CI `[+16.372,+23.831]`;
+- uniform legal HU: `+21.484`, simultaneous CI `[+16.521,+26.447]`;
+- passive caller 3H: `+4.030`, simultaneous CI `[+0.977,+7.082]`;
+- passive caller HU: `-0.996`, simultaneous CI `[-4.435,+2.442]`;
+- jammer 3H: `+0.859`, simultaneous CI `[-2.628,+4.347]`;
+- jammer HU: `-5.141`, simultaneous CI `[-9.078,-1.204]`.
 
-The next experiment evaluates both preserved checkpoints against the transparent weak curriculum opponents using six independent 5000-scenario seed blocks.
+Thus HU Jammer is a confirmed current failure mode. Passive HU and Jammer 3H remain near zero/unresolved at the achieved precision.
 
-Primary Stage-B claims:
+The paired Stage-B-minus-Stage-A HU-Jammer delta is `-1.682` chips/hand; after applying the same six-claim simultaneous correction, the interval remains negative at approximately `[-3.143,-0.222]`. The Stage-A -> Stage-B continuation therefore measurably degraded this cell.
 
-- uniform legal 3H and HU;
-- passive caller 3H and HU;
-- jammer 3H and HU.
+This does not mean Stage B is globally worse. Policy drift is material and several cells are strongly positive. It means more roots alone have not produced monotonic useful learning across the weak curriculum.
 
-The six claims use a Bonferroni simultaneous family-wise 95% confidence interval. There is no arbitrary strength score. A cell is positive only if its simultaneous lower bound is above zero, negative only if its upper bound is below zero, otherwise unresolved.
+## Why long training is frozen
 
-Why 30k: using the observed pilot variance, the worst cell would require about 29.4k total scenarios to target an approximately 5-chip/hand simultaneous half-width. The 5-chip figure is a precision target selected to resolve the pilot's apparent ~8 to ~12 chip HU losses, not a pass threshold.
+A new root block would mix together at least three possible mechanisms:
 
-Launcher:
+1. target generation may be noisy or biased in the relevant HU states;
+2. the Advantage network may not fit the stored targets well enough after reset + 100 optimizer steps;
+3. the AveragePolicy network may not fit its 2M target reservoir adequately after 4000 finalization steps.
 
-`tools/run_lt2_weak_baseline_variance_review.sh`
+Those mechanisms can be separated with read-only or bounded in-memory experiments. They should be separated before paying for another long run.
 
-Analysis:
+## Immediate training-dynamics audit
 
-`tools/analyze_lt2_weak_baseline_multiseed.py`
+Launcher: `tools/run_lt2_training_dynamics_fit_audit.sh`.
 
-## Training-dynamics hypotheses to test only if needed
+The audit is read only. It deterministically samples Stage A and Stage B Advantage/AveragePolicy reservoirs, separately for 3H/HU, and measures fit of the stored networks to the stored targets.
 
-If weak-baseline strength is negative or near-zero after adequate precision, do not merely add roots. Run bounded diagnostics first.
+Advantage metrics:
 
-The first hypothesis is Advantage-network fit sufficiency. The trainer resets each domain's Advantage network every iteration and then trains it for 100 optimizer steps from the accumulated reservoir. This follows the current Deep-CFR design, but whether 100 steps are enough at a 2M reservoir is an empirical question. Measure held-out loss for the canonical 100-step fit versus larger controlled budgets before changing anything.
+- legal-action MSE;
+- zero-predictor MSE;
+- fraction of zero-baseline error removed;
+- regret-matching policy TV and argmax agreement;
+- target/predicted all-nonpositive fractions;
+- sample iteration-age distribution.
 
-The second hypothesis is AveragePolicy approximation. Finalization trains the policy network for 4000 optimizer steps over the 2M policy reservoir. Measure held-out strategy loss/calibration and whether longer fitting materially changes policy quality before assuming the learned average strategy itself is correct.
+AveragePolicy metrics:
 
-Other bounded checks:
+- target entropy;
+- cross-entropy;
+- excess KL;
+- TV;
+- argmax agreement;
+- uniform-legal cross-entropy baseline and fraction of available gap closed;
+- sample iteration-age distribution.
 
-- reservoir age/composition and iteration weighting;
-- 3H/HU-specific fit differences;
-- blind/street concentration of errors;
-- sensitivity to network capacity only after fit-budget sufficiency is known.
+There is no arbitrary fit PASS threshold. Stage A/B and 3H/HU comparisons determine the next experiment.
+
+## Bounded branches after the fit audit
+
+If Advantage underfit is implicated, sweep optimizer budget on a cloned in-memory Stage-B model/reservoir with a fixed held-out set. Candidate budgets should include the canonical 100 and larger values selected geometrically; compare held-out MSE/policy-TV rather than training loss alone. Do not mutate the preserved checkpoint.
+
+If AveragePolicy underfit is implicated, sweep policy-fit budget from cloned Stage-B policy state/reservoir and measure held-out KL/TV/argmax agreement. No new roots are needed for that experiment.
+
+If both fits are already strong, move deeper into learning semantics: inspect reservoir age/iteration weighting, HU state/action concentration, target variance, all-nonpositive regret frequency, and whether sampled AveragePolicy trajectories represent the relevant HU responses adequately.
+
+Only after a causal mechanism is identified should a small bounded training experiment be admitted. It must have a predeclared comparison against the preserved Stage B and must not overwrite Stage A or Stage B.
 
 ## DeepCrusher placement
 
-DeepCrusher is deferred. It is a sophisticated advanced rules strategy and should be used later, after SpinCore has demonstrated statistically stable superiority over weak transparent opponents.
+DeepCrusher is deferred. It is a sophisticated advanced rules strategy and should be used later, after SpinCore is strong and stable against transparent weak curriculum opponents.
 
-A literal C++ translation is not logically required for future DeepCrusher benchmarking. It may be useful for speed, auditability, or exact structural comparison, but any future benchmark can use another execution path if that path is shown faithful to the original strategy and relevant OpenPPL/library semantics.
-
-## Decision branches
-
-If all six weak-baseline cells are clearly positive with adequate precision, consider another bounded continuation from Stage B, then repeat the same statistically defined curriculum gate.
-
-If any cell is clearly negative, run the training-dynamics audit before more roots.
-
-If cells remain unresolved but the precision target is met, the edge is practically close enough to zero that training dynamics should still be investigated before more long compute.
-
-Do not use DeepCrusher as a pass/fail requirement for this stage.
+A literal C++ translation may be useful later for speed or auditability, but it is not a prerequisite for eventual benchmarking.
 
 ## Immediate direction
 
 1. Preserve Stage A and Stage B.
-2. Keep training stopped at iteration 7500.
-3. Run `bash tools/run_lt2_weak_baseline_variance_review.sh`.
-4. Review the 30k multi-seed report.
-5. Only then decide between bounded continuation and training-dynamics diagnostics.
-6. DeepCrusher remains later, not the current dependency.
+2. Keep long training stopped at iteration 7500.
+3. Run `bash tools/run_lt2_training_dynamics_fit_audit.sh`.
+4. Review `SpinCore_LT2_training_fit_audit.json`.
+5. Choose one bounded causal experiment from the observed fit evidence.
+6. Do not return to long-root scaling or DeepCrusher yet.
