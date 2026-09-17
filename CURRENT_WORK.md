@@ -1,127 +1,109 @@
 # SpinCore Current Work
 
 Date: 2026-09-17
-Status: **LT2 STAGE B PASS — 4.5M ROOTS — MATERIAL POLICY DRIFT — TWO CROSS-PLAY RUNS INCONCLUSIVE / SIGN-UNSTABLE — TRAINING FROZEN PENDING FAITHFUL DEEPCRUSHER BENCHMARK**
+Status: **LT2 STAGE B PASS — 4.5M ROOTS — POLICY MOVED, STRENGTH STILL UNRESOLVED — 30K MULTI-SEED WEAK-BASELINE VARIANCE GATE NEXT**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_VARIANCE_AND_WEAK_BASELINE_GATE_20260917.md`
 - `docs/LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`
-- `docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`
 - `docs/LT2_POLICY_DRIFT_REVIEW_20260917.md`
 - `docs/LT2_STAGE_B_LEARNING_REVIEW_20260917.md`
 - `docs/LT2_STAGE_B_RESOURCE_REVIEW_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
-Preserve all completed checkpoints. Do not continue SpinCore training beyond iteration 7500 until the external benchmark gate below is available and reviewed.
+Preserve all completed checkpoints. Do not continue training beyond iteration 7500 until the variance-first weak-baseline gate is reviewed.
+
+## Correction of immediate direction
+
+The previous instruction to make a faithful DeepCrusher benchmark the immediate next gate was premature.
+
+DeepCrusher is a sophisticated hard-coded strategy and remains a **later advanced benchmark**, not the correct early curriculum gate for a SpinCore policy whose performance against uniform/passive/jammer opponents is not yet established with adequate statistical precision.
+
+A literal C++ DeepCrusher transcription is also **not a prerequisite** for ever using DeepCrusher as a reference. It is one possible faithful execution/audit route. No DeepCrusher work is required for the current SpinCore diagnosis.
 
 ## Preserved checkpoints
 
-LT2 Stage A:
+Stage A:
 
 - iteration 3000 / 1.8M roots;
-- `/home/rz9/spincore_lean_functional/runs/long_training_lt2/20260916_015559/checkpoint.pt`;
 - SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
 
-LT2 Stage B:
+Stage B:
 
 - iteration 7500 / 4.5M roots;
-- `/home/rz9/spincore_lean_functional/runs/long_training_lt2_stage_b/20260917_004911/checkpoint.pt`;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-Do not overwrite either. Stage B is not automatically promoted over Stage A for strength claims.
+Stage B has all four 2M memories in replacement regime. Resource status is healthy: no swap and minimum observed WSL MemAvailable 7.473 GiB.
 
-## Stage B state
+## What is known
 
-- 4,500,000 total roots;
-- 3H roots 2,452,500;
-- HU roots 2,047,500;
-- 3H AveragePolicy seen 5,549,800;
-- HU AveragePolicy seen 2,072,704;
-- all four 2M reservoirs in replacement regime;
-- final checkpoint 2.623474 GiB;
-- minimum observed WSL MemAvailable 7.473 GiB;
-- maximum observed swap 0 GiB.
+### Weak-baseline pilot was underpowered
 
-Resource status is healthy.
+The Stage-B 1000-scenario weak-baseline evaluation had wide raw chip-EV confidence intervals. Approximate 95% half-widths ranged from about 9 to 20 chips/hand. In HU the apparent passive/jammer values were roughly -8 and -12 chips/hand, but their intervals crossed zero widely.
 
-## Evidence after Stage B
+Therefore those apparent losses cannot be treated as established losses.
 
-### Weak fixed opponents
+### Stage B policy did move materially
 
-Stage A and Stage B were compared on the same 1000 empirical scenarios/deals against uniform-legal, passive-caller and jammer families. All nine paired Stage-B-minus-Stage-A 95% CIs included zero.
+Stage A -> Stage B policy drift on 11,040 identical decision states:
 
-Result: no statistically distinguishable improvement or regression under the weak fixed-opponent sentinel.
-
-### Policy drift
-
-Across 11,040 identical probe states from 3000 independent scenarios:
-
-- overall mean TV 0.041395;
-- median TV 0.032119;
+- mean TV 0.041395;
 - p95 TV 0.108574;
-- 26.77% of decisions TV >= 0.05;
-- argmax disagreement 12.10%.
+- argmax disagreement 12.10%;
+- much larger movement postflop/HU.
 
-Movement is especially strong postflop in HU. Therefore weak-baseline flatness is not policy stagnation.
+Training is not distributionally stagnant.
 
-### Contemporary checkpoint cross-play — two independent runs
+### Checkpoint cross-play is seed-sensitive
 
-Run 1: 3000 scenarios, seed `20260918`.
+3000-scenario seed 20260918 primary B-A result was mildly negative; independent 9000-scenario seed 20260919 reversed all primary signs to mildly positive. Both runs' intervals included zero.
 
-Primary B-minus-A:
+A proper inverse-variance combination of the two primary ALL estimates is near zero, and the two ALL/3H runs show sign instability rather than a reproducible ordering. Row-level inspection of the 9000-scenario run shows only ~4.19% of paired seat-runs had non-zero terminal B-A delta.
 
-- ALL `-1.8129`, CI `[-3.9564,+0.3306]`;
-- 3H `-1.9760`, CI `[-4.3207,+0.3687]`;
-- HU `-1.6162`, CI `[-5.4070,+2.1747]`.
+Conclusion: cross-play did not establish Stage-B improvement or regression.
 
-Run 2: 9000 scenarios, independent seed `20260919`.
+## Immediate mathematically grounded gate
 
-Primary B-minus-A:
+Run:
 
-- ALL `+0.8625`, CI `[-0.4085,+2.1335]`;
-- 3H `+0.9152`, CI `[-0.5940,+2.4244]`;
-- HU `+0.7990`, CI `[-1.3337,+2.9317]`.
+`tools/run_lt2_weak_baseline_variance_review.sh`
 
-The higher-power fresh-seed run reversed all three primary signs and still did not exclude zero. Additional HU-direct and 3H-invasion diagnostics were also broad and directionally unstable.
+Design:
 
-Row-level confirmation shows sparse terminal divergence in the primary paired test: only about 4.19% of the 22,918 seat-runs in the 9000-scenario run had non-zero B-minus-A terminal chip delta. Repeating the same stochastic checkpoint-vs-checkpoint test has diminishing value.
+- six independent seed blocks: 20260920..20260925;
+- 5000 scenarios per seed;
+- 30,000 total scenarios **per checkpoint**;
+- Stage A and Stage B evaluated on identical scenario/deal/opponent/hero RNG streams within each seed;
+- no training;
+- 31 workers by default.
 
-Conclusion: Stage B is materially different from Stage A, but **no reproducible relative strength gain or regression has been established**.
+Primary question: does Stage B have positive raw chip EV against each of `UNIFORM_LEGAL`, `PASSIVE_CALLER`, and `JAMMER`, separately in 3H and HU?
 
-See `docs/LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`.
+There are six primary claims. They use a Bonferroni simultaneous family-wise 95% confidence interval. Classification is mathematical rather than threshold-chosen:
 
-## Training decision
+- `POSITIVE` if simultaneous lower bound > 0;
+- `NEGATIVE` if simultaneous upper bound < 0;
+- otherwise `UNRESOLVED`.
 
-Freeze the current SpinCore training line at iteration 7500 / 4.5M roots.
+The run size comes from the observed pilot variance. About 29.4k scenarios are required to target a worst-case simultaneous CI half-width of roughly 5 chips/hand if variance remains similar; 30k is therefore the bounded design. The 5-chip value is a **precision target**, chosen to resolve the pilot's apparent ~8 to ~12 chip HU losses; it is not a strength pass score.
 
-Do not:
+## What happens next
 
-- spend another long block merely to increase root count;
-- keep rerunning the same A-vs-B cross-play seeking significance;
-- change architecture solely because Stage B failed to beat Stage A in these noisy relative tests.
+If all six Stage-B weak-baseline claims are clearly positive, the early curriculum gate is passed and a bounded continuation can be considered.
 
-## Immediate next product-strength gate — faithful DeepCrusher R8 v22
+If any claim is clearly negative, or if the result is near zero with the precision target met, do not add blind roots. Move directly to a training-dynamics audit. High-priority hypotheses include the Advantage network being reset every iteration and then fitted for only 100 optimizer steps, and whether 4000 AveragePolicy finalization steps adequately fit the 2M policy reservoir. These are hypotheses to test on held-out memory, not conclusions yet.
 
-The next benchmark must use the faithful DeepCrusher oracle now being built in parallel.
-
-Admission prerequisite:
-
-- literal/structural OpenPPL strategy semantics preserved;
-- relevant OpenPPL/library functions implemented faithfully, including true definitions such as `AmountToCall` rather than approximations;
-- action sizing/order/priority preserved;
-- representative parity probes pass;
-- intentional deviations explicitly documented.
-
-Once admitted, benchmark **both Stage A and Stage B** against the exact same DeepCrusher oracle on paired empirical scenarios/deals/seats. Do not assume the later checkpoint is stronger.
-
-See `docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`.
-
-## Stop condition
-
-No additional SpinCore training beyond iteration 7500 until the faithful DeepCrusher benchmark is available and reviewed, unless a separately justified bounded training-dynamics experiment is explicitly admitted first.
+DeepCrusher is deferred until SpinCore is demonstrably strong and stable against these weak opponents.
 
 ## Immediate user action
 
-No SpinCore command is required now. Keep the Stage A and Stage B checkpoints intact and continue the DeepCrusher R8 v22 literal C++/OpenPPL-library parity work. Return to this benchmark gate only after the DeepCrusher oracle passes its faithfulness checks.
+Pull current `main` and run:
+
+```bash
+bash tools/run_lt2_weak_baseline_variance_review.sh
+```
+
+Wait for `LT2_WEAK_BASELINE_VARIANCE_REVIEW_PASS`, then send `SpinCore_LT2_weak_baseline_multiseed_30k.json` from Windows Downloads. Do not resume training first.
