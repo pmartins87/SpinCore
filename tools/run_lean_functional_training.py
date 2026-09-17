@@ -14,6 +14,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
 
+from spincore.lean_concurrent_iteration import run_iteration_concurrent_fit  # noqa: E402
 from spincore.lean_functional_training import (  # noqa: E402
     LeanFunctionalConfig,
     compact_report,
@@ -51,6 +52,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--report", type=Path, default=ROOT / "runs" / "lean_functional" / "report.json")
     p.add_argument("--resume", action="store_true")
     p.add_argument("--batch-mode", choices=("reference", "vectorized"), default="reference")
+    p.add_argument(
+        "--iteration-mode",
+        choices=("sequential", "concurrent_fit"),
+        default="sequential",
+        help=(
+            "iteration execution path; concurrent_fit overlaps only the independently validated "
+            "3H/HU Advantage optimizer loops and preserves canonical sampler semantics"
+        ),
+    )
     p.add_argument(
         "--additional-iterations",
         type=int,
@@ -116,7 +126,8 @@ def main() -> int:
             )
             return 0
         print(
-            f"RESUME seed={seed} completed_iteration={completed}/{config.iterations} workers={workers}",
+            f"RESUME seed={seed} completed_iteration={completed}/{config.iterations} "
+            f"workers={workers} iteration_mode={args.iteration_mode}",
             flush=True,
         )
     else:
@@ -147,6 +158,7 @@ def main() -> int:
                     "solver": str(args.solver),
                     "checkpoint_every": int(args.checkpoint_every),
                     "workers": workers,
+                    "iteration_mode": args.iteration_mode,
                 },
                 sort_keys=True,
             ),
@@ -157,14 +169,23 @@ def main() -> int:
         runtime.session.batch_mode = args.batch_mode
     if "SPINCORE_TORCH_THREADS" in os.environ:
         torch.set_num_threads(int(os.environ["SPINCORE_TORCH_THREADS"]))
-    print(f"FIT_RUNTIME threads={torch.get_num_threads()} batch_mode={args.batch_mode}", flush=True)
+    print(
+        f"FIT_RUNTIME threads={torch.get_num_threads()} batch_mode={args.batch_mode} "
+        f"iteration_mode={args.iteration_mode}",
+        flush=True,
+    )
+    iteration_fn = (
+        run_iteration_concurrent_fit
+        if args.iteration_mode == "concurrent_fit"
+        else run_iteration
+    )
     executor = ParallelRootExecutor(args.solver, workers) if workers > 1 else None
     overall_started = time.perf_counter()
     checkpoint_metrics: list[dict[str, float | int | str]] = []
     try:
         for iteration in range(completed + 1, config.iterations + 1):
             print(f"ITERATION {iteration}/{config.iterations} collect+fit", flush=True)
-            report = run_iteration(
+            report = iteration_fn(
                 seed=seed,
                 iteration=iteration,
                 config=config,
@@ -225,6 +246,7 @@ def main() -> int:
     report["wall_seconds"] = float(time.perf_counter() - overall_started)
     report["wall_scope"] = "iterations_through_final_checkpoint_excludes_initial_load"
     report["batch_mode"] = args.batch_mode
+    report["iteration_mode"] = args.iteration_mode
     report["torch_threads"] = torch.get_num_threads()
     write_json_report(args.report, report)
     print("FINAL_SUMMARY " + json.dumps(report["final"], sort_keys=True), flush=True)
