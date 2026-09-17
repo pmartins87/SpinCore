@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — SAME-REGIME EXTENSION PAUSED — INITIAL CONTEMPORARY CROSS-PLAY BORDERLINE — 9K FRESH-SEED CONFIRMATION NEXT**
+Status: **LT2 STAGE B PASS — TRAINING FROZEN AT 4.5M ROOTS — MATERIAL POLICY DRIFT BUT NO REPRODUCIBLE CHECKPOINT STRENGTH ORDERING — DEEPCRUSHER EXTERNAL GATE NEXT**
 Date: 2026-09-17
 
 ## Current state
@@ -13,10 +13,11 @@ The continuous learning line has reached:
 - LT2 Stage B: 4.5M roots / iteration 7500 — all four 2M memories saturated/replacement;
 - paired weak-baseline checkpoint delta — flat/inconclusive;
 - policy-drift gate — material movement confirmed;
-- first contemporary Stage-A/Stage-B cross-play — borderline/mixed, no demonstrated Stage-B advantage;
-- next gate — 9000-scenario fresh-seed contemporary cross-play confirmation.
+- contemporary Stage-A/Stage-B cross-play run 1 — mild Stage-A direction, inconclusive;
+- independent 9000-scenario cross-play confirmation — sign reversal to mild Stage-B direction, still inconclusive;
+- next gate — faithful DeepCrusher R8 v22 external benchmark of both preserved checkpoints.
 
-Read `LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`, `LT2_POLICY_DRIFT_REVIEW_20260917.md`, `LT2_STAGE_B_LEARNING_REVIEW_20260917.md` and `LT2_STAGE_B_RESOURCE_REVIEW_20260917.md`.
+Read `LT2_CHECKPOINT_CROSSPLAY_REVIEW_20260917.md`, `DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`, `LT2_POLICY_DRIFT_REVIEW_20260917.md`, `LT2_STAGE_B_LEARNING_REVIEW_20260917.md` and `LT2_STAGE_B_RESOURCE_REVIEW_20260917.md`.
 
 ## Core training contract
 
@@ -62,6 +63,8 @@ Stage B final sample state:
 
 All four 2M memories are in replacement regime. Resource gate passed with zero swap and minimum observed WSL MemAvailable 7.473 GiB.
 
+Preserve Stage A and Stage B. Do not assume Stage B is stronger simply because it is later.
+
 ## Weak-baseline learning review
 
 Stage A and Stage B were compared on the same 1000 scenarios/deals against uniform-legal, passive-caller and jammer families. All nine paired checkpoint-delta 95% CIs crossed zero. The extra 2.7M roots therefore produced no statistically distinguishable gain or regression under those weak fixed opponents.
@@ -72,65 +75,88 @@ The policies differ materially at the decision-distribution level. Overall mean 
 
 Therefore weak-baseline flatness cannot be treated as policy stagnation.
 
-## Contemporary checkpoint cross-play — initial pass
+## Contemporary checkpoint cross-play — run 1
 
-Method:
+3000 scenarios, seed `20260918`.
 
-- 3000 fresh empirical scenarios;
-- seed `20260918`;
-- 31 workers;
-- same scenario, deal, hero seat and per-seat RNG streams;
-- primary opponent environment fixed to the exact same deterministic 50/50 Stage-A/Stage-B mixture;
-- additional HU direct and 3H invasion diagnostics.
+Primary Stage-B-minus-Stage-A delta against the identical deterministic 50/50 A/B opponent mixture:
+
+- ALL `-1.8129`, CI `[-3.9564,+0.3306]`;
+- 3H `-1.9760`, CI `[-4.3207,+0.3687]`;
+- HU `-1.6162`, CI `[-5.4070,+2.1747]`.
+
+Additional diagnostics:
+
+- HU direct `-0.6165`, CI `[-10.7519,+9.5188]`;
+- 3H invasion difference `+2.8894`, CI `[-1.2160,+6.9949]`.
+
+The primary point estimates favored Stage A, but all intervals included zero and the invasion diagnostic pointed the opposite way.
+
+## Contemporary checkpoint cross-play — independent confirmation
+
+9000 scenarios, seed `20260919`; 4918 3H / 4082 HU.
 
 Primary Stage-B-minus-Stage-A delta:
 
-- ALL: -1.8129 chips/hand, CI [-3.9564,+0.3306];
-- 3H: -1.9760, CI [-4.3207,+0.3687];
-- HU: -1.6162, CI [-5.4070,+2.1747].
+- ALL `+0.8625`, CI `[-0.4085,+2.1335]`;
+- 3H `+0.9152`, CI `[-0.5940,+2.4244]`;
+- HU `+0.7990`, CI `[-1.3337,+2.9317]`.
 
-All three point estimates favor Stage A, but all intervals still include zero. ALL and 3H are close to resolving negative.
+Additional diagnostics:
 
-Additional diagnostics are mixed:
+- HU direct `+1.5503`, CI `[-4.2649,+7.3656]`;
+- 3H invasion difference `-2.2202`, CI `[-4.4860,+0.0456]`.
 
-- HU direct B-vs-A: -0.6165, CI [-10.7519,+9.5188];
-- 3H invasion B-vs-AA minus A-vs-BB: +2.8894, CI [-1.2160,+6.9949].
+The higher-power independent run reversed all three primary signs relative to run 1 and still did not exclude zero. The invasion diagnostic also reversed direction.
 
-This does not support a Stage-B strength claim. It also does not yet prove regression because the primary CIs still cross zero and the invasion diagnostic points in the opposite direction.
+Row-level evidence shows only about 4.19% of 22,918 primary seat-runs produced a non-zero paired terminal chip delta. The paired common-random-number design cancels most trajectories exactly, but the remaining rare divergent trajectories carry large positive/negative outcomes. That makes further repetitions of the same A-vs-B stochastic cross-play a low-value use of evaluation compute.
 
 ## Training decision
 
-Pause same-regime extension beyond iteration 7500.
+Freeze same-regime extension beyond iteration 7500 / 4.5M roots.
 
-Do not spend another multi-million-root block while Stage B has failed to demonstrate a relative advantage over Stage A in either weak-baseline or contemporary cross-play evidence.
+Evidence now supports all of the following simultaneously:
 
-Also do not change architecture based on the initial 3000-scenario cross-play alone, because it is borderline/mixed.
+- training continues to move the AveragePolicy materially;
+- weak fixed opponents do not resolve whether that movement helps;
+- contemporary checkpoint cross-play does not provide a reproducible A/B strength ordering across independent seeds;
+- there is no defensible basis yet for either more blind root count or an architecture change.
 
-## Immediate higher-power read-only gate
+Do not spend another multi-million-root block merely because resources are healthy. Do not repeatedly rerun the same cross-play seeking significance.
 
-Repeat the exact contemporary cross-play with triple sample size and an independent seed:
+## Next product-strength gate — faithful DeepCrusher R8 v22
 
-```bash
-SPINCORE_CROSSPLAY_SCENARIOS=9000 SPINCORE_CROSSPLAY_SEED=20260919 bash tools/run_lt2_checkpoint_crossplay.sh
-```
+The DeepCrusher oracle must pass source-faithfulness admission before use:
 
-This performs no training and does not mutate the preserved checkpoints.
+- structural OpenPPL rule ordering/priority preserved;
+- all relevant library symbols implemented from their real definitions, including functions such as `AmountToCall`;
+- action sizing/all-in conversion semantics preserved;
+- representative parity probes against the frozen source pass;
+- intentional divergences documented.
 
-Interpretation:
+After admission, benchmark **both Stage A and Stage B** against the exact same DeepCrusher policy with paired empirical scenarios, deal seeds, hero-seat rotation and row-level evidence.
 
-- if Stage B again shows a coherent disadvantage and ALL/3H intervals exclude zero, investigate training dynamics / AveragePolicy approximation before more roots;
-- if the disadvantage disappears or reverses, relative checkpoint evidence remains unresolved and the next priority becomes faithful DeepCrusher / richer external benchmarking rather than trainer changes;
-- if HU alone remains unresolved, target HU evaluation separately.
+Required primary outputs:
 
-Do not informally average the 3000- and 9000-scenario reports. Treat the 9000 fresh-seed run as an independent confirmation.
+- Stage A vs DeepCrusher chip EV;
+- Stage B vs DeepCrusher chip EV;
+- paired Stage-B-minus-Stage-A external-reference delta;
+- 3H and HU separated wherever DeepCrusher faithfully supports them;
+- scenario-clustered uncertainty.
 
-## DeepCrusher strength path
+Then add blind/effective-stack/position breakdowns only after the primary result is stable.
 
-The faithful DeepCrusher R8 v22 oracle remains the primary external product-strength reference. Once ready, run direct paired chip-EV with HU and 3H separated, then blind/stack/position breakdowns and eventually full-tournament performance.
+Decision logic:
+
+- Stage B clearly stronger than Stage A vs DeepCrusher -> consider another bounded continuation from Stage B and re-evaluate afterward;
+- Stage A clearly stronger -> investigate AveragePolicy/training dynamics before more roots;
+- externally indistinguishable -> investigate representation/capacity/optimizer/reservoir dynamics only through bounded controlled experiments, not another long blind run.
+
+See `docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md`.
 
 ## Reservoir policy
 
-Do not shrink or enlarge the 2M reservoirs on intuition alone.
+Do not shrink or enlarge the 2M reservoirs on intuition alone. Stage B established a healthy saturated operating point with zero swap.
 
 ## Operational files
 
@@ -139,15 +165,15 @@ Do not shrink or enlarge the 2M reservoirs on intuition alone.
 - `tools/run_lt2_stage_b_learning_review.sh` — completed paired weak-baseline review;
 - `tools/run_lt2_policy_drift_review.sh` — completed policy-drift gate;
 - `tools/evaluate_lt2_checkpoint_crossplay.py` — contemporary policy cross-play evaluator;
-- `tools/run_lt2_checkpoint_crossplay.sh` — cross-play launcher, supports scenario/seed overrides;
+- `tools/run_lt2_checkpoint_crossplay.sh` — completed cross-play launcher with scenario/seed overrides;
 - `tools/run_lean_functional_training.py` — authoritative trainer.
 
 ## Immediate direction
 
 1. Preserve Stage A and Stage B checkpoints.
-2. Do not continue training beyond iteration 7500.
-3. Pull current `main`.
-4. Run `SPINCORE_CROSSPLAY_SCENARIOS=9000 SPINCORE_CROSSPLAY_SEED=20260919 bash tools/run_lt2_checkpoint_crossplay.sh`.
-5. Review the fresh-seed 9000-scenario result independently.
-6. Then choose between training-dynamics investigation and stronger external benchmarking.
-7. Continue the faithful DeepCrusher oracle in parallel.
+2. Keep SpinCore training stopped at iteration 7500 / 4.5M roots.
+3. Do not spend more evaluation compute on repeated A-vs-B stochastic cross-play by default.
+4. Finish the faithful DeepCrusher R8 v22 C++/OpenPPL-library parity work.
+5. Admit DeepCrusher only after representative source-parity checks pass.
+6. Benchmark both Stage A and Stage B against the same external oracle.
+7. Use that result to decide whether to continue Stage B, investigate training dynamics, or run bounded architecture/optimization experiments.
