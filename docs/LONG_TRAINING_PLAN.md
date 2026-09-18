@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER REGRESSION LOCALIZED — V1 OVERLAY REFERENCE CORRECTED — COMMON-REFERENCE V2 ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER REGRESSION LOCALIZED — COMMON REFERENCE RETAINED — ACTION-GAP V2.1 ACTIVE**
 Date: 2026-09-18
 
 ## Preserved milestones
@@ -83,15 +83,35 @@ That is not the correct direct benchmark reference for JAMMER. JAMMER's action r
 
 The V1 result is retained as training-process evidence, not final causal proof.
 
-## Corrected final causal overlay
+## Common-reference V2 assertion correction
 
-V2 reconstructs the same class of 24 actual Jammer FACING_ALL_IN states but uses one shared benchmark reference:
+V2 correctly used one shared Jammer-conditioned hidden-hand distribution, but its first run stopped because it asserted raw Stage-A/B Advantage-target equality.
 
-- uniform compatible opponent hands;
+Raw target equality is not required. At the traverser node:
+
+`target[a] = Q(a) - V_sigma`.
+
+Stage A and Stage B use different current `sigma`, so `V_sigma` can shift the full legal-action vector by a common scalar.
+
+The correct invariant is the action-value geometry `Q(a)-Q(b)`.
+
+## Corrected final causal overlay — V2.1
+
+V2.1 keeps:
+- uniform compatible Jammer opponent hands;
 - uniform future boards;
 - 32 hands × 8 boards;
-- same target reference for Stage A and Stage B;
-- fixed-deal Stage-A/B target equality asserted after opponent is already all-in.
+- one shared benchmark reference.
+
+It now canonicalizes each target to:
+
+`Q(a)-mean_legal(Q)`
+
+by subtracting the legal-action mean.
+
+It asserts:
+- canonical Stage-A/B fixed-deal targets match;
+- any raw Stage-A/B difference is constant across legal actions.
 
 Primary causal signatures:
 - B-A AveragePolicy TV/regret to the same reference;
@@ -123,6 +143,7 @@ Even a positive K4 result does not reopen long training until the separate postf
 
 1. Keep Stage A/B frozen.
 2. Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`.
-3. Review `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
+3. Wait for `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS`.
+4. Review `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
 4. Do not train K4 yet.
 5. Keep holdout seeds `20261001..20261006` untouched.
