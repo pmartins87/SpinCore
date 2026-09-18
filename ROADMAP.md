@@ -1,4 +1,4 @@
-# SpinCore Roadmap — active state 2026-09-17
+# SpinCore Roadmap — active state 2026-09-18
 
 ## Active status
 
@@ -13,20 +13,20 @@
 - 30k weak-baseline gate — **COMPLETE; HU JAMMER NEGATIVE**.
 - AveragePolicy extra-budget hypothesis — **NOT SUPPORTED**.
 - Advantage optimizer escalation — **NOT SUPPORTED AS NEXT INTERVENTION**.
-- Repeated-state target variance — **COMPLETE**.
-- Same-input reservoir audit — **COMPLETE; DUPLICATES TOO SPARSE**.
-- HU-preflop conditional resampling — **COMPLETE; HIDDEN/CHANCE VARIANCE DOMINANT**.
-- HU-preflop target-estimator budget sweep — **COMPLETE; EXACT0 + MORE DEALS IS COMPUTE FRONTIER**.
-- HU-preflop board-only averaging — **NEXT**.
+- HU-preflop conditional variance decomposition — **COMPLETE; 93.73% HIDDEN/CHANCE VARIANCE**.
+- Exact0/exact1 target-estimator sweep — **COMPLETE; EXACT0 + MORE DEALS WINS COMPUTE FRONTIER**.
+- Board-only averaging sweep — **COMPLETE; K4 ADMITTED AS COMPUTE ELBOW**.
+- Board-averaging mechanics smoke — **NEXT**.
+- Bounded K4 causal training pilot — **PENDING SMOKE**.
 - Root training beyond iteration 7500 — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
+- `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
+- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
-- `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_20260917.md`
-- `docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -38,72 +38,80 @@ Stage B: iteration 7500 / 4.5M roots, SHA256 `3463aa1dccac2c9f26cb45753b69490cfa
 
 Keep both unchanged.
 
-## Strength failure freezing scaling
+## Strength failure freezing scale
 
-Stage B HU Jammer remains confirmed negative. No more long roots until a bounded causal intervention beats preserved Stage B on the powered weak-baseline suite.
+Stage B HU Jammer remains confirmed negative:
+- raw EV `-5.141` chips/hand;
+- simultaneous family-wise 95% CI `[-9.078,-1.204]`.
 
-## Mechanism now established
+No long continuation until a bounded semantic intervention beats preserved Stage B.
 
-HU preflop sampled-target MSE is dominated by hidden/chance variation:
+## Mechanism and estimator decisions
 
+The dominant HU-preflop target noise is hidden/chance variance:
 - future board **65.88%**;
-- opponent-hand posterior **26.10%**;
-- exact-level-1 action noise **1.74%**;
-- current-model conditional-mean error **6.27%**.
+- opponent hand **26.10%**;
+- residual exact-level-1 opponent-action noise **1.74%**.
 
-## Exact branching decision
+Exact1 is rejected as the next intervention because its ~2.1x same-K node cost does not produce a matched-compute policy benefit.
 
-The compute-normalized estimator sweep compared exact0/exact1 on paired candidate hidden deals.
+Board-only averaging is operationally much simpler and directly attacks the largest component.
 
-Exact1 costs about 2.1x nodes at the same K.
+## Board-only result
 
-At matched node budgets, exact0 with approximately twice as many independent hidden deals has lower target MSE at every tested budget, with paired 95% intervals excluding zero.
+Overall K1 -> K4:
+- MSE `0.042638 -> 0.013556`;
+- policy TV `0.5001 -> 0.4868`;
+- regret `38.73 -> 35.42`;
+- branch mismatch `26.04% -> 17.68%`;
+- nodes `75.5 -> 302.1`.
 
-Policy-TV/regret differences at those matched budgets mostly remain unresolved, so exact1 has no demonstrated policy-space benefit sufficient to pay its cost.
+K4 -> K8:
+- doubles nodes;
+- materially lowers raw MSE;
+- does not resolve further TV/regret/argmax improvement;
+- only a small branch-mismatch gain remains.
 
-**Exact1 is not promoted.**
+Therefore **K4 is admitted; K8 is not**.
 
-## Jammer-specific structure
+In FACING_ALL_IN, K1 -> K8 produces a resolved TV improvement and K4 is already essentially at the K8 policy-space plateau.
 
-FACING_ALL_IN exact0 and exact1 are identical at every K because no future opponent action remains to exactify.
+## Implementation principle
 
-This makes chance averaging, not opponent-action branching, the relevant variance mechanism for the confirmed HU-Jammer weakness.
+The experiment must alter only HU-preflop Advantage labels:
+- same scenario/root distribution;
+- same hole cards;
+- canonical board retained as board 0;
+- K-1 alternate future boards conditional on fixed holes;
+- same external-sampling RNG replayed for all boards;
+- preflop targets averaged;
+- postflop targets retained from canonical board only;
+- same sample count/order/identity;
+- canonical K1 remains default.
 
-## Next implementation-feasibility gate
+## Immediate gate
 
-The next read-only audit tests future-board-only averaging at exact0 while keeping one sampled opponent hand fixed.
+Run:
 
-Why:
+```bash
+bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh
+```
 
-- future-board variance is the largest single component;
-- future-board resampling is far easier to integrate into production training than posterior opponent-hand resampling;
-- full hidden-deal averaging is useful diagnostically but operationally more invasive.
+The smoke is read-only and compares identical HU roots at K1 and K4.
 
-Launcher:
+It must verify:
+- sample identity invariance;
+- postflop target invariance;
+- actual preflop target change;
+- node multiplier;
+- source checkpoint integrity.
 
-`tools/run_lt2_hu_preflop_board_only_averaging.sh`
-
-Design:
-- same 64 anchors;
-- reference = 16 posterior hands × 4 boards, exact1;
-- candidate = 16 separate posterior hands, each held fixed while 8 future boards are generated;
-- K = 1,2,4,8 board averages at exact0;
-- no roots and no optimizer steps.
-
-## Branch after board-only audit
-
-If K4/K8 captures most of the full-deal policy-space improvement, implement a bounded HU-preflop board-averaging training pilot.
-
-If board-only leaves a large gap, opponent-hand posterior variation must be incorporated.
-
-If MSE falls but TV/regret remains largely unchanged, prioritize a policy-aligned Advantage objective.
-
-Only a candidate that later beats Stage B on the powered weak-baseline suite can reopen long root scaling.
+After smoke review:
+1. use measured K4/K1 node multiplier to set a bounded root budget;
+2. run one isolated K4 continuation candidate from preserved Stage B;
+3. compare candidate vs Stage B using the powered weak-baseline suite;
+4. only reopen long training if the candidate passes.
 
 ## Immediate action
 
-```bash
-bash tools/run_lt2_hu_preflop_board_only_averaging.sh
-```
-
-Wait for `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_PASS`. Keep root training paused.
+Wait for `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_PASS` after running the smoke launcher. Do not train first.
