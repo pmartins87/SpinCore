@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — HU-JAMMER REGRESSION LOCALIZED — K4 MECHANICS PASS — COMMON-REFERENCE V2 RAW-TARGET ASSERTION TOO STRONG — ACTION-GAP V2.1 NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — HU-JAMMER REGRESSION LOCALIZED — COMMON-REFERENCE V2.1 PASS — K4 IMPROVES FORENSIC TARGET ESTIMATION — FULL JSON/POSTFLOP REVIEW BEFORE ANY TRAINING**
 
 ## Active source of truth
 
@@ -11,6 +11,7 @@ Read before new compute:
 - `docs/LT2_JAMMER_FACING_ALLIN_TARGET_OVERLAY_20260918.md`
 - `docs/LT2_JAMMER_FACING_ALLIN_OVERLAY_V1_CORRECTION_20260918.md`
 - `docs/LT2_JAMMER_COMMON_REFERENCE_V2_ASSERTION_FAILURE_20260918.md`
+- `docs/LT2_JAMMER_COMMON_REFERENCE_V2_1_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
@@ -130,45 +131,46 @@ Stage A and Stage B have different current traverser policies `sigma`, so their 
 
 The observed first-anchor difference `0.0141837` is therefore not automatically a solver/target inconsistency.
 
-## Corrected final causal gate — COMMON REFERENCE V2.1
+## Common-reference V2.1 — PASS
 
-The same launcher now runs V2.1:
+Observed on 24 actual Jammer FACING_ALL_IN first-divergence states:
 
-```bash
-bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh
-```
+- Stage A AveragePolicy TV `0.3069`;
+- Stage B AveragePolicy TV `0.3119`;
+- B-A AveragePolicy regret `+0.45` chips;
+- Stage A Advantage TV `0.4543`;
+- Stage B Advantage TV `0.4266`;
+- B-A Advantage regret `+16.73` chips;
+- K4-K1 target MSE `-0.026189`;
+- K4-K1 policy-TV diagnostic `-0.1146`;
+- K4-K1 reference-best-action regret `-19.27` chips.
 
-V2.1:
-- keeps the common uniform Jammer hidden-hand reference;
-- keeps uniform future boards;
-- canonicalizes every target by subtracting the equal-weight mean over legal actions;
-- thereby compares `Q(a)-mean_legal(Q)`, preserving every action-value gap while removing the stage-specific `V_sigma` scalar;
-- requires Stage-A/B canonical targets to match deal by deal;
-- separately requires the raw A-B difference across legal actions to be a constant offset;
-- compares A/B AveragePolicy, current Advantage policy, and K1/K4 estimator quality against the same canonical reference.
+Fixed-deal Stage-A/B canonical action-gap targets match to `2.98e-08`. Raw labels differ by a common scalar offset up to `0.416667`, as expected from `Q(a)-V_sigma`.
+
+Important: TV to the canonical regret-matching policy is gauge-sensitive and is diagnostic only. Gauge-invariant value/regret is primary.
+
+V2.1 strongly supports that K4 improves the target estimator on the actual Jammer-facing failure states. It does **not yet** justify training because:
+- the AveragePolicy degradation is small in the console aggregate;
+- confidence intervals and action-mass shifts from the full JSON still need review;
+- separate FLOP/TURN regressions remain unexplained.
 
 Reserved holdout seeds `20261001..20261006` remain untouched.
 
-## Decision after V2
+## Decision after V2.1
 
-Only if the same common-reference comparison shows:
-1. Stage B AveragePolicy farther from target than Stage A;
-2. Stage B Advantage policy farther from target in a coherent direction;
-3. action-mass shifts explain the Jammer-facing regression;
-4. K4 improves estimator quality on those exact states;
+Do not train K4 yet.
 
-may a bounded K4 pilot be considered.
+First inspect the full V2.1 JSON, especially:
+- 95% intervals for B-A AveragePolicy regret and Advantage regret;
+- 95% intervals for K4-K1 MSE/TV/regret;
+- FOLD/CHECK_CALL/ALL_IN action-mass shifts.
 
-Even then, long training remains paused until the separate postflop regression is accounted for.
+If the local causal chain is statistically coherent, the next question is whether to run a bounded K4 pilot or first test whether the same future-chance target-variance mechanism also explains the resolved PassiveCaller FLOP and UniformLegal TURN regressions.
 
 DeepCrusher remains deferred.
 
 ## Immediate user action
 
-Pull current `main` and run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`.
+Send/upload `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json` from Windows Downloads.
 
-Wait for `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS` or the first error.
-
-Then send `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
-
-Do not start K4 training.
+No rerun is needed. Do not start K4 training while the full confidence intervals and action-mass shifts are still unreviewed.
