@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — K4 IMPROVES ESTIMATION BUT DOES NOT EXPLAIN FAILURES — TARGET-DRIFT / MODEL-TRACKING AUDIT ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — TARGET-DRIFT MATRIX COMPLETE — HU POLICY-CHAIN AUDIT ACTIVE**
 Date: 2026-09-18
 
 ## Preserved milestones
@@ -17,77 +17,84 @@ Never rewrite either checkpoint.
 
 ## Current scientific conclusion
 
-K4 future-board averaging is a genuine target-estimator improvement.
+Future-board K4 improves estimator quality but does not identify Stage-B failure states.
 
-However the full cross-street FAILURE/CONTROL analysis shows that estimator noise is **not failure-specific**.
+The Stage-A/B target-drift matrix adds:
 
-Important examples:
-- Jammer CONTROL absolute future-board variance exceeds FAILURE significantly.
-- PassiveCaller FLOP relative board fraction differs, but absolute board variance does not.
-- UniformLegal TURN relative model-error fraction differs, but absolute model error does not.
-- K4 MSE improvement does not distinguish FAILURE from CONTROL in any context.
+### Jammer
+- low-noise target is invariant A->B after opponent all-in;
+- Stage-B own-target Advantage MSE does not worsen;
+- deployed AveragePolicy nevertheless has a resolved negative B-A result.
 
-Therefore:
-- K4 is not yet a justified causal intervention;
-- long training remains frozen.
+Therefore the Jammer regression is not explained by target nonstationarity.
 
-## Missing distinction
+### PassiveCaller flop
+- target drift is significantly larger in controls than failures;
+- failures show an internal Stage-B own-target MSE increase;
+- but its FAILURE-vs-CONTROL excess is unresolved;
+- Stage-B Advantage best-action agreement is poor in both failure/control samples.
 
-The Stage-B-only variance audit cannot tell whether regression came from:
+### UniformLegal turn
+- target drift is substantial;
+- own-target and tracking changes are heterogeneous;
+- no failure-specific cause resolves.
 
-### Target nonstationarity
-The conditional self-play target changed between Stage A and Stage B.
+## Highest-value distinction
 
-### Model tracking failure
-The target may be similar, but Stage B no longer represents it accurately.
+The deployed benchmark evaluates AveragePolicy.
 
-### Both
-The target moved and the model failed to follow.
+The current target/model diagnostics evaluate the current Advantage-induced behavior.
 
-## Target-drift / model-tracking gate
+We now need to know whether Stage-B regression is:
+
+1. already present in current behavior; or
+2. introduced/amplified by historical AveragePolicy aggregation.
+
+## HU policy-chain gate
 
 Canonical contract:
 
-`docs/LT2_CROSS_STREET_TARGET_DRIFT_TRACKING_20260918.md`.
+`docs/LT2_HU_POLICY_CHAIN_AUDIT_20260918.md`.
 
-Use the same 72 FAILURE/CONTROL anchors.
+Use forensic seeds `20260920..20260925`, 5000 scenarios/seed, HU only.
 
-For every anchor:
-- exact hidden hand fixed;
-- same future-board samples A/B;
-- same RNG seeds A/B;
-- 8 boards × 4 repeats;
-- exact1;
-- canonical legal-action mean subtraction.
+Evaluate:
+- AVG_A;
+- AVG_B;
+- BEH_A;
+- BEH_B;
+
+against:
+- UNIFORM_LEGAL;
+- PASSIVE_CALLER;
+- JAMMER.
+
+Same scenario, deal, seat and random streams.
 
 Measure:
-- target drift A->B;
-- model A error to target A;
-- model B error to target B;
-- B-A own-target error;
-- model drift;
-- tracking error;
-- reference best-action changes;
-- sampled action regret under own-stage target.
+- deployed AVG B-A;
+- current BEH B-A;
+- stage-specific AVG-BEH gaps;
+- change in aggregation gap from A to B.
 
 ## Decision logic
 
-If target drift is large but both models fit own targets:
-- investigate self-play nonstationarity and target evolution.
+If AVG B-A is negative while BEH B-A is neutral/positive:
+- inspect policy reservoir/history weighting and AveragePolicy aggregation.
 
-If target drift is small but Stage-B own-target error worsens:
-- investigate reservoir coverage, catastrophic interference, representation or optimizer dynamics.
+If both are negative:
+- continue upstream through Advantage/self-play behavior.
 
-If both are large:
-- treat the problem as moving-target + tracking instability.
+If results split by baseline:
+- accept a multi-mechanism diagnosis rather than forcing one global fix.
 
-Only after this distinction is established may an intervention be designed.
+No training resumes before this gate is reviewed.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_cross_street_target_drift_tracking.sh`.
-3. Wait for `LT2_CROSS_STREET_TARGET_DRIFT_TRACKING_PASS`.
-4. Send `SpinCore_LT2_cross_street_target_drift_tracking.json`.
+2. Run `bash tools/run_lt2_hu_policy_chain.sh`.
+3. Wait for `LT2_HU_POLICY_CHAIN_EVAL_PASS`.
+4. Send `SpinCore_LT2_hu_policy_chain.json`.
 5. Keep holdout seeds `20261001..20261006` untouched.
 6. Do not train K4 or resume long training.
