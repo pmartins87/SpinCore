@@ -205,19 +205,33 @@ def _collect_hu_board_averaged_root(
     for player in live:
         rng_before = collector.rng.getstate()
         rng_after_canonical = None
+        canonical_preflop_trace = None
         streams: list[tuple[ActionAdvantageSample, ...]] = []
 
         for board_index, board in enumerate(boards):
-            # Replay the same external-sampling stream for every board. This
-            # holds preflop opponent-action sampling fixed while isolating future
-            # board chance. After all variants, restore the RNG progression from
-            # the canonical first board so later traversers/roots consume the
-            # same stochastic stream they would have consumed at K=1.
+            # A full traversal is depth-first. Merely resetting one global RNG
+            # is NOT enough to preserve later preflop opponent samples, because
+            # board-dependent postflop branches consume different numbers of RNG
+            # draws before recursion returns to a later preflop branch.
+            #
+            # Board 0 therefore records the canonical sequence of sampled
+            # preflop opponent actions. Alternate boards replay that exact
+            # preflop trace (and consume one dummy RNG draw per replayed sample)
+            # while postflop remains ordinary external sampling. This isolates
+            # future-board chance without changing the canonical board-0 walk.
             collector.rng.setstate(rng_before)
+            if board_index == 0:
+                collector.begin_preflop_record()
+            else:
+                if canonical_preflop_trace is None:
+                    raise RuntimeError("missing canonical preflop replay trace")
+                collector.begin_preflop_replay(canonical_preflop_trace)
+
             temp = _ListSink()
             old_memory = collector.advantage_memory
             collector.advantage_memory = temp
             root = solver.create_with_deal(job.episode, snapshot.holes, board)
+            completed_trace = False
             try:
                 result = collector.collect_advantage_partial_exact(
                     root,
@@ -225,7 +239,14 @@ def _collect_hu_board_averaged_root(
                     iteration=int(iteration),
                     exact_opponent_levels=0,
                 )
+                if board_index == 0:
+                    canonical_preflop_trace = collector.finish_preflop_record()
+                else:
+                    collector.finish_preflop_replay()
+                completed_trace = True
             finally:
+                if not completed_trace:
+                    collector.abort_preflop_trace()
                 root.close()
                 collector.advantage_memory = old_memory
 
@@ -280,9 +301,107 @@ def _collect_chunk(
         device="cpu",
         ready=bool(model_ready),
     )
+    class _BoardReplayCollector(LeanLegacyActionCollector):
+        """Canonical collector plus opt-in preflop opponent-action replay.
+
+        Record mode is observational and consumes RNG exactly as canonical.
+        Replay mode forces the recorded preflop sampled action at the same
+        information state while consuming one RNG draw to preserve the local
+        external-sampling draw count. Postflop sampling is untouched.
+        """
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self._preflop_trace_mode = "off"
+            self._preflop_trace = []
+            self._preflop_trace_index = 0
+
+        def begin_preflop_record(self) -> None:
+            if self._preflop_trace_mode != "off":
+                raise RuntimeError("preflop trace already active")
+            self._preflop_trace_mode = "record"
+            self._preflop_trace = []
+            self._preflop_trace_index = 0
+
+        def finish_preflop_record(self):
+            if self._preflop_trace_mode != "record":
+                raise RuntimeError("preflop trace is not recording")
+            out = tuple(self._preflop_trace)
+            self._preflop_trace_mode = "off"
+            self._preflop_trace = []
+            self._preflop_trace_index = 0
+            return out
+
+        def begin_preflop_replay(self, trace) -> None:
+            if self._preflop_trace_mode != "off":
+                raise RuntimeError("preflop trace already active")
+            self._preflop_trace_mode = "replay"
+            self._preflop_trace = list(trace)
+            self._preflop_trace_index = 0
+
+        def finish_preflop_replay(self) -> None:
+            if self._preflop_trace_mode != "replay":
+                raise RuntimeError("preflop trace is not replaying")
+            if self._preflop_trace_index != len(self._preflop_trace):
+                raise RuntimeError(
+                    "alternate board did not consume the full canonical preflop trace"
+                )
+            self._preflop_trace_mode = "off"
+            self._preflop_trace = []
+            self._preflop_trace_index = 0
+
+        def abort_preflop_trace(self) -> None:
+            self._preflop_trace_mode = "off"
+            self._preflop_trace = []
+            self._preflop_trace_index = 0
+
+        def _sample_opponent_action(self, state, observation, legal, sigma) -> int:
+            if self._street(state) != 0 or self._preflop_trace_mode == "off":
+                return super()._sample_opponent_action(
+                    state, observation, legal, sigma
+                )
+
+            if self._preflop_trace_mode == "record":
+                action = super()._sample_opponent_action(
+                    state, observation, legal, sigma
+                )
+                self._preflop_trace.append(
+                    (bytes(observation), tuple(int(x) for x in legal), int(action))
+                )
+                return int(action)
+
+            if self._preflop_trace_mode != "replay":
+                raise RuntimeError("unknown preflop trace mode")
+            if self._preflop_trace_index >= len(self._preflop_trace):
+                raise RuntimeError(
+                    "alternate board visited more preflop opponent nodes than canonical"
+                )
+
+            expected_observation, expected_legal, action = self._preflop_trace[
+                self._preflop_trace_index
+            ]
+            self._preflop_trace_index += 1
+            if bytes(observation) != expected_observation:
+                raise RuntimeError(
+                    "alternate board changed canonical preflop opponent observation"
+                )
+            if tuple(int(x) for x in legal) != tuple(expected_legal):
+                raise RuntimeError(
+                    "alternate board changed canonical preflop opponent legal set"
+                )
+            if int(action) not in legal or float(sigma[int(action)]) <= 0.0:
+                raise RuntimeError(
+                    "canonical preflop sampled action is not replayable"
+                )
+
+            # sample_action consumes exactly one rng.random() call. Consume the
+            # same local draw even though the action itself is forced.
+            self.rng.random()
+            return int(action)
+
     sink = _ListSink()
     dummy = _ListSink()
-    collector = LeanLegacyActionCollector(
+    collector = _BoardReplayCollector(
         action_spec=FIRST_RELEASE_ACTION_SPEC,
         selected_representation="C0_V1_FROZEN_CONTROL",
         policy=behavior,
