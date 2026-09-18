@@ -13,19 +13,20 @@
 - 30k weak-baseline gate — **COMPLETE; HU JAMMER NEGATIVE**.
 - AveragePolicy extra-budget hypothesis — **NOT SUPPORTED**.
 - Advantage optimizer escalation — **NOT SUPPORTED AS NEXT INTERVENTION**.
-- Repeated-state target variance — **COMPLETE; EXACT LEVEL 1 REDUCES OPPONENT-ACTION NOISE**.
-- Same-input reservoir audit — **COMPLETE; DUPLICATE COVERAGE TOO SPARSE**.
-- HU-preflop conditional resampling — **COMPLETE; 93.73% HIDDEN/CHANCE VARIANCE**.
-- HU-preflop target-estimator budget sweep — **NEXT**.
+- Repeated-state target variance — **COMPLETE**.
+- Same-input reservoir audit — **COMPLETE; DUPLICATES TOO SPARSE**.
+- HU-preflop conditional resampling — **COMPLETE; HIDDEN/CHANCE VARIANCE DOMINANT**.
+- HU-preflop target-estimator budget sweep — **COMPLETE; EXACT0 + MORE DEALS IS COMPUTE FRONTIER**.
+- HU-preflop board-only averaging — **NEXT**.
 - Root training beyond iteration 7500 — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
 
 Canonical current files:
 
 - `CURRENT_WORK.md`
+- `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
+- `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_20260917.md`
 - `docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md`
-- `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_20260917.md`
-- `docs/LT2_REPEATED_TARGET_VARIANCE_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -39,87 +40,70 @@ Keep both unchanged.
 
 ## Strength failure freezing scaling
 
-Stage B HU Jammer: `-5.141` chips/hand, simultaneous family-wise 95% CI `[-9.078,-1.204]`.
-
-Stage B minus Stage A HU Jammer: `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
-
-No more roots until the learning mechanism changes and a bounded candidate beats the preserved checkpoint.
+Stage B HU Jammer remains confirmed negative. No more long roots until a bounded causal intervention beats preserved Stage B on the powered weak-baseline suite.
 
 ## Mechanism now established
 
-The targeted HU-preflop conditional audit resolves the major ambiguity left by fixed-deal target repetitions.
+HU preflop sampled-target MSE is dominated by hidden/chance variation:
 
-Across 64 anchors:
+- future board **65.88%**;
+- opponent-hand posterior **26.10%**;
+- exact-level-1 action noise **1.74%**;
+- current-model conditional-mean error **6.27%**.
 
-- future-board variance: **65.88%** of sampled-target MSE;
-- opponent-hand posterior variance: **26.10%**;
-- residual exact-level-1 opponent-action variance: **1.74%**;
-- current-model error to conditional mean: **6.27%**.
+## Exact branching decision
 
-Total conditional hidden/chance variance: **93.73%**.
+The compute-normalized estimator sweep compared exact0/exact1 on paired candidate hidden deals.
 
-The same qualitative split holds at root, continuation-1, continuation-2+, and in the 25 FACING_ALL_IN anchors.
+Exact1 costs about 2.1x nodes at the same K.
 
-Therefore simply enlarging the network or adding optimizer steps is not the next justified experiment.
+At matched node budgets, exact0 with approximately twice as many independent hidden deals has lower target MSE at every tested budget, with paired 95% intervals excluding zero.
 
-## But policy disagreement remains large
+Policy-TV/regret differences at those matched budgets mostly remain unresolved, so exact1 has no demonstrated policy-space benefit sufficient to pay its cost.
 
-Current model against the high-budget conditional-mean target:
+**Exact1 is not promoted.**
 
-- mean regret-matching policy TV: `0.6903`;
-- argmax agreement: `26.56%`;
-- branch mismatch: `34.38%`;
-- model regret under conditional mean: `39.55` chips-equivalent;
-- signed conditional-mean-policy minus model-policy gap: `+26.58` chips.
+## Jammer-specific structure
 
-FACING_ALL_IN:
-- TV `0.6590`;
-- branch mismatch `72%`;
-- target FOLD/CHECK_CALL/ALL_IN mass `44.15/36.95/18.90%`;
-- model mass `31.04/34.91/34.04%`.
+FACING_ALL_IN exact0 and exact1 are identical at every K because no future opponent action remains to exactify.
 
-This means raw target MSE and decision quality are not interchangeable.
+This makes chance averaging, not opponent-action branching, the relevant variance mechanism for the confirmed HU-Jammer weakness.
 
-## Immediate gate — compute-normalized target estimator
+## Next implementation-feasibility gate
+
+The next read-only audit tests future-board-only averaging at exact0 while keeping one sampled opponent hand fixed.
+
+Why:
+
+- future-board variance is the largest single component;
+- future-board resampling is far easier to integrate into production training than posterior opponent-hand resampling;
+- full hidden-deal averaging is useful diagnostically but operationally more invasive.
 
 Launcher:
 
-`tools/run_lt2_hu_preflop_target_estimator_budget.sh`
+`tools/run_lt2_hu_preflop_board_only_averaging.sh`
 
 Design:
+- same 64 anchors;
+- reference = 16 posterior hands × 4 boards, exact1;
+- candidate = 16 separate posterior hands, each held fixed while 8 future boards are generated;
+- K = 1,2,4,8 board averages at exact0;
+- no roots and no optimizer steps.
 
-- same 64 HU-preflop anchors;
-- 64 independent hidden-deal exact-level-1 samples form the reference mean;
-- 32/32 split-half reference diagnostic;
-- separate 64-deal candidate pool;
-- exact0 and exact1 evaluated on the same candidate hidden deals;
-- candidate averages K = 1, 2, 4, 8, 16, 32, 64;
-- actual traversal nodes measured.
+## Branch after board-only audit
 
-Metrics:
-- target MSE to reference;
-- policy TV;
-- argmax;
-- branch mismatch;
-- reference-target value gap/regret;
-- node cost.
+If K4/K8 captures most of the full-deal policy-space improvement, implement a bounded HU-preflop board-averaging training pilot.
 
-## Branch after estimator sweep
+If board-only leaves a large gap, opponent-hand posterior variation must be incorporated.
 
-If exact0 with more independent hidden deals gives better policy accuracy per node than exact1, build a bounded chance-averaged estimator pilot around that frontier.
+If MSE falls but TV/regret remains largely unchanged, prioritize a policy-aligned Advantage objective.
 
-If exact1 still wins at matched compute, retain deeper opponent branching.
-
-If K reduces target MSE strongly while policy TV/regret remains high, switch the next training intervention toward sign/ranking/regret-policy-aligned supervision rather than plain MSE.
-
-If a moderate K reaches near the reference split-half floor, use that budget in a small HU-preflop causal training pilot.
-
-Only after a bounded candidate beats Stage B on the powered weak-baseline suite may root scaling resume.
+Only a candidate that later beats Stage B on the powered weak-baseline suite can reopen long root scaling.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_preflop_target_estimator_budget.sh
+bash tools/run_lt2_hu_preflop_board_only_averaging.sh
 ```
 
-Wait for `LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_PASS`. Keep long training paused.
+Wait for `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_PASS`. Keep root training paused.
