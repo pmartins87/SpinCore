@@ -231,6 +231,22 @@ class UniversalPartialExactCollector:
     def _p(self, state, observation: bytes, legal: tuple[int, ...]) -> Policy:
         return validate_policy(self.policy(state, observation, legal), legal)
 
+    def _sample_opponent_action(
+        self,
+        state,
+        observation: bytes,
+        legal: tuple[int, ...],
+        sigma: Policy,
+    ) -> int:
+        """Sample one external-sampling opponent action.
+
+        Kept as an overridable hook so bounded diagnostics can impose
+        common-random-number/replay contracts without changing canonical
+        collector semantics. The default path is byte-for-byte equivalent to
+        the historical direct sample_action call.
+        """
+        return int(sample_action(sigma, legal, self.rng))
+
     def collect_advantage_partial_exact(
         self,
         root,
@@ -330,7 +346,7 @@ class UniversalPartialExactCollector:
                 added += int(child_added)
             return float(value), int(nodes), int(added)
 
-        action = sample_action(sigma, legal, self.rng)
+        action = self._sample_opponent_action(state, observation, legal, sigma)
         child = state.child_universal(active_mask, action)
         try:
             value, nodes, added = self._adv_partial(
