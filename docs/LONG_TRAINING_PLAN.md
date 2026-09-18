@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — TARGET-DRIFT MATRIX COMPLETE — HU POLICY-CHAIN AUDIT ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — POLICY-CHAIN SPLIT RESOLVED — JAMMER CURRENT-BEHAVIOR LOCALIZATION ACTIVE**
 Date: 2026-09-18
 
 ## Preserved milestones
@@ -17,84 +17,87 @@ Never rewrite either checkpoint.
 
 ## Current scientific conclusion
 
-Future-board K4 improves estimator quality but does not identify Stage-B failure states.
+K4 improves target estimation but does not identify the Stage-B failure mechanism.
 
-The Stage-A/B target-drift matrix adds:
+The Stage-A/B target matrix showed:
+- Jammer facing-all-in target is stationary A->B;
+- Passive flop has some Stage-B own-target fit degradation but not failure-specific;
+- Uniform turn remains heterogeneous.
 
-### Jammer
-- low-noise target is invariant A->B after opponent all-in;
-- Stage-B own-target Advantage MSE does not worsen;
-- deployed AveragePolicy nevertheless has a resolved negative B-A result.
+The global HU policy-chain audit now shows that the Stage-B mechanism differs by opponent family.
 
-Therefore the Jammer regression is not explained by target nonstationarity.
+## Jammer
 
-### PassiveCaller flop
-- target drift is significantly larger in controls than failures;
-- failures show an internal Stage-B own-target MSE increase;
-- but its FAILURE-vs-CONTROL excess is unresolved;
-- Stage-B Advantage best-action agreement is poor in both failure/control samples.
+AveragePolicy B-A:
+- `-1.682`, CI95 `[-2.767,-0.597]`.
 
-### UniformLegal turn
-- target drift is substantial;
-- own-target and tracking changes are heterogeneous;
-- no failure-specific cause resolves.
+Current Advantage-induced behavior B-A:
+- `-8.430`, CI95 `[-12.515,-4.345]`.
 
-## Highest-value distinction
+Aggregation-chain delta:
+- `+6.748`, CI95 `[+2.521,+10.975]`.
 
-The deployed benchmark evaluates AveragePolicy.
+The current Stage-B Advantage/behavior chain contains a strong resolved defect.
 
-The current target/model diagnostics evaluate the current Advantage-induced behavior.
+AveragePolicy reduces, rather than amplifies, the final current-behavior deterioration.
 
-We now need to know whether Stage-B regression is:
+Because Advantage resets/refits every iteration, this is not by itself proof that the final snapshot caused the cumulative AveragePolicy loss. It is nevertheless the strongest upstream failure currently observed.
 
-1. already present in current behavior; or
-2. introduced/amplified by historical AveragePolicy aggregation.
+## PassiveCaller
 
-## HU policy-chain gate
+AveragePolicy B-A:
+- resolved negative.
+
+Current behavior B-A:
+- unresolved positive.
+
+This suggests a separate historical aggregation / policy-memory mechanism may exist.
+
+It is secondary until the stronger Jammer upstream defect is localized.
+
+## UniformLegal
+
+No resolved mechanism.
+
+## Current-behavior first-divergence gate
 
 Canonical contract:
 
-`docs/LT2_HU_POLICY_CHAIN_AUDIT_20260918.md`.
+`docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_20260918.md`.
 
-Use forensic seeds `20260920..20260925`, 5000 scenarios/seed, HU only.
+Use:
+- forensic seeds `20260920..20260925`;
+- 5000 scenarios/seed;
+- HU only;
+- same scenario/deal/hero/baseline/RNG streams.
 
-Evaluate:
-- AVG_A;
-- AVG_B;
-- BEH_A;
-- BEH_B;
+Run Stage A and Stage B current Advantage-induced behavior in lock-step until the first sampled hero action differs.
 
-against:
-- UNIFORM_LEGAL;
-- PASSIVE_CALLER;
-- JAMMER.
-
-Same scenario, deal, seat and random streams.
-
-Measure:
-- deployed AVG B-A;
-- current BEH B-A;
-- stage-specific AVG-BEH gaps;
-- change in aggregation gap from A to B.
+Decompose B-A into:
+- NO_DIVERGENCE;
+- PREFLOP_ROOT;
+- PREFLOP_FACING_ALL_IN;
+- PREFLOP_OTHER;
+- FLOP;
+- TURN;
+- RIVER.
 
 ## Decision logic
 
-If AVG B-A is negative while BEH B-A is neutral/positive:
-- inspect policy reservoir/history weighting and AveragePolicy aggregation.
+If Jammer current-behavior loss is concentrated in PREFLOP_FACING_ALL_IN:
+- next inspect broad action-gap / ranking / regret-matching calibration on non-selected states there;
+- explicitly measure positive-regret support and all-nonpositive fallback incidence.
 
-If both are negative:
-- continue upstream through Advantage/self-play behavior.
+If the loss localizes to another state class:
+- follow that class instead.
 
-If results split by baseline:
-- accept a multi-mechanism diagnosis rather than forcing one global fix.
-
-No training resumes before this gate is reviewed.
+Do not design or train an intervention until this is known.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_hu_policy_chain.sh`.
-3. Wait for `LT2_HU_POLICY_CHAIN_EVAL_PASS`.
-4. Send `SpinCore_LT2_hu_policy_chain.json`.
+2. Run `bash tools/run_lt2_hu_behavior_first_divergence.sh`.
+3. Wait for `LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_PASS`.
+4. Send `SpinCore_LT2_hu_behavior_first_divergence.json`.
 5. Keep holdout seeds `20261001..20261006` untouched.
 6. Do not train K4 or resume long training.
