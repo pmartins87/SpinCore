@@ -1,7 +1,7 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — EXACT0 COMPUTE FRONTIER CONFIRMED — BOARD-ONLY AVERAGING ACTIVE**
-Date: 2026-09-17
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — HU-PREFLOP BOARD-AVERAGING K4 ADMITTED — MECHANICS SMOKE ACTIVE**
+Date: 2026-09-18
 
 ## Current state
 
@@ -11,22 +11,23 @@ The continuous learning line has reached:
 - LT1: 1.2M roots;
 - LT2 Stage A: 1.8M roots;
 - LT2 Stage B: 4.5M roots / iteration 7500;
-- 30k weak-baseline gate confirms Stage B HU Jammer negative;
-- AveragePolicy extra fitting is not helpful;
+- powered weak-baseline gate confirms Stage B HU Jammer negative;
+- extra AveragePolicy fitting is not helpful;
 - larger Advantage optimizer budgets do not justify themselves;
 - HU-preflop sampled-target error is dominated by hidden/chance variance;
-- exact1 is not compute-efficient versus spending the same nodes on more independent hidden deals;
-- next step is board-only averaging feasibility, not more roots.
+- exact1 is not compute-efficient;
+- board-only future-board averaging has a measured K4 policy-space elbow;
+- the next step is a read-only implementation smoke, not long training.
 
 Read first:
 
+- `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
+- `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_20260918.md`
 - `LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
-- `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_20260917.md`
-- `LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md`
 
-## Core training contract
+## Canonical training contract
 
-Current functional line remains unchanged:
+The preserved Stage-B line remains:
 
 - empirical SpinGo 3H/HU/blind/stack sampling;
 - WTA chip-EV utility scaled by 1500;
@@ -42,9 +43,10 @@ Current functional line remains unchanged:
 - batch size 1024;
 - 4000 AveragePolicy optimizer steps per milestone finalization;
 - production `exact_opponent_levels=0`;
-- production concurrent-fit path.
+- canonical `hu_preflop_board_average_k=1`;
+- 31 root workers, vectorized batching, concurrent-fit iteration mode.
 
-No production-training semantic change has been admitted yet.
+The preserved checkpoints are never rewritten.
 
 ## Preserved milestones
 
@@ -54,15 +56,13 @@ LT2 Stage A: 1.8M roots / iteration 3000, SHA256 `e7dd9c460fe103933ee1b025b1ac79
 
 LT2 Stage B: 4.5M roots / iteration 7500, SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-Keep all preserved milestones unchanged.
-
 ## Strength gate
 
 Stage B HU Jammer is `-5.141` chips/hand with simultaneous family-wise 95% CI `[-9.078,-1.204]`.
 
 Stage B minus Stage A HU Jammer is `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
 
-No long root continuation is authorized.
+No blind root scaling is authorized.
 
 ## Target-variance mechanism
 
@@ -75,47 +75,84 @@ HU-preflop conditional decomposition:
 
 Total hidden/chance conditional variance: **93.73%**.
 
-## Compute-normalized exact-level decision
+## Closed exact-level branch
 
-The completed estimator-budget sweep shows:
+Exact1 costs about 2.1x as many nodes at same K.
 
-- same-K exact1 costs about 2.1x nodes;
-- same-K MSE improvement from exact1 is small;
-- at approximately matched compute, exact0 with 2K independent hidden deals beats exact1 with K in target MSE at every tested budget;
-- paired 95% intervals for those MSE differences are entirely below zero;
-- policy-TV/regret differences mostly remain statistically unresolved.
+Matched-compute exact0 with more independent hidden deals wins target MSE across every tested budget, while policy-space differences do not justify exact1.
 
-Therefore deeper opponent-action exact branching is not the next training intervention.
+In FACING_ALL_IN, exact0 and exact1 are identical.
 
-In FACING_ALL_IN states exact0 and exact1 are exactly identical, reinforcing that exact branching cannot directly fix the most Jammer-relevant situation.
+Exact1 stays off.
 
-## Why board-only averaging is next
+## Board-only feasibility result
 
-Full independent hidden-deal averaging is the diagnostic winner, but production implementation of posterior opponent-hand resampling is invasive.
+Board-only exact0 future-board averaging while fixing the sampled opponent hand:
 
-Future-board chance accounts for the largest component and can be resampled without changing the observable information set.
+| K | nodes | MSE | TV | argmax | branch mismatch | regret |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 75.5 | 0.042638 | 0.5001 | 38.92% | 26.04% | 38.73 |
+| 2 | 151.0 | 0.023177 | 0.4966 | 39.84% | 22.05% | 37.01 |
+| 4 | 302.1 | 0.013556 | 0.4868 | 41.60% | 17.68% | 35.42 |
+| 8 | 604.2 | 0.008715 | 0.4843 | 42.58% | 15.82% | 35.13 |
 
-The active audit therefore measures whether future-board averaging alone captures enough of the benefit.
+K4 vs K1 gives resolved improvements in:
+- target MSE;
+- regret;
+- positive-regret branch mismatch.
 
-Design:
+K8 doubles K4 compute but adds no resolved TV/regret/argmax benefit.
 
-- 64 deterministic HU-preflop anchors;
-- independent 64-deal reference per anchor from 16 posterior hands × 4 boards at exact1;
-- candidate uses 16 separate posterior hands;
-- each candidate hand is held fixed;
-- 8 future boards are generated at exact0;
-- board-only averages K = 1,2,4,8;
-- no roots and no optimizer steps.
+**K4 is the first admitted causal training candidate.**
 
-## Decision after board-only audit
+This is not yet an authorization to train.
 
-If board-only K4/K8 captures most of the full-deal policy improvement, implement a bounded training pilot using future-board averaging only in HU preflop.
+## Candidate semantic
 
-If it plateaus materially above the full-deal frontier, opponent-hand conditional resampling or another lower-variance estimator is required.
+The opt-in parameter is `hu_preflop_board_average_k`.
 
-If target MSE improves but regret-matching policy TV/regret does not, the next experiment should be a policy-aligned Advantage objective rather than larger K.
+Default `1` is canonical.
 
-Every candidate must beat preserved Stage B on the powered weak-baseline suite before root scaling resumes.
+Candidate K4 must:
+- affect TRUE_HEADS_UP only;
+- preserve the canonical root's hole cards;
+- retain canonical future board as board 0;
+- add three independent future boards conditional on those holes;
+- replay the same external-sampling RNG state across all four boards;
+- average only preflop Advantage targets;
+- retain postflop samples from canonical board 0;
+- preserve sample count/order/observation/legal/weight/iteration;
+- restore canonical-board RNG progression after averaging.
+
+Thus the intervention targets the measured future-board noise without multiplying reservoir sample density or changing postflop labels.
+
+## Active mechanics gate
+
+Before any training continuation, compare identical prospective Stage-B HU roots at K1 and K4.
+
+Launcher:
+
+`tools/run_lt2_hu_preflop_board_averaging_smoke.sh`
+
+The smoke performs:
+- no training-memory writes;
+- no optimizer steps;
+- no checkpoint write.
+
+Required pass conditions:
+- same root/sample identity;
+- postflop target equality;
+- nonzero preflop target changes;
+- K4 node cost > K1;
+- preserved source SHA unchanged.
+
+## Pilot sizing after smoke
+
+Do not preselect the root count.
+
+Use the measured K4/K1 node multiplier from the smoke to choose a bounded compute budget that is large enough to move the saturated HU policy memory but small enough to stop cheaply if the semantic fails.
+
+The eventual candidate must be isolated from Stage B and must pass the same powered weak-baseline suite before long training can resume.
 
 ## DeepCrusher placement
 
@@ -124,8 +161,8 @@ DeepCrusher remains deferred until the weak-opponent curriculum is strong and st
 ## Immediate direction
 
 1. Preserve Stage A and Stage B.
-2. Keep root training stopped at iteration 7500.
-3. Run `bash tools/run_lt2_hu_preflop_board_only_averaging.sh`.
-4. Review `SpinCore_LT2_hu_preflop_board_only_averaging.json`.
-5. Choose the first bounded training semantic change only after that review.
+2. Keep long root training stopped at iteration 7500.
+3. Run `bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh`.
+4. Review `SpinCore_LT2_hu_preflop_board_averaging_smoke.json`.
+5. Size the bounded K4 causal training pilot from measured compute.
 6. Do not move to DeepCrusher yet.
