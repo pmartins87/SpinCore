@@ -104,7 +104,7 @@ def _torch_load_mmap(path: Path):
 
     try:
         return torch.load(path, map_location="cpu", weights_only=False, mmap=True)
-    except TypeError:
+    except (TypeError, RuntimeError):
         return torch.load(path, map_location="cpu", weights_only=False)
 
 
