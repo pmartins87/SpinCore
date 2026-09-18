@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — HU-JAMMER FAILURE CONFIRMED — TARGETED HU-PREFLOP CONDITIONAL RESAMPLING ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — HU-JAMMER FAILURE CONFIRMED — TARGET-ESTIMATOR BUDGET SWEEP ACTIVE**
 Date: 2026-09-17
 
 ## Current state
@@ -13,15 +13,18 @@ The continuous learning line has reached:
 - LT2 Stage B: 4.5M roots / iteration 7500;
 - all four 2M reservoirs in replacement regime;
 - Stage A -> Stage B policy movement is material;
-- 30k weak-baseline precision gate complete;
-- Stage B HU Jammer is statistically negative and worsened relative to Stage A;
-- AveragePolicy extra fitting does not improve held-out CE;
-- larger Advantage budgets reduce MSE modestly but do not improve production-policy behavior;
-- fixed-state repeats show material opponent-action target variance and strong variance reduction from exact level 1;
-- complete-reservoir exact-input duplicates are too sparse for a representative conditional-variance estimate;
-- immediate next experiment is targeted HU-preflop conditional resampling, not more roots.
+- 30k weak-baseline gate confirms Stage B HU Jammer negative;
+- AveragePolicy extra fitting is not helpful;
+- larger Advantage optimizer budgets improve MSE only modestly and do not improve production-policy behavior;
+- fixed-deal repeats show exact level 1 reduces opponent-action noise;
+- exact same-input reservoir collisions are too sparse for inference;
+- targeted HU-preflop conditional resampling shows **93.73% of sampled-target MSE is hidden/chance conditional variance**;
+- next step is compute-normalized target-estimator selection, not more roots or a larger network.
 
-Read `LT2_SAME_INPUT_TARGET_VARIANCE_RESULT_20260917.md` and `LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_20260917.md` first.
+Read first:
+
+- `LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md`
+- `LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_20260917.md`
 
 ## Core training contract
 
@@ -60,80 +63,65 @@ Stage B HU Jammer is `-5.141` chips/hand with simultaneous family-wise 95% CI `[
 
 Stage B minus Stage A HU Jammer is `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
 
-Policy movement without practical strength improvement is not sufficient to admit more roots.
+Policy movement without practical strength improvement is not enough to continue roots.
 
-## Diagnostics already closed
+## Mechanism result
 
-More AveragePolicy optimizer steps are not supported.
+Targeted conditional resampling on 64 HU-preflop anchors produced:
 
-A 16x Advantage optimizer increase is not supported: 100 -> 1600 steps modestly improves MSE but not the production policy mapping.
+- future-board variance: **65.88%**;
+- opponent-hand posterior variance: **26.10%**;
+- residual exact-level-1 opponent-action variance: **1.74%**;
+- current-model MSE to conditional mean: **6.27%**.
 
-The large Advantage target-policy disagreement is not mostly caused by near-tied actions and is not dominated by the all-nonpositive fallback branch.
+Total hidden/chance conditional variance: **93.73%**.
 
-## Opponent-action target variance
+This result is consistent across root, continuation-1, continuation-2+, and FACING_ALL_IN.
 
-At fixed exact hidden deal:
+Thus the training target is dominated by information that is correctly absent from the observable information-set input. A deterministic model can only learn the conditional mean, not individual sampled realizations.
 
-- production exact level 0 opponent-action noise explains about 35.1% of sampled-target MSE in 3H and 36.7% in HU;
-- exact level 1 reduces that measured component by about 78.0% and 80.5%;
-- node cost rises about 2.27x and 2.31x.
+## Policy-space caveat
 
-Exact level 1 therefore remains a serious candidate variance-reduction mechanism.
+The current model still differs strongly from the high-budget conditional-mean policy:
 
-It is not yet a production-training choice because fixed-deal residual error also contains hidden-card/future-board effects absent from the neural information set.
+- mean policy TV: `0.6903`;
+- argmax agreement: `26.56%`;
+- model regret under the conditional mean: `39.55` chips-equivalent.
 
-## Same-input reservoir audit
+So "model is only 6.27% of raw MSE" does not mean "model is good enough." Regret matching is sensitive to sign and relative errors.
 
-Scanning all stored Stage-B Advantage memories found very low exact-input repeat coverage.
+The correct next intervention must reduce label variance and then measure policy-space improvement.
 
-HU preflop is the best case, but only 527 of 224,491 stored items (0.2348%) are in duplicate exact-input groups and max group size is 3.
+## Active target-estimator gate
 
-The sparse HU-preflop subset yields:
-- within-same-input target variance 36.9%;
-- model-to-same-input-mean error 63.1%;
-- policy TV 0.620;
-- target FOLD 38.2% vs model 16.6%;
-- target CHECK_CALL 23.7% vs model 44.8%;
-- target ALL_IN 23.2% vs model 36.4%.
+The next read-only audit compares the compute frontier of two ways to spend target-generation nodes:
 
-Those values are suggestive, not representative, because coverage is too low.
+1. deeper opponent branching (`exact_opponent_levels=1`);
+2. more independent opponent-hand/future-board realizations of the same observable HU-preflop state.
 
-## Active targeted conditional audit
+Design:
 
-The next audit creates its own controlled repeated conditional samples instead of waiting for reservoir collisions.
+- 64 deterministic HU-preflop anchors;
+- independent 64-deal exact-level-1 reference per anchor;
+- reference split 32/32 to estimate its own Monte-Carlo floor;
+- separate 64-deal candidate pool;
+- exact0 and exact1 evaluated on the same candidate hidden deals;
+- averages K = 1, 2, 4, 8, 16, 32, 64;
+- actual nodes measured.
 
-HU preflop only:
-
-- 16 root anchors;
-- 32 continuation-1 anchors;
-- 16 continuation-2+ anchors;
-- hero cards/public state/action history held fixed;
-- all 2450 ordered opponent hands enumerated;
-- current Stage-B opponent behavior used to compute exact hand-posterior reach weights for the observed public path;
-- 16 stratified posterior hand draws per anchor;
-- 4 future boards per hand;
-- 4 target repeats per exact hidden deal;
-- target collection uses exact opponent level 1.
-
-Balanced nested decomposition:
-
-`sample-target MSE`
-`= within-deal action-sampling variance`
-`+ future-board variance`
-`+ opponent-hand posterior variance`
-`+ current-model MSE to conditional mean`.
-
-This is the first current-line diagnostic that directly separates hidden/chance conditional variance from model conditional-mean error on deliberately repeated observable HU preflop states.
+The key outputs are target MSE, regret-matching policy TV, argmax, branch mismatch, reference-target value gap/regret, and nodes.
 
 ## Decision branches
 
-If hidden-hand/future-board variance dominates, architecture growth alone is the wrong intervention. Focus on lower-variance, information-set-correct target estimation.
+If exact0 plus more independent hidden deals dominates exact1 at matched node cost, implement chance/hidden-deal averaging first.
 
-If model error to the conditional mean dominates, test representation/capacity/per-action calibration in a small HU-preflop candidate before any long training. Localize FOLD/CHECK_CALL/ALL_IN and FACING_ALL_IN states.
+If exact1 remains superior at matched compute, retain exact branching in the estimator.
 
-If residual within-deal action noise stays large even at exact level 1, test deeper bounded exact branching.
+If averaging reduces target MSE but not policy TV/regret, the next bounded experiment should modify the Advantage learning objective toward sign/ranking/regret-policy alignment.
 
-Every candidate must beat preserved Stage B on the powered weak-baseline suite before root scaling resumes.
+If a moderate K approaches the reference split-half floor, use that K in a bounded HU-preflop chance-averaged training pilot.
+
+Every training intervention must beat preserved Stage B on the powered weak-baseline suite before root scaling resumes.
 
 ## DeepCrusher placement
 
@@ -143,7 +131,7 @@ DeepCrusher remains deferred until the weak-opponent curriculum is strong and st
 
 1. Preserve Stage A and Stage B.
 2. Keep root training stopped at iteration 7500.
-3. Run `bash tools/run_lt2_hu_preflop_conditional_resampling.sh`.
-4. Review `SpinCore_LT2_hu_preflop_conditional_resampling.json`.
-5. Select one bounded causal intervention from the measured decomposition.
+3. Run `bash tools/run_lt2_hu_preflop_target_estimator_budget.sh`.
+4. Review `SpinCore_LT2_hu_preflop_target_estimator_budget.json`.
+5. Select one bounded causal training intervention from the measured compute frontier.
 6. Do not scale roots or move to DeepCrusher yet.
