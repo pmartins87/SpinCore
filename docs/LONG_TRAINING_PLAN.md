@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER REGRESSION LOCALIZED — COMMON REFERENCE RETAINED — ACTION-GAP V2.1 ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — COMMON-REFERENCE V2.1 PASS — K4 TARGET BENEFIT CONFIRMED LOCALLY — FULL CAUSAL/POSTFLOP REVIEW PENDING**
 Date: 2026-09-18
 
 ## Preserved milestones
@@ -95,55 +95,50 @@ Stage A and Stage B use different current `sigma`, so `V_sigma` can shift the fu
 
 The correct invariant is the action-value geometry `Q(a)-Q(b)`.
 
-## Corrected final causal overlay — V2.1
+## Common-reference V2.1 result
 
-V2.1 keeps:
-- uniform compatible Jammer opponent hands;
-- uniform future boards;
-- 32 hands × 8 boards;
-- one shared benchmark reference.
+V2.1 passed on 24 actual Jammer FACING_ALL_IN first-divergence states.
 
-It now canonicalizes each target to:
+Action-gap invariance:
+- canonical Stage-A/B fixed-deal max delta `2.98e-08`;
+- raw common-offset magnitude up to `0.416667`.
 
-`Q(a)-mean_legal(Q)`
+Policy/model summaries:
+- Stage A AveragePolicy TV `0.3069`;
+- Stage B AveragePolicy TV `0.3119`;
+- B-A AveragePolicy regret `+0.45` chips;
+- Stage A Advantage TV `0.4543`;
+- Stage B Advantage TV `0.4266`;
+- B-A Advantage regret `+16.73` chips.
 
-by subtracting the legal-action mean.
+Estimator effect:
+- K4-K1 MSE `-0.026189`;
+- K4-K1 TV diagnostic `-0.1146`;
+- K4-K1 reference-best-action regret `-19.27` chips.
 
-It asserts:
-- canonical Stage-A/B fixed-deal targets match;
-- any raw Stage-A/B difference is constant across legal actions.
+The K4 estimator is materially better on the exact Jammer-facing forensic states.
 
-Primary causal signatures:
-- B-A AveragePolicy TV/regret to the same reference;
-- B-A Advantage TV/regret to the same reference;
-- FOLD/CHECK_CALL/ALL_IN shifts;
-- K4-K1 estimator TV/regret against that same reference.
+Because the common reference uses a chosen zero-mean action-gap gauge, regret/value and action gaps are primary; regret-matching TV is diagnostic only.
 
-Forensic seeds:
-`20260920..20260925`.
-
-Untouched acceptance seeds:
-`20261001..20261006`.
+Forensic seeds remain `20260920..20260925`.
+Untouched acceptance seeds remain `20261001..20261006`.
 
 Do not inspect holdout seeds before an intervention is frozen.
 
 ## Decision logic
 
-A bounded K4 pilot is admissible only if:
-- Stage B is worse than Stage A on the actual Jammer-facing failure states;
-- current Advantage degradation aligns with AveragePolicy degradation;
-- lower-variance target reference points in the corrective direction;
-- K4 improves target estimation on those states.
+Do not authorize K4 training from the console aggregate alone.
 
-If not, investigate AveragePolicy/reservoir dynamics instead.
+First review the full V2.1 JSON confidence intervals and action-mass shifts.
 
-Even a positive K4 result does not reopen long training until the separate postflop regression is addressed.
+If those confirm that Stage-B Advantage value error is resolvedly worse and K4 regret reduction is resolvedly better, K4 becomes a justified **local Jammer-facing intervention candidate**.
+
+Before reopening long training, separately explain the resolved PassiveCaller FLOP regression and UniformLegal TURN subgroup. A broader future-chance target-variance mechanism may be preferable to a narrow HU-preflop patch.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`.
-3. Wait for `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS`.
-4. Review `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
+2. Upload `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
+3. Review confidence intervals and FOLD/CHECK_CALL/ALL_IN mass shifts.
 4. Do not train K4 yet.
 5. Keep holdout seeds `20261001..20261006` untouched.
