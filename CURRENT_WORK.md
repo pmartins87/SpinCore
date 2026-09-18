@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — K4 ESTIMATOR BENEFIT CONFIRMED BUT JAMMER CAUSAL GATE NOT MET — CROSS-STREET FUTURE-CHANCE AUDIT NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — CROSS-STREET FUTURE-CHANCE AUDIT PASS — FUTURE-CHANCE NOT SUFFICIENT TO EXPLAIN REGRESSION — FULL JSON REVIEW NEXT — NO TRAINING**
 
 ## Active source of truth
 
@@ -9,6 +9,7 @@ Read before new compute:
 
 - `docs/LT2_JAMMER_COMMON_REFERENCE_V2_1_RESULT_20260918.md`
 - `docs/LT2_CROSS_STREET_FUTURE_CHANCE_AUDIT_20260918.md`
+- `docs/LT2_CROSS_STREET_FUTURE_CHANCE_RESULT_20260918.md`
 - `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
@@ -84,53 +85,41 @@ On the 13 outcome-relevant FOLD-vs-CONTINUE anchors:
 - Stage-B-minus-Stage-A Advantage regret approximately `+29.17`, CI `[-11.86,+70.20]` is unresolved;
 - AveragePolicy regret approximately `+0.71`, CI `[-3.92,+5.33]` is unresolved.
 
-## Strategic decision
+## Cross-street future-chance audit — PASS
 
-Do **not** train K4 now.
+Terminal summary:
 
-Continuing to drill only Jammer would risk exactly the benchmark overfitting we wanted to avoid.
+Jammer preflop FOLD-vs-CONTINUE:
+- FAILURE board fraction `0.692`, model `0.308`, K4-K1 MSE `-0.030440`, regret `-36.58`;
+- CONTROL board fraction `0.820`, model `0.180`, K4-K1 MSE `-0.054250`, regret `-10.28`.
 
-The next question is broader:
+PassiveCaller FLOP:
+- FAILURE board fraction `0.610`, action `0.212`, model `0.179`, K4-K1 MSE `-0.012697`, regret `-11.52`;
+- CONTROL board fraction `0.350`, action `0.230`, model `0.421`, K4-K1 MSE `-0.012868`, regret `-4.51`.
 
-**Does future-chance target variance also characterize the resolved PassiveCaller FLOP and UniformLegal TURN regression contexts?**
+UniformLegal TURN:
+- FAILURE board fraction `0.143`, action `0.070`, model `0.787`, K4-K1 MSE `-0.008399`, regret `-19.67`;
+- CONTROL board fraction `0.333`, action `0.088`, model `0.579`, K4-K1 MSE `-0.004301`, regret `-19.51`.
 
-If yes, prefer a generalized future-chance estimator by street rather than a HU-preflop/Jammer-specific patch.
+## Current interpretation
 
-## Active gate
+Future-board averaging clearly improves estimator quality in several contexts, but **future-chance variance is not a sufficient explanation of the deployed-policy regression**.
 
-Run:
+Key evidence:
+- Jammer controls have even higher board-variance fraction than failures;
+- PassiveCaller flop failures have higher relative board variance than controls, so chance noise remains plausible there;
+- UniformLegal turn failures are dominated by **model error**, not board variance;
+- K4 regret improvement on turn is almost identical in failure and control states.
 
-```bash
-bash tools/run_lt2_cross_street_future_chance.sh
-```
+Therefore:
+- do not train Jammer-specific K4;
+- do not generalize K4 across all streets;
+- do not resume long training.
 
-The audit uses the already-seen forensic seeds only and compares FAILURE vs CONTROL states in:
-- Jammer preflop FOLD-vs-CONTINUE;
-- PassiveCaller FLOP;
-- UniformLegal TURN.
-
-It holds the actual opponent hand and visible board fixed and resamples only unrevealed future cards.
-
-Reference:
-- 8 future boards;
-- 4 repeats/board;
-- exact1.
-
-Candidate:
-- independent 8-board stream;
-- exact0;
-- K1 vs K4.
-
-Holdout seeds `20261001..20261006` remain untouched.
-
-DeepCrusher remains deferred.
+The full cross-street JSON must be reviewed before choosing the next mechanism experiment.
 
 ## Immediate user action
 
-Pull `main` and run `bash tools/run_lt2_cross_street_future_chance.sh`.
+Upload `SpinCore_LT2_cross_street_future_chance.json` from Windows Downloads.
 
-Wait for `LT2_CROSS_STREET_FUTURE_CHANCE_AUDIT_PASS` or the first error.
-
-Then send `SpinCore_LT2_cross_street_future_chance.json`.
-
-Do not start any training.
+No rerun is needed. Do not start any training or new diagnostic until the full JSON review.
