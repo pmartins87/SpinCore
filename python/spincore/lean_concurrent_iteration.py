@@ -164,10 +164,19 @@ def run_iteration_concurrent_fit(
                 iteration=int(iteration),
                 exact_opponent_levels=int(config.exact_opponent_levels),
                 jobs=plan["jobs"],
+                hu_preflop_board_average_k=(
+                    int(config.hu_preflop_board_average_k)
+                    if domain == "TRUE_HEADS_UP"
+                    else 1
+                ),
             )
             tree_seconds = float(stats["seconds"])
             execution_mode = f"parallel_{parallel_executor.workers}x1"
         else:
+            if domain == "TRUE_HEADS_UP" and int(config.hu_preflop_board_average_k) > 1:
+                raise RuntimeError(
+                    "HU preflop board averaging currently requires parallel root collection"
+                )
             started = time.perf_counter()
             for job in plan["jobs"]:
                 runtime.session.collect_root(
@@ -235,6 +244,11 @@ def run_iteration_concurrent_fit(
             "advantage_loss_last": float(losses[-1]),
             "blind_counts": dict(plan["blind_counts"]),
             "sampled_policy": policy_report,
+            "hu_preflop_board_average_k": (
+                int(config.hu_preflop_board_average_k)
+                if domain == "TRUE_HEADS_UP"
+                else 1
+            ),
         }
     report["concurrent_fit_wall_seconds"] = shared_fit_wall
     return report
