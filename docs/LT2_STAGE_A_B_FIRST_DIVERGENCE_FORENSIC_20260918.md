@@ -1,7 +1,7 @@
 # SpinCore — LT2 Stage-A -> Stage-B first-divergence forensic
 
 Date: 2026-09-18
-Status: **ACTIVE — DIRECT DEPLOYED-POLICY ATTRIBUTION BEFORE ANY K4 TRAINING**
+Status: **ACTIVE — FIRST FULL RUN TERMINATED BY RESOURCE PRESSURE; LIGHTWEIGHT-POLICY WORKER FIX IMPLEMENTED; RERUN REQUIRED**
 
 ## Why this gate exists
 
@@ -121,6 +121,25 @@ Decision branches:
 - If the negative contribution is preflop but not specifically tied to the same states affected by board averaging, K4 remains unproven.
 - If a resolved negative contribution is concentrated in HU-preflop/FACING_ALL_IN and Stage B shifts mass in the same problematic direction previously seen in the lower-variance target diagnostics, then K4 remains a causal candidate — but one more target/Advantage overlay is still required before training.
 - Cross-baseline consistency strengthens a general mechanism interpretation; Jammer-only localization is treated as benchmark-specific evidence and is not enough by itself to authorize training.
+
+## First-run resource failure and fix
+
+The first full run used 31 spawned workers and terminated abruptly before producing a report.
+
+The original worker initializer loaded the complete Stage-A and Stage-B training checkpoints in every worker, including large reservoirs and both domains, even though the forensic needs only the HU AveragePolicy.
+
+Canonical diagnosis:
+
+- `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_RESOURCE_FAILURE_20260918.md`
+
+The corrected implementation:
+
+- extracts the HU AveragePolicy from each full checkpoint once in the parent;
+- uses mmap loading where supported;
+- releases the full checkpoint objects before spawning workers;
+- gives workers only tiny derived HU policy snapshots;
+- reduces the default worker count from 31 to 16;
+- leaves all forensic semantics unchanged.
 
 ## Launcher
 
