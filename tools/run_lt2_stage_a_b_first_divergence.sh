@@ -9,7 +9,7 @@ SOLVER="$ROOT/build/libspincore_solver_c.so"
 STAGE_A_SHA="e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c"
 STAGE_B_SHA="3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0"
 SCENARIOS="${SPINCORE_FORENSIC_SCENARIOS_PER_SEED:-5000}"
-WORKERS="${SPINCORE_FORENSIC_WORKERS:-31}"
+WORKERS="${SPINCORE_FORENSIC_WORKERS:-16}"
 
 if [ ! -x "$PYTHON_RUN" ]; then
   echo "ERROR: lean Python environment not found: $PYTHON_RUN" >&2
@@ -63,7 +63,8 @@ printf "\n=== SpinCore LT2 Stage-A -> Stage-B first-divergence forensic ===\n"
 printf "mode=READ ONLY; NO TRAINING ROOTS; NO OPTIMIZER STEPS\n"
 printf "domain=TRUE_HEADS_UP; baselines=UNIFORM_LEGAL,PASSIVE_CALLER,JAMMER\n"
 printf "forensic seeds=20260920..20260925 (already seen diagnostic family)\n"
-printf "scenarios/seed=%s workers=%s\n\n" "$SCENARIOS" "$WORKERS"
+printf "scenarios/seed=%s workers=%s\n" "$SCENARIOS" "$WORKERS"
+printf "worker memory=lightweight HU AveragePolicy snapshots only (reservoirs stay out of workers)\n\n"
 
 "$PYTHON_RUN" tools/audit_lt2_stage_a_b_first_divergence.py \
   --solver "$SOLVER" \
