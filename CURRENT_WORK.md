@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — 4.5M ROOTS — HU-JAMMER NEGATIVE — K4 MECHANICS PASS — STAGE-A -> STAGE-B FORENSIC NEXT — NO TRAINING YET**
+Status: **LT2 STAGE B PASS — 4.5M ROOTS — HU-JAMMER NEGATIVE — K4 MECHANICS PASS — FORENSIC FIRST RUN TERMINATED — LIGHTWEIGHT-POLICY FIX READY — RERUN NEXT**
 
 ## Active source of truth
 
@@ -9,6 +9,7 @@ Read before new compute:
 
 - `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
 - `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_20260918.md`
+- `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_RESOURCE_FAILURE_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
@@ -80,6 +81,20 @@ K4 changes Advantage target generation, which could influence future behavior an
 The immediate question is therefore:
 
 **Where does Stage B's deployed AveragePolicy first diverge from Stage A on the exact paired HU evaluation trajectories, and which divergence contexts contribute the negative B-A chip EV?**
+
+## First forensic run — resource termination
+
+The first full forensic run was terminated by the OS/WSL before producing a Python traceback or report. The original design spawned 31 workers, and every worker deserialized both **full** Stage-A and Stage-B training checkpoints through `LeanFunctionalAgent.from_checkpoint`. That redundantly loaded large reservoirs and both domains even though the audit needs only the HU AveragePolicy.
+
+The resource design has been corrected:
+
+- full checkpoints are read once in the parent, using mmap when supported;
+- only TRUE_HEADS_UP AveragePolicy weights are extracted;
+- workers load tiny policy-only snapshots and never reservoirs;
+- default workers reduced from 31 to 16;
+- forensic sampling, pairing and attribution semantics are unchanged.
+
+The trailing `resource_tracker` semaphore warning is treated as a consequence of abrupt multiprocessing shutdown, not as the cause.
 
 ## Active forensic gate
 
