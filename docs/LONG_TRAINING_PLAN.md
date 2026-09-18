@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — K4 ESTIMATOR BENEFIT REAL BUT NARROW CAUSAL GATE NOT MET — CROSS-STREET VARIANCE AUDIT ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — CROSS-STREET FUTURE-CHANCE AUDIT PASS — GENERAL K4 CAUSAL CASE NOT SUPPORTED — FULL JSON REVIEW PENDING**
 Date: 2026-09-18
 
 ## Preserved milestones
@@ -79,58 +79,70 @@ On the 13 FOLD-vs-CONTINUE anchors:
 
 The narrow K4 causal gate therefore fails.
 
-## Scientific priority
+## Cross-street future-chance result
 
-Do not continue narrowing around Jammer.
+The 72-anchor read-only audit passed.
 
-Test whether the **future-chance target-noise mechanism generalizes across streets**.
+Terminal summary:
 
-Canonical contract:
+### Jammer preflop
+FAILURE:
+- future-board `0.692`;
+- model `0.308`;
+- K4-K1 MSE `-0.030440`;
+- regret `-36.58`.
 
-`docs/LT2_CROSS_STREET_FUTURE_CHANCE_AUDIT_20260918.md`.
+CONTROL:
+- future-board `0.820`;
+- model `0.180`;
+- K4-K1 MSE `-0.054250`;
+- regret `-10.28`.
 
-Groups:
-- Jammer preflop FOLD-vs-CONTINUE;
-- PassiveCaller FLOP;
-- UniformLegal TURN.
+### PassiveCaller flop
+FAILURE:
+- future-board `0.610`;
+- action `0.212`;
+- model `0.179`;
+- K4-K1 MSE `-0.012697`;
+- regret `-11.52`.
 
-For every group:
-- FAILURE states;
-- matched-context CONTROL states;
-- actual hidden opponent hand fixed;
-- visible board fixed;
-- only unrevealed future cards resampled.
+CONTROL:
+- future-board `0.350`;
+- action `0.230`;
+- model `0.421`;
+- K4-K1 MSE `-0.012868`;
+- regret `-4.51`.
 
-Reference:
-- 8 boards × 4 repeats;
-- exact1.
+### UniformLegal turn
+FAILURE:
+- future-board `0.143`;
+- action `0.070`;
+- model `0.787`;
+- K4-K1 MSE `-0.008399`;
+- regret `-19.67`.
 
-Candidate:
-- 8 disjoint boards;
-- exact0;
-- K1 vs K4.
+CONTROL:
+- future-board `0.333`;
+- action `0.088`;
+- model `0.579`;
+- K4-K1 MSE `-0.004301`;
+- regret `-19.51`.
 
-Primary questions:
-- how much sample-target MSE is future-board variance?
-- is that fraction higher in FAILURE than CONTROL?
-- does K4 reduce MSE?
-- does K4 reduce gauge-invariant best-action regret?
+## Interpretation
 
-## Decision logic
+Future-chance averaging is a genuine estimator improvement, but high future-board noise is not specific to failing states.
 
-If the same effect appears across preflop/flop/turn, build a generalized future-chance estimator intervention.
+The turn result is particularly important: the failure sample is model-error dominated, which points away from chance averaging as the main explanation.
 
-If only Jammer preflop shows it, keep K4 as a local candidate only.
+A generalized all-street K4 intervention is not authorized.
 
-If postflop is dominated by model error or opponent-action variance, investigate those mechanisms instead.
-
-No training resumes until this mechanism decision is made.
+Before designing the next mechanism experiment, inspect the full JSON confidence intervals and per-anchor distributions.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_cross_street_future_chance.sh`.
-3. Wait for `LT2_CROSS_STREET_FUTURE_CHANCE_AUDIT_PASS`.
-4. Send `SpinCore_LT2_cross_street_future_chance.json`.
-5. Keep holdout seeds `20261001..20261006` untouched.
-6. Do not train K4 or resume long training.
+2. Upload `SpinCore_LT2_cross_street_future_chance.json`.
+3. Review FAILURE-vs-CONTROL uncertainty and per-anchor structure.
+4. Keep holdout seeds `20261001..20261006` untouched.
+5. Do not train K4 or resume long training.
+6. Do not launch another diagnostic until that review is complete.
