@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — HU-JAMMER REGRESSION LOCALIZED — K4 MECHANICS PASS — V1 OVERLAY DIRECTIONALLY POSITIVE BUT REFERENCE-MISMATCHED — COMMON-REFERENCE V2 NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — HU-JAMMER REGRESSION LOCALIZED — K4 MECHANICS PASS — COMMON-REFERENCE V2 RAW-TARGET ASSERTION TOO STRONG — ACTION-GAP V2.1 NEXT — NO TRAINING**
 
 ## Active source of truth
 
@@ -10,6 +10,7 @@ Read before new compute:
 - `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_RESULT_20260918.md`
 - `docs/LT2_JAMMER_FACING_ALLIN_TARGET_OVERLAY_20260918.md`
 - `docs/LT2_JAMMER_FACING_ALLIN_OVERLAY_V1_CORRECTION_20260918.md`
+- `docs/LT2_JAMMER_COMMON_REFERENCE_V2_ASSERTION_FAILURE_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
@@ -113,22 +114,38 @@ The actual JAMMER policy is hand-independent, so conditioning on the observed ja
 
 V1 is retained as descriptive training-process evidence only.
 
-## Corrected final causal gate — COMMON REFERENCE V2
+## Common-reference V2 first run — assertion was too strong
 
-Run:
+V2 correctly switched to a common Jammer-conditioned hidden-hand reference, but it required the **raw Advantage target vectors** from Stage A and Stage B to be equal for the same fixed deal.
+
+That is not the correct invariant.
+
+The collector stores:
+
+`target[a] = Q(a) - V_sigma`
+
+where `V_sigma = sum_b sigma(b) Q(b)`.
+
+Stage A and Stage B have different current traverser policies `sigma`, so their raw Advantage labels can differ by one common scalar even when every fixed-deal action value `Q(a)` is identical.
+
+The observed first-anchor difference `0.0141837` is therefore not automatically a solver/target inconsistency.
+
+## Corrected final causal gate — COMMON REFERENCE V2.1
+
+The same launcher now runs V2.1:
 
 ```bash
 bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh
 ```
 
-V2:
-- reconstructs the same class of actual forensic Jammer FACING_ALL_IN states;
-- uses uniform compatible opponent hands because JAMMER is hand-independent;
-- uses uniform future boards;
-- builds one common target reference shared by Stage A and Stage B;
-- asserts that fixed-deal targets computed with Stage A and Stage B runtimes are identical after opponent is already all-in;
-- compares A/B AveragePolicy and Advantage to that same target;
-- compares K1 vs K4 estimator error against the same target.
+V2.1:
+- keeps the common uniform Jammer hidden-hand reference;
+- keeps uniform future boards;
+- canonicalizes every target by subtracting the equal-weight mean over legal actions;
+- thereby compares `Q(a)-mean_legal(Q)`, preserving every action-value gap while removing the stage-specific `V_sigma` scalar;
+- requires Stage-A/B canonical targets to match deal by deal;
+- separately requires the raw A-B difference across legal actions to be a constant offset;
+- compares A/B AveragePolicy, current Advantage policy, and K1/K4 estimator quality against the same canonical reference.
 
 Reserved holdout seeds `20261001..20261006` remain untouched.
 
@@ -150,7 +167,7 @@ DeepCrusher remains deferred.
 
 Pull current `main` and run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`.
 
-Wait for `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_PASS` or the first error.
+Wait for `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS` or the first error.
 
 Then send `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
 
