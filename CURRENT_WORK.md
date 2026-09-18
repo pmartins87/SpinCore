@@ -1,19 +1,16 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — CROSS-STREET FUTURE-CHANCE AUDIT PASS — FUTURE-CHANCE NOT SUFFICIENT TO EXPLAIN REGRESSION — FULL JSON REVIEW NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — CROSS-STREET FULL JSON REVIEW COMPLETE — FUTURE-CHANCE NOT FAILURE-SPECIFIC — TARGET-DRIFT / MODEL-TRACKING AUDIT NEXT — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
-- `docs/LT2_JAMMER_COMMON_REFERENCE_V2_1_RESULT_20260918.md`
-- `docs/LT2_CROSS_STREET_FUTURE_CHANCE_AUDIT_20260918.md`
+- `docs/LT2_CROSS_STREET_FULL_JSON_REVIEW_20260918.md`
+- `docs/LT2_CROSS_STREET_TARGET_DRIFT_TRACKING_20260918.md`
 - `docs/LT2_CROSS_STREET_FUTURE_CHANCE_RESULT_20260918.md`
-- `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_RESULT_20260918.md`
-- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
-- `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
-- `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
+- `docs/LT2_JAMMER_COMMON_REFERENCE_V2_1_RESULT_20260918.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -28,98 +25,101 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Confirmed deployed-policy regressions
+## Full cross-street JSON verdict
 
-HU Jammer:
-- Stage-B-minus-Stage-A `-1.682`, CI `[-2.767,-0.597]`;
-- FACING_ALL_IN first-divergence contribution `-1.126`, CI `[-2.049,-0.202]`.
+The simple rule
 
-PassiveCaller:
-- Stage-B-minus-Stage-A `-1.261`, CI `[-2.377,-0.145]`;
-- resolved FLOP contribution `-0.672`, CI `[-1.299,-0.046]`.
+`more future-board noise -> Stage-B failure`
 
-UniformLegal:
-- overall B-A unresolved;
-- resolved TURN subgroup contribution `-0.552`, CI `[-0.970,-0.134]`.
+is not supported.
 
-The Stage-B deterioration is multi-mechanism until proved otherwise.
+### Jammer preflop
 
-## V2.1 full-JSON review
+Absolute future-board variance:
+- FAILURE `0.03834`;
+- CONTROL `0.07201`;
+- F-C approximate 95% CI `[-0.06195,-0.00538]`.
 
-The common-reference V2.1 passed mechanically and mathematically.
+Controls are significantly noisier than failures.
 
-Action-gap invariant:
-- max canonical Stage-A/B fixed-deal difference `2.98e-08`.
+K4 MSE benefit does not significantly discriminate FAILURE from CONTROL.
 
-K4 estimator effect on 24 selected Jammer-facing anchors:
-- K4-K1 target MSE `-0.026189`, CI `[-0.030418,-0.021961]`;
-- K4-K1 reference-best-action regret `-19.27` chips, CI `[-30.07,-8.47]`.
+### PassiveCaller flop
 
-This estimator improvement is resolved.
+Relative future-board fraction is higher in FAILURE:
+- F `0.6097`;
+- C `0.3497`;
+- F-C approximate CI `[+0.0456,+0.4743]`.
 
-But Stage-B model/policy degradation on the selected anchors is not:
-- AveragePolicy regret B-A `+0.454`, CI `[-2.447,+3.355]`;
-- Advantage regret B-A `+16.734`, CI `[-6.365,+39.833]`.
+But absolute future-board variance excess is unresolved:
+- F-C approximate CI `[-0.00369,+0.01071]`.
 
-Therefore the predefined causal gate for training K4 is **not met**.
+K4 MSE benefit is effectively the same:
+- F `-0.012697`;
+- C `-0.012868`;
+- F-C approximate CI `[-0.01119,+0.01153]`.
 
-## Outcome-equivalence correction
+### UniformLegal turn
 
-V2.1 selected transitions:
-- `0->1`: 11;
-- `1->0`: 2;
-- `1->9`: 7;
-- `9->1`: 4.
+Failure states are more model-dominated in **fraction**, but absolute model error is not higher:
+- model absolute F `0.00812`;
+- C `0.00881`;
+- F-C approximate CI `[-0.01220,+0.01081]`.
 
-The 11 CHECK_CALL<->ALL_IN transitions all had identical reference values and zero forensic terminal B-A delta.
+K4 regret gain is essentially identical in FAILURE and CONTROL.
 
-After an opponent jam, they are one benchmark class:
+## Strategic interpretation
 
-`CONTINUE = {CHECK_CALL, ALL_IN}`.
+K4 is a real variance-reduction improvement.
 
-Thus 45.8% of the selected V2.1 anchors were not responsible for Jammer EV loss.
+It is **not** demonstrated as the cause/fix for Stage-B regression.
 
-On the 13 outcome-relevant FOLD-vs-CONTINUE anchors:
-- K4-K1 MSE remains resolved at approximately `-0.02560`, CI `[-0.03178,-0.01943]`;
-- K4-K1 regret approximately `-16.77`, CI `[-34.54,+1.00]` is unresolved;
-- Stage-B-minus-Stage-A Advantage regret approximately `+29.17`, CI `[-11.86,+70.20]` is unresolved;
-- AveragePolicy regret approximately `+0.71`, CI `[-3.92,+5.33]` is unresolved.
+Do not:
+- train Jammer-specific K4;
+- generalize K4 to all streets;
+- resume LT2 long training.
 
-## Cross-street future-chance audit — PASS
+The previous cross-street audit only measured the Stage-B target process, so it cannot distinguish:
 
-Terminal summary:
+1. target nonstationarity from Stage A to Stage B;
+2. Stage-B approximation / tracking / forgetting failure;
+3. both.
 
-Jammer preflop FOLD-vs-CONTINUE:
-- FAILURE board fraction `0.692`, model `0.308`, K4-K1 MSE `-0.030440`, regret `-36.58`;
-- CONTROL board fraction `0.820`, model `0.180`, K4-K1 MSE `-0.054250`, regret `-10.28`.
+That is now the highest-value diagnostic.
 
-PassiveCaller FLOP:
-- FAILURE board fraction `0.610`, action `0.212`, model `0.179`, K4-K1 MSE `-0.012697`, regret `-11.52`;
-- CONTROL board fraction `0.350`, action `0.230`, model `0.421`, K4-K1 MSE `-0.012868`, regret `-4.51`.
+## Active gate
 
-UniformLegal TURN:
-- FAILURE board fraction `0.143`, action `0.070`, model `0.787`, K4-K1 MSE `-0.008399`, regret `-19.67`;
-- CONTROL board fraction `0.333`, action `0.088`, model `0.579`, K4-K1 MSE `-0.004301`, regret `-19.51`.
+Run:
 
-## Current interpretation
+```bash
+bash tools/run_lt2_cross_street_target_drift_tracking.sh
+```
 
-Future-board averaging clearly improves estimator quality in several contexts, but **future-chance variance is not a sufficient explanation of the deployed-policy regression**.
+It reuses the same FAILURE/CONTROL contexts and forensic seeds.
 
-Key evidence:
-- Jammer controls have even higher board-variance fraction than failures;
-- PassiveCaller flop failures have higher relative board variance than controls, so chance noise remains plausible there;
-- UniformLegal turn failures are dominated by **model error**, not board variance;
-- K4 regret improvement on turn is almost identical in failure and control states.
+For every anchor it computes paired low-noise Stage-A and Stage-B conditional targets on the same hidden deal, boards and RNG seeds, canonicalizes to an action-gap gauge, then compares:
 
-Therefore:
-- do not train Jammer-specific K4;
-- do not generalize K4 across all streets;
-- do not resume long training.
+- target drift A->B;
+- Stage-A own-target model error;
+- Stage-B own-target model error;
+- B-A own-target error;
+- model-drift tracking error;
+- reference best-action changes.
 
-The full cross-street JSON must be reviewed before choosing the next mechanism experiment.
+Holdout seeds `20261001..20261006` remain untouched.
+
+DeepCrusher remains deferred.
 
 ## Immediate user action
 
-Upload `SpinCore_LT2_cross_street_future_chance.json` from Windows Downloads.
+Pull `main` and run:
 
-No rerun is needed. Do not start any training or new diagnostic until the full JSON review.
+```bash
+bash tools/run_lt2_cross_street_target_drift_tracking.sh
+```
+
+Wait for `LT2_CROSS_STREET_TARGET_DRIFT_TRACKING_PASS` or the first error.
+
+Then send `SpinCore_LT2_cross_street_target_drift_tracking.json`.
+
+Do not start any training.
