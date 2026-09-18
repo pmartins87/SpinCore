@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER REGRESSION LOCALIZED TO FACING ALL-IN — FINAL TARGET OVERLAY ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER REGRESSION LOCALIZED — V1 OVERLAY REFERENCE CORRECTED — COMMON-REFERENCE V2 ACTIVE**
 Date: 2026-09-18
 
 ## Preserved milestones
@@ -67,23 +67,37 @@ Uniform:
 
 The regression is therefore multi-mechanism. A preflop K4 intervention, even if causal for Jammer, is not sufficient evidence to resume long training globally.
 
-## Final causal overlay
+## First target overlay result and correction
 
-Before any training, reconstruct 24 actual Jammer FACING_ALL_IN first-divergence states, balanced 4 per forensic seed.
+V1 reconstructed 24 actual Jammer FACING_ALL_IN first-divergence states.
 
-For Stage A and Stage B separately:
-- evaluate stored AveragePolicy;
-- evaluate current Advantage-induced policy;
-- compute stage-specific information-set posterior over opponent hands;
-- build a 32-hand × 8-board conditional target reference;
-- compare K1 vs K4 board-only target estimators on an independent hand stream.
+Directionally:
+- Stage B AveragePolicy TV to its own reference exceeded Stage A by `+0.0464`;
+- Stage B Advantage-policy TV exceeded Stage A by `+0.0862`;
+- Stage B Advantage regret exceeded Stage A by `+10.70` chips;
+- K4 reduced estimator TV relative to K1 in both stages.
+
+But V1 used stage-specific self-play posteriors for opponent hands.
+
+That is not the correct direct benchmark reference for JAMMER. JAMMER's action rule is hand-independent, so the observed shove does not alter the hidden-hand distribution.
+
+The V1 result is retained as training-process evidence, not final causal proof.
+
+## Corrected final causal overlay
+
+V2 reconstructs the same class of 24 actual Jammer FACING_ALL_IN states but uses one shared benchmark reference:
+
+- uniform compatible opponent hands;
+- uniform future boards;
+- 32 hands × 8 boards;
+- same target reference for Stage A and Stage B;
+- fixed-deal Stage-A/B target equality asserted after opponent is already all-in.
 
 Primary causal signatures:
-- B-A AveragePolicy TV/regret to own reference;
-- B-A Advantage TV/regret to own reference;
+- B-A AveragePolicy TV/regret to the same reference;
+- B-A Advantage TV/regret to the same reference;
 - FOLD/CHECK_CALL/ALL_IN shifts;
-- K4-K1 estimator TV/regret;
-- Stage-A vs Stage-B reference-policy shift.
+- K4-K1 estimator TV/regret against that same reference.
 
 Forensic seeds:
 `20260920..20260925`.
@@ -108,7 +122,7 @@ Even a positive K4 result does not reopen long training until the separate postf
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_jammer_facing_allin_target_overlay.sh`.
-3. Review `SpinCore_LT2_jammer_facing_allin_target_overlay.json`.
+2. Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`.
+3. Review `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
 4. Do not train K4 yet.
 5. Keep holdout seeds `20261001..20261006` untouched.
