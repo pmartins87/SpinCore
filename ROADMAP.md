@@ -16,7 +16,7 @@
 - Stage-A -> Stage-B first-divergence forensic — **COMPLETE**.
 - Jammer FACING_ALL_IN target overlay V1 — **COMPLETE; DIRECTIONALLY POSITIVE BUT STAGE-SPECIFIC REFERENCE MISMATCHED**.
 - Jammer COMMON-REFERENCE V2 — **FIRST RUN STOPPED: RAW TARGET EQUALITY ASSERTION TOO STRONG**.
-- Jammer COMMON-REFERENCE ACTION-GAP V2.1 — **NEXT**.
+- Jammer COMMON-REFERENCE ACTION-GAP V2.1 — **PASS; K4 IMPROVES TARGET ESTIMATOR ON FORENSIC STATES; CAUSAL REVIEW NOT YET COMPLETE**.
 - K4 causal training pilot — **NOT AUTHORIZED YET**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -61,23 +61,24 @@ For the fixed JAMMER benchmark this is not the correct A-vs-B reference: JAMMER'
 
 Direct A-vs-B causal comparison requires one shared Jammer-conditioned reference.
 
-## Next gate
+## V2.1 result
 
-`tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`
+On 24 actual Jammer FACING_ALL_IN first-divergence states:
 
-V2 correctly established the common Jammer hidden-hand reference but incorrectly required raw Stage-A/B Advantage labels to be identical.
+- canonical fixed-deal Stage-A/B action-gap delta: max `2.98e-08`;
+- B-A AveragePolicy TV `+0.0049`;
+- B-A AveragePolicy regret `+0.45` chips;
+- B-A Advantage TV `-0.0277`;
+- B-A Advantage regret `+16.73` chips;
+- K4-K1 MSE `-0.026189`;
+- K4-K1 TV diagnostic `-0.1146`;
+- K4-K1 regret `-19.27` chips.
 
-Because the collector target is `Q(a)-V_sigma`, different Stage-A/B traverser policies shift all legal-action targets by a common scalar even when action values are identical.
+The K4 estimator benefit is strong on the actual failure states.
 
-V2.1 uses:
-- common uniform compatible opponent hands;
-- uniform future boards;
-- canonical target gauge `Q(a)-mean_legal(Q)`;
-- fixed-deal Stage-A/B action-gap equality assertion;
-- raw A-B target differences allowed only as one common scalar offset;
-- K1 vs K4 against the same canonical reference.
+TV to the canonical regret-matching policy is gauge-sensitive; value/regret and action gaps are primary.
 
-Uses only forensic seeds `20260920..20260925`.
+Before any training, inspect the full JSON intervals and action-mass shifts, then decide whether the next experiment is a bounded K4 pilot or a cross-street causal variance audit.
 
 The untouched acceptance family `20261001..20261006` remains sealed.
 
@@ -90,4 +91,6 @@ The untouched acceptance family `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`. Stop at `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS` or first error. Do not train K4 first.
+Upload `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
+
+Do not train K4 before the full statistical review.
