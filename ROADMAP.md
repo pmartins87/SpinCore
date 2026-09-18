@@ -17,7 +17,7 @@
 - Exact0/exact1 target-estimator sweep — **COMPLETE; EXACT0 + MORE DEALS WINS COMPUTE FRONTIER**.
 - Board-only averaging sweep — **COMPLETE; K4 IS ESTIMATOR COMPUTE ELBOW**.
 - Board-averaging mechanics smoke — **PASS; IMPLEMENTATION ISOLATED CORRECTLY**.
-- Stage-A -> Stage-B deployed-policy forensic — **NEXT**.
+- Stage-A -> Stage-B deployed-policy forensic — **FIRST RUN TERMINATED BY RESOURCE PRESSURE; LIGHTWEIGHT-POLICY FIX READY; RERUN NEXT**.
 - K4 causal training pilot — **NOT AUTHORIZED YET**.
 - Root training beyond iteration 7500 — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -27,6 +27,7 @@ Canonical current files:
 - `CURRENT_WORK.md`
 - `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
 - `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_20260918.md`
+- `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_RESOURCE_FAILURE_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
@@ -79,6 +80,12 @@ The diagnostic weak-baseline seed family `20260920..20260925` may be used for fo
 It must not be reused for future candidate acceptance.
 
 Reserve `20261001..20261006` as untouched holdout seeds for any later acceptance gate.
+
+## Forensic resource correction
+
+The first attempt used 31 spawned workers and loaded the two complete training checkpoints inside every worker. That needlessly replicated reservoirs and both domains and ended in an abrupt `Terminated` shutdown before any report was produced.
+
+The rerun extracts the HU AveragePolicy once per source checkpoint in the parent and gives workers only lightweight policy snapshots. Default concurrency is now 16. The forensic statistical design is unchanged.
 
 ## Immediate forensic gate
 
