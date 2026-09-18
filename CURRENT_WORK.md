@@ -1,15 +1,15 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — TARGET-DRIFT MATRIX REVIEWED — JAMMER TARGET STATIONARY, PASSIVE FIT DEGRADATION NOT FAILURE-SPECIFIC, TURN MIXED — HU POLICY-CHAIN AUDIT NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — HU POLICY-CHAIN SPLIT RESOLVED — JAMMER DEFECT UPSTREAM IN CURRENT BEHAVIOR, PASSIVE AVG REGRESSION NOT REPRODUCED BY CURRENT BEHAVIOR — BEHAVIOR FIRST-DIVERGENCE NEXT — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_HU_POLICY_CHAIN_RESULT_20260918.md`
+- `docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_20260918.md`
 - `docs/LT2_TARGET_DRIFT_TRACKING_RESULT_20260918.md`
-- `docs/LT2_HU_POLICY_CHAIN_AUDIT_20260918.md`
-- `docs/LT2_CROSS_STREET_FULL_JSON_REVIEW_20260918.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -24,82 +24,91 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Target-drift / model-tracking result
+## HU policy-chain result
 
-### Jammer preflop after opponent all-in
+The global paired HU audit used 13,585 HU scenario clusters and 81,510 baseline/seat rows on forensic seeds only.
 
-Target drift is effectively zero:
-- FAILURE `5.54e-17`;
-- CONTROL `2.51e-16`;
-- reference best action changed on 0/12 in both groups.
+### JAMMER
 
-Stage-B own-target Advantage MSE did not worsen:
-- FAILURE B-A `-0.001079`, CI `[-0.006408,+0.004250]`;
-- CONTROL B-A `-0.001084`, CI `[-0.004754,+0.002585]`.
+AveragePolicy:
+- A `-3.459`;
+- B `-5.141`;
+- B-A `-1.682`, CI95 `[-2.767,-0.597]`.
 
-Therefore target nonstationarity cannot explain the deployed Jammer regression.
+Current Advantage-induced behavior:
+- A `+1.850`;
+- B `-6.580`;
+- B-A `-8.430`, CI95 `[-12.515,-4.345]`.
 
-### PassiveCaller FLOP
+Aggregation-chain delta:
+- `+6.748`, CI95 `[+2.521,+10.975]`.
 
-Target drift is actually larger in CONTROL:
-- FAILURE `0.000735`;
-- CONTROL `0.001809`;
-- F-C `-0.001074`, CI `[-0.001990,-0.000158]`.
+Therefore the strong Jammer defect is already present upstream in current Advantage behavior. AveragePolicy buffers rather than amplifies the Stage-B-vs-A current-behavior loss.
 
-Stage-B own-target model error worsens in selected FAILURE states:
-- B-A `+0.000606`, CI `[+0.000189,+0.001023]`;
-- 10/12 anchors worsen.
+This does not mean the single final Stage-B Advantage snapshot alone caused the historical AveragePolicy regression, because Advantage is reset/refit each iteration. It does mean the current Advantage/behavior chain contains a large resolved defect.
 
-But the failure-control difference is unresolved:
-- `+0.000131`, CI `[-0.001227,+0.001489]`.
+Combined with the prior stationary Jammer target result, the next target is action-ranking / regret-matching behavior, not K4 or target drift.
 
-Stage-B current Advantage best-action agreement with its own low-noise reference is 0/12 in both FAILURE and CONTROL.
+### PASSIVE_CALLER
 
-### UniformLegal TURN
+AveragePolicy B-A:
+- `-1.261`, CI95 `[-2.377,-0.145]`.
 
-Target drift is large and heterogeneous:
-- FAILURE mean `0.003490`;
-- CONTROL mean `0.002354`;
-- F-C unresolved.
+Current behavior B-A:
+- `+2.083`, CI95 `[-1.413,+5.579]`.
 
-Own-target B-A model error and tracking-error differences are also unresolved.
+Aggregation-chain delta:
+- `-3.344`, CI95 `[-6.944,+0.255]`.
 
-No single mechanism is established.
+The deployed regression is not reproduced by the final current behavior. Historical aggregation / policy reservoir remains a separate candidate, but the chain delta is unresolved.
+
+### UNIFORM_LEGAL
+
+AveragePolicy B-A:
+- `-0.416`, unresolved.
+
+Current behavior B-A:
+- `-3.461`, unresolved.
+
+Aggregation-chain delta:
+- `+3.045`, unresolved.
 
 ## Strategic interpretation
 
-Do not return to K4 or target-estimator tuning.
+There is no single Stage-B mechanism.
 
-The Jammer result moves the highest-value question downstream:
+Highest priority is the resolved Jammer current-behavior loss because:
+- it is large;
+- it is upstream of AveragePolicy;
+- its previously audited facing-all-in target is stationary A->B;
+- own-target MSE did not show a matching global degradation.
 
-**Did Stage-B current Advantage behavior regress too, or did the loss appear mainly in historical AveragePolicy aggregation?**
+The next question is therefore:
 
-This matters because the deployed benchmark uses AveragePolicy, while the target-drift audit inspected the current Advantage model.
+**Where does the -8.43 chips/hand current-behavior Jammer loss first manifest?**
+
+Do not train a fix before localizing it.
 
 ## Active gate
 
 Run:
 
 ```bash
-bash tools/run_lt2_hu_policy_chain.sh
+bash tools/run_lt2_hu_behavior_first_divergence.sh
 ```
 
-The audit uses the same forensic seed family only and compares, on identical HU scenarios/deals/RNG streams:
+It replays Stage A/B current Advantage-induced behavior in lock-step under the same forensic HU scenarios, deals, baselines, hero seats and RNG streams.
 
-- Stage-A AveragePolicy;
-- Stage-B AveragePolicy;
-- Stage-A current Advantage-induced behavior;
-- Stage-B current Advantage-induced behavior;
+First-divergence groups:
+- NO_DIVERGENCE;
+- PREFLOP_ROOT;
+- PREFLOP_FACING_ALL_IN;
+- PREFLOP_OTHER;
+- FLOP;
+- TURN;
+- RIVER.
 
-against:
-- UNIFORM_LEGAL;
-- PASSIVE_CALLER;
-- JAMMER.
-
-Primary contrasts:
-- AVG B-A;
-- BEH B-A;
-- change in the AVG-vs-BEH gap.
+If Jammer loss again concentrates in PREFLOP_FACING_ALL_IN, the next audit will test broad non-selected action-gap / regret-matching calibration there.
 
 Holdout `20261001..20261006` remains untouched.
 
@@ -110,11 +119,11 @@ DeepCrusher remains deferred.
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_hu_policy_chain.sh
+bash tools/run_lt2_hu_behavior_first_divergence.sh
 ```
 
-Wait for `LT2_HU_POLICY_CHAIN_EVAL_PASS` or the first error.
+Wait for `LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_PASS` or the first error.
 
-Then send `SpinCore_LT2_hu_policy_chain.json`.
+Then send `SpinCore_LT2_hu_behavior_first_divergence.json`.
 
 Do not start any training.
