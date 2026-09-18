@@ -260,6 +260,8 @@ def _paired_run(
                 value = int(da[int(hero_seat)])
                 state_a.close()
                 state_b.close()
+                state_a = None
+                state_b = None
                 return {
                     "stage_a": value,
                     "stage_b": value,
