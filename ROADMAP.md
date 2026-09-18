@@ -16,9 +16,8 @@
 - HU-preflop conditional variance decomposition — **COMPLETE; 93.73% HIDDEN/CHANCE VARIANCE**.
 - Exact0/exact1 target-estimator sweep — **COMPLETE; EXACT0 + MORE DEALS WINS COMPUTE FRONTIER**.
 - Board-only averaging sweep — **COMPLETE; K4 IS ESTIMATOR COMPUTE ELBOW**.
-- Board-averaging mechanics smoke first run — **FAILED SAFELY; RNG COUPLING DIAGNOSED**.
-- RNG-coupling fix — **IMPLEMENTED; SMOKE RERUN NEXT**.
-- Stage-A -> Stage-B causal attribution — **NEXT AFTER SMOKE**.
+- Board-averaging mechanics smoke — **PASS; IMPLEMENTATION ISOLATED CORRECTLY**.
+- Stage-A -> Stage-B deployed-policy forensic — **NEXT**.
 - K4 causal training pilot — **NOT AUTHORIZED YET**.
 - Root training beyond iteration 7500 — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -26,8 +25,8 @@
 Canonical current files:
 
 - `CURRENT_WORK.md`
-- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_FAILURE_20260918.md`
-- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_20260918.md`
+- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
+- `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
@@ -47,65 +46,74 @@ Stage B HU Jammer remains confirmed negative:
 - raw EV `-5.141` chips/hand;
 - simultaneous family-wise 95% CI `[-9.078,-1.204]`.
 
-A diagnostic estimator improvement is not enough to reopen training.
+The successful K4 mechanics smoke proves only implementation correctness.
 
-## Board-only K4 evidence
+It does not prove causal responsibility for the strength regression.
 
-Board-only averaging at exact0 reduces target variance and improves branch mismatch/regret at K4, with K8 beyond the policy-space compute elbow.
+## K4 mechanics result
 
-This justifies testing the estimator mechanically. It does **not** prove that board-noise caused the Stage-A -> Stage-B regression.
+On 8 paired prospective HU roots:
 
-## Mechanics-smoke failure
+- K1/K4 sample counts identical: 273;
+- 22 preflop samples;
+- 21/22 preflop targets changed under K4;
+- 251 postflop samples;
+- zero postflop target differences;
+- K1 nodes `1,229`;
+- K4 nodes `4,765`;
+- multiplier `3.8771x`.
 
-The first K1-vs-K4 smoke failed because preflop sample counts differed across board variants.
+The intervention is isolated to preflop labels as designed.
 
-Cause:
+## Anti-overfitting rule
 
-The collector is depth-first. Postflop branches consume RNG before recursion returns to later preflop branches. Different future boards therefore alter the RNG position seen by those later preflop opponent nodes.
+Do not promote K4 merely because:
+- HU Jammer is the failing benchmark;
+- board averaging improves a target proxy;
+- the implementation now works.
 
-Resetting one global RNG only at traversal start was insufficient.
+First identify the actual Stage-A -> Stage-B deployed-policy regression.
 
-## Fix
+The diagnostic weak-baseline seed family `20260920..20260925` may be used for forensic localization because it is already seen.
 
-The experimental K4 path now:
+It must not be reused for future candidate acceptance.
 
-1. runs board 0 canonically and records sampled preflop opponent actions;
-2. records the corresponding preflop observation and legal set;
-3. replays that exact preflop action trace on alternate boards;
-4. asserts observation/legal identity at every replayed node;
-5. consumes one dummy RNG draw for each replayed preflop sample;
-6. leaves postflop external sampling ordinary;
-7. restores the canonical board-0 final RNG state afterward;
-8. averages only preflop targets and keeps board-0 postflop samples.
+Reserve `20261001..20261006` as untouched holdout seeds for any later acceptance gate.
 
-Canonical K1 remains default and unchanged.
+## Immediate forensic gate
 
-## Immediate gate
+Launcher:
 
-Rerun:
+`tools/run_lt2_stage_a_b_first_divergence.sh`
 
-```bash
-bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh
-```
+Scope:
+- TRUE_HEADS_UP only;
+- all three weak baselines;
+- Stage A versus Stage B stored AveragePolicy;
+- same scenario/deal/seat/random streams until first sampled hero-action divergence;
+- mutually exclusive first-divergence groups:
+  - NO_DIVERGENCE;
+  - PREFLOP_ROOT;
+  - PREFLOP_FACING_ALL_IN;
+  - PREFLOP_OTHER;
+  - FLOP;
+  - TURN;
+  - RIVER.
 
-Expected marker:
+Each group's B-minus-A chip delta contributes additively to total paired B-minus-A EV.
 
-`LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_PASS`.
+## Branch after forensic audit
 
-## Branch after smoke
+If the negative contribution is postflop, deprioritize K4.
 
-Even on PASS, **do not start a K4 continuation**.
+If the regression is preflop but not in K4-sensitive contexts, K4 remains unproven.
 
-Next build a Stage-A -> Stage-B forensic audit that asks whether:
+If HU-preflop/FACING_ALL_IN carries a resolved negative contribution and Stage B shifts mass in the same direction implicated by lower-variance target diagnostics, run a final matched Advantage/target overlay.
 
-- the states in which Stage B moved away from Stage A are the same states with high noisy-target sign/policy instability;
-- the change is concentrated in HU preflop/FACING_ALL_IN or elsewhere;
-- K4 moves the target/reference direction toward the better Stage-A behavior in those same states.
+Only after that overlay may a bounded K4 training pilot be considered.
 
-Only if that causal link survives the audit should K4 be trained.
-
-This explicitly prevents benchmark-specific overfitting to Jammer.
+Jammer-only localization is not sufficient by itself; cross-baseline consistency strengthens a general causal interpretation.
 
 ## Immediate action
 
-Rerun the fixed smoke and stop at PASS or first error. Keep root training paused.
+Run `bash tools/run_lt2_stage_a_b_first_divergence.sh`, stop at PASS or first error, and keep root training paused.
