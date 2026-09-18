@@ -57,6 +57,121 @@ _SOLVER = None
 _AGENT_A = None
 _AGENT_B = None
 
+POLICY_SNAPSHOT_SCHEMA = "SPINCORE_LT2_HU_POLICY_SNAPSHOT_V1"
+REPRESENTATION = "C0_V1_FROZEN_CONTROL"
+
+
+class _HUPolicyAgent:
+    """Minimal TRUE_HEADS_UP AveragePolicy inference wrapper."""
+
+    def __init__(self, model):
+        self.model = model
+        self.model.eval()
+
+    def distribution(self, state):
+        import torch
+        from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
+        from spincore.lean_functional_agent import _street_from_state
+        from spincore.lean_solver_actions import lean_legal_actions
+        from spincore.r7_5_action_cfr import legal_mask
+        from spincore_nn.action_models import collate_action_observations
+
+        if state.terminal:
+            raise ValueError("cannot infer action on terminal state")
+        street = int(_street_from_state(state))
+        active_mask = FIRST_RELEASE_ACTION_SPEC.active_mask(street)
+        legal = lean_legal_actions(state, active_mask)
+        if not legal:
+            raise RuntimeError("nonterminal HU state has no legal action")
+        observation = state.neural_bytes()
+        batch = collate_action_observations(
+            REPRESENTATION,
+            [observation],
+            [legal_mask(legal)],
+            device="cpu",
+        )
+        with torch.no_grad():
+            probs = self.model.probabilities(batch)[0].detach().cpu().tolist()
+        out = tuple(float(x) for x in probs)
+        total = sum(out[action] for action in legal)
+        if not (0.999 <= total <= 1.001):
+            raise RuntimeError(f"HU policy probability mass drift: {total}")
+        return int(active_mask), tuple(int(x) for x in legal), out
+
+
+def _torch_load_mmap(path: Path):
+    import torch
+
+    try:
+        return torch.load(path, map_location="cpu", weights_only=False, mmap=True)
+    except TypeError:
+        return torch.load(path, map_location="cpu", weights_only=False)
+
+
+def _extract_hu_policy_snapshot(checkpoint: Path, destination: Path) -> dict[str, Any]:
+    """Extract only the HU AveragePolicy once in the parent process.
+
+    The full training checkpoint contains large reservoirs. Loading that entire
+    object independently in every spawned worker is unnecessary and can exhaust
+    RAM. The derived snapshot is tiny and contains only the deployed HU policy.
+    """
+    import gc
+    import torch
+
+    payload = _torch_load_mmap(checkpoint)
+    if payload.get("schema") != "SPINCORE_LEAN_FUNCTIONAL_TRAINING_V1":
+        raise RuntimeError(f"unexpected checkpoint schema: {checkpoint}")
+    if payload.get("representation") != REPRESENTATION:
+        raise RuntimeError(f"representation drift in {checkpoint}")
+    if not bool(payload.get("finalized")):
+        raise RuntimeError(f"forensic source is not finalized: {checkpoint}")
+    domains = dict(payload.get("domains") or {})
+    if "TRUE_HEADS_UP" not in domains:
+        raise RuntimeError(f"checkpoint missing TRUE_HEADS_UP: {checkpoint}")
+
+    policy = {
+        key: value.detach().cpu().clone()
+        for key, value in domains["TRUE_HEADS_UP"]["policy"].items()
+    }
+    snapshot = {
+        "schema": POLICY_SNAPSHOT_SCHEMA,
+        "source_checkpoint": str(checkpoint.resolve()),
+        "completed_iteration": int(payload["completed_iteration"]),
+        "representation": str(payload["representation"]),
+        "action_candidate": payload.get("action_candidate"),
+        "policy": policy,
+    }
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(snapshot, destination)
+    meta = {
+        "completed_iteration": int(snapshot["completed_iteration"]),
+        "snapshot_path": str(destination.resolve()),
+        "parameter_tensors": len(policy),
+        "snapshot_bytes": int(destination.stat().st_size),
+    }
+    del policy, snapshot, domains, payload
+    gc.collect()
+    return meta
+
+
+def _load_hu_policy_snapshot(path: str):
+    import torch
+    from spincore_nn.action_models import make_policy_action_model
+
+    payload = torch.load(Path(path), map_location="cpu", weights_only=False)
+    if payload.get("schema") != POLICY_SNAPSHOT_SCHEMA:
+        raise RuntimeError(f"wrong HU policy snapshot schema: {path}")
+    if payload.get("representation") != REPRESENTATION:
+        raise RuntimeError(f"HU policy snapshot representation drift: {path}")
+    _, model = make_policy_action_model(
+        REPRESENTATION,
+        device="cpu",
+        seed=0,
+    )
+    model.load_state_dict(payload["policy"])
+    model.eval()
+    return _HUPolicyAgent(model)
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
@@ -70,7 +185,7 @@ def parse_args() -> argparse.Namespace:
         default=[20260920, 20260921, 20260922, 20260923, 20260924, 20260925],
     )
     p.add_argument("--scenarios-per-seed", type=int, default=5000)
-    p.add_argument("--workers", type=int, default=31)
+    p.add_argument("--workers", type=int, default=16)
     p.add_argument("--report", type=Path, required=True)
     return p.parse_args()
 
@@ -85,11 +200,14 @@ def _mix64(*values: int) -> int:
     return x
 
 
-def _init_worker(solver_path: str, stage_a: str, stage_b: str) -> None:
+def _init_worker(
+    solver_path: str,
+    stage_a_policy_snapshot: str,
+    stage_b_policy_snapshot: str,
+) -> None:
     global _SOLVER, _AGENT_A, _AGENT_B
     import os
     import torch
-    from spincore.lean_functional_agent import LeanFunctionalAgent
     from spincore.solver import SolverLibrary
 
     os.environ["OMP_NUM_THREADS"] = "1"
@@ -102,8 +220,8 @@ def _init_worker(solver_path: str, stage_a: str, stage_b: str) -> None:
         pass
 
     _SOLVER = SolverLibrary(solver_path)
-    _AGENT_A = LeanFunctionalAgent.from_checkpoint(stage_a, seed=0)
-    _AGENT_B = LeanFunctionalAgent.from_checkpoint(stage_b, seed=0)
+    _AGENT_A = _load_hu_policy_snapshot(stage_a_policy_snapshot)
+    _AGENT_B = _load_hu_policy_snapshot(stage_b_policy_snapshot)
 
 
 def _street(state) -> int:
@@ -555,6 +673,19 @@ def main() -> int:
         if not path.is_file():
             raise SystemExit(f"missing input: {path}")
 
+    args.report.parent.mkdir(parents=True, exist_ok=True)
+    stage_a_snapshot = args.report.parent / "stage_a_hu_average_policy.pt"
+    stage_b_snapshot = args.report.parent / "stage_b_hu_average_policy.pt"
+    print("Extracting lightweight HU AveragePolicy snapshots once in parent...", flush=True)
+    stage_a_meta = _extract_hu_policy_snapshot(args.stage_a.resolve(), stage_a_snapshot)
+    stage_b_meta = _extract_hu_policy_snapshot(args.stage_b.resolve(), stage_b_snapshot)
+    print(
+        "policy snapshots: "
+        f"A={stage_a_meta['snapshot_bytes']/1048576.0:.2f} MiB "
+        f"B={stage_b_meta['snapshot_bytes']/1048576.0:.2f} MiB",
+        flush=True,
+    )
+
     tasks: list[tuple[int, int, Episode, int]] = []
     hu_counts: dict[str, int] = {}
     total_counts: dict[str, int] = {}
@@ -584,8 +715,8 @@ def main() -> int:
         initializer=_init_worker,
         initargs=(
             str(args.solver.resolve()),
-            str(args.stage_a.resolve()),
-            str(args.stage_b.resolve()),
+            str(stage_a_snapshot.resolve()),
+            str(stage_b_snapshot.resolve()),
         ),
     ) as pool:
         for chunk in pool.map(_worker, tasks, chunksize=4):
@@ -593,20 +724,17 @@ def main() -> int:
 
     summary = _summarize(rows)
 
-    import torch
-
-    a_payload = torch.load(args.stage_a, map_location="cpu", weights_only=False)
-    b_payload = torch.load(args.stage_b, map_location="cpu", weights_only=False)
-
     report = {
         "schema": "SPINCORE_LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_V1",
         "stage_a": {
             "path": str(args.stage_a.resolve()),
-            "completed_iteration": int(a_payload["completed_iteration"]),
+            "completed_iteration": int(stage_a_meta["completed_iteration"]),
+            "worker_policy_snapshot_bytes": int(stage_a_meta["snapshot_bytes"]),
         },
         "stage_b": {
             "path": str(args.stage_b.resolve()),
-            "completed_iteration": int(b_payload["completed_iteration"]),
+            "completed_iteration": int(stage_b_meta["completed_iteration"]),
+            "worker_policy_snapshot_bytes": int(stage_b_meta["snapshot_bytes"]),
         },
         "method": {
             "read_only": True,
@@ -624,7 +752,12 @@ def main() -> int:
                 "a fresh seed family not used in this forensic design"
             ),
             "opponent_families": list(BASELINES),
-            "deployed_policy_compared": "stored AveragePolicy",
+            "deployed_policy_compared": "stored TRUE_HEADS_UP AveragePolicy",
+            "worker_memory_strategy": (
+                "full checkpoints are read once in the parent with mmap when available; "
+                "workers load only derived HU AveragePolicy snapshots, never reservoirs"
+            ),
+            "workers": int(workers),
             "pairing": (
                 "same HU scenario, solver deal, weak opponent, hero seat and random "
                 "streams; states remain identical until sampled Stage-A/Stage-B hero "
@@ -655,7 +788,6 @@ def main() -> int:
         if not math.isfinite(err) or err > 1e-9:
             raise RuntimeError(f"contribution decomposition failed for {baseline}: {err}")
 
-    args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     print("=== STAGE A -> STAGE B HU FIRST-DIVERGENCE FORENSIC ===")
