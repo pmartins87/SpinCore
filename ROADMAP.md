@@ -14,7 +14,8 @@
 - board-only averaging — **K4 ESTIMATOR ELBOW**.
 - K4 mechanics smoke — **PASS**.
 - Stage-A -> Stage-B first-divergence forensic — **COMPLETE**.
-- Jammer FACING_ALL_IN target overlay — **NEXT**.
+- Jammer FACING_ALL_IN target overlay V1 — **COMPLETE; DIRECTIONALLY POSITIVE BUT STAGE-SPECIFIC REFERENCE MISMATCHED**.
+- Jammer COMMON-REFERENCE V2 — **NEXT**.
 - K4 causal training pilot — **NOT AUTHORIZED YET**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -49,9 +50,26 @@ This is stronger than tuning directly to Jammer.
 
 One causal bridge still remains: confirm that the actual Stage-B Advantage and AveragePolicy errors on those forensic states point in the same wrong direction and that K4 improves the target estimator there.
 
+## V1 overlay correction
+
+V1 showed Stage B farther from its own reference in AveragePolicy TV and Advantage TV, and K4 improved estimator TV.
+
+However, the reference was stage-specific self-play posterior.
+
+For the fixed JAMMER benchmark this is not the correct A-vs-B reference: JAMMER's action rule depends only on legal actions and is independent of hole cards. The observed shove therefore leaves the opponent-hand posterior uniform.
+
+Direct A-vs-B causal comparison requires one shared Jammer-conditioned reference.
+
 ## Next gate
 
-`tools/run_lt2_jammer_facing_allin_target_overlay.sh`
+`tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`
+
+V2 uses:
+- common uniform compatible opponent hands;
+- uniform future boards;
+- one shared target reference for A and B;
+- fixed-deal Stage-A/Stage-B target equality assertion;
+- K1 vs K4 against the same reference.
 
 Uses only forensic seeds `20260920..20260925`.
 
@@ -66,4 +84,4 @@ The untouched acceptance family `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_jammer_facing_allin_target_overlay.sh`. Stop at PASS or first error. Do not train K4 first.
+Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`. Stop at PASS or first error. Do not train K4 first.
