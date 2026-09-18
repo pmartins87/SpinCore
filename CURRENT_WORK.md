@@ -1,16 +1,15 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — CROSS-STREET FULL JSON REVIEW COMPLETE — FUTURE-CHANCE NOT FAILURE-SPECIFIC — TARGET-DRIFT / MODEL-TRACKING AUDIT NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — TARGET-DRIFT MATRIX REVIEWED — JAMMER TARGET STATIONARY, PASSIVE FIT DEGRADATION NOT FAILURE-SPECIFIC, TURN MIXED — HU POLICY-CHAIN AUDIT NEXT — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_TARGET_DRIFT_TRACKING_RESULT_20260918.md`
+- `docs/LT2_HU_POLICY_CHAIN_AUDIT_20260918.md`
 - `docs/LT2_CROSS_STREET_FULL_JSON_REVIEW_20260918.md`
-- `docs/LT2_CROSS_STREET_TARGET_DRIFT_TRACKING_20260918.md`
-- `docs/LT2_CROSS_STREET_FUTURE_CHANCE_RESULT_20260918.md`
-- `docs/LT2_JAMMER_COMMON_REFERENCE_V2_1_RESULT_20260918.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -25,88 +24,84 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Full cross-street JSON verdict
+## Target-drift / model-tracking result
 
-The simple rule
+### Jammer preflop after opponent all-in
 
-`more future-board noise -> Stage-B failure`
+Target drift is effectively zero:
+- FAILURE `5.54e-17`;
+- CONTROL `2.51e-16`;
+- reference best action changed on 0/12 in both groups.
 
-is not supported.
+Stage-B own-target Advantage MSE did not worsen:
+- FAILURE B-A `-0.001079`, CI `[-0.006408,+0.004250]`;
+- CONTROL B-A `-0.001084`, CI `[-0.004754,+0.002585]`.
 
-### Jammer preflop
+Therefore target nonstationarity cannot explain the deployed Jammer regression.
 
-Absolute future-board variance:
-- FAILURE `0.03834`;
-- CONTROL `0.07201`;
-- F-C approximate 95% CI `[-0.06195,-0.00538]`.
+### PassiveCaller FLOP
 
-Controls are significantly noisier than failures.
+Target drift is actually larger in CONTROL:
+- FAILURE `0.000735`;
+- CONTROL `0.001809`;
+- F-C `-0.001074`, CI `[-0.001990,-0.000158]`.
 
-K4 MSE benefit does not significantly discriminate FAILURE from CONTROL.
+Stage-B own-target model error worsens in selected FAILURE states:
+- B-A `+0.000606`, CI `[+0.000189,+0.001023]`;
+- 10/12 anchors worsen.
 
-### PassiveCaller flop
+But the failure-control difference is unresolved:
+- `+0.000131`, CI `[-0.001227,+0.001489]`.
 
-Relative future-board fraction is higher in FAILURE:
-- F `0.6097`;
-- C `0.3497`;
-- F-C approximate CI `[+0.0456,+0.4743]`.
+Stage-B current Advantage best-action agreement with its own low-noise reference is 0/12 in both FAILURE and CONTROL.
 
-But absolute future-board variance excess is unresolved:
-- F-C approximate CI `[-0.00369,+0.01071]`.
+### UniformLegal TURN
 
-K4 MSE benefit is effectively the same:
-- F `-0.012697`;
-- C `-0.012868`;
-- F-C approximate CI `[-0.01119,+0.01153]`.
+Target drift is large and heterogeneous:
+- FAILURE mean `0.003490`;
+- CONTROL mean `0.002354`;
+- F-C unresolved.
 
-### UniformLegal turn
+Own-target B-A model error and tracking-error differences are also unresolved.
 
-Failure states are more model-dominated in **fraction**, but absolute model error is not higher:
-- model absolute F `0.00812`;
-- C `0.00881`;
-- F-C approximate CI `[-0.01220,+0.01081]`.
-
-K4 regret gain is essentially identical in FAILURE and CONTROL.
+No single mechanism is established.
 
 ## Strategic interpretation
 
-K4 is a real variance-reduction improvement.
+Do not return to K4 or target-estimator tuning.
 
-It is **not** demonstrated as the cause/fix for Stage-B regression.
+The Jammer result moves the highest-value question downstream:
 
-Do not:
-- train Jammer-specific K4;
-- generalize K4 to all streets;
-- resume LT2 long training.
+**Did Stage-B current Advantage behavior regress too, or did the loss appear mainly in historical AveragePolicy aggregation?**
 
-The previous cross-street audit only measured the Stage-B target process, so it cannot distinguish:
-
-1. target nonstationarity from Stage A to Stage B;
-2. Stage-B approximation / tracking / forgetting failure;
-3. both.
-
-That is now the highest-value diagnostic.
+This matters because the deployed benchmark uses AveragePolicy, while the target-drift audit inspected the current Advantage model.
 
 ## Active gate
 
 Run:
 
 ```bash
-bash tools/run_lt2_cross_street_target_drift_tracking.sh
+bash tools/run_lt2_hu_policy_chain.sh
 ```
 
-It reuses the same FAILURE/CONTROL contexts and forensic seeds.
+The audit uses the same forensic seed family only and compares, on identical HU scenarios/deals/RNG streams:
 
-For every anchor it computes paired low-noise Stage-A and Stage-B conditional targets on the same hidden deal, boards and RNG seeds, canonicalizes to an action-gap gauge, then compares:
+- Stage-A AveragePolicy;
+- Stage-B AveragePolicy;
+- Stage-A current Advantage-induced behavior;
+- Stage-B current Advantage-induced behavior;
 
-- target drift A->B;
-- Stage-A own-target model error;
-- Stage-B own-target model error;
-- B-A own-target error;
-- model-drift tracking error;
-- reference best-action changes.
+against:
+- UNIFORM_LEGAL;
+- PASSIVE_CALLER;
+- JAMMER.
 
-Holdout seeds `20261001..20261006` remain untouched.
+Primary contrasts:
+- AVG B-A;
+- BEH B-A;
+- change in the AVG-vs-BEH gap.
+
+Holdout `20261001..20261006` remains untouched.
 
 DeepCrusher remains deferred.
 
@@ -115,11 +110,11 @@ DeepCrusher remains deferred.
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_cross_street_target_drift_tracking.sh
+bash tools/run_lt2_hu_policy_chain.sh
 ```
 
-Wait for `LT2_CROSS_STREET_TARGET_DRIFT_TRACKING_PASS` or the first error.
+Wait for `LT2_HU_POLICY_CHAIN_EVAL_PASS` or the first error.
 
-Then send `SpinCore_LT2_cross_street_target_drift_tracking.json`.
+Then send `SpinCore_LT2_hu_policy_chain.json`.
 
 Do not start any training.
