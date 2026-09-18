@@ -1,19 +1,20 @@
 # SpinCore Current Work
 
-Date: 2026-09-17
-Status: **LT2 STAGE B PASS — 4.5M ROOTS — HU-JAMMER NEGATIVE — EXACT0 COMPUTE FRONTIER CONFIRMED — BOARD-ONLY AVERAGING NEXT**
+Date: 2026-09-18
+Status: **LT2 STAGE B PASS — 4.5M ROOTS — HU-JAMMER NEGATIVE — BOARD-ONLY K4 ADMITTED — MECHANICS SMOKE NEXT**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
+- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
-- `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_20260917.md`
 - `docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
-Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
+Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500 yet.
 
 ## Preserved checkpoints
 
@@ -28,7 +29,7 @@ Powered 30k weak-baseline gate:
 - Stage B HU Jammer raw chip EV `-5.141`, simultaneous family-wise 95% CI `[-9.078,-1.204]`;
 - Stage-B-minus-Stage-A HU-Jammer paired delta `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
 
-Root scaling remains paused.
+Long root scaling remains paused.
 
 ## Closed optimizer/capacity findings
 
@@ -38,7 +39,7 @@ Advantage: 100 -> 1600 optimizer steps lowers held-out MSE only modestly and doe
 
 A larger network is not the next admitted intervention.
 
-## Conditional target mechanism
+## Target-variance mechanism
 
 HU-preflop conditional decomposition:
 
@@ -49,92 +50,99 @@ HU-preflop conditional decomposition:
 
 Total hidden/chance conditional variance: **93.73%**.
 
-## Target-estimator budget sweep — complete
+## Exact-level decision — closed
 
-The paired 64-anchor exact0/exact1 budget sweep completed successfully.
+The compute-normalized exact0/exact1 sweep established:
+- exact1 costs about 2.1x nodes at same K;
+- exact0 with more independent hidden deals wins target MSE at matched compute across every tested budget;
+- exact1 has no reproducible policy-space benefit sufficient to justify its cost;
+- for FACING_ALL_IN, exact0 and exact1 are identical.
 
-Overall same-K K64:
-- exact0: 4,822 nodes, MSE `0.001178`, TV `0.3700`;
-- exact1: 10,103 nodes, MSE `0.001145`, TV `0.3637`.
+Exact1 is not promoted.
 
-Exact1 therefore buys only a tiny same-K gain at roughly twice the node cost.
+## Board-only averaging result — complete
 
-Matched-compute comparisons use approximately exact0 at 2K versus exact1 at K.
+Read-only audit:
+- 64 HU-preflop anchors;
+- candidate exact0;
+- one sampled opponent hand fixed;
+- K = 1,2,4,8 future boards;
+- 0 training roots;
+- 0 optimizer steps.
 
-Paired target-MSE differences, exact0 minus exact1, are negative with 95% intervals entirely below zero at every matched budget from K2-vs-K1 through K64-vs-K32.
+Overall:
 
-Conclusion:
+| K | nodes | MSE | TV | argmax | branch mismatch | regret |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 75.5 | 0.042638 | 0.5001 | 38.92% | 26.04% | 38.73 |
+| 2 | 151.0 | 0.023177 | 0.4966 | 39.84% | 22.05% | 37.01 |
+| 4 | 302.1 | 0.013556 | 0.4868 | 41.60% | 17.68% | 35.42 |
+| 8 | 604.2 | 0.008715 | 0.4843 | 42.58% | 15.82% | 35.13 |
 
-**exact0 plus more independent hidden deals is decisively more compute-efficient in target MSE. Exact1 shows no reproducible policy-space advantage large enough to justify its node cost and is not promoted to production training.**
+Paired K4 minus K1:
+- MSE `-0.02908`, 95% CI `[-0.03366,-0.02450]`;
+- TV `-0.01324`, CI crosses zero;
+- regret `-3.31` chips, CI `[-5.80,-0.82]`;
+- branch mismatch `-8.36 pp`, CI `[-11.27,-5.45]`.
 
-## Policy-space caution
+Paired K8 minus K4:
+- MSE improves further;
+- TV, regret and argmax show no resolved extra gain;
+- branch mismatch improves only another `1.86 pp`;
+- node cost doubles.
 
-The 64-deal reference itself remains noisy:
+**K4 is the measured policy-space compute elbow.**
 
-- overall 32-vs-32 split-half policy TV: `0.4614`;
-- root: `0.5552`;
-- continuation-1: `0.5583`;
-- continuation-2+: `0.1738`;
-- facing-all-in: `0.2470`.
+## Facing-all-in
 
-Exact0 averaging curve:
+For 25 FACING_ALL_IN anchors:
+- K1 TV `0.3615`;
+- K4 TV `0.3262`;
+- K8 TV `0.3232`.
 
-- K1 TV `0.4866`;
-- K4 `0.4493`;
-- K16 `0.4137`;
-- K32 `0.3742`;
-- K64 `0.3700`.
+K8 minus K1 TV = `-0.03836`, 95% CI `[-0.06827,-0.00846]`.
 
-MSE falls much faster than policy TV/regret. Do not select K64 merely because raw MSE is smallest.
+Board averaging is therefore directly relevant to the Jammer-facing subset, unlike exact-opponent branching.
 
-## HU-Jammer-specific finding
+## Admission decision
 
-For the 25 FACING_ALL_IN anchors, exact0 and exact1 are identical at every K and at the same node cost.
+Admit **HU-preflop future-board averaging K4** as the first candidate training semantic change.
 
-Once the opponent is already all-in there is no future opponent-action branch for exact-level integration to remove.
+Do not use K8.
 
-Therefore exact1 cannot directly solve the most Jammer-relevant subset.
+Do not start the training pilot until mechanics are verified.
 
-FACING_ALL_IN:
-- current model TV `0.6115`;
-- current branch mismatch `84%`;
-- exact0 K32 TV `0.2609`;
-- exact0 K64 TV `0.2580`.
+Implementation is opt-in and canonical K1 remains the default.
 
-Chance/hidden-deal averaging is the relevant variance lever.
-
-## Immediate bounded gate — board-only averaging
-
-Full hidden-deal averaging attacks both opponent hand and future board, but online opponent-hand posterior resampling is substantially more complex than future-board resampling.
-
-Future-board variance is the largest single component.
+## Immediate bounded gate — mechanics smoke
 
 Run:
 
 ```bash
-bash tools/run_lt2_hu_preflop_board_only_averaging.sh
+bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh
 ```
 
-Design:
+The smoke compares the same prospective HU roots at K1 and K4 and must prove:
+- same sample count/order/identity;
+- canonical-board postflop targets unchanged;
+- preflop targets actually change under K4;
+- K4 node multiplier measured;
+- no training-memory writes;
+- no optimizer steps;
+- Stage-B checkpoint unchanged.
 
-- same 64 HU-preflop anchors;
-- independent reference: 16 posterior hands × 4 future boards, exact1;
-- candidate: 16 posterior hands from a separate stream;
-- keep each candidate opponent hand fixed;
-- average K = 1,2,4,8 independent future boards at exact0;
-- no training roots and no optimizer steps.
+Expected marker:
 
-This directly measures how much of the full-deal gain can be captured by the simpler production-feasible intervention.
+`LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_PASS`.
 
-## Decision after board-only gate
-
-- If board-only K4/K8 captures most of the full-deal policy improvement, build the first bounded training pilot around future-board averaging.
-- If it plateaus far above full-deal averaging, opponent-hand posterior variation must also be addressed.
-- If it lowers MSE but barely changes TV/regret, switch next to a policy-aligned Advantage objective rather than brute-force averaging.
-- Any training candidate must later beat preserved Stage B on the powered weak-baseline suite before long root scaling resumes.
+After reviewing the smoke, size one bounded causal K4 training pilot from the measured node multiplier. Only a candidate that later beats Stage B on the powered weak-baseline suite can reopen long root scaling.
 
 DeepCrusher remains deferred.
 
 ## Immediate user action
 
-Pull current `main` and run `bash tools/run_lt2_hu_preflop_board_only_averaging.sh`. Wait for `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_PASS`, then send `SpinCore_LT2_hu_preflop_board_only_averaging.json`. Do not resume root training first.
+Pull current `main` and run `bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh`.
+
+Wait for `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_PASS`, then send `SpinCore_LT2_hu_preflop_board_averaging_smoke.json`.
+
+Do not resume root training first.
