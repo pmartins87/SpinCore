@@ -43,6 +43,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--learning-rate", type=float, default=0.001)
     p.add_argument("--heads-up-prob", type=float, default=0.4548)
     p.add_argument(
+        "--hu-preflop-board-average-k",
+        type=int,
+        default=None,
+        help=(
+            "opt-in TRUE_HEADS_UP preflop Advantage target averaging over K future boards; "
+            "1 preserves canonical training; values >1 require parallel workers and exact-opponent-levels=0"
+        ),
+    )
+    p.add_argument(
         "--workers",
         type=int,
         default=1,
@@ -101,6 +110,8 @@ def main() -> int:
         raise SystemExit("--additional-iterations must be nonnegative")
     if int(args.workers) < 0:
         raise SystemExit("--workers must be >= 0")
+    if args.hu_preflop_board_average_k is not None and int(args.hu_preflop_board_average_k) <= 0:
+        raise SystemExit("--hu-preflop-board-average-k must be positive")
 
     workers = int(args.workers)
     if workers == 0:
@@ -114,10 +125,12 @@ def main() -> int:
             args.checkpoint, solver=solver
         )
         if int(args.additional_iterations) > 0:
-            config = replace(
-                config,
-                iterations=int(completed) + int(args.additional_iterations),
-            )
+            replace_kwargs = {
+                "iterations": int(completed) + int(args.additional_iterations),
+            }
+            if args.hu_preflop_board_average_k is not None:
+                replace_kwargs["hu_preflop_board_average_k"] = int(args.hu_preflop_board_average_k)
+            config = replace(config, **replace_kwargs)
             finalized = False
         elif finalized:
             print(
@@ -144,6 +157,11 @@ def main() -> int:
             batch_size=int(args.batch_size),
             learning_rate=float(args.learning_rate),
             heads_up_prob=float(args.heads_up_prob),
+            hu_preflop_board_average_k=(
+                1
+                if args.hu_preflop_board_average_k is None
+                else int(args.hu_preflop_board_average_k)
+            ),
         )
         completed = 0
         history = []
@@ -165,13 +183,16 @@ def main() -> int:
             flush=True,
         )
 
+    if int(config.hu_preflop_board_average_k) > 1 and workers <= 1:
+        raise SystemExit("HU preflop board averaging requires --workers > 1")
     for runtime in runtimes.values():
         runtime.session.batch_mode = args.batch_mode
     if "SPINCORE_TORCH_THREADS" in os.environ:
         torch.set_num_threads(int(os.environ["SPINCORE_TORCH_THREADS"]))
     print(
         f"FIT_RUNTIME threads={torch.get_num_threads()} batch_mode={args.batch_mode} "
-        f"iteration_mode={args.iteration_mode}",
+        f"iteration_mode={args.iteration_mode} "
+        f"hu_preflop_board_average_k={config.hu_preflop_board_average_k}",
         flush=True,
     )
     iteration_fn = (
