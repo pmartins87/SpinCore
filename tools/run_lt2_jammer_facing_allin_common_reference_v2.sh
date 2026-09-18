@@ -51,7 +51,7 @@ export PYTHONPATH="$ROOT/python:$ROOT/tools"
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
-printf "=== SpinCore LT2 Jammer facing-all-in COMMON REFERENCE V2 ===\n"
+printf "=== SpinCore LT2 Jammer facing-all-in COMMON REFERENCE V2.1 ===\n"
 printf "mode=READ ONLY; NO TRAINING ROOTS; NO OPTIMIZER STEPS\n"
 printf "V1 stage-specific self-play posterior is NOT used as A-vs-B benchmark reference\n"
 printf "common reference=uniform opponent hands under fixed hand-independent JAMMER + uniform future boards\n"
@@ -76,7 +76,7 @@ printf "reference=32 hands x 8 boards; candidate=16 hands x K1/K4\n\n"
 import json, math, sys
 from pathlib import Path
 d=json.loads(Path(sys.argv[1]).read_text())
-assert d["schema"] == "SPINCORE_LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2"
+assert d["schema"] == "SPINCORE_LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1"
 assert d["stage_a"]["completed_iteration"] == 3000
 assert d["stage_b"]["completed_iteration"] == 7500
 m=d["method"]
@@ -88,12 +88,12 @@ assert m["future_holdout_seeds_touched"] is False
 assert m["forensic_seeds"] == [20260920,20260921,20260922,20260923,20260924,20260925]
 s=d["summary"]
 assert s["n"] == int(m["anchors_per_seed"]) * 6
-assert float(s["max_stage_a_b_fixed_deal_target_abs_delta"]) <= 1e-7
+assert float(s["max_stage_a_b_fixed_deal_canonical_target_abs_delta"]) <= 1e-7
 for k in ("average_policy_tv","average_policy_regret_chips","advantage_policy_tv","advantage_policy_regret_chips"):
     assert math.isfinite(float(s["stage_b_minus_a"][k]["mean"]))
 for k in ("target_mse_to_reference","policy_tv_to_reference","regret_chips"):
     assert math.isfinite(float(s["k4_minus_k1"][k]["mean"]))
-print("LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_POSTVALIDATION_PASS")
+print("LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_POSTVALIDATION_PASS")
 PY
 
 AFTER_A="$(sha256sum "$STAGE_A" | awk '{print $1}')"
@@ -108,8 +108,8 @@ if [ -d "$DEST" ]; then
   cp "$REPORT" "$DEST/SpinCore_LT2_jammer_facing_allin_common_reference_v2.json"
 fi
 
-printf "\nLT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_PASS\n"
+printf "\nLT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS\n"
 printf "sources_unchanged=true\n"
 printf "holdout_seeds_untouched=true\n"
 printf "report=%s\n" "$REPORT"
-printf "STOP HERE. Do not train K4 until V2 is reviewed.\n"
+printf "STOP HERE. Do not train K4 until V2.1 is reviewed.\n"
