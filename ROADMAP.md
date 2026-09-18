@@ -13,8 +13,8 @@
 - K4 board averaging — **VALID ESTIMATOR IMPROVEMENT**.
 - Jammer K4 causal gate — **NOT MET**.
 - Cross-street future-chance audit — **PASS; FUTURE-CHANCE NOT FAILURE-SPECIFIC**.
-- Full cross-street JSON review — **COMPLETE**.
-- Stage-A/B target-drift and model-tracking matrix — **NEXT**.
+- Stage-A/B target-drift matrix — **PASS; NO UNIVERSAL TARGET-DRIFT EXPLANATION**.
+- HU AveragePolicy-vs-current-behavior chain — **NEXT**.
 - K4 training — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -27,48 +27,49 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Cross-street full-JSON conclusion
+## Target-drift verdict
 
-Future-board noise is real but not a failure discriminator.
+Jammer:
+- target A->B is invariant after opponent all-in;
+- Stage-B own-target Advantage MSE does not worsen;
+- deployed AveragePolicy still regresses.
 
-- Jammer controls are significantly noisier than failures in absolute future-board variance.
-- Passive flop has a different fractional composition, but no resolved absolute future-board excess.
-- Turn has higher model-error fraction in failures, but no resolved absolute model-error excess.
-- K4 MSE improvement does not significantly separate FAILURE from CONTROL.
+This rules out target nonstationarity as the Jammer explanation and makes the policy aggregation/deployment chain the next target.
 
-Therefore the next question is not "where else should K4 be enabled?"
+Passive flop:
+- target drift is larger in controls;
+- failures show a resolved Stage-B own-target fit degradation internally;
+- but FAILURE-vs-CONTROL excess is unresolved;
+- current Advantage action ranking is poor in both samples.
 
-It is:
-
-**Did the self-play target move from Stage A to B, or did the model fail to track its own moving target?**
+Uniform turn:
+- target drift and tracking are heterogeneous;
+- no failure-specific mechanism resolves.
 
 ## Next gate
 
-`tools/run_lt2_cross_street_target_drift_tracking.sh`
+Run `tools/run_lt2_hu_policy_chain.sh`.
 
-Same three contexts:
-1. Jammer preflop FOLD-vs-CONTINUE;
-2. PassiveCaller FLOP;
-3. UniformLegal TURN.
+Global HU, same forensic seeds, common random numbers.
 
-Same FAILURE/CONTROL selection.
+Compare:
+1. AVG_A;
+2. AVG_B;
+3. BEH_A;
+4. BEH_B;
 
-For each anchor:
-- same hidden deal;
-- same future boards;
-- same target RNG seeds;
-- Stage-A conditional target;
-- Stage-B conditional target;
-- Stage-A current Advantage model;
-- Stage-B current Advantage model;
-- canonical action-gap comparison.
+against each transparent weak baseline.
 
-## Decision after target-drift matrix
+## Decision after policy-chain audit
 
-- high target drift + models fit own targets -> self-play nonstationarity;
-- low target drift + Stage-B own-target error increase -> approximation/coverage/forgetting;
-- high drift + high tracking error -> both;
-- neither -> search outside the Advantage target/model chain.
+- AVG B-A negative, BEH B-A neutral/positive:
+  AveragePolicy aggregation/history is implicated.
+
+- both AVG and BEH B-A negative:
+  regression is already upstream in current Advantage behavior.
+
+- baseline-dependent split:
+  multiple mechanisms.
 
 No training before this distinction is measured.
 
@@ -76,6 +77,6 @@ Holdout `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_cross_street_target_drift_tracking.sh`.
+Run `bash tools/run_lt2_hu_policy_chain.sh`.
 
 Stop at PASS or first error. Do not train.
