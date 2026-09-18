@@ -89,41 +89,105 @@ Therefore:
 - AveragePolicy / Advantage expected value under the reference is meaningful;
 - TV to the canonical regret-matching policy is retained as a diagnostic only and must not drive the causal decision by itself.
 
-## What V2.1 supports
+## Full-JSON statistical review
 
-V2.1 supports two concrete statements:
+The full report shows:
 
-1. **Stage B current Advantage is worse in value/regret on these selected Jammer-facing states** despite having slightly lower TV to the arbitrary canonical-RM policy.
-2. **K4 substantially improves target estimation on these same selected states**, including a large `-19.27` chip reduction in candidate-policy regret.
+### Stage-B minus Stage-A
 
-This closes much of the local mechanism chain for the Jammer-facing failure.
+AveragePolicy regret:
+- mean `+0.454` chips;
+- 95% CI `[-2.447,+3.355]`.
 
-## What V2.1 does not establish
+Advantage-policy regret:
+- mean `+16.734` chips;
+- 95% CI `[-6.365,+39.833]`.
 
-The AveragePolicy degradation on these selected states is small in the console aggregate:
+Neither Stage-B degradation is statistically resolved on this 24-anchor sample.
 
-- TV `+0.0049`;
-- regret `+0.45` chips.
+### K4 minus K1
 
-The full JSON confidence intervals and action-mass shifts must be inspected before declaring this link resolved.
+Target MSE:
+- mean `-0.026189`;
+- 95% CI `[-0.030418,-0.021961]`.
 
-Also, the global Stage-B regression is still multi-mechanism:
+Reference-best-action regret:
+- mean `-19.267` chips;
+- 95% CI `[-30.066,-8.469]`.
 
-- PassiveCaller has a resolved FLOP regression;
-- UniformLegal has a resolved TURN subgroup.
+Thus the K4 estimator improvement **is** statistically resolved.
 
-A HU-preflop-only K4 patch may therefore solve one symptom while leaving the broader training-instability mechanism untouched.
+### Mean action mass
+
+Common reference:
+- FOLD `0.2500`;
+- CHECK_CALL `0.4792`;
+- ALL_IN `0.2708`.
+
+Stage A AveragePolicy:
+- FOLD `0.3120`;
+- CHECK_CALL `0.3923`;
+- ALL_IN `0.2957`.
+
+Stage B AveragePolicy:
+- FOLD `0.2830`;
+- CHECK_CALL `0.4101`;
+- ALL_IN `0.3069`.
+
+The mean Stage-B AveragePolicy action mass actually moves closer to the common reference on FOLD/CHECK_CALL at the aggregate level. This reinforces that the local deployed-policy degradation is not cleanly demonstrated by the 24-anchor summary.
+
+## Outcome-equivalence correction
+
+The sampled transition counts were:
+
+- `0->1`: 11;
+- `1->0`: 2;
+- `1->9`: 7;
+- `9->1`: 4.
+
+All 11 CHECK_CALL<->ALL_IN transitions had:
+- identical reference values for actions 1 and 9;
+- forensic terminal B-A delta exactly `0`.
+
+After an opponent jam, those two actions are benchmark-outcome-equivalent:
+
+`CONTINUE = {CHECK_CALL, ALL_IN}`.
+
+Therefore **11/24 = 45.8%** of the selected anchors were not behaviorally responsible for the Jammer EV regression.
+
+On the 13 outcome-relevant FOLD-vs-CONTINUE anchors:
+
+- K4-minus-K1 MSE approximately `-0.02560`, 95% CI `[-0.03178,-0.01943]`;
+- K4-minus-K1 regret approximately `-16.77` chips, 95% CI `[-34.54,+1.00]`;
+- Stage-B-minus-Stage-A Advantage regret approximately `+29.17`, CI `[-11.86,+70.20]`;
+- AveragePolicy regret approximately `+0.71`, CI `[-3.92,+5.33]`.
+
+The estimator MSE benefit remains resolved, but the value/regret causal chain is not.
+
+## What V2.1 establishes
+
+V2.1 establishes that K4 is a genuinely better **target estimator** on these states.
+
+It does **not** establish that target variance is the cause of the deployed-policy regression strongly enough to justify training.
+
+The pre-declared gate requiring coherent Stage-B AveragePolicy and Advantage degradation is therefore **not met**.
 
 ## Decision
 
-**Do not train K4 yet.**
+**Do not train K4.**
 
-Next:
+The next experiment moves away from Jammer-specific drilling.
 
-1. inspect the full V2.1 JSON, especially 95% intervals and FOLD/CHECK_CALL/ALL_IN mass shifts;
-2. treat gauge-invariant regret/value metrics as primary;
-3. decide whether the next experiment should be:
-   - a bounded K4 pilot, if the local causal chain is statistically coherent; or
-   - a cross-street variance/regression audit, if evidence suggests a broader target-estimator instability that also explains FLOP/TURN regressions.
+Run a cross-street future-chance audit on:
+- outcome-relevant Jammer preflop FOLD-vs-CONTINUE states;
+- PassiveCaller FLOP regression states;
+- UniformLegal TURN regression states;
+- matched-context controls.
+
+If the future-chance mechanism appears across streets, prefer a general future-chance estimator intervention over a HU-preflop/Jammer-specific patch.
+
+Canonical next contract:
+
+- `docs/LT2_CROSS_STREET_FUTURE_CHANCE_AUDIT_20260918.md`.
 
 The untouched holdout seeds remain sealed.
