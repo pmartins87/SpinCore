@@ -14,7 +14,8 @@
 - Jammer K4 causal gate — **NOT MET**.
 - Cross-street future-chance audit — **PASS; FUTURE-CHANCE NOT FAILURE-SPECIFIC**.
 - Stage-A/B target-drift matrix — **PASS; NO UNIVERSAL TARGET-DRIFT EXPLANATION**.
-- HU AveragePolicy-vs-current-behavior chain — **NEXT**.
+- HU policy-chain audit — **PASS; MULTI-MECHANISM**.
+- Jammer current-behavior first divergence — **NEXT**.
 - K4 training — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -27,56 +28,63 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Target-drift verdict
+## Policy-chain verdict
 
-Jammer:
-- target A->B is invariant after opponent all-in;
-- Stage-B own-target Advantage MSE does not worsen;
-- deployed AveragePolicy still regresses.
+### Jammer
 
-This rules out target nonstationarity as the Jammer explanation and makes the policy aggregation/deployment chain the next target.
+Deployed AveragePolicy:
+- B-A `-1.682`, CI95 `[-2.767,-0.597]`.
 
-Passive flop:
-- target drift is larger in controls;
-- failures show a resolved Stage-B own-target fit degradation internally;
-- but FAILURE-vs-CONTROL excess is unresolved;
-- current Advantage action ranking is poor in both samples.
+Current Advantage-induced behavior:
+- B-A `-8.430`, CI95 `[-12.515,-4.345]`.
 
-Uniform turn:
-- target drift and tracking are heterogeneous;
-- no failure-specific mechanism resolves.
+Aggregation-chain delta:
+- `+6.748`, CI95 `[+2.521,+10.975]`.
+
+The strong defect is already upstream in current behavior. AveragePolicy buffers it.
+
+Together with stationary Jammer facing-all-in targets, this shifts the causal search toward model action ranking / regret matching rather than target drift.
+
+### PassiveCaller
+
+AveragePolicy B-A is resolved negative, while current behavior B-A is unresolved positive.
+
+This is a separate aggregation/history candidate, not the immediate primary gate.
+
+### UniformLegal
+
+No resolved A/B mechanism.
 
 ## Next gate
 
-Run `tools/run_lt2_hu_policy_chain.sh`.
+Run `tools/run_lt2_hu_behavior_first_divergence.sh`.
 
-Global HU, same forensic seeds, common random numbers.
+Purpose:
+localize where the resolved `-8.43` chips/hand Jammer current-behavior loss first appears.
 
-Compare:
-1. AVG_A;
-2. AVG_B;
-3. BEH_A;
-4. BEH_B;
+Groups:
+1. NO_DIVERGENCE;
+2. PREFLOP_ROOT;
+3. PREFLOP_FACING_ALL_IN;
+4. PREFLOP_OTHER;
+5. FLOP;
+6. TURN;
+7. RIVER.
 
-against each transparent weak baseline.
+## Decision after behavior localization
 
-## Decision after policy-chain audit
+If Jammer loss concentrates in PREFLOP_FACING_ALL_IN:
+- audit broad non-selected reference action gaps, model action gaps, RM support and fallback regime there.
 
-- AVG B-A negative, BEH B-A neutral/positive:
-  AveragePolicy aggregation/history is implicated.
+If it localizes elsewhere:
+- follow that exact state class.
 
-- both AVG and BEH B-A negative:
-  regression is already upstream in current Advantage behavior.
-
-- baseline-dependent split:
-  multiple mechanisms.
-
-No training before this distinction is measured.
+No training before this localization.
 
 Holdout `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_hu_policy_chain.sh`.
+Run `bash tools/run_lt2_hu_behavior_first_divergence.sh`.
 
 Stop at PASS or first error. Do not train.
