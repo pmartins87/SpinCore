@@ -16,7 +16,7 @@
 - Stage-A -> Stage-B forensic — **COMPLETE**.
 - Jammer common-reference V2.1 — **PASS; K4 ESTIMATOR IMPROVES, BUT POLICY/MODEL CAUSAL GATE UNRESOLVED**.
 - Outcome-equivalence review — **45.8% OF V2.1 ANCHORS WERE CALL<->ALLIN BENCHMARK-NEUTRAL**.
-- Cross-street future-chance audit — **NEXT**.
+- Cross-street future-chance audit — **PASS; BOARD NOISE GENERALIZES BUT DOES NOT EXPLAIN FAILURES BY ITSELF**.
 - K4 training pilot — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -43,39 +43,32 @@ On the 13 outcome-relevant FOLD-vs-CONTINUE anchors, K4 MSE remains resolved, bu
 
 Therefore a Jammer-specific K4 training pilot would be premature.
 
-## Anti-overfitting direction
+## Cross-street result
 
-We now test the mechanism across all resolved regression contexts instead of drilling the same benchmark.
+Terminal-level evidence:
 
-Cross-street groups:
-1. Jammer preflop FOLD-vs-CONTINUE;
-2. PassiveCaller FLOP;
-3. UniformLegal TURN.
+- Jammer preflop: future-board variance large in both FAILURE and CONTROL; CONTROL is higher.
+- PassiveCaller flop: FAILURE future-board fraction `0.610` vs CONTROL `0.350`; plausible association, but K4 MSE gain is almost identical.
+- UniformLegal turn: FAILURE is model-error dominated at `0.787`; future-board fraction only `0.143`; K4 regret gain nearly identical to CONTROL.
 
-Each includes FAILURE and matched-context CONTROL states.
+Thus future-chance averaging is a useful estimator improvement but is **not yet the general causal explanation** for Stage-B regression.
 
-The audit isolates **future board chance** by keeping:
-- exact dealt hidden opponent hand;
-- visible board prefix;
-- public path;
-- actor;
-- observation;
-- legal actions
+## Next gate
 
-fixed while resampling only unrevealed future cards.
+Review the full `SpinCore_LT2_cross_street_future_chance.json` before defining another experiment.
 
-## Decision after cross-street audit
+Primary questions:
+- are FAILURE-vs-CONTROL component differences statistically resolved?
+- is flop future-board excess robust?
+- is turn model-error excess robust?
+- do per-anchor patterns point to target nonstationarity, function-approximation drift, or coverage/forgetting?
 
-If future-board variance and K4 estimator benefit appear across streets, design a generalized future-chance estimator by street.
+No training is authorized.
 
-If the effect is isolated to Jammer preflop, K4 remains a narrow local candidate and should not be mistaken for the root cause of Stage-B instability.
-
-If postflop regressions are dominated by model or opponent-action noise instead, investigate those mechanisms separately.
+Holdout `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_cross_street_future_chance.sh`.
+Upload `SpinCore_LT2_cross_street_future_chance.json`.
 
-Do not train before its result is reviewed.
-
-Holdout `20261001..20261006` remains sealed.
+Do not run another diagnostic or any training yet.
