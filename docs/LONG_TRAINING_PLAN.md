@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — K4 MECHANICS PASS — STAGE-A -> STAGE-B DEPLOYED-POLICY FORENSIC ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — K4 MECHANICS PASS — FORENSIC RESOURCE FIX READY — RERUN ACTIVE**
 Date: 2026-09-18
 
 ## Current state
@@ -23,6 +23,7 @@ Read first:
 
 - `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
 - `LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_20260918.md`
+- `LT2_STAGE_A_B_FIRST_DIVERGENCE_RESOURCE_FAILURE_20260918.md`
 - `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 
 ## Preserved milestones
@@ -85,6 +86,12 @@ The intended causal chain would be:
 We have evidence for the first arrow only.
 
 Before training, first locate the actual A->B AveragePolicy regression.
+
+## Forensic first-run resource failure
+
+The first full attempt terminated abruptly with 31 spawned workers. Each worker loaded both complete training checkpoints, including large reservoirs and both domains, even though only the HU AveragePolicy is required. This is a resource-design failure, not strategy evidence.
+
+The corrected audit extracts policy-only HU snapshots once in the parent, releases the full checkpoints, and gives workers only those small snapshots. Default concurrency is 16. No scientific semantics changed.
 
 ## Active Stage-A -> Stage-B forensic
 
