@@ -6,18 +6,18 @@
 - LT1 — **DONE**.
 - LT2 Stage A — **PASS**: 1.8M roots.
 - LT2 Stage B — **PASS**: 4.5M roots / iteration 7500.
-- 30k weak-baseline gate — **HU JAMMER NEGATIVE; PASSIVE HU REGRESSION ALSO CONFIRMED**.
+- Weak-baseline gate — **HU JAMMER NEGATIVE; PASSIVE HU REGRESSION CONFIRMED**.
 - AveragePolicy extra-fit — **NOT SUPPORTED**.
 - Advantage optimizer escalation — **NOT SUPPORTED**.
-- HU-preflop conditional target decomposition — **93.73% HIDDEN/CHANCE VARIANCE**.
-- exact0/exact1 estimator sweep — **EXACT0 + MORE DEALS WINS COMPUTE FRONTIER**.
-- board-only averaging — **K4 ESTIMATOR ELBOW**.
+- HU-preflop conditional variance — **HIDDEN/CHANCE DOMINANT**.
+- exact0/exact1 estimator sweep — **EXACT1 NOT COMPUTE-EFFICIENT**.
+- board-only K4 — **ESTIMATOR BENEFIT CONFIRMED**.
 - K4 mechanics smoke — **PASS**.
-- Stage-A -> Stage-B first-divergence forensic — **COMPLETE**.
-- Jammer FACING_ALL_IN target overlay V1 — **COMPLETE; DIRECTIONALLY POSITIVE BUT STAGE-SPECIFIC REFERENCE MISMATCHED**.
-- Jammer COMMON-REFERENCE V2 — **FIRST RUN STOPPED: RAW TARGET EQUALITY ASSERTION TOO STRONG**.
-- Jammer COMMON-REFERENCE ACTION-GAP V2.1 — **PASS; K4 IMPROVES TARGET ESTIMATOR ON FORENSIC STATES; CAUSAL REVIEW NOT YET COMPLETE**.
-- K4 causal training pilot — **NOT AUTHORIZED YET**.
+- Stage-A -> Stage-B forensic — **COMPLETE**.
+- Jammer common-reference V2.1 — **PASS; K4 ESTIMATOR IMPROVES, BUT POLICY/MODEL CAUSAL GATE UNRESOLVED**.
+- Outcome-equivalence review — **45.8% OF V2.1 ANCHORS WERE CALL<->ALLIN BENCHMARK-NEUTRAL**.
+- Cross-street future-chance audit — **NEXT**.
+- K4 training pilot — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
 
@@ -29,68 +29,53 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Forensic result
+## V2.1 statistical verdict
 
-Jammer Stage-B-minus-Stage-A:
-- total `-1.682`, CI `[-2.767,-0.597]`;
-- FACING_ALL_IN first divergence contribution `-1.126`, CI `[-2.049,-0.202]`;
-- root contribution `-0.557`, CI `[-1.139,+0.026]`.
+K4 improves estimator quality on the 24 selected Jammer-facing states:
+- MSE delta `-0.026189`, CI entirely negative;
+- regret delta `-19.27` chips, CI entirely negative.
 
-The FACING_ALL_IN class alone explains about 67% of the Jammer regression.
+But Stage-B degradation relative to Stage A is unresolved on those anchors:
+- AveragePolicy regret `+0.45`, CI crosses zero;
+- Advantage regret `+16.73`, CI crosses zero.
 
-PassiveCaller simultaneously shows a resolved FLOP contribution of `-0.672`, so a HU-preflop K4 fix cannot be assumed to solve the whole Stage-B regression.
+On the 13 outcome-relevant FOLD-vs-CONTINUE anchors, K4 MSE remains resolved, but K4 regret and Stage-B policy/model degradation are not.
 
-## Anti-overfitting status
+Therefore a Jammer-specific K4 training pilot would be premature.
 
-The K4 hypothesis now has three independent supports:
-1. independent target-variance diagnosis;
-2. independent compute-normalized estimator selection;
-3. independent deployed-policy localization to FACING_ALL_IN.
+## Anti-overfitting direction
 
-This is stronger than tuning directly to Jammer.
+We now test the mechanism across all resolved regression contexts instead of drilling the same benchmark.
 
-One causal bridge still remains: confirm that the actual Stage-B Advantage and AveragePolicy errors on those forensic states point in the same wrong direction and that K4 improves the target estimator there.
+Cross-street groups:
+1. Jammer preflop FOLD-vs-CONTINUE;
+2. PassiveCaller FLOP;
+3. UniformLegal TURN.
 
-## V1 overlay correction
+Each includes FAILURE and matched-context CONTROL states.
 
-V1 showed Stage B farther from its own reference in AveragePolicy TV and Advantage TV, and K4 improved estimator TV.
+The audit isolates **future board chance** by keeping:
+- exact dealt hidden opponent hand;
+- visible board prefix;
+- public path;
+- actor;
+- observation;
+- legal actions
 
-However, the reference was stage-specific self-play posterior.
+fixed while resampling only unrevealed future cards.
 
-For the fixed JAMMER benchmark this is not the correct A-vs-B reference: JAMMER's action rule depends only on legal actions and is independent of hole cards. The observed shove therefore leaves the opponent-hand posterior uniform.
+## Decision after cross-street audit
 
-Direct A-vs-B causal comparison requires one shared Jammer-conditioned reference.
+If future-board variance and K4 estimator benefit appear across streets, design a generalized future-chance estimator by street.
 
-## V2.1 result
+If the effect is isolated to Jammer preflop, K4 remains a narrow local candidate and should not be mistaken for the root cause of Stage-B instability.
 
-On 24 actual Jammer FACING_ALL_IN first-divergence states:
-
-- canonical fixed-deal Stage-A/B action-gap delta: max `2.98e-08`;
-- B-A AveragePolicy TV `+0.0049`;
-- B-A AveragePolicy regret `+0.45` chips;
-- B-A Advantage TV `-0.0277`;
-- B-A Advantage regret `+16.73` chips;
-- K4-K1 MSE `-0.026189`;
-- K4-K1 TV diagnostic `-0.1146`;
-- K4-K1 regret `-19.27` chips.
-
-The K4 estimator benefit is strong on the actual failure states.
-
-TV to the canonical regret-matching policy is gauge-sensitive; value/regret and action gaps are primary.
-
-Before any training, inspect the full JSON intervals and action-mass shifts, then decide whether the next experiment is a bounded K4 pilot or a cross-street causal variance audit.
-
-The untouched acceptance family `20261001..20261006` remains sealed.
-
-## Branch after overlay
-
-- If Stage-B AveragePolicy and Advantage are both farther from low-noise reference and K4 fixes estimator error: consider one bounded K4 pilot.
-- If AveragePolicy worsens but Advantage does not: investigate strategy-memory/AveragePolicy accumulation.
-- If K4 does not improve estimator quality on the actual failure states: reject K4 as causal fix.
-- Regardless, separately account for the PassiveCaller FLOP regression before reopening long training.
+If postflop regressions are dominated by model or opponent-action noise instead, investigate those mechanisms separately.
 
 ## Immediate action
 
-Upload `SpinCore_LT2_jammer_facing_allin_common_reference_v2.json`.
+Run `bash tools/run_lt2_cross_street_future_chance.sh`.
 
-Do not train K4 before the full statistical review.
+Do not train before its result is reviewed.
+
+Holdout `20261001..20261006` remains sealed.
