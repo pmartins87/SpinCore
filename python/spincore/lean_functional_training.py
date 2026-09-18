@@ -68,6 +68,7 @@ class LeanFunctionalConfig:
     batch_size: int = 64
     learning_rate: float = 1e-3
     heads_up_prob: float = 0.4548
+    hu_preflop_board_average_k: int = 1
 
     def __post_init__(self) -> None:
         if self.iterations <= 0 or self.roots_per_iteration < 2:
@@ -82,6 +83,10 @@ class LeanFunctionalConfig:
             raise ValueError("learning_rate must be positive")
         if not 0.0 < self.heads_up_prob < 1.0:
             raise ValueError("heads_up_prob must be strictly between 0 and 1")
+        if self.hu_preflop_board_average_k <= 0:
+            raise ValueError("hu_preflop_board_average_k must be positive")
+        if self.hu_preflop_board_average_k > 1 and self.exact_opponent_levels != 0:
+            raise ValueError("HU preflop board averaging requires exact_opponent_levels=0")
 
     def roots_by_domain(self) -> dict[str, int]:
         hu = int(round(self.roots_per_iteration * self.heads_up_prob))
@@ -425,10 +430,19 @@ def run_iteration(
                 iteration=int(iteration),
                 exact_opponent_levels=int(config.exact_opponent_levels),
                 jobs=jobs,
+                hu_preflop_board_average_k=(
+                    int(config.hu_preflop_board_average_k)
+                    if domain == "TRUE_HEADS_UP"
+                    else 1
+                ),
             )
             tree_seconds = float(parallel_stats["seconds"])
             execution_mode = f"parallel_{parallel_executor.workers}x1"
         else:
+            if domain == "TRUE_HEADS_UP" and int(config.hu_preflop_board_average_k) > 1:
+                raise RuntimeError(
+                    "HU preflop board averaging currently requires parallel root collection"
+                )
             started = time.perf_counter()
             # Historical single-process path retained for portability/CI.
             for job in jobs:
@@ -474,6 +488,11 @@ def run_iteration(
             "advantage_loss_last": float(adv_losses[-1]) if adv_losses else None,
             "blind_counts": blind_counts,
             "sampled_policy": policy_report,
+            "hu_preflop_board_average_k": (
+                int(config.hu_preflop_board_average_k)
+                if domain == "TRUE_HEADS_UP"
+                else 1
+            ),
         }
     return report
 
