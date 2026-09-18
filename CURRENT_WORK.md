@@ -1,17 +1,16 @@
 # SpinCore Current Work
 
 Date: 2026-09-18
-Status: **LT2 STAGE B PASS — 4.5M ROOTS — HU-JAMMER NEGATIVE — BOARD-ONLY K4 MECHANICS FIRST RUN FAILED SAFELY — RNG COUPLING FIXED — RERUN SMOKE**
+Status: **LT2 STAGE B PASS — 4.5M ROOTS — HU-JAMMER NEGATIVE — K4 MECHANICS PASS — STAGE-A -> STAGE-B FORENSIC NEXT — NO TRAINING YET**
 
 ## Active source of truth
 
 Read before new compute:
 
-- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_FAILURE_20260918.md`
-- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_20260918.md`
+- `docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md`
+- `docs/LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_20260918.md`
 - `docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 - `docs/LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
-- `docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md`
 - `docs/LT2_WEAK_BASELINE_VARIANCE_RESULT_20260917.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -32,7 +31,7 @@ Powered 30k weak-baseline gate:
 
 Long root scaling remains paused.
 
-## Mechanism evidence so far
+## Estimator mechanism evidence
 
 HU-preflop conditional decomposition:
 
@@ -41,62 +40,92 @@ HU-preflop conditional decomposition:
 - residual exact-level-1 opponent-action variance: **1.74%**;
 - current-model MSE to conditional mean: **6.27%**.
 
-Board-only K4 is the measured estimator compute elbow, but this remains an estimator finding, not proof that target noise caused the Stage-A -> Stage-B HU-Jammer regression.
+Board-only K4 is the measured estimator compute elbow.
 
-## First mechanics-smoke failure — resolved as implementation bug
+This is still estimator evidence, not proof that target noise caused the A->B deployed-policy regression.
 
-The first K1-vs-K4 smoke stopped with:
+## K4 mechanics smoke — PASS
 
-`RuntimeError: HU board averaging changed preflop sample count across boards`.
+Corrected smoke on the same 8 deterministic prospective HU roots:
 
-This was a successful gate failure: no memory writes, optimizer steps, or checkpoint mutation occurred.
+- samples per arm: `273`;
+- preflop samples: `22`;
+- K4 changed `21/22 = 95.45%` preflop targets;
+- postflop samples: `251`;
+- postflop target differences: `0`;
+- K1 nodes: `1,229`;
+- K4 nodes: `4,765`;
+- measured node multiplier: **3.8771x**;
+- maximum preflop target absolute delta: `0.592`.
 
-Root cause:
+All invariants passed:
+- same root jobs;
+- same sample count/order/identity;
+- canonical postflop targets unchanged;
+- canonical RNG progression preserved;
+- no optimizer steps;
+- no training-memory writes;
+- Stage-B source unchanged.
 
-- the Advantage traversal is depth-first;
-- postflop branches consume RNG before recursion returns to later preflop branches;
-- different future boards therefore consume different postflop RNG histories;
-- merely resetting one global RNG state at traversal start does **not** preserve later preflop opponent samples.
+The K4 implementation is mechanically admissible.
 
-The implementation now records the canonical board-0 sequence of sampled **preflop opponent actions** and replays that exact sequence on alternate boards while asserting the same observation/legal set at every replayed node. Postflop remains ordinary external sampling. Board 0 remains canonical and its terminal RNG state is restored after the alternate-board work.
+**It is not yet scientifically admitted as a training fix.**
 
-The generic collector gained only an overridable opponent-sampling hook. Its default remains the historical direct `sample_action` path, so canonical K1 semantics stay unchanged.
+## Why no training yet
 
-## Immediate gate — rerun mechanics smoke
+The weak-baseline evaluator uses the stored **AveragePolicy**.
+
+K4 changes Advantage target generation, which could influence future behavior and AveragePolicy data, but the causal chain has not been demonstrated.
+
+The immediate question is therefore:
+
+**Where does Stage B's deployed AveragePolicy first diverge from Stage A on the exact paired HU evaluation trajectories, and which divergence contexts contribute the negative B-A chip EV?**
+
+## Active forensic gate
 
 Run:
 
 ```bash
-bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh
+bash tools/run_lt2_stage_a_b_first_divergence.sh
 ```
 
-Required:
+The audit:
 
-- same K1/K4 root/sample count;
-- same sample order/identity;
-- canonical postflop targets identical;
-- at least one preflop target changed;
-- K4 node multiplier measured;
-- Stage-B source unchanged.
+- reuses the already-seen forensic seeds `20260920..20260925`;
+- uses 5,000 full-sampler scenarios per seed by default;
+- retains HU scenarios;
+- compares Stage A and Stage B AveragePolicy directly;
+- includes UNIFORM_LEGAL, PASSIVE_CALLER and JAMMER;
+- keeps scenario/deal/opponent/seat/random streams paired until first hero-policy divergence;
+- partitions first divergence into:
+  - NO_DIVERGENCE;
+  - PREFLOP_ROOT;
+  - PREFLOP_FACING_ALL_IN;
+  - PREFLOP_OTHER;
+  - FLOP;
+  - TURN;
+  - RIVER;
+- decomposes total B-A chip EV into additive first-divergence contributions.
 
-Expected marker:
+The already-seen seeds are diagnosis/design data only.
 
-`LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_PASS`.
+Reserve `20261001..20261006` as untouched holdout seeds for future candidate acceptance.
 
-## Scientific gate after smoke
+## Decision after forensic audit
 
-**Do not train K4 immediately even if the smoke passes.**
-
-The next gate is Stage-A -> Stage-B causal attribution. It must test whether the observed regression is actually explained by target-noise/sign/policy errors in the states that changed from A to B, especially HU preflop and FACING_ALL_IN.
-
-Only if K4 corrects the same directional errors that distinguish Stage B from Stage A will it graduate from "useful estimator" to "causally justified training intervention."
-
-This guards against tuning to the Jammer benchmark or overfitting a convenient proxy.
+- If the negative regression is mainly postflop, K4 is not the primary fix.
+- If it is preflop but not aligned with K4-sensitive states, K4 remains unproven.
+- If a resolved negative contribution is concentrated in HU-preflop/FACING_ALL_IN and Stage B shifts action mass in the same problematic direction seen in the low-noise target diagnostics, run one final Advantage/target overlay before considering K4 training.
+- Jammer-only evidence is not enough; cross-baseline consistency matters.
 
 DeepCrusher remains deferred.
 
 ## Immediate user action
 
-Pull current `main` and rerun `bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh`.
+Pull current `main` and run `bash tools/run_lt2_stage_a_b_first_divergence.sh`.
 
-Wait for `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_PASS` or the first error. Send the output/JSON. Do not start any training continuation.
+Wait for `LT2_STAGE_A_B_FIRST_DIVERGENCE_FORENSIC_PASS` or the first error.
+
+Then send `SpinCore_LT2_stage_a_b_first_divergence.json`.
+
+Do not start any K4 or long-training continuation.
