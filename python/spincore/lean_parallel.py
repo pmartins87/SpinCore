@@ -4,12 +4,18 @@ from __future__ import annotations
 
 Only independent Deep-CFR advantage roots are parallelized. The mathematical
 collector, action resolver, terminal utility, representation and reservoir
-semantics are unchanged. Workers use one Torch thread each; the parent merges
-samples in deterministic root order into the authoritative reservoir.
+semantics are unchanged by default. Workers use one Torch thread each; the
+parent merges samples in deterministic root order into the authoritative
+reservoir.
 
-This mirrors the proven DeepPot pattern on the same 32-thread Ryzen: many
-independent CPU workers, one thread per worker, leaving one logical CPU for the
-parent/OS.
+An opt-in HU-preflop board-averaging experiment is also supported. When
+`hu_preflop_board_average_k > 1`, only TRUE_HEADS_UP roots are affected:
+the original root deal supplies the fixed hole cards and canonical board, K-1
+additional future boards are drawn conditional on those same hole cards, the
+same external-sampling RNG stream is replayed for every board, and only
+preflop Advantage targets are averaged. Postflop samples are retained from the
+canonical original board only. Sample count/order therefore stay aligned with
+one ordinary root while target-generation node cost increases.
 """
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -71,6 +77,173 @@ def _worker_init(solver_path: str) -> None:
         pass
 
 
+def _sample_street(sample: ActionAdvantageSample) -> int:
+    from spincore_nn.codec import decode_spnniv1
+
+    return int(decode_spnniv1(sample.observation).categorical[1])
+
+
+def _board_seed(deck_seed: int, board_index: int) -> int:
+    return (
+        int(deck_seed)
+        ^ 0xB04D4A5E7C15
+        ^ (int(board_index) * 0x9E3779B97F4A7C15)
+    ) & ((1 << 63) - 1)
+
+
+def _draw_board(holes, *, seed: int) -> tuple[int, int, int, int, int]:
+    used = {
+        int(card)
+        for row in holes
+        for card in row
+        if int(card) >= 0
+    }
+    remaining = [card for card in range(52) if card not in used]
+    if len(remaining) < 5:
+        raise RuntimeError("not enough cards for HU board resampling")
+    board = tuple(int(x) for x in random.Random(int(seed)).sample(remaining, 5))
+    return board  # type: ignore[return-value]
+
+
+def _average_preflop_targets(
+    per_board: list[tuple[ActionAdvantageSample, ...]],
+) -> tuple[ActionAdvantageSample, ...]:
+    if not per_board:
+        raise ValueError("board-averaging requires at least one sample stream")
+    base = list(per_board[0])
+    preflop = [
+        [sample for sample in stream if _sample_street(sample) == 0]
+        for stream in per_board
+    ]
+    expected = len(preflop[0])
+    if any(len(stream) != expected for stream in preflop):
+        raise RuntimeError("HU board averaging changed preflop sample count across boards")
+
+    replacements: list[ActionAdvantageSample] = []
+    for pos in range(expected):
+        anchor = preflop[0][pos]
+        for stream in preflop[1:]:
+            other = stream[pos]
+            if (
+                other.observation != anchor.observation
+                or tuple(other.legal) != tuple(anchor.legal)
+                or float(other.weight) != float(anchor.weight)
+                or int(other.iteration) != int(anchor.iteration)
+            ):
+                raise RuntimeError(
+                    "HU board averaging changed preflop information-state identity"
+                )
+        target = tuple(
+            sum(float(stream[pos].target[action]) for stream in preflop)
+            / float(len(preflop))
+            for action in range(len(anchor.target))
+        )
+        replacements.append(
+            ActionAdvantageSample(
+                observation=anchor.observation,
+                legal=tuple(anchor.legal),
+                target=target,
+                weight=float(anchor.weight),
+                iteration=int(anchor.iteration),
+            )
+        )
+
+    # Preserve the exact canonical-board sample order/count. Only the target of
+    # preflop samples is replaced; postflop samples stay bit-for-bit from board 0.
+    out: list[ActionAdvantageSample] = []
+    pre_index = 0
+    for sample in base:
+        if _sample_street(sample) == 0:
+            out.append(replacements[pre_index])
+            pre_index += 1
+        else:
+            out.append(sample)
+    if pre_index != expected:
+        raise RuntimeError("HU board averaging reconstruction drift")
+    return tuple(out)
+
+
+def _collect_hu_board_averaged_root(
+    *,
+    solver,
+    collector,
+    job: RootJob,
+    iteration: int,
+    exact_opponent_levels: int,
+    board_average_k: int,
+) -> tuple[int, tuple[ActionAdvantageSample, ...]]:
+    if int(board_average_k) <= 1:
+        raise ValueError("board_average_k must be > 1 in averaged-root path")
+    if int(exact_opponent_levels) != 0:
+        raise ValueError("HU preflop board averaging is admitted only with exact_opponent_levels=0")
+    if not job.episode.game_is_hu:
+        raise ValueError("HU preflop board averaging received non-HU episode")
+    if not solver.explicit_deal_available:
+        raise RuntimeError("HU board averaging requires explicit-deal solver API")
+
+    canonical = solver.create(job.episode, int(job.deck_seed))
+    try:
+        snapshot = canonical.deal_snapshot()
+    finally:
+        canonical.close()
+    if int(snapshot.visible_board_count) != 0:
+        raise RuntimeError("root deal snapshot unexpectedly has visible board cards")
+
+    boards = [tuple(int(x) for x in snapshot.board)]
+    for board_index in range(1, int(board_average_k)):
+        boards.append(
+            _draw_board(
+                snapshot.holes,
+                seed=_board_seed(int(job.deck_seed), int(board_index)),
+            )
+        )
+
+    live = [index for index, stack in enumerate(job.episode.stacks) if stack > 0]
+    total_nodes = 0
+    root_samples: list[ActionAdvantageSample] = []
+
+    for player in live:
+        rng_before = collector.rng.getstate()
+        rng_after_canonical = None
+        streams: list[tuple[ActionAdvantageSample, ...]] = []
+
+        for board_index, board in enumerate(boards):
+            # Replay the same external-sampling stream for every board. This
+            # holds preflop opponent-action sampling fixed while isolating future
+            # board chance. After all variants, restore the RNG progression from
+            # the canonical first board so later traversers/roots consume the
+            # same stochastic stream they would have consumed at K=1.
+            collector.rng.setstate(rng_before)
+            temp = _ListSink()
+            old_memory = collector.advantage_memory
+            collector.advantage_memory = temp
+            root = solver.create_with_deal(job.episode, snapshot.holes, board)
+            try:
+                result = collector.collect_advantage_partial_exact(
+                    root,
+                    traverser=int(player),
+                    iteration=int(iteration),
+                    exact_opponent_levels=0,
+                )
+            finally:
+                root.close()
+                collector.advantage_memory = old_memory
+
+            if int(result.samples_added) != len(temp.items):
+                raise RuntimeError("HU board averaging sample-accounting drift")
+            if board_index == 0:
+                rng_after_canonical = collector.rng.getstate()
+            streams.append(tuple(temp.items))
+            total_nodes += int(result.nodes)
+
+        if rng_after_canonical is None:
+            raise RuntimeError("HU board averaging canonical RNG state missing")
+        collector.rng.setstate(rng_after_canonical)
+        root_samples.extend(_average_preflop_targets(streams))
+
+    return int(total_nodes), tuple(root_samples)
+
+
 def _collect_chunk(
     domain: str,
     bundle_seed: int,
@@ -78,10 +251,13 @@ def _collect_chunk(
     model_ready: bool,
     iteration: int,
     exact_opponent_levels: int,
+    hu_preflop_board_average_k: int,
     jobs: tuple[RootJob, ...],
 ) -> tuple[RootResult, ...]:
     if _WORKER_SOLVER_PATH is None:
         raise RuntimeError("parallel worker was not initialized")
+    if int(hu_preflop_board_average_k) <= 0:
+        raise ValueError("hu_preflop_board_average_k must be positive")
 
     from spincore.lean_action_policy import LeanNeuralActionAdvantagePolicy
     from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
@@ -120,20 +296,39 @@ def _collect_chunk(
     for job in jobs:
         before = len(sink.items)
         collector.rng = random.Random(int(job.policy_seed))
-        nodes = 0
-        live = [index for index, stack in enumerate(job.episode.stacks) if stack > 0]
-        for player in live:
-            root = solver.create(job.episode, int(job.deck_seed))
-            try:
-                result = collector.collect_advantage_partial_exact(
-                    root,
-                    traverser=int(player),
-                    iteration=int(iteration),
-                    exact_opponent_levels=int(exact_opponent_levels),
-                )
-            finally:
-                root.close()
-            nodes += int(result.nodes)
+        use_board_averaging = (
+            str(domain) == "TRUE_HEADS_UP"
+            and bool(job.episode.game_is_hu)
+            and int(hu_preflop_board_average_k) > 1
+        )
+
+        if use_board_averaging:
+            nodes, averaged = _collect_hu_board_averaged_root(
+                solver=solver,
+                collector=collector,
+                job=job,
+                iteration=int(iteration),
+                exact_opponent_levels=int(exact_opponent_levels),
+                board_average_k=int(hu_preflop_board_average_k),
+            )
+            for sample in averaged:
+                sink.add(sample)
+        else:
+            nodes = 0
+            live = [index for index, stack in enumerate(job.episode.stacks) if stack > 0]
+            for player in live:
+                root = solver.create(job.episode, int(job.deck_seed))
+                try:
+                    result = collector.collect_advantage_partial_exact(
+                        root,
+                        traverser=int(player),
+                        iteration=int(iteration),
+                        exact_opponent_levels=int(exact_opponent_levels),
+                    )
+                finally:
+                    root.close()
+                nodes += int(result.nodes)
+
         samples = tuple(sink.items[before:])
         out.append(RootResult(int(job.root_index), int(nodes), samples))
     return tuple(out)
@@ -190,10 +385,17 @@ class ParallelRootExecutor:
         iteration: int,
         exact_opponent_levels: int,
         jobs: Iterable[RootJob],
+        hu_preflop_board_average_k: int = 1,
     ) -> dict[str, float | int]:
         values = list(jobs)
         if not values:
             return {"roots": 0, "nodes": 0, "samples": 0, "seconds": 0.0}
+        if int(hu_preflop_board_average_k) <= 0:
+            raise ValueError("hu_preflop_board_average_k must be positive")
+        if int(hu_preflop_board_average_k) > 1 and int(exact_opponent_levels) != 0:
+            raise ValueError(
+                "HU preflop board averaging requires exact_opponent_levels=0"
+            )
 
         # Freeze a small CPU copy of the current fitted advantage model. The
         # parent does not mutate it until every worker finishes this iteration.
@@ -213,6 +415,7 @@ class ParallelRootExecutor:
                 ready,
                 int(iteration),
                 int(exact_opponent_levels),
+                int(hu_preflop_board_average_k),
                 chunk,
             )
             for chunk in chunks
@@ -240,6 +443,7 @@ class ParallelRootExecutor:
             "nodes": nodes,
             "samples": samples,
             "seconds": float(time.perf_counter() - started),
+            "hu_preflop_board_average_k": int(hu_preflop_board_average_k),
         }
 
 
