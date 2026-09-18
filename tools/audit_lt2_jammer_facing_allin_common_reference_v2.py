@@ -18,9 +18,14 @@ states and reports:
   * K1 vs K4 board-only estimator error to that same reference;
   * action-mass shifts in FOLD / CHECK_CALL / ALL_IN.
 
-At these anchors the opponent is already all-in, so the target for a fixed
-explicit deal is independent of any future opponent behavior policy. V2 asserts
-that Stage-A and Stage-B target captures are numerically identical deal by deal.
+At these anchors the opponent is already all-in, so fixed-deal ACTION VALUES
+are independent of any future opponent behavior policy. The raw Deep-CFR
+Advantage target is nevertheless stage-dependent by an additive scalar because
+it is centered by that stage's current traverser policy value:
+    target[a] = Q[a] - sum_b sigma[b] Q[b].
+V2.1 therefore compares a canonical zero-mean-over-legal-actions gauge. This
+preserves every action-value gap while removing the policy-dependent scalar
+baseline. Stage-A and Stage-B canonicalized fixed-deal targets must match.
 """
 
 import argparse
@@ -112,12 +117,52 @@ def _capture_fixed_deal(
     return torch.tensor(sample.target, dtype=torch.float32), int(nodes)
 
 
-def _assert_same_target(a: torch.Tensor, b: torch.Tensor, *, atol: float = 1e-7) -> None:
-    if not torch.allclose(a, b, atol=atol, rtol=0.0):
-        delta = float(torch.max(torch.abs(a - b)).item())
+def _canonicalize_target(
+    target: torch.Tensor,
+    legal: torch.Tensor,
+) -> torch.Tensor:
+    """Remove the arbitrary/current-policy scalar baseline from Advantage labels.
+
+    At a traverser node the collector stores Q(a) - V_sigma. Different Stage-A/B
+    sigma therefore shifts every legal action by the same scalar even when all
+    Q(a) values are identical. Subtracting the equal-weight legal-action mean
+    chooses one common gauge: Q(a) - mean_legal Q.
+    """
+    out = target.detach().clone().float()
+    legal_values = out[legal]
+    if int(legal_values.numel()) <= 0:
+        raise RuntimeError("canonical target requires at least one legal action")
+    out[legal] = legal_values - legal_values.mean()
+    out[~legal] = 0.0
+    return out
+
+
+def _assert_same_action_gaps(
+    a_raw: torch.Tensor,
+    b_raw: torch.Tensor,
+    legal: torch.Tensor,
+    *,
+    atol: float = 1e-7,
+) -> tuple[torch.Tensor, torch.Tensor, float, float]:
+    """Assert Stage A/B differ only by the expected common scalar baseline."""
+    a = _canonicalize_target(a_raw, legal)
+    b = _canonicalize_target(b_raw, legal)
+    centered_delta = float(torch.max(torch.abs(a - b)).item())
+    if centered_delta > float(atol):
         raise RuntimeError(
-            f"Stage-A/B fixed-deal target differs after opponent already all-in: max_abs={delta}"
+            "Stage-A/B fixed-deal ACTION GAPS differ after opponent already all-in: "
+            f"canonical_max_abs={centered_delta}"
         )
+
+    raw_diff = (a_raw - b_raw)[legal]
+    nonconstant_range = float((raw_diff.max() - raw_diff.min()).item())
+    if nonconstant_range > float(atol):
+        raise RuntimeError(
+            "Stage-A/B raw target difference is not a common scalar baseline: "
+            f"range={nonconstant_range}"
+        )
+    raw_offset = float(raw_diff.mean().item())
+    return a, b, centered_delta, raw_offset
 
 
 def _policy_against_reference(
@@ -200,7 +245,8 @@ def _common_reference_and_candidates(
     )
     ref_targets: list[torch.Tensor] = []
     ref_nodes = []
-    max_stage_target_delta = 0.0
+    max_stage_canonical_delta = 0.0
+    max_raw_stage_offset_abs = 0.0
 
     for hpos, hidx in enumerate(ref_idx):
         hand = hands[int(hidx)]
@@ -226,12 +272,18 @@ def _common_reference_and_candidates(
                 board=board,
                 rng_seed=rng_seed,
             )
-            max_stage_target_delta = max(
-                max_stage_target_delta,
-                float(torch.max(torch.abs(ta - tb)).item()),
+            ca, cb, canonical_delta, raw_offset = _assert_same_action_gaps(
+                ta, tb, legal
             )
-            _assert_same_target(ta, tb)
-            ref_targets.append(0.5 * (ta + tb))
+            max_stage_canonical_delta = max(
+                max_stage_canonical_delta,
+                float(canonical_delta),
+            )
+            max_raw_stage_offset_abs = max(
+                max_raw_stage_offset_abs,
+                abs(float(raw_offset)),
+            )
+            ref_targets.append(0.5 * (ca + cb))
             ref_nodes.append((int(na), int(nb)))
 
     reference_target = torch.stack(ref_targets).mean(dim=0)
@@ -255,7 +307,7 @@ def _common_reference_and_candidates(
                 v1._mix64(anchor["anchor_index"], hpos, bpos, 0xCA4D)
             )
             board = cond._board_for(hero_cards, hand, rng=board_rng)
-            target, node_count = _capture_fixed_deal(
+            target_raw, node_count = _capture_fixed_deal(
                 solver=solver,
                 stage=stage_a,
                 anchor=anchor,
@@ -263,7 +315,7 @@ def _common_reference_and_candidates(
                 board=board,
                 rng_seed=v1._mix64(anchor["anchor_index"], hpos, bpos, 0xE571),
             )
-            board_targets.append(target)
+            board_targets.append(_canonicalize_target(target_raw, legal))
             nodes.append(int(node_count))
 
         k1 = board_targets[0]
@@ -301,7 +353,12 @@ def _common_reference_and_candidates(
             "mean_nodes_stage_b": float(
                 statistics.fmean(x[1] for x in ref_nodes)
             ),
-            "max_stage_a_b_fixed_deal_target_abs_delta": float(max_stage_target_delta),
+            "max_stage_a_b_fixed_deal_canonical_target_abs_delta": float(
+                max_stage_canonical_delta
+            ),
+            "max_stage_a_b_raw_target_common_offset_abs": float(
+                max_raw_stage_offset_abs
+            ),
         },
         "stage_a": {
             "average_policy": _policy_against_reference(
@@ -470,9 +527,15 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "CHECK_CALL": float(statistics.fmean(r["reference"]["policy"][1] for r in rows)),
         "ALL_IN": float(statistics.fmean(r["reference"]["policy"][9] for r in rows)),
     }
-    out["max_stage_a_b_fixed_deal_target_abs_delta"] = float(
+    out["max_stage_a_b_fixed_deal_canonical_target_abs_delta"] = float(
         max(
-            r["reference"]["max_stage_a_b_fixed_deal_target_abs_delta"]
+            r["reference"]["max_stage_a_b_fixed_deal_canonical_target_abs_delta"]
+            for r in rows
+        )
+    )
+    out["max_stage_a_b_raw_target_common_offset_abs"] = float(
+        max(
+            r["reference"]["max_stage_a_b_raw_target_common_offset_abs"]
             for r in rows
         )
     )
@@ -573,11 +636,11 @@ def main() -> int:
         )
 
     summary = _aggregate(rows)
-    if summary["max_stage_a_b_fixed_deal_target_abs_delta"] > 1e-7:
-        raise RuntimeError("common-reference stage-invariance assertion failed")
+    if summary["max_stage_a_b_fixed_deal_canonical_target_abs_delta"] > 1e-7:
+        raise RuntimeError("common-reference action-gap invariance assertion failed")
 
     report = {
-        "schema": "SPINCORE_LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2",
+        "schema": "SPINCORE_LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1",
         "stage_a": {
             "checkpoint": str(args.stage_a.resolve()),
             "completed_iteration": int(meta_a["completed_iteration"]),
@@ -602,13 +665,24 @@ def main() -> int:
             ),
             "reference_hands": int(args.reference_hands),
             "reference_boards_per_hand": int(args.reference_boards_per_hand),
-            "fixed_deal_stage_target_invariance_asserted": True,
+            "fixed_deal_stage_action_gap_invariance_asserted": True,
+            "canonical_advantage_gauge": (
+                "subtract equal-weight mean over legal action targets, yielding "
+                "Q(a)-mean_legal(Q); this removes the Stage-specific V_sigma scalar "
+                "while preserving every action-value gap"
+            ),
+            "raw_stage_target_difference_expected": (
+                "a common scalar offset because collector target is Q(a)-V_sigma "
+                "and Stage A/B have different current traverser policies"
+            ),
             "candidate_hands": int(args.candidate_hands),
             "candidate_boards_per_hand": int(args.candidate_boards_per_hand),
             "v1_correction": (
                 "V1 used stage-specific self-play posteriors and therefore did not "
                 "place Stage A and Stage B against one common Jammer-conditioned "
-                "benchmark reference. V2 corrects that conceptual mismatch."
+                "benchmark reference. Initial V2 then incorrectly required raw "
+                "Advantage labels to be equal across stages. V2.1 uses the common "
+                "Jammer reference and compares action gaps in a canonical gauge."
             ),
             "warning": (
                 "selected first-divergence states are forensic design data, not "
@@ -649,10 +723,12 @@ def main() -> int:
         f"regret={k['regret_chips']['mean']:+.2f}"
     )
     print(
-        "max_stage_a_b_fixed_deal_target_abs_delta="
-        f"{summary['max_stage_a_b_fixed_deal_target_abs_delta']:.3e}"
+        "max_stage_a_b_fixed_deal_canonical_target_abs_delta="
+        f"{summary['max_stage_a_b_fixed_deal_canonical_target_abs_delta']:.3e} "
+        "max_raw_common_offset_abs="
+        f"{summary['max_stage_a_b_raw_target_common_offset_abs']:.6f}"
     )
-    print("LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_COMPLETE")
+    print("LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_COMPLETE")
     print(f"report={args.report.resolve()}")
     return 0
 
