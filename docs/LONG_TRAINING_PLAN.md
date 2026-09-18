@@ -1,60 +1,37 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — HU-PREFLOP BOARD-AVERAGING K4 ADMITTED — MECHANICS SMOKE ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED AT 4.5M — BOARD-AVERAGING SMOKE FIXED — CAUSAL ATTRIBUTION REQUIRED BEFORE TRAINING**
 Date: 2026-09-18
 
 ## Current state
 
-The continuous learning line has reached:
+The line has reached:
 
 - LT0: 120k roots;
 - LT1: 1.2M roots;
 - LT2 Stage A: 1.8M roots;
 - LT2 Stage B: 4.5M roots / iteration 7500;
 - powered weak-baseline gate confirms Stage B HU Jammer negative;
-- extra AveragePolicy fitting is not helpful;
-- larger Advantage optimizer budgets do not justify themselves;
-- HU-preflop sampled-target error is dominated by hidden/chance variance;
+- HU-preflop target variance is dominated by hidden/chance variation;
 - exact1 is not compute-efficient;
-- board-only future-board averaging has a measured K4 policy-space elbow;
-- the next step is a read-only implementation smoke, not long training.
+- board-only future-board averaging has a measured K4 estimator elbow;
+- the first mechanics smoke caught RNG coupling and stopped safely;
+- the implementation has been repaired with canonical preflop action-trace replay;
+- no K4 training continuation is authorized yet.
 
 Read first:
 
-- `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
+- `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_FAILURE_20260918.md`
 - `LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_20260918.md`
-- `LT2_HU_PREFLOP_TARGET_ESTIMATOR_BUDGET_RESULT_20260917.md`
-
-## Canonical training contract
-
-The preserved Stage-B line remains:
-
-- empirical SpinGo 3H/HU/blind/stack sampling;
-- WTA chip-EV utility scaled by 1500;
-- SPNNIV1 frozen-control representation;
-- mature legacy action vocabulary;
-- external-sampling Deep CFR;
-- separate 3H and HU brains;
-- sampled AveragePolicy trajectories;
-- 2,000,000-sample reservoir capacity per memory per domain;
-- 600 roots per iteration;
-- Advantage reset every iteration;
-- 100 Advantage optimizer steps per domain per iteration;
-- batch size 1024;
-- 4000 AveragePolicy optimizer steps per milestone finalization;
-- production `exact_opponent_levels=0`;
-- canonical `hu_preflop_board_average_k=1`;
-- 31 root workers, vectorized batching, concurrent-fit iteration mode.
-
-The preserved checkpoints are never rewritten.
+- `LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md`
 
 ## Preserved milestones
 
-LT1: 1.2M roots, SHA256 `beef9bee9439de8d9153450d190e62b0388a678b0778c4185108361f626b4337`.
+Stage A: iteration 3000 / 1.8M roots, SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
 
-LT2 Stage A: 1.8M roots / iteration 3000, SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
+Stage B: iteration 7500 / 4.5M roots, SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-LT2 Stage B: 4.5M roots / iteration 7500, SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
+Never rewrite either preserved checkpoint.
 
 ## Strength gate
 
@@ -62,9 +39,9 @@ Stage B HU Jammer is `-5.141` chips/hand with simultaneous family-wise 95% CI `[
 
 Stage B minus Stage A HU Jammer is `-1.682`, simultaneous six-claim interval approximately `[-3.143,-0.222]`.
 
-No blind root scaling is authorized.
+Blind root scaling remains disallowed.
 
-## Target-variance mechanism
+## Estimator mechanism
 
 HU-preflop conditional decomposition:
 
@@ -73,96 +50,87 @@ HU-preflop conditional decomposition:
 - residual exact-level-1 opponent-action variance: **1.74%**;
 - current-model MSE to conditional mean: **6.27%**.
 
-Total hidden/chance conditional variance: **93.73%**.
+Board-only K4 reduces label noise and improves branch mismatch/regret enough to justify an implementation experiment.
 
-## Closed exact-level branch
+This does not yet establish causal responsibility for the A->B strength regression.
 
-Exact1 costs about 2.1x as many nodes at same K.
+## First mechanics-smoke failure
 
-Matched-compute exact0 with more independent hidden deals wins target MSE across every tested budget, while policy-space differences do not justify exact1.
+The first K1-vs-K4 smoke found different preflop sample counts across future boards.
 
-In FACING_ALL_IN, exact0 and exact1 are identical.
+The reason is structural:
 
-Exact1 stays off.
+- traverser nodes exact-expand several action branches;
+- the traversal is depth-first;
+- a branch can enter postflop and consume RNG;
+- different future boards can produce different postflop sample paths;
+- later preflop branches then see different RNG positions.
 
-## Board-only feasibility result
+Therefore "reset RNG once at root" was not a valid common-random-number construction.
 
-Board-only exact0 future-board averaging while fixing the sampled opponent hand:
+The gate correctly stopped before training.
 
-| K | nodes | MSE | TV | argmax | branch mismatch | regret |
-|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 75.5 | 0.042638 | 0.5001 | 38.92% | 26.04% | 38.73 |
-| 2 | 151.0 | 0.023177 | 0.4966 | 39.84% | 22.05% | 37.01 |
-| 4 | 302.1 | 0.013556 | 0.4868 | 41.60% | 17.68% | 35.42 |
-| 8 | 604.2 | 0.008715 | 0.4843 | 42.58% | 15.82% | 35.13 |
+## Corrected K4 implementation
 
-K4 vs K1 gives resolved improvements in:
-- target MSE;
-- regret;
-- positive-regret branch mismatch.
+Default `hu_preflop_board_average_k=1` remains canonical.
 
-K8 doubles K4 compute but adds no resolved TV/regret/argmax benefit.
+For experimental K4:
 
-**K4 is the first admitted causal training candidate.**
+- board 0 is a completely canonical traversal;
+- each sampled preflop opponent action on board 0 is recorded with observation/legal set;
+- alternate boards replay that exact preflop opponent-action trace;
+- each replayed preflop sample consumes one dummy RNG draw;
+- postflop opponent sampling remains ordinary;
+- every replayed preflop observation/legal set must match canonical;
+- only preflop targets are averaged;
+- postflop samples come only from canonical board 0;
+- final RNG progression is restored to canonical board-0 state.
 
-This is not yet an authorization to train.
+The generic collector only gained an overridable sampling hook. Its default implementation is unchanged.
 
-## Candidate semantic
+## Active gate
 
-The opt-in parameter is `hu_preflop_board_average_k`.
-
-Default `1` is canonical.
-
-Candidate K4 must:
-- affect TRUE_HEADS_UP only;
-- preserve the canonical root's hole cards;
-- retain canonical future board as board 0;
-- add three independent future boards conditional on those holes;
-- replay the same external-sampling RNG state across all four boards;
-- average only preflop Advantage targets;
-- retain postflop samples from canonical board 0;
-- preserve sample count/order/observation/legal/weight/iteration;
-- restore canonical-board RNG progression after averaging.
-
-Thus the intervention targets the measured future-board noise without multiplying reservoir sample density or changing postflop labels.
-
-## Active mechanics gate
-
-Before any training continuation, compare identical prospective Stage-B HU roots at K1 and K4.
-
-Launcher:
+Rerun:
 
 `tools/run_lt2_hu_preflop_board_averaging_smoke.sh`
 
-The smoke performs:
-- no training-memory writes;
-- no optimizer steps;
-- no checkpoint write.
-
-Required pass conditions:
-- same root/sample identity;
-- postflop target equality;
+Required pass:
+- identical K1/K4 root and sample counts;
+- identical sample identity/order;
+- exact postflop target equality;
 - nonzero preflop target changes;
-- K4 node cost > K1;
-- preserved source SHA unchanged.
+- K4 node multiplier measured;
+- preserved Stage-B SHA unchanged.
 
-## Pilot sizing after smoke
+## Scientific rule after smoke
 
-Do not preselect the root count.
+A mechanics PASS is necessary but **not sufficient** to train K4.
 
-Use the measured K4/K1 node multiplier from the smoke to choose a bounded compute budget that is large enough to move the saturated HU policy memory but small enough to stop cheaply if the semantic fails.
+Before any candidate continuation, perform Stage-A -> Stage-B causal attribution.
 
-The eventual candidate must be isolated from Stage B and must pass the same powered weak-baseline suite before long training can resume.
+The audit must determine whether the known A->B regression is explained by the same target-sign/policy errors that K4 corrects.
+
+At minimum compare, on matched HU preflop states:
+
+- Stage-A versus Stage-B Advantage raw outputs;
+- induced regret-matching policies;
+- conditional low-noise target reference;
+- sign/branch mismatches;
+- action-level changes, especially FOLD / CHECK_CALL / ALL_IN;
+- FACING_ALL_IN subset;
+- whether K4 corrected targets point toward the better Stage-A behavior or merely toward a benchmark-specific proxy.
+
+Only if this connection is demonstrated may a bounded K4 training pilot be admitted.
 
 ## DeepCrusher placement
 
-DeepCrusher remains deferred until the weak-opponent curriculum is strong and stable.
+DeepCrusher remains deferred.
 
 ## Immediate direction
 
 1. Preserve Stage A and Stage B.
-2. Keep long root training stopped at iteration 7500.
-3. Run `bash tools/run_lt2_hu_preflop_board_averaging_smoke.sh`.
-4. Review `SpinCore_LT2_hu_preflop_board_averaging_smoke.json`.
-5. Size the bounded K4 causal training pilot from measured compute.
-6. Do not move to DeepCrusher yet.
+2. Keep training stopped at iteration 7500.
+3. Rerun the corrected mechanics smoke.
+4. Stop at PASS or first error.
+5. If PASS, build the Stage-A -> Stage-B causal attribution audit.
+6. Do not train K4 before that audit.
