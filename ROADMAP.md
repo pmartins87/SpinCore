@@ -15,7 +15,8 @@
 - K4 mechanics smoke — **PASS**.
 - Stage-A -> Stage-B first-divergence forensic — **COMPLETE**.
 - Jammer FACING_ALL_IN target overlay V1 — **COMPLETE; DIRECTIONALLY POSITIVE BUT STAGE-SPECIFIC REFERENCE MISMATCHED**.
-- Jammer COMMON-REFERENCE V2 — **NEXT**.
+- Jammer COMMON-REFERENCE V2 — **FIRST RUN STOPPED: RAW TARGET EQUALITY ASSERTION TOO STRONG**.
+- Jammer COMMON-REFERENCE ACTION-GAP V2.1 — **NEXT**.
 - K4 causal training pilot — **NOT AUTHORIZED YET**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -64,12 +65,17 @@ Direct A-vs-B causal comparison requires one shared Jammer-conditioned reference
 
 `tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`
 
-V2 uses:
+V2 correctly established the common Jammer hidden-hand reference but incorrectly required raw Stage-A/B Advantage labels to be identical.
+
+Because the collector target is `Q(a)-V_sigma`, different Stage-A/B traverser policies shift all legal-action targets by a common scalar even when action values are identical.
+
+V2.1 uses:
 - common uniform compatible opponent hands;
 - uniform future boards;
-- one shared target reference for A and B;
-- fixed-deal Stage-A/Stage-B target equality assertion;
-- K1 vs K4 against the same reference.
+- canonical target gauge `Q(a)-mean_legal(Q)`;
+- fixed-deal Stage-A/B action-gap equality assertion;
+- raw A-B target differences allowed only as one common scalar offset;
+- K1 vs K4 against the same canonical reference.
 
 Uses only forensic seeds `20260920..20260925`.
 
@@ -84,4 +90,4 @@ The untouched acceptance family `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`. Stop at PASS or first error. Do not train K4 first.
+Run `bash tools/run_lt2_jammer_facing_allin_common_reference_v2.sh`. Stop at `LT2_JAMMER_FACING_ALLIN_COMMON_REFERENCE_V2_1_PASS` or first error. Do not train K4 first.
