@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-19
-Status: **LT2 STAGE B PASS — JAMMER FAI INFOSET OVERFOLD CONFIRMED — ACTION-GAP DRIFT DOMINANT — CONTROLLED REFIT AUDIT NEXT — NO ROOT TRAINING**
+Status: **LT2 STAGE B PASS — JAMMER FAI INFOSET OVERFOLD CONFIRMED — 100-STEP ADVANTAGE REFIT IDENTIFIED AS INSUFFICIENT — B400 BROAD GENERALIZATION NEXT — NO ROOT TRAINING**
 
 ## Active source of truth
 
@@ -9,7 +9,8 @@ Read before new compute:
 
 - `docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_RESULT_20260919.md`
 - `docs/LT2_JAMMER_FAI_RAW_MARGIN_DECOMPOSITION_RESULT_20260919.md`
-- `docs/LT2_JAMMER_FAI_CONTROLLED_REFIT_20260919.md`
+- `docs/LT2_JAMMER_FAI_CONTROLLED_REFIT_RESULT_20260919.md`
+- `docs/LT2_HU_B400_BROAD_GENERALIZATION_20260919.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -24,66 +25,67 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Structural overfold is confirmed
+## Controlled refit result — decisive
 
-In the frozen Jammer FAI structure legal `{FOLD,CALL}`, one public action:
+The fixed structural cohort reproduces the production B_MORE_FOLD defect.
 
-B_MORE_FOLD policy-value B-A:
-- `-24.54921` chips;
-- CI95 `[-35.58425,-13.51416]`.
+Fresh paired refits show:
 
-Fold-mass B-A:
-- `+0.46907`.
+### 100 steps
+Stage-B reservoir minus Stage-A reservoir:
 
-Reference FOLD-minus-CONTINUE:
-- `-40.86355` chips.
+- `-11.64417` chips;
+- replicate-mean CI95 `[-18.26748,-5.02086]`;
+- all 3 replicates negative.
 
-Canonical action-gap MSE and class-error mass both worsen significantly at Stage B.
+### 400 steps
+- `+13.91919`;
+- CI95 `[+2.96579,+24.87259]`;
+- all 3 replicates positive.
 
-## Raw-margin decomposition is complete
+### 1600 steps
+- `+7.29093`;
+- CI95 `[+3.38533,+11.19653]`;
+- all 3 replicates positive.
 
-B_MORE_FOLD:
+## Interpretation
 
-- FULL_B: `-24.549` `[-35.584,-13.514]`;
-- GAP_ONLY: `-18.719` `[-27.359,-10.080]`;
-- OFFSET_ONLY: `-4.946` `[-9.166,-0.726]`;
-- interaction: `-0.884`, unresolved.
+The Stage-B 2M-item Advantage reservoir is not poisoned.
 
-Thus the fold-vs-continue action-gap drift is the larger causal component.
+The canonical 100-step reset/refit is insufficient at this mature training stage.
 
-A diagnostic-only argmax replacement for the all-nonpositive fallback recovers:
+This is not just one unlucky final reset: three fresh 100-step trials remain negative.
 
-- `+15.415` chips vs production Stage B;
-- CI95 `[+8.623,+22.207]`.
+400 is the minimum tested sufficient budget and therefore the candidate intervention.
 
-But modified B-vs-A remains `-9.134`, CI crosses zero. Fallback-only patch is not authorized.
+1600 remains a fallback escalation because it is 16x canonical optimizer work.
 
-## Active gate — controlled fresh refits
+## Active gate — broad B400 generalization
 
-Compare the Stage-A and Stage-B HU Advantage reservoirs under:
+Recreate all three deterministic B400 candidates and evaluate them on the full forensic HU population against:
 
-- identical model init seeds;
-- identical batch-sampling seeds;
-- budgets 100, 400, 1600;
-- 3 replicates;
-- same fixed 384-anchor low-noise cohort.
+- UNIFORM_LEGAL;
+- PASSIVE_CALLER;
+- JAMMER.
 
-No roots are collected. Source checkpoints remain read-only. Holdout remains sealed.
+Pair against production Stage A and Stage B using common scenario/deal/seat/RNG streams.
 
-Goal:
+Primary question:
 
-distinguish **reservoir / target-signal drift** from **last-fit instability / insufficient fit**.
+does B400 repair the global Jammer current-behavior regression without causing a resolved material regression against the other baselines?
+
+No holdout and no roots.
 
 ## Immediate user action
 
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_controlled_refit.sh
+bash tools/run_lt2_hu_b400_broad_generalization.sh
 ```
 
-Wait for `LT2_JAMMER_FAI_CONTROLLED_REFIT_PASS` or the first error.
+Wait for `LT2_HU_B400_BROAD_GENERALIZATION_PASS` or the first error.
 
-Then send `SpinCore_LT2_jammer_fai_controlled_refit.json`.
+Then send `SpinCore_LT2_hu_b400_broad_generalization.json`.
 
-Do not start K4 or long training.
+Do not resume long training.
