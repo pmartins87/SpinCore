@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — FULL-POPULATION JAMMER FAI LOSS RESOLVED — STAGE-B OVERFOLDING IDENTIFIED — INFOSET CONFIRMATION ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER FAI LOSS RESOLVED IN POPULATION — FIRST INFOSET FOLD-SHIFT AUDIT UNDERPOWERED — POWERED STRUCTURAL CONFIRMATION ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -15,110 +15,98 @@ Stage B:
 
 Never rewrite either checkpoint.
 
-## Resolved Jammer FAI population result
+## What is already resolved
 
-The full-population reconciliation used every HU Jammer seat-run on the forensic seeds.
+The natural Jammer population established a genuine FAI current-policy loss:
 
-Hard reproduction:
-- sampled FAI contribution `-6.22672064777328`;
-- exact match to the prior first-divergence result.
-
-Deterministic expected FAI contribution:
-- `-4.18434` chips/hand;
+- expected FAI B-A `-4.18434` chips/hand;
 - CI95 `[-6.58924,-1.77944]`.
 
-The FAI regression is therefore genuine in expected current-policy value.
+Stage-B increasing FOLD probability carries the loss:
 
-## Stage-B overfold
+- B_MORE_FOLD `-5.57116`, resolved;
+- B_LESS_FOLD `+1.38682`, resolved beneficial.
 
-At common FAI:
+The dominant structural blocks were already identified as:
 
-- Stage-A fold mass `0.24964`;
-- Stage-B fold mass `0.37200`;
-- difference `+0.12237`, resolved.
+- legal `{FOLD,CALL}`;
+- one public action before FAI.
 
-Contribution by fold-shift direction:
+## First low-noise infoset fold-shift test
 
-- B_MORE_FOLD:
-  - `-5.57116`;
-  - CI95 `[-7.61160,-3.53071]`.
+The valid 96-anchor test used 512 explicit reference deals per anchor.
 
-- B_LESS_FOLD:
-  - `+1.38682`;
-  - CI95 `[+0.21539,+2.55825]`.
+B_MORE_FOLD:
 
-- NO_FOLD_SHIFT:
-  - zero.
+- policy-value B-A `-5.92295`;
+- seed-cluster CI95 `[-19.60209,+7.75619]`.
 
-This direction-specific result supersedes the ambiguous 48-anchor broad calibration.
+B_LESS_FOLD:
 
-## Structural concentration
+- `+7.47850`;
+- seed-cluster CI95 `[-7.99668,+22.95369]`.
 
-The largest resolved block is legal `{FOLD,CALL}`:
+Both signs align with the full-population mechanism, but neither resolves.
 
-- contribution `-4.07764`;
-- CI95 `[-5.88461,-2.27067]`.
-
-Legal `{FOLD,CALL,ALL_IN}` is near neutral.
-
-One-action public paths carry most of the loss.
-
-CALL and ALL_IN have zero terminal-value spread after opponent all-in.
+This is an underpowered result, not evidence against the mechanism.
 
 ## Why we still do not train
 
-The population counterfactual uses the actual hidden opponent hand and future board.
+The decision-time causal chain is not yet sufficiently isolated.
 
-That is correct for evaluation attribution but cannot be used as the model's decision-time truth.
+A training modification now would risk fitting a noisy symptom.
 
-Before an intervention, confirm the same overfold defect using a low-noise infoset reference.
+No K4 training, RM-loss change, fallback change, or long-root continuation is authorized.
 
-Canonical next contract:
+## Powered structural infoset confirmation
 
-`docs/LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_20260919.md`.
+Canonical contract:
 
-## Fold-shift infoset gate
+`docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_CONFIRMATION_20260919.md`.
 
-For each forensic seed:
+Frozen inclusion:
 
-- collect common FAI states before hero action;
-- classify only by Stage-B-minus-A fold-mass sign;
-- sample 8 B_MORE_FOLD;
-- sample 8 B_LESS_FOLD;
-- do not condition on sampled action, terminal outcome, realized Q or low-noise Q.
+- common Jammer FAI;
+- legal slots exactly `0,1`;
+- one public action before FAI.
+
+These criteria come from the upstream full-population localization, not the first low-noise result.
+
+Within each forensic seed:
+
+- sample 32 B_MORE_FOLD;
+- sample 32 B_LESS_FOLD.
 
 Total:
-- 96 anchors.
 
-Reference:
-- 64 uniform compatible opponent hands;
-- 8 boards/hand;
-- 512 deals/anchor.
+- 384 anchors;
+- 196,608 explicit reference deals at 64 hands × 8 boards.
 
-Primary quantity:
+Primary metric:
 
-`policy_value_B_minus_A = (sigma_B-sigma_A) dot Q_infoset`.
-
-The matched B_LESS_FOLD group is the directional control.
+`policy_value_B_minus_A` for B_MORE_FOLD with seed-cluster CI.
 
 ## Decision logic
 
-If B_MORE_FOLD is resolved negative under infoset Q:
-- the Stage-B overfold is a genuine model/policy calibration error;
-- next inspect raw Advantage margins / fallback only inside the pre-registered harmful group;
-- design a minimal intervention and freeze it before touching holdout seeds.
+If B_MORE_FOLD resolves negative:
+- confirm a real infoset-level overfold defect in the frozen high-impact structure;
+- inspect raw fold/continue Advantage margins, fallback incidence, and estimator noise there;
+- design the smallest intervention;
+- freeze that intervention before opening any holdout seed.
 
-If B_MORE_FOLD is not negative:
-- do not train a fold-calibration change;
-- investigate weighting / hidden-chance covariance.
+If B_MORE_FOLD remains unresolved:
+- do not increase sample size again by reflex;
+- decompose residual variance into state heterogeneity, reference noise, and seed composition.
 
-No K4 training, RM loss change, or long root continuation before this gate.
+If B_MORE_FOLD resolves positive:
+- reject a direct fold-calibration intervention for this structure;
+- investigate evaluation weighting / hidden-chance covariance.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_jammer_fai_fold_shift_infoset.sh`.
-3. Wait for `LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_PASS`.
-4. Send `SpinCore_LT2_jammer_fai_fold_shift_infoset.json`.
+2. Run `bash tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh`.
+3. Wait for `LT2_JAMMER_FAI_STRUCTURAL_INFOSET_CONFIRMATION_PASS`.
+4. Send `SpinCore_LT2_jammer_fai_structural_infoset_confirmation.json`.
 5. Keep holdout `20261001..20261006` untouched.
 6. Do not train.
