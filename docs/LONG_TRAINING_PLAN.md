@@ -1,7 +1,7 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — POLICY-CHAIN SPLIT RESOLVED — JAMMER CURRENT-BEHAVIOR LOCALIZATION ACTIVE**
-Date: 2026-09-18
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER LOSS LOCALIZED TO FAI — BROAD ACTION-GAP / RM CALIBRATION ACTIVE**
+Date: 2026-09-19
 
 ## Preserved milestones
 
@@ -17,87 +17,94 @@ Never rewrite either checkpoint.
 
 ## Current scientific conclusion
 
-K4 improves target estimation but does not identify the Stage-B failure mechanism.
+The global HU policy-chain audit showed:
+- Jammer current behavior regresses much more than AveragePolicy;
+- PassiveCaller deployed AveragePolicy regression is not reproduced by final current behavior;
+- UniformLegal remains unresolved.
 
-The Stage-A/B target matrix showed:
-- Jammer facing-all-in target is stationary A->B;
-- Passive flop has some Stage-B own-target fit degradation but not failure-specific;
-- Uniform turn remains heterogeneous.
+The current-behavior first-divergence audit now localizes Jammer:
 
-The global HU policy-chain audit now shows that the Stage-B mechanism differs by opponent family.
+- total B-A `-8.4304`, resolved;
+- FAI contribution `-6.2267`, resolved;
+- ROOT contribution `-2.2037`, unresolved;
+- FAI explains **73.86%**;
+- no Jammer postflop contribution.
 
-## Jammer
+## Why target noise is not the primary next target
 
-AveragePolicy B-A:
-- `-1.682`, CI95 `[-2.767,-0.597]`.
+Earlier work established:
+- Jammer FAI target A->B is effectively stationary;
+- Stage-B aggregate FAI own-target MSE does not worsen clearly;
+- K4 reduces estimator variance but variance is not failure-specific.
 
-Current Advantage-induced behavior B-A:
-- `-8.430`, CI95 `[-12.515,-4.345]`.
+Thus further K4 tuning would not address the best-supported mechanism.
 
-Aggregation-chain delta:
-- `+6.748`, CI95 `[+2.521,+10.975]`.
+## Leading mechanism
 
-The current Stage-B Advantage/behavior chain contains a strong resolved defect.
+Production current behavior is obtained by lean regret matching.
 
-AveragePolicy reduces, rather than amplifies, the final current-behavior deterioration.
+If any legal Advantage output is positive:
+- use positive regrets only.
 
-Because Advantage resets/refits every iteration, this is not by itself proof that the final snapshot caused the cumulative AveragePolicy loss. It is nevertheless the strongest upstream failure currently observed.
+If all are non-positive:
+- use softmax fallback.
 
-## PassiveCaller
+This makes policy behavior highly sensitive to:
+- sign near zero;
+- positive-support membership;
+- action ranking;
+- relative positive-regret scale.
 
-AveragePolicy B-A:
-- resolved negative.
+A model may have similar MSE and still produce much worse policy EV.
 
-Current behavior B-A:
-- unresolved positive.
-
-This suggests a separate historical aggregation / policy-memory mechanism may exist.
-
-It is secondary until the stronger Jammer upstream defect is localized.
-
-## UniformLegal
-
-No resolved mechanism.
-
-## Current-behavior first-divergence gate
+## Broad Jammer FAI calibration gate
 
 Canonical contract:
 
-`docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_20260918.md`.
+`docs/LT2_JAMMER_FAI_BROAD_CALIBRATION_20260919.md`.
 
-Use:
+Selection:
 - forensic seeds `20260920..20260925`;
 - 5000 scenarios/seed;
-- HU only;
-- same scenario/deal/hero/baseline/RNG streams.
+- all common Stage-A/B current-behavior trajectories that reach FAI before earlier divergence;
+- record state before FAI action;
+- deterministic 8 anchors/seed;
+- no conditioning on FAI action divergence or terminal result.
 
-Run Stage A and Stage B current Advantage-induced behavior in lock-step until the first sampled hero action differs.
+Reference:
+- uniform compatible opponent hands;
+- 32 hands × 8 boards;
+- common canonical Q-like action-gap gauge.
 
-Decompose B-A into:
-- NO_DIVERGENCE;
-- PREFLOP_ROOT;
-- PREFLOP_FACING_ALL_IN;
-- PREFLOP_OTHER;
-- FLOP;
-- TURN;
-- RIVER.
+For each Stage A/B:
+- exact production sigma;
+- stage-specific true Advantage target;
+- raw-target MSE;
+- action-gap MSE;
+- positive support;
+- fallback incidence;
+- mass on true-negative actions;
+- best-action agreement;
+- expected policy regret.
 
 ## Decision logic
 
-If Jammer current-behavior loss is concentrated in PREFLOP_FACING_ALL_IN:
-- next inspect broad action-gap / ranking / regret-matching calibration on non-selected states there;
-- explicitly measure positive-regret support and all-nonpositive fallback incidence.
+If Stage B has:
+- no material MSE deterioration;
+- but more sign/support mistakes, fallback, true-negative mass or policy regret;
 
-If the loss localizes to another state class:
-- follow that class instead.
+then target the **RM-sensitive calibration problem** rather than raw MSE.
 
-Do not design or train an intervention until this is known.
+If broad FAI calibration does not show a Stage-B defect:
+- investigate root-to-FAI trajectory weighting / visitation interaction.
+
+No training resumes before this gate is reviewed.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_hu_behavior_first_divergence.sh`.
-3. Wait for `LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_PASS`.
-4. Send `SpinCore_LT2_hu_behavior_first_divergence.json`.
+2. Run `bash tools/run_lt2_jammer_fai_broad_calibration.sh`.
+3. Wait for `LT2_JAMMER_FAI_BROAD_CALIBRATION_PASS`.
+4. Send `SpinCore_LT2_jammer_fai_broad_calibration.json`.
 5. Keep holdout seeds `20261001..20261006` untouched.
 6. Do not train K4 or resume long training.
