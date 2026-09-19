@@ -1,16 +1,16 @@
 # SpinCore Current Work
 
 Date: 2026-09-19
-Status: **LT2 STAGE B PASS — JAMMER CURRENT-BEHAVIOR LOSS LOCALIZED 73.86% TO PREFLOP FACING ALL-IN — BROAD ACTION-GAP / REGRET-MATCHING CALIBRATION NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — BROAD JAMMER FAI CALIBRATION DOES NOT SHOW STAGE-B POLICY-REGRET DEGRADATION — FIRST-DIVERGENCE CONTRADICTION MUST BE RECONCILED ON FULL POPULATION — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_JAMMER_FAI_BROAD_CALIBRATION_RESULT_20260919.md`
+- `docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_20260919.md`
 - `docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_RESULT_20260919.md`
-- `docs/LT2_JAMMER_FAI_BROAD_CALIBRATION_20260919.md`
 - `docs/LT2_HU_POLICY_CHAIN_RESULT_20260918.md`
-- `docs/LT2_TARGET_DRIFT_TRACKING_RESULT_20260918.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -25,94 +25,131 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Current-behavior first-divergence result
+## Broad Jammer FAI calibration result
 
-Jammer current behavior:
-- total Stage-B-minus-A `-8.4304` chips/hand;
-- CI95 `[-12.5155,-4.3453]`;
-- divergence rate `59.78%`.
+48 broad common FAI anchors, 8 per forensic seed, selected before the FAI action and without conditioning on FAI A/B divergence or terminal outcome.
 
-### PREFLOP_FACING_ALL_IN
+### Policy regret
 
-- frequency `27.24%`;
-- 7402 seat-runs;
-- contribution `-6.2267`;
-- CI95 `[-9.2575,-3.1959]`.
+Stage A:
+- `32.885` chips;
+- seed-cluster CI95 `[22.073,43.697]`.
 
-This group explains **73.86%** of the total resolved Jammer current-behavior regression.
+Stage B:
+- `20.984`;
+- seed-cluster CI95 `[11.894,30.073]`.
 
-### PREFLOP_ROOT
+B-A:
+- `-11.901`;
+- seed-cluster CI95 `[-25.515,+1.713]`.
 
-- frequency `32.54%`;
-- contribution `-2.2037`;
-- CI95 `[-4.9947,+0.5873]`.
+Stage B is not broadly worse in policy regret. Direction is better, but unresolved.
 
-Numerically the remaining 26.14%, but unresolved.
+### Canonical action-gap MSE
 
-### Postflop
+Stage A:
+- `0.0020185`.
 
-For Jammer:
-- no FLOP first divergences;
-- no TURN;
-- no RIVER;
-- no PREFLOP_OTHER.
+Stage B:
+- `0.0014322`.
 
-The entire paired current-behavior loss is preflop.
+B-A:
+- `-0.00058635`;
+- CI95 `[-0.00093271,-0.00023998]`.
 
-## Outcome-equivalence caution
+Resolved Stage-B improvement.
 
-Inside FAI, clearly FOLD-vs-non-FOLD transitions account for 4761/7402 = **64.32%**.
+### FOLD-vs-CONTINUE class-error mass
 
-There are also:
-- 2259 `1->9`;
-- 367 `9->1`;
-- 15 rare transitions involving slot 5.
+Stage A:
+- `0.38346`.
 
-Raw universal-slot divergence is not the same as strategic-value divergence.
+Stage B:
+- `0.29914`.
 
-Therefore the next gate does not select on sampled slot mismatch and does not use raw transition count as the primary metric.
+B-A:
+- `-0.08432`;
+- CI95 `[-0.16662,-0.00203]`.
 
-## Causal synthesis
+Resolved Stage-B improvement.
 
-We now have:
+### Fold mass
 
-1. global Jammer current-behavior B-A `-8.43`, resolved;
-2. 73.86% of that loss localizes to FAI;
-3. Jammer FAI low-noise targets are Stage-A/B stationary;
-4. aggregate own-target MSE did not show a matching Stage-B degradation;
-5. K4 improves estimator variance but noise is not failure-specific.
+Stage A:
+- `0.27466`.
 
-The leading hypothesis is now:
+Stage B:
+- `0.37475`.
 
-**small Advantage action-gap/sign errors are amplified by production regret matching at FAI states.**
+B-A:
+- `+0.10009`;
+- CI95 `[+0.04693,+0.15326]`.
 
-Production RM is nonlinear:
-- positive outputs are clipped/normalized;
-- all-nonpositive outputs enter softmax fallback.
+Stage B folds about 10 pp more on the broad sample, but the class-error metric improves, so the fold shift alone is not evidence of a defect.
 
-MSE can therefore stay similar while action support and policy EV change sharply.
+### Fallback
+
+All-nonpositive fallback:
+- Stage A `5/48 = 10.42%`;
+- Stage B `12/48 = 25.00%`.
+
+Fallback is more frequent in B, but this does not align with worse class error or action-gap MSE.
+
+## Positive-support metric correction
+
+The strict positive-support/Jaccard metric is not valid as standalone causal evidence.
+
+Reason:
+
+`A*_S(a)=Q(a)-V_{sigma_S}`.
+
+When `sigma_S` is pure on an optimal action, that selected action has true Advantage exactly zero, while the raw model generally needs a positive value to induce the pure regret-matching action.
+
+Thus `raw>0` versus `A*>0` can label a policy-consistent optimal action as a false positive.
+
+Do not use zero exact-support rate or Stage-B Jaccard decline as a training target.
+
+## Scientific contradiction
+
+Previous full paired first divergence:
+
+- Jammer current behavior B-A `-8.4304`, resolved;
+- FAI additive contribution `-6.2267`, resolved.
+
+Broad 48-anchor calibration:
+
+- Stage B policy regret not worse;
+- canonical gap MSE improves;
+- class-error mass improves.
+
+Possible causes:
+1. 48 anchors underpowered / unrepresentative;
+2. loss concentrated in a high-leverage subset;
+3. sampled first-divergence attribution needs direct deterministic policy-value reconciliation.
+
+Before any intervention, reconcile them on every natural evaluation Jammer FAI state.
 
 ## Active gate
 
 Run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_broad_calibration.sh
+bash tools/run_lt2_jammer_fai_population_reconciliation.sh
 ```
 
-The audit samples 48 broad common FAI states, 8 per forensic seed, **before** sampling the FAI action and without selecting on A/B divergence or terminal outcome.
+This uses every HU Jammer seat-run on the forensic seeds.
 
-For each anchor:
-- 32 uniform compatible opponent hands;
-- 8 future boards/hand;
-- common Q-like action-gap reference;
-- Stage-A/B raw Advantage;
-- exact production RM behavior;
-- stage-specific true Advantage target;
-- sign/support mistakes;
-- all-nonpositive fallback;
-- mass on truly negative actions;
-- policy regret.
+At each common FAI state:
+- no anchor subsampling;
+- exact dealt hidden hand/full board retained;
+- every legal action applied to a cloned solver state;
+- terminal chip delta read directly;
+- deterministic expected policy-value delta
+  `sum (sigma_B-sigma_A) Q_actual`;
+- paired sampled action contribution reproduced using the exact prior RNG.
+
+The sampled contribution must exactly reproduce:
+`-6.22672064777328`.
 
 Holdout `20261001..20261006` remains untouched.
 
@@ -123,11 +160,11 @@ DeepCrusher remains deferred.
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_broad_calibration.sh
+bash tools/run_lt2_jammer_fai_population_reconciliation.sh
 ```
 
-Wait for `LT2_JAMMER_FAI_BROAD_CALIBRATION_PASS` or the first error.
+Wait for `LT2_JAMMER_FAI_POPULATION_RECONCILIATION_PASS` or the first error.
 
-Then send `SpinCore_LT2_jammer_fai_broad_calibration.json`.
+Then send `SpinCore_LT2_jammer_fai_population_reconciliation.json`.
 
 Do not start any training.
