@@ -1,4 +1,4 @@
-# SpinCore Roadmap — active state 2026-09-18
+# SpinCore Roadmap — active state 2026-09-19
 
 ## Active status
 
@@ -14,8 +14,9 @@
 - Jammer K4 causal gate — **NOT MET**.
 - Cross-street future-chance audit — **PASS; FUTURE-CHANCE NOT FAILURE-SPECIFIC**.
 - Stage-A/B target-drift matrix — **PASS; NO UNIVERSAL TARGET-DRIFT EXPLANATION**.
-- HU policy-chain audit — **PASS; MULTI-MECHANISM**.
-- Jammer current-behavior first divergence — **NEXT**.
+- HU policy-chain audit — **PASS; JAMMER DEFECT UPSTREAM IN CURRENT BEHAVIOR**.
+- HU current-behavior first divergence — **PASS; 73.86% OF JAMMER LOSS AT PREFLOP FACING ALL-IN**.
+- Broad Jammer FAI action-gap/RM calibration — **NEXT**.
 - K4 training — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -28,63 +29,67 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Policy-chain verdict
+## Current-behavior localization verdict
 
-### Jammer
+Jammer BEH B-A:
+- total `-8.4304`, CI95 `[-12.5155,-4.3453]`.
 
-Deployed AveragePolicy:
-- B-A `-1.682`, CI95 `[-2.767,-0.597]`.
+First-divergence contribution:
+- FAI `-6.2267`, CI95 `[-9.2575,-3.1959]`;
+- ROOT `-2.2037`, CI crosses zero;
+- all postflop groups exactly zero.
 
-Current Advantage-induced behavior:
-- B-A `-8.430`, CI95 `[-12.515,-4.345]`.
+FAI explains **73.86%** of the resolved current-behavior loss.
 
-Aggregation-chain delta:
-- `+6.748`, CI95 `[+2.521,+10.975]`.
+## Why MSE is no longer enough
 
-The strong defect is already upstream in current behavior. AveragePolicy buffers it.
+Prior Jammer FAI diagnostics showed:
+- common target stationary A->B;
+- no matching aggregate own-target MSE degradation;
+- yet current behavior loses heavily.
 
-Together with stationary Jammer facing-all-in targets, this shifts the causal search toward model action ranking / regret matching rather than target drift.
+Production regret matching has a nonlinear zero boundary:
+- positive regrets define support;
+- all-nonpositive vectors trigger softmax fallback.
 
-### PassiveCaller
-
-AveragePolicy B-A is resolved negative, while current behavior B-A is unresolved positive.
-
-This is a separate aggregation/history candidate, not the immediate primary gate.
-
-### UniformLegal
-
-No resolved A/B mechanism.
+Therefore small sign/ranking errors can have large policy effects while MSE remains similar.
 
 ## Next gate
 
-Run `tools/run_lt2_hu_behavior_first_divergence.sh`.
+Run `tools/run_lt2_jammer_fai_broad_calibration.sh`.
 
-Purpose:
-localize where the resolved `-8.43` chips/hand Jammer current-behavior loss first appears.
+Selection:
+- common Jammer FAI states reached before prior A/B divergence;
+- sample before the FAI hero action;
+- no conditioning on FAI divergence or outcome;
+- 8 anchors/seed, 48 total.
 
-Groups:
-1. NO_DIVERGENCE;
-2. PREFLOP_ROOT;
-3. PREFLOP_FACING_ALL_IN;
-4. PREFLOP_OTHER;
-5. FLOP;
-6. TURN;
-7. RIVER.
+Measure:
+- common low-noise Q action gaps;
+- stage-specific true regrets;
+- raw Advantage MSE;
+- canonical gap MSE;
+- positive-support agreement;
+- false positive / false negative support;
+- fallback incidence;
+- best-action agreement;
+- mass on truly negative actions;
+- policy regret.
 
-## Decision after behavior localization
+## Decision after calibration
 
-If Jammer loss concentrates in PREFLOP_FACING_ALL_IN:
-- audit broad non-selected reference action gaps, model action gaps, RM support and fallback regime there.
+If Stage B has similar MSE but worse support/sign calibration or higher policy regret:
+- investigate RM-sensitive training objectives / calibration.
 
-If it localizes elsewhere:
-- follow that exact state class.
+If Stage B is not worse on broad FAI states:
+- investigate trajectory weighting and root interaction instead.
 
-No training before this localization.
+No training before this gate.
 
 Holdout `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_hu_behavior_first_divergence.sh`.
+Run `bash tools/run_lt2_jammer_fai_broad_calibration.sh`.
 
 Stop at PASS or first error. Do not train.
