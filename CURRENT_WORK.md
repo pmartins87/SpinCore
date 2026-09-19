@@ -1,15 +1,15 @@
 # SpinCore Current Work
 
 Date: 2026-09-19
-Status: **LT2 STAGE B PASS — JAMMER FAI INFOSET OVERFOLD CONFIRMED — RAW MARGIN DECOMPOSITION NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — JAMMER FAI INFOSET OVERFOLD CONFIRMED — ACTION-GAP DRIFT DOMINANT — CONTROLLED REFIT AUDIT NEXT — NO ROOT TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
 - `docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_RESULT_20260919.md`
-- `docs/LT2_JAMMER_FAI_RAW_MARGIN_DECOMPOSITION_20260919.md`
-- `docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_RESULT_20260919.md`
+- `docs/LT2_JAMMER_FAI_RAW_MARGIN_DECOMPOSITION_RESULT_20260919.md`
+- `docs/LT2_JAMMER_FAI_CONTROLLED_REFIT_20260919.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -24,80 +24,66 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Powered structural confirmation — decisive PASS
+## Structural overfold is confirmed
 
-Frozen structure:
+In the frozen Jammer FAI structure legal `{FOLD,CALL}`, one public action:
 
-- common Jammer FAI;
-- legal exactly `{FOLD,CALL}`;
-- exactly one public action before FAI;
-- 192 B_MORE_FOLD + 192 B_LESS_FOLD anchors;
-- 512 explicit low-noise reference deals per anchor;
-- holdout untouched.
-
-### Primary B_MORE_FOLD result
-
-Policy-value B-A:
-
+B_MORE_FOLD policy-value B-A:
 - `-24.54921` chips;
-- seed-cluster CI95 `[-35.58425,-13.51416]`.
+- CI95 `[-35.58425,-13.51416]`.
 
 Fold-mass B-A:
-
-- `+0.46907`;
-- CI95 `[+0.45307,+0.48508]`.
+- `+0.46907`.
 
 Reference FOLD-minus-CONTINUE:
+- `-40.86355` chips.
 
-- `-40.86355` chips;
-- CI95 `[-57.51783,-24.20927]`.
+Canonical action-gap MSE and class-error mass both worsen significantly at Stage B.
 
-The Stage-B overfold is therefore confirmed at the decision-time infoset level. It is not explained by realized hidden-card / future-board covariance.
+## Raw-margin decomposition is complete
 
-### Model geometry
+B_MORE_FOLD:
 
-Canonical action-gap MSE B-A:
+- FULL_B: `-24.549` `[-35.584,-13.514]`;
+- GAP_ONLY: `-18.719` `[-27.359,-10.080]`;
+- OFFSET_ONLY: `-4.946` `[-9.166,-0.726]`;
+- interaction: `-0.884`, unresolved.
 
-- `+0.000714714`;
-- CI95 `[+0.000397781,+0.001031647]`.
+Thus the fold-vs-continue action-gap drift is the larger causal component.
 
-Class-error mass B-A:
+A diagnostic-only argmax replacement for the all-nonpositive fallback recovers:
 
-- `+0.127198`;
-- CI95 `[+0.058510,+0.195887]`.
+- `+15.415` chips vs production Stage B;
+- CI95 `[+8.623,+22.207]`.
 
-Raw-target MSE does not resolve.
+But modified B-vs-A remains `-9.134`, CI crosses zero. Fallback-only patch is not authorized.
 
-Fallback rate:
+## Active gate — controlled fresh refits
 
-- Stage A `6.25%`;
-- Stage B `50.00%`.
+Compare the Stage-A and Stage-B HU Advantage reservoirs under:
 
-This is a mixed signal: fallback/zero-crossing is suspicious, but the fold-vs-continue action gap itself also degrades.
+- identical model init seeds;
+- identical batch-sampling seeds;
+- budgets 100, 400, 1600;
+- 3 replicates;
+- same fixed 384-anchor low-noise cohort.
 
-## Active gate
+No roots are collected. Source checkpoints remain read-only. Holdout remains sealed.
 
-Run a read-only raw-margin decomposition on the already completed structural report.
+Goal:
 
-For each anchor, decompose the two legal raw outputs into:
-
-- common center / offset;
-- fold-vs-continue gap.
-
-Recombine Stage-A/Stage-B center and gap under exact production lean regret matching.
-
-Also run one diagnostic-only argmax fallback counterfactual.
-
-No solver, roots, optimizer steps, memory writes, or holdout use.
+distinguish **reservoir / target-signal drift** from **last-fit instability / insufficient fit**.
 
 ## Immediate user action
 
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_raw_margin_decomposition.sh
+bash tools/run_lt2_jammer_fai_controlled_refit.sh
 ```
 
-Send `SpinCore_LT2_jammer_fai_raw_margin_decomposition.json`.
+Wait for `LT2_JAMMER_FAI_CONTROLLED_REFIT_PASS` or the first error.
 
-Do not start K4 training or resume long training.
+Then send `SpinCore_LT2_jammer_fai_controlled_refit.json`.
+
+Do not start K4 or long training.
