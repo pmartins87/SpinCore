@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER LOSS LOCALIZED TO FAI — BROAD ACTION-GAP / RM CALIBRATION ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — BROAD FAI CALIBRATION DOES NOT EXPLAIN RESOLVED FIRST-DIVERGENCE LOSS — FULL-POPULATION RECONCILIATION ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -17,94 +17,92 @@ Never rewrite either checkpoint.
 
 ## Current scientific conclusion
 
-The global HU policy-chain audit showed:
-- Jammer current behavior regresses much more than AveragePolicy;
-- PassiveCaller deployed AveragePolicy regression is not reproduced by final current behavior;
-- UniformLegal remains unresolved.
-
-The current-behavior first-divergence audit now localizes Jammer:
+The Jammer current-behavior regression is real in the paired weak-baseline evaluation:
 
 - total B-A `-8.4304`, resolved;
-- FAI contribution `-6.2267`, resolved;
-- ROOT contribution `-2.2037`, unresolved;
-- FAI explains **73.86%**;
-- no Jammer postflop contribution.
+- FAI first-divergence contribution `-6.2267`, resolved;
+- FAI explains 73.86%.
 
-## Why target noise is not the primary next target
+But the broad 48-anchor FAI calibration does not show Stage B globally worse.
 
-Earlier work established:
-- Jammer FAI target A->B is effectively stationary;
-- Stage-B aggregate FAI own-target MSE does not worsen clearly;
-- K4 reduces estimator variance but variance is not failure-specific.
+### Broad expected policy regret
 
-Thus further K4 tuning would not address the best-supported mechanism.
+Stage A:
+- `32.885` chips.
 
-## Leading mechanism
+Stage B:
+- `20.984`.
 
-Production current behavior is obtained by lean regret matching.
+B-A:
+- `-11.901`, seed-cluster CI crosses zero.
 
-If any legal Advantage output is positive:
-- use positive regrets only.
+### Canonical action-gap MSE
 
-If all are non-positive:
-- use softmax fallback.
+B-A:
+- `-0.00058635`;
+- resolved Stage-B improvement.
 
-This makes policy behavior highly sensitive to:
-- sign near zero;
-- positive-support membership;
-- action ranking;
-- relative positive-regret scale.
+### FOLD-vs-CONTINUE class error
 
-A model may have similar MSE and still produce much worse policy EV.
+B-A:
+- `-0.08432`;
+- resolved Stage-B improvement.
 
-## Broad Jammer FAI calibration gate
+Thus the simple RM-calibration hypothesis is not supported on the broad 48-anchor sample.
+
+## Metric correction
+
+Do not use strict positive-support agreement as a causal training objective from this audit.
+
+Because the stage-specific true Advantage is centered on the same `sigma` produced by the raw model, a pure optimal action can have true Advantage exactly zero while requiring a positive raw output to be selected by production regret matching.
+
+Policy regret and canonical action gaps remain valid.
+
+## Required reconciliation
+
+Before any intervention, compare the two results on the same full natural evaluation population.
 
 Canonical contract:
 
-`docs/LT2_JAMMER_FAI_BROAD_CALIBRATION_20260919.md`.
+`docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_20260919.md`.
 
-Selection:
-- forensic seeds `20260920..20260925`;
-- 5000 scenarios/seed;
-- all common Stage-A/B current-behavior trajectories that reach FAI before earlier divergence;
-- record state before FAI action;
-- deterministic 8 anchors/seed;
-- no conditioning on FAI action divergence or terminal result.
+For every Jammer HU seat-run:
+- replay paired A/B current behavior;
+- if a common FAI state is reached before earlier divergence, inspect it before hero action;
+- clone exact dealt solver state for every legal action;
+- apply action to terminal;
+- read hero chip delta;
+- compute deterministic expected Stage-B-minus-A policy value.
 
-Reference:
-- uniform compatible opponent hands;
-- 32 hands × 8 boards;
-- common canonical Q-like action-gap gauge.
+Also use the exact previous RNG to reproduce the sampled FAI first-divergence contribution.
 
-For each Stage A/B:
-- exact production sigma;
-- stage-specific true Advantage target;
-- raw-target MSE;
-- action-gap MSE;
-- positive support;
-- fallback incidence;
-- mass on true-negative actions;
-- best-action agreement;
-- expected policy regret.
+Hard gate:
+- sampled contribution must reproduce `-6.22672064777328` exactly.
+
+## Why actual-deal Q is allowed here
+
+Per-state `Q_actual` uses hidden opponent cards and the full future board, so it is not a deployable infoset target.
+
+Across every natural evaluation deal, however, it is an unbiased counterfactual estimator under the exact same distribution as the weak-baseline test.
+
+Its purpose is attribution/reconciliation only.
 
 ## Decision logic
 
-If Stage B has:
-- no material MSE deterioration;
-- but more sign/support mistakes, fallback, true-negative mass or policy regret;
+If deterministic expected full-population FAI contribution is resolved negative:
+- diagnose the harmful policy-mass shift regime on that same population;
+- only then use high-budget infoset references on a pre-registered subset.
 
-then target the **RM-sensitive calibration problem** rather than raw MSE.
+If it is neutral/positive:
+- the stochastic first-divergence attribution requires methodological correction.
 
-If broad FAI calibration does not show a Stage-B defect:
-- investigate root-to-FAI trajectory weighting / visitation interaction.
-
-No training resumes before this gate is reviewed.
+No K4 training, no RM loss modification, and no resumed root training before this gate.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_jammer_fai_broad_calibration.sh`.
-3. Wait for `LT2_JAMMER_FAI_BROAD_CALIBRATION_PASS`.
-4. Send `SpinCore_LT2_jammer_fai_broad_calibration.json`.
-5. Keep holdout seeds `20261001..20261006` untouched.
-6. Do not train K4 or resume long training.
+2. Run `bash tools/run_lt2_jammer_fai_population_reconciliation.sh`.
+3. Wait for `LT2_JAMMER_FAI_POPULATION_RECONCILIATION_PASS`.
+4. Send `SpinCore_LT2_jammer_fai_population_reconciliation.json`.
+5. Keep holdout `20261001..20261006` untouched.
+6. Do not train.
