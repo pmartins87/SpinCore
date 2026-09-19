@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — BROAD FAI CALIBRATION DOES NOT EXPLAIN RESOLVED FIRST-DIVERGENCE LOSS — FULL-POPULATION RECONCILIATION ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — FULL-POPULATION JAMMER FAI LOSS RESOLVED — STAGE-B OVERFOLDING IDENTIFIED — INFOSET CONFIRMATION ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -15,94 +15,110 @@ Stage B:
 
 Never rewrite either checkpoint.
 
-## Current scientific conclusion
+## Resolved Jammer FAI population result
 
-The Jammer current-behavior regression is real in the paired weak-baseline evaluation:
+The full-population reconciliation used every HU Jammer seat-run on the forensic seeds.
 
-- total B-A `-8.4304`, resolved;
-- FAI first-divergence contribution `-6.2267`, resolved;
-- FAI explains 73.86%.
+Hard reproduction:
+- sampled FAI contribution `-6.22672064777328`;
+- exact match to the prior first-divergence result.
 
-But the broad 48-anchor FAI calibration does not show Stage B globally worse.
+Deterministic expected FAI contribution:
+- `-4.18434` chips/hand;
+- CI95 `[-6.58924,-1.77944]`.
 
-### Broad expected policy regret
+The FAI regression is therefore genuine in expected current-policy value.
 
-Stage A:
-- `32.885` chips.
+## Stage-B overfold
 
-Stage B:
-- `20.984`.
+At common FAI:
 
-B-A:
-- `-11.901`, seed-cluster CI crosses zero.
+- Stage-A fold mass `0.24964`;
+- Stage-B fold mass `0.37200`;
+- difference `+0.12237`, resolved.
 
-### Canonical action-gap MSE
+Contribution by fold-shift direction:
 
-B-A:
-- `-0.00058635`;
-- resolved Stage-B improvement.
+- B_MORE_FOLD:
+  - `-5.57116`;
+  - CI95 `[-7.61160,-3.53071]`.
 
-### FOLD-vs-CONTINUE class error
+- B_LESS_FOLD:
+  - `+1.38682`;
+  - CI95 `[+0.21539,+2.55825]`.
 
-B-A:
-- `-0.08432`;
-- resolved Stage-B improvement.
+- NO_FOLD_SHIFT:
+  - zero.
 
-Thus the simple RM-calibration hypothesis is not supported on the broad 48-anchor sample.
+This direction-specific result supersedes the ambiguous 48-anchor broad calibration.
 
-## Metric correction
+## Structural concentration
 
-Do not use strict positive-support agreement as a causal training objective from this audit.
+The largest resolved block is legal `{FOLD,CALL}`:
 
-Because the stage-specific true Advantage is centered on the same `sigma` produced by the raw model, a pure optimal action can have true Advantage exactly zero while requiring a positive raw output to be selected by production regret matching.
+- contribution `-4.07764`;
+- CI95 `[-5.88461,-2.27067]`.
 
-Policy regret and canonical action gaps remain valid.
+Legal `{FOLD,CALL,ALL_IN}` is near neutral.
 
-## Required reconciliation
+One-action public paths carry most of the loss.
 
-Before any intervention, compare the two results on the same full natural evaluation population.
+CALL and ALL_IN have zero terminal-value spread after opponent all-in.
 
-Canonical contract:
+## Why we still do not train
 
-`docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_20260919.md`.
+The population counterfactual uses the actual hidden opponent hand and future board.
 
-For every Jammer HU seat-run:
-- replay paired A/B current behavior;
-- if a common FAI state is reached before earlier divergence, inspect it before hero action;
-- clone exact dealt solver state for every legal action;
-- apply action to terminal;
-- read hero chip delta;
-- compute deterministic expected Stage-B-minus-A policy value.
+That is correct for evaluation attribution but cannot be used as the model's decision-time truth.
 
-Also use the exact previous RNG to reproduce the sampled FAI first-divergence contribution.
+Before an intervention, confirm the same overfold defect using a low-noise infoset reference.
 
-Hard gate:
-- sampled contribution must reproduce `-6.22672064777328` exactly.
+Canonical next contract:
 
-## Why actual-deal Q is allowed here
+`docs/LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_20260919.md`.
 
-Per-state `Q_actual` uses hidden opponent cards and the full future board, so it is not a deployable infoset target.
+## Fold-shift infoset gate
 
-Across every natural evaluation deal, however, it is an unbiased counterfactual estimator under the exact same distribution as the weak-baseline test.
+For each forensic seed:
 
-Its purpose is attribution/reconciliation only.
+- collect common FAI states before hero action;
+- classify only by Stage-B-minus-A fold-mass sign;
+- sample 8 B_MORE_FOLD;
+- sample 8 B_LESS_FOLD;
+- do not condition on sampled action, terminal outcome, realized Q or low-noise Q.
+
+Total:
+- 96 anchors.
+
+Reference:
+- 64 uniform compatible opponent hands;
+- 8 boards/hand;
+- 512 deals/anchor.
+
+Primary quantity:
+
+`policy_value_B_minus_A = (sigma_B-sigma_A) dot Q_infoset`.
+
+The matched B_LESS_FOLD group is the directional control.
 
 ## Decision logic
 
-If deterministic expected full-population FAI contribution is resolved negative:
-- diagnose the harmful policy-mass shift regime on that same population;
-- only then use high-budget infoset references on a pre-registered subset.
+If B_MORE_FOLD is resolved negative under infoset Q:
+- the Stage-B overfold is a genuine model/policy calibration error;
+- next inspect raw Advantage margins / fallback only inside the pre-registered harmful group;
+- design a minimal intervention and freeze it before touching holdout seeds.
 
-If it is neutral/positive:
-- the stochastic first-divergence attribution requires methodological correction.
+If B_MORE_FOLD is not negative:
+- do not train a fold-calibration change;
+- investigate weighting / hidden-chance covariance.
 
-No K4 training, no RM loss modification, and no resumed root training before this gate.
+No K4 training, RM loss change, or long root continuation before this gate.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_jammer_fai_population_reconciliation.sh`.
-3. Wait for `LT2_JAMMER_FAI_POPULATION_RECONCILIATION_PASS`.
-4. Send `SpinCore_LT2_jammer_fai_population_reconciliation.json`.
+2. Run `bash tools/run_lt2_jammer_fai_fold_shift_infoset.sh`.
+3. Wait for `LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_PASS`.
+4. Send `SpinCore_LT2_jammer_fai_fold_shift_infoset.json`.
 5. Keep holdout `20261001..20261006` untouched.
 6. Do not train.
