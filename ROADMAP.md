@@ -18,7 +18,8 @@
 - HU current-behavior first divergence — **PASS; 73.86% OF JAMMER LOSS AT PREFLOP FACING ALL-IN**.
 - Broad Jammer FAI calibration — **PASS; SMALL 48-ANCHOR SAMPLE DID NOT SHOW BROAD B DEGRADATION**.
 - Full-population Jammer FAI reconciliation — **PASS; EXPECTED FAI LOSS RESOLVED AND CARRIED BY B OVERFOLDING**.
-- Fold-shift low-noise infoset audit — **NEXT**.
+- Fold-shift low-noise infoset audit — **PASS / UNDERPOWERED; DIRECTIONS ALIGN BUT PRIMARY CIs CROSS ZERO**.
+- Powered structural infoset confirmation — **NEXT**.
 - K4 training — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -31,97 +32,99 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Full-population reconciliation verdict
-
-Paired sampled FAI contribution:
-- `-6.22672064777328`;
-- exact reproduction of prior first-divergence result.
+## Canonical full-population result
 
 Deterministic expected FAI contribution:
-- `-4.18434`;
+
+- `-4.18434` chips/hand;
 - CI95 `[-6.58924,-1.77944]`.
 
-Thus the FAI loss is real in expected policy value.
+B_MORE_FOLD:
 
-Conditional fold mass:
-- A `0.24964`;
-- B `0.37200`;
-- B-A `+0.12237`;
-- resolved.
+- contribution `-5.57116`;
+- resolved harmful.
 
-By fold-shift direction:
+B_LESS_FOLD:
 
-- B_MORE_FOLD:
-  - 7,374 rows;
-  - contribution `-5.57116`;
-  - CI95 `[-7.61160,-3.53071]`.
+- contribution `+1.38682`;
+- resolved beneficial.
 
-- B_LESS_FOLD:
-  - 3,287 rows;
-  - contribution `+1.38682`;
-  - CI95 `[+0.21539,+2.55825]`.
+## First low-noise fold-shift infoset result
 
-- NO_FOLD_SHIFT:
-  - contribution zero.
+### B_MORE_FOLD
 
-The damaging mechanism is specifically the Stage-B increase in FOLD probability.
+Policy-value B-A:
 
-## Structural localization
+- `-5.92295`;
+- seed-cluster CI95 `[-19.60209,+7.75619]`.
 
-Legal `0,1`:
-- contribution `-4.07764`, resolved.
+### B_LESS_FOLD
 
-Legal `0,1,9`:
-- contribution `-0.11128`, unresolved.
+Policy-value B-A:
 
-Public path length 1:
-- contribution `-3.52854`, resolved.
+- `+7.47850`;
+- seed-cluster CI95 `[-7.99668,+22.95369]`.
 
-Path length 2:
-- contribution `-0.65580`, unresolved.
+The signs match the full-population result, but 48 anchors/group do not resolve the infoset effect.
 
-Non-FOLD action values are equivalent after the Jammer all-in.
+No canonical action-gap MSE or class-error degradation resolves in B_MORE_FOLD.
 
-## Why one more diagnostic is required
+Verdict:
 
-The full-population reconciliation uses actual dealt hidden hand and full future board.
+**inconclusive due power / heterogeneity**.
 
-That is valid for population attribution but not for a decision-time infoset target.
+Do not infer that the mechanism is absent.
 
-Before changing training, verify that B_MORE_FOLD is also harmful under a low-noise infoset expectation.
+## Pre-existing structural localization
+
+The full-population result had already identified:
+
+- legal slots `0,1` as the dominant resolved loss block;
+- one public action before FAI as the dominant path-length block.
+
+Therefore the next confirmation freezes that structure before reference evaluation.
 
 ## Next gate
 
-Run `tools/run_lt2_jammer_fai_fold_shift_infoset.sh`.
+Run:
+
+`tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh`.
 
 Selection:
-- classify common FAI states only by fold-mass shift sign;
-- no sampled FAI action;
-- no outcome;
-- no realized Q;
-- no low-noise Q used for selection.
 
-Balanced sample:
-- 8 B_MORE_FOLD per seed;
-- 8 B_LESS_FOLD per seed;
-- 96 anchors total.
+- common Jammer FAI;
+- legal exactly `0,1`;
+- path length exactly 1;
+- classify only by fold-mass shift sign;
+- no action/outcome/Q-based selection.
+
+Sample:
+
+- 32 B_MORE_FOLD per seed;
+- 32 B_LESS_FOLD per seed;
+- 384 anchors.
 
 Reference:
-- 64 hands × 8 boards = 512 deals/anchor.
 
-Primary metric:
-`(sigma_B-sigma_A) dot Q_infoset`.
+- 64 hands × 8 boards;
+- 512 deals/anchor.
 
-## Decision
+Primary condition:
 
-If B_MORE_FOLD has resolved negative infoset policy value:
-- overfold is a genuine decision-time model/policy error;
-- inspect raw fold-vs-continue margins and fallback regimes inside that pre-registered group;
-- design smallest isolated calibration intervention.
+B_MORE_FOLD seed-cluster CI for `policy_value_b_minus_a_chips` must resolve negative.
 
-If B_MORE_FOLD is neutral/positive:
+If it resolves negative:
+- inspect raw fold-vs-continue Advantage margins, fallback incidence, and target-estimator noise in this frozen structure;
+- identify smallest intervention;
+- keep holdout sealed until intervention is frozen.
+
+If it remains unresolved:
+- stop blind sample escalation;
+- decompose residual variance.
+
+If it resolves positive:
 - do not train a fold fix;
-- investigate hidden-chance/weighting covariance.
+- investigate hidden-chance/evaluation weighting.
 
 No training before this gate.
 
@@ -129,6 +132,6 @@ Holdout `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_jammer_fai_fold_shift_infoset.sh`.
+Run `bash tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh`.
 
 Stop at PASS or first error. Do not train.
