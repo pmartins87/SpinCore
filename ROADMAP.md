@@ -8,7 +8,7 @@
 - LT2 Stage B — **PASS** at 4.5M roots / iteration 7500.
 - Weak-baseline regression — **CONFIRMED**.
 - AveragePolicy extra-fit — **NOT SUPPORTED**.
-- Advantage optimizer escalation — **NOT SUPPORTED**.
+- Advantage optimizer escalation — **NOT SUPPORTED GLOBALLY**.
 - HU-preflop target variance — **HIDDEN/CHANCE DOMINANT**.
 - K4 board averaging — **VALID ESTIMATOR IMPROVEMENT**.
 - Jammer K4 causal gate — **NOT MET**.
@@ -16,10 +16,11 @@
 - Stage-A/B target-drift matrix — **PASS; NO UNIVERSAL TARGET-DRIFT EXPLANATION**.
 - HU policy-chain audit — **PASS; JAMMER DEFECT UPSTREAM IN CURRENT BEHAVIOR**.
 - HU current-behavior first divergence — **PASS; 73.86% OF JAMMER LOSS AT PREFLOP FACING ALL-IN**.
-- Broad Jammer FAI calibration — **PASS; SMALL 48-ANCHOR SAMPLE DID NOT SHOW BROAD B DEGRADATION**.
-- Full-population Jammer FAI reconciliation — **PASS; EXPECTED FAI LOSS RESOLVED AND CARRIED BY B OVERFOLDING**.
-- Fold-shift low-noise infoset audit — **PASS / UNDERPOWERED; DIRECTIONS ALIGN BUT PRIMARY CIs CROSS ZERO**.
-- Powered structural infoset confirmation — **NEXT**.
+- Broad Jammer FAI calibration — **PASS; SMALL SAMPLE INCONCLUSIVE**.
+- Full-population Jammer FAI reconciliation — **PASS; EXPECTED FAI LOSS CARRIED BY B OVERFOLDING**.
+- First fold-shift infoset audit — **PASS / UNDERPOWERED**.
+- Powered structural infoset confirmation — **PASS; OVERFOLD CONFIRMED AT INFOSET LEVEL**.
+- Raw center-vs-gap decomposition — **NEXT**.
 - K4 training — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -32,106 +33,86 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Canonical full-population result
+## Decisive structural infoset result
 
-Deterministic expected FAI contribution:
+Frozen high-impact structure:
 
-- `-4.18434` chips/hand;
-- CI95 `[-6.58924,-1.77944]`.
+- Jammer FAI;
+- legal `{FOLD,CALL}`;
+- one public action before FAI.
 
-B_MORE_FOLD:
+B_MORE_FOLD policy-value B-A:
 
-- contribution `-5.57116`;
-- resolved harmful.
+- `-24.54921`;
+- CI95 `[-35.58425,-13.51416]`.
 
-B_LESS_FOLD:
+Fold shift:
 
-- contribution `+1.38682`;
-- resolved beneficial.
+- `+0.46907`;
+- CI95 `[+0.45307,+0.48508]`.
 
-## First low-noise fold-shift infoset result
+Reference FOLD-minus-CONTINUE:
 
-### B_MORE_FOLD
+- `-40.86355`;
+- CI95 `[-57.51783,-24.20927]`.
 
-Policy-value B-A:
+Canonical action-gap MSE B-A:
 
-- `-5.92295`;
-- seed-cluster CI95 `[-19.60209,+7.75619]`.
+- `+0.000714714`;
+- CI95 `[+0.000397781,+0.001031647]`.
 
-### B_LESS_FOLD
+Class-error mass B-A:
 
-Policy-value B-A:
+- `+0.127198`;
+- CI95 `[+0.058510,+0.195887]`.
 
-- `+7.47850`;
-- seed-cluster CI95 `[-7.99668,+22.95369]`.
+Fallback rate:
 
-The signs match the full-population result, but 48 anchors/group do not resolve the infoset effect.
+- A `6.25%`;
+- B `50.00%`.
 
-No canonical action-gap MSE or class-error degradation resolves in B_MORE_FOLD.
+Raw-target MSE remains unresolved.
 
-Verdict:
+## Interpretation
 
-**inconclusive due power / heterogeneity**.
+The overfold is a real decision-time error against the hand-independent Jammer reference inside the previously localized structure.
 
-Do not infer that the mechanism is absent.
+The failure is not merely a sampled-action artifact, hidden-board artifact, or AveragePolicy-only artifact.
 
-## Pre-existing structural localization
+However, a fallback-only diagnosis is not yet sufficient because the canonical fold-vs-continue action gap also degrades significantly.
 
-The full-population result had already identified:
+## Next gate — raw margin decomposition
 
-- legal slots `0,1` as the dominant resolved loss block;
-- one public action before FAI as the dominant path-length block.
+Use the completed 384-anchor report only.
 
-Therefore the next confirmation freezes that structure before reference evaluation.
+For legal raw outputs:
 
-## Next gate
+```
+center = (fold + continue) / 2
+gap    = fold - continue
+```
 
-Run:
+Evaluate under exact production lean RM:
 
-`tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh`.
+- B center + A gap = OFFSET_ONLY;
+- A center + B gap = GAP_ONLY;
+- B center + B gap = FULL_B.
 
-Selection:
+Also measure a diagnostic-only argmax replacement for the all-nonpositive fallback.
 
-- common Jammer FAI;
-- legal exactly `0,1`;
-- path length exactly 1;
-- classify only by fold-mass shift sign;
-- no action/outcome/Q-based selection.
+Decision:
 
-Sample:
+- GAP_ONLY dominant -> prioritize Advantage-gap fit / data diagnostics;
+- OFFSET_ONLY dominant -> prioritize zero-crossing / fallback stabilization;
+- both -> mixed cause;
+- if fallback probe recovers only part of the loss, do not patch fallback alone.
 
-- 32 B_MORE_FOLD per seed;
-- 32 B_LESS_FOLD per seed;
-- 384 anchors.
-
-Reference:
-
-- 64 hands × 8 boards;
-- 512 deals/anchor.
-
-Primary condition:
-
-B_MORE_FOLD seed-cluster CI for `policy_value_b_minus_a_chips` must resolve negative.
-
-If it resolves negative:
-- inspect raw fold-vs-continue Advantage margins, fallback incidence, and target-estimator noise in this frozen structure;
-- identify smallest intervention;
-- keep holdout sealed until intervention is frozen.
-
-If it remains unresolved:
-- stop blind sample escalation;
-- decompose residual variance.
-
-If it resolves positive:
-- do not train a fold fix;
-- investigate hidden-chance/evaluation weighting.
-
-No training before this gate.
-
-Holdout `20261001..20261006` remains sealed.
+Holdout `20261001..20261006` stays sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh`.
+Run:
+
+`bash tools/run_lt2_jammer_fai_raw_margin_decomposition.sh`.
 
 Stop at PASS or first error. Do not train.
