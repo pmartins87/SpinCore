@@ -16,8 +16,9 @@
 - Stage-A/B target-drift matrix — **PASS; NO UNIVERSAL TARGET-DRIFT EXPLANATION**.
 - HU policy-chain audit — **PASS; JAMMER DEFECT UPSTREAM IN CURRENT BEHAVIOR**.
 - HU current-behavior first divergence — **PASS; 73.86% OF JAMMER LOSS AT PREFLOP FACING ALL-IN**.
-- Broad Jammer FAI calibration — **PASS; DOES NOT SHOW BROAD STAGE-B POLICY-REGRET DEGRADATION**.
-- Full-population Jammer FAI counterfactual reconciliation — **NEXT**.
+- Broad Jammer FAI calibration — **PASS; SMALL 48-ANCHOR SAMPLE DID NOT SHOW BROAD B DEGRADATION**.
+- Full-population Jammer FAI reconciliation — **PASS; EXPECTED FAI LOSS RESOLVED AND CARRIED BY B OVERFOLDING**.
+- Fold-shift low-noise infoset audit — **NEXT**.
 - K4 training — **NOT AUTHORIZED**.
 - long root training — **PAUSED**.
 - DeepCrusher — **DEFERRED**.
@@ -30,74 +31,104 @@ Stage A SHA:
 Stage B SHA:
 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Broad FAI verdict
+## Full-population reconciliation verdict
 
-The 48-anchor broad low-noise calibration does not support:
+Paired sampled FAI contribution:
+- `-6.22672064777328`;
+- exact reproduction of prior first-divergence result.
 
-`Stage B broadly worse at FAI -> Jammer loss`.
+Deterministic expected FAI contribution:
+- `-4.18434`;
+- CI95 `[-6.58924,-1.77944]`.
 
-Policy regret:
-- A `32.885`;
-- B `20.984`;
-- B-A `-11.901`, CI crosses zero.
+Thus the FAI loss is real in expected policy value.
 
-Canonical action-gap MSE:
-- B-A `-0.00058635`, resolved improvement.
+Conditional fold mass:
+- A `0.24964`;
+- B `0.37200`;
+- B-A `+0.12237`;
+- resolved.
 
-FOLD-vs-CONTINUE class-error mass:
-- B-A `-0.08432`, resolved improvement.
+By fold-shift direction:
 
-Fold mass:
-- B-A `+0.10009`, resolved.
+- B_MORE_FOLD:
+  - 7,374 rows;
+  - contribution `-5.57116`;
+  - CI95 `[-7.61160,-3.53071]`.
 
-Fallback incidence:
-- A 10.42%;
-- B 25.00%.
+- B_LESS_FOLD:
+  - 3,287 rows;
+  - contribution `+1.38682`;
+  - CI95 `[+0.21539,+2.55825]`.
 
-Fallback frequency rises, but Stage-B class error and gap MSE improve. It cannot be called the cause.
+- NO_FOLD_SHIFT:
+  - contribution zero.
 
-Strict positive-support Jaccard is methodologically unsuitable because stage-specific true Advantage can be exactly zero on a pure optimal action while the raw model must be positive there to induce that action.
+The damaging mechanism is specifically the Stage-B increase in FOLD probability.
 
-## Remaining contradiction
+## Structural localization
 
-Full paired first divergence says:
-- FAI contributes `-6.2267` chips/hand to Jammer Stage-B-minus-A current behavior.
+Legal `0,1`:
+- contribution `-4.07764`, resolved.
 
-Broad 48-anchor expected regret says:
-- Stage B is not worse.
+Legal `0,1,9`:
+- contribution `-0.11128`, unresolved.
 
-Resolve this before changing training.
+Public path length 1:
+- contribution `-3.52854`, resolved.
+
+Path length 2:
+- contribution `-0.65580`, unresolved.
+
+Non-FOLD action values are equivalent after the Jammer all-in.
+
+## Why one more diagnostic is required
+
+The full-population reconciliation uses actual dealt hidden hand and full future board.
+
+That is valid for population attribution but not for a decision-time infoset target.
+
+Before changing training, verify that B_MORE_FOLD is also harmful under a low-noise infoset expectation.
 
 ## Next gate
 
-Run `tools/run_lt2_jammer_fai_population_reconciliation.sh`.
+Run `tools/run_lt2_jammer_fai_fold_shift_infoset.sh`.
 
-Use every natural HU Jammer seat-run.
+Selection:
+- classify common FAI states only by fold-mass shift sign;
+- no sampled FAI action;
+- no outcome;
+- no realized Q;
+- no low-noise Q used for selection.
 
-For every common FAI state:
-- compute actual-deal terminal Q for every legal action;
-- compute deterministic `(sigma_B-sigma_A) dot Q_actual`;
-- also reproduce the prior paired sampled contribution with exact RNG.
+Balanced sample:
+- 8 B_MORE_FOLD per seed;
+- 8 B_LESS_FOLD per seed;
+- 96 anchors total.
 
-Hard validation:
-- sampled additive FAI contribution must equal `-6.22672064777328`.
+Reference:
+- 64 hands × 8 boards = 512 deals/anchor.
+
+Primary metric:
+`(sigma_B-sigma_A) dot Q_infoset`.
 
 ## Decision
 
-If deterministic full-population expected FAI contribution is resolved negative:
-- first-divergence loss is genuine in expected policy value;
-- identify which fold-mass shift regime carries it;
-- then apply low-noise infoset references to a pre-registered subset.
+If B_MORE_FOLD has resolved negative infoset policy value:
+- overfold is a genuine decision-time model/policy error;
+- inspect raw fold-vs-continue margins and fallback regimes inside that pre-registered group;
+- design smallest isolated calibration intervention.
 
-If deterministic expected contribution is neutral/positive:
-- correct the previous sampled attribution before any intervention.
+If B_MORE_FOLD is neutral/positive:
+- do not train a fold fix;
+- investigate hidden-chance/weighting covariance.
 
-No training before reconciliation.
+No training before this gate.
 
 Holdout `20261001..20261006` remains sealed.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_jammer_fai_population_reconciliation.sh`.
+Run `bash tools/run_lt2_jammer_fai_fold_shift_infoset.sh`.
 
 Stop at PASS or first error. Do not train.
