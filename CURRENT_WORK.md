@@ -1,16 +1,16 @@
 # SpinCore Current Work
 
 Date: 2026-09-19
-Status: **LT2 STAGE B PASS — BROAD JAMMER FAI CALIBRATION DOES NOT SHOW STAGE-B POLICY-REGRET DEGRADATION — FIRST-DIVERGENCE CONTRADICTION MUST BE RECONCILED ON FULL POPULATION — NO TRAINING**
+Status: **LT2 STAGE B PASS — JAMMER FAI LOSS CONFIRMED IN FULL-POPULATION EXPECTED VALUE — STAGE-B OVERFOLDING IS THE HARMFUL COMPONENT — LOW-NOISE INFOSET FOLD-SHIFT GATE NEXT — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_RESULT_20260919.md`
+- `docs/LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_20260919.md`
 - `docs/LT2_JAMMER_FAI_BROAD_CALIBRATION_RESULT_20260919.md`
-- `docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_20260919.md`
 - `docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_RESULT_20260919.md`
-- `docs/LT2_HU_POLICY_CHAIN_RESULT_20260918.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
 Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
@@ -25,131 +25,134 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Broad Jammer FAI calibration result
+## Full-population FAI reconciliation — PASS
 
-48 broad common FAI anchors, 8 per forensic seed, selected before the FAI action and without conditioning on FAI A/B divergence or terminal outcome.
+Integrity:
+- 27,170 HU Jammer seat-runs;
+- 13,585 scenario clusters;
+- 16,279 common FAI states;
+- forensic seeds only;
+- holdout untouched;
+- read-only.
 
-### Policy regret
+### Hard reproduction
 
-Stage A:
-- `32.885` chips;
-- seed-cluster CI95 `[22.073,43.697]`.
+The paired sampled FAI contribution reproduced the prior result exactly:
 
-Stage B:
-- `20.984`;
-- seed-cluster CI95 `[11.894,30.073]`.
+`-6.22672064777328` chips/hand.
 
-B-A:
-- `-11.901`;
-- seed-cluster CI95 `[-25.515,+1.713]`.
+CI95:
+`[-9.25754,-3.19590]`.
 
-Stage B is not broadly worse in policy regret. Direction is better, but unresolved.
+Difference from prior:
+`0.0`.
 
-### Canonical action-gap MSE
+### Deterministic expected FAI contribution
 
-Stage A:
-- `0.0020185`.
+Using exact dealt hidden hand/full board and every legal terminal action:
 
-Stage B:
-- `0.0014322`.
+`-4.18434` chips/hand.
 
-B-A:
-- `-0.00058635`;
-- CI95 `[-0.00093271,-0.00023998]`.
+CI95:
+`[-6.58924,-1.77944]`.
 
-Resolved Stage-B improvement.
+Resolved negative.
 
-### FOLD-vs-CONTINUE class-error mass
+Therefore the FAI regression is genuine in expected policy value, not an action-sampling artifact.
 
-Stage A:
-- `0.38346`.
+Conditional on reaching common FAI:
 
-Stage B:
-- `0.29914`.
+`-6.9704` chips, seed-cluster CI95 `[-11.2658,-2.6751]`.
 
-B-A:
-- `-0.08432`;
-- CI95 `[-0.16662,-0.00203]`.
+## Stage-B overfold localization
 
-Resolved Stage-B improvement.
+Conditional mean fold mass:
 
-### Fold mass
+- Stage A `0.24964`;
+- Stage B `0.37200`;
+- B-A `+0.12237`;
+- seed-cluster CI95 `[+0.11779,+0.12695]`.
 
-Stage A:
-- `0.27466`.
+Stage B folds about 12.24 pp more.
 
-Stage B:
-- `0.37475`.
+### B_MORE_FOLD
 
-B-A:
-- `+0.10009`;
-- CI95 `[+0.04693,+0.15326]`.
+- 7,374 rows;
+- contribution `-5.57116`;
+- CI95 `[-7.61160,-3.53071]`.
 
-Stage B folds about 10 pp more on the broad sample, but the class-error metric improves, so the fold shift alone is not evidence of a defect.
+Resolved harmful.
 
-### Fallback
+### B_LESS_FOLD
 
-All-nonpositive fallback:
-- Stage A `5/48 = 10.42%`;
-- Stage B `12/48 = 25.00%`.
+- 3,287 rows;
+- contribution `+1.38682`;
+- CI95 `[+0.21539,+2.55825]`.
 
-Fallback is more frequent in B, but this does not align with worse class error or action-gap MSE.
+Resolved beneficial.
 
-## Positive-support metric correction
+### NO_FOLD_SHIFT
 
-The strict positive-support/Jaccard metric is not valid as standalone causal evidence.
+- 5,618 rows;
+- contribution numerically zero.
 
-Reason:
+The harmful FAI mechanism is therefore direction-specific: **Stage B increasing FOLD probability**.
 
-`A*_S(a)=Q(a)-V_{sigma_S}`.
+## Structural concentration
 
-When `sigma_S` is pure on an optimal action, that selected action has true Advantage exactly zero, while the raw model generally needs a positive value to induce the pure regret-matching action.
+Legal `{FOLD,CALL}`:
+- 7,892 rows;
+- contribution `-4.07764`;
+- CI95 `[-5.88461,-2.27067]`.
 
-Thus `raw>0` versus `A*>0` can label a policy-consistent optimal action as a false positive.
+Legal `{FOLD,CALL,ALL_IN}`:
+- 8,356 rows;
+- contribution `-0.11128`;
+- CI crosses zero.
 
-Do not use zero exact-support rate or Stage-B Jaccard decline as a training target.
+One public action before FAI:
+- contribution `-3.52854`;
+- CI95 `[-5.83127,-1.22581]`.
 
-## Scientific contradiction
+Two public actions:
+- contribution `-0.65580`;
+- unresolved.
 
-Previous full paired first divergence:
+Maximum non-FOLD actual-Q spread is exactly zero.
 
-- Jammer current behavior B-A `-8.4304`, resolved;
-- FAI additive contribution `-6.2267`, resolved.
+CALL and ALL_IN are outcome-equivalent after the Jammer is already all-in. The meaningful decision class is FOLD versus CONTINUE.
 
-Broad 48-anchor calibration:
+## Why the 48-anchor broad audit looked benign
 
-- Stage B policy regret not worse;
-- canonical gap MSE improves;
-- class-error mass improves.
+The 48-anchor broad audit was too small / heterogeneous to expose the full-population directional effect reliably.
 
-Possible causes:
-1. 48 anchors underpowered / unrepresentative;
-2. loss concentrated in a high-leverage subset;
-3. sampled first-divergence attribution needs direct deterministic policy-value reconciliation.
+It did not invalidate the FAI hypothesis; the full-population test now resolves the loss and identifies the fold direction carrying it.
 
-Before any intervention, reconcile them on every natural evaluation Jammer FAI state.
+Do not design a training intervention from actual-deal Q alone, because actual-deal Q uses hidden cards/future board.
 
 ## Active gate
 
 Run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_population_reconciliation.sh
+bash tools/run_lt2_jammer_fai_fold_shift_infoset.sh
 ```
 
-This uses every HU Jammer seat-run on the forensic seeds.
+Pre-reference selection:
+- common FAI states only;
+- classify only by Stage-B-minus-A production fold-mass sign;
+- 8 B_MORE_FOLD + 8 B_LESS_FOLD anchors per forensic seed;
+- 96 total;
+- no sampled FAI action/outcome/actual-Q/low-noise-Q selection.
 
-At each common FAI state:
-- no anchor subsampling;
-- exact dealt hidden hand/full board retained;
-- every legal action applied to a cloned solver state;
-- terminal chip delta read directly;
-- deterministic expected policy-value delta
-  `sum (sigma_B-sigma_A) Q_actual`;
-- paired sampled action contribution reproduced using the exact prior RNG.
+Low-noise reference:
+- 64 uniform compatible opponent hands;
+- 8 future boards/hand;
+- 512 deals/anchor.
 
-The sampled contribution must exactly reproduce:
-`-6.22672064777328`.
+Primary question:
+
+Does the resolved Stage-B overfold remain harmful under **infoset expectation**?
 
 Holdout `20261001..20261006` remains untouched.
 
@@ -160,11 +163,11 @@ DeepCrusher remains deferred.
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_population_reconciliation.sh
+bash tools/run_lt2_jammer_fai_fold_shift_infoset.sh
 ```
 
-Wait for `LT2_JAMMER_FAI_POPULATION_RECONCILIATION_PASS` or the first error.
+Wait for `LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_PASS` or the first error.
 
-Then send `SpinCore_LT2_jammer_fai_population_reconciliation.json`.
+Then send `SpinCore_LT2_jammer_fai_fold_shift_infoset.json`.
 
 Do not start any training.
