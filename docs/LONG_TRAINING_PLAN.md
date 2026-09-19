@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER FAI INFOSET OVERFOLD CONFIRMED — ACTION-GAP DRIFT DOMINANT — CONTROLLED REFIT ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — INSUFFICIENT 100-STEP ADVANTAGE REFIT IDENTIFIED — B400 BROAD GENERALIZATION ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -15,89 +15,88 @@ Stage B:
 
 Never rewrite either checkpoint.
 
-## Confirmed defect
+## Causal chain now resolved to the fit stage
 
-The pre-registered high-impact Jammer FAI structure is:
+Previously established:
 
-- legal `{FOLD,CALL}`;
-- one public action before FAI.
+- Jammer current behavior regresses at Stage B;
+- 73.86% localizes to preflop facing-all-in;
+- Stage B overfolds;
+- low-noise infoset reference confirms that overfold is wrong;
+- fold-vs-continue Advantage action-gap drift is the dominant component;
+- fallback is an amplifier but a fallback-only patch is insufficient.
 
-For B_MORE_FOLD:
+Controlled fresh refits now show:
 
-- policy-value B-A `-24.54921`;
-- CI95 `[-35.58425,-13.51416]`;
-- fold-mass B-A `+0.46907`;
-- reference FOLD-minus-CONTINUE `-40.86355` chips;
-- canonical action-gap MSE worsens significantly;
-- class-error mass worsens significantly.
+- 100 steps: Stage-B reservoir remains worse;
+- 400 steps: Stage-B reservoir is better in all three paired replicates;
+- 1600 steps: Stage-B reservoir remains better in all three paired replicates.
 
-This is a real infoset-level Stage-B overfold against the hand-independent Jammer reference.
+Therefore the reservoir contains usable signal and the canonical 100-step fit is the leading failure mechanism.
 
-## Raw-margin causal decomposition
+## Why root training is still paused
 
-Using the exact production lean regret-matching map:
+The fixed structural cohort is selected around the known Jammer FAI failure.
 
-- FULL_B `-24.549`;
-- GAP_ONLY `-18.719`, resolved;
-- OFFSET_ONLY `-4.946`, resolved;
-- nonlinear interaction unresolved.
+Before changing the training schedule globally, the 400-step candidate must generalize to the natural HU forensic population.
 
-Therefore action-gap drift is the larger causal component.
+## Candidate
 
-A diagnostic argmax fallback recovers `+15.415` versus production B but does not prove B=A.
+`advantage_steps=400`.
 
-Do not patch fallback alone.
+Reason:
 
-## Why root training remains paused
+- smallest tested budget that clears the primary cohort in all three replicates;
+- 4x canonical optimizer work;
+- materially cheaper than 1600.
 
-We still do not know whether the Stage-B action-gap degradation comes from:
+1600 is reserved for one escalation branch if 400 fails global Jammer generalization.
 
-1. the Stage-B Advantage reservoir / target signal;
-2. the final reset/refit and optimizer budget;
-3. reset/fit seed instability.
+## Active broad gate
 
-Blindly adding roots can worsen a data-signal problem and wastes compute if the real issue is the fit stage.
+Recreate all three deterministic 400-step Stage-B candidates.
 
-## Active experiment
+Evaluate on all forensic HU scenarios against:
 
-Controlled fresh-refit audit:
+- UNIFORM_LEGAL;
+- PASSIVE_CALLER;
+- JAMMER.
 
-- source checkpoints read-only;
-- no roots;
-- fixed 384-anchor cohort;
-- stored low-noise q reference reused;
-- Stage-A and Stage-B HU reservoirs;
-- paired init and batch seeds;
-- budgets 100, 400, 1600;
-- 3 replicates.
+Use common random numbers and compare with:
 
-### If Stage-B reservoir stays worse at 1600
+- production Stage A;
+- production Stage B.
 
-Next:
-- inspect conditional target composition, sampling frequency, iteration weights and hidden-chance noise specifically for the FAI structural class;
-- design a target/reservoir intervention.
+No roots are generated.
 
-### If Stage-B catches Stage A as budget rises
+## Decision logic
+
+### B400 improves Jammer in all three replicates and does not create a resolved material regression elsewhere
+
+Freeze 400 as the training-side intervention.
 
 Next:
-- modify fit schedule only;
-- validate on forensic cohort;
-- freeze candidate before holdout.
+- create a bounded continuation pilot from Stage B;
+- use a small, predefined number of additional iterations;
+- evaluate before any long continuation.
 
-### If replicate variance dominates
+### B400 still fails broad Jammer
 
-Next:
-- stabilize the reset/refit procedure;
-- consider ensemble/seed selection only if it can be specified without holdout leakage.
+Run one broad 1600-step escalation.
+
+### B400 introduces a resolved tradeoff
+
+Do not train.
+Investigate whether the stronger fit is moving toward a different weakness rather than genuine overall improvement.
 
 ## Holdout
 
-Seeds `20261001..20261006` remain sealed until an intervention is frozen.
+Seeds `20261001..20261006` remain sealed until the intervention is frozen and a bounded pilot is ready for final validation.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
 2. Pull `main`.
-3. Run `bash tools/run_lt2_jammer_fai_controlled_refit.sh`.
-4. Send `SpinCore_LT2_jammer_fai_controlled_refit.json`.
+3. Run `bash tools/run_lt2_hu_b400_broad_generalization.sh`.
+4. Send `SpinCore_LT2_hu_b400_broad_generalization.json`.
 5. Do not resume root training.
