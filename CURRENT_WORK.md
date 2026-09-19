@@ -1,14 +1,15 @@
 # SpinCore Current Work
 
-Date: 2026-09-18
-Status: **LT2 STAGE B PASS — HU POLICY-CHAIN SPLIT RESOLVED — JAMMER DEFECT UPSTREAM IN CURRENT BEHAVIOR, PASSIVE AVG REGRESSION NOT REPRODUCED BY CURRENT BEHAVIOR — BEHAVIOR FIRST-DIVERGENCE NEXT — NO TRAINING**
+Date: 2026-09-19
+Status: **LT2 STAGE B PASS — JAMMER CURRENT-BEHAVIOR LOSS LOCALIZED 73.86% TO PREFLOP FACING ALL-IN — BROAD ACTION-GAP / REGRET-MATCHING CALIBRATION NEXT — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
+- `docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_RESULT_20260919.md`
+- `docs/LT2_JAMMER_FAI_BROAD_CALIBRATION_20260919.md`
 - `docs/LT2_HU_POLICY_CHAIN_RESULT_20260918.md`
-- `docs/LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_20260918.md`
 - `docs/LT2_TARGET_DRIFT_TRACKING_RESULT_20260918.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -24,91 +25,94 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## HU policy-chain result
+## Current-behavior first-divergence result
 
-The global paired HU audit used 13,585 HU scenario clusters and 81,510 baseline/seat rows on forensic seeds only.
+Jammer current behavior:
+- total Stage-B-minus-A `-8.4304` chips/hand;
+- CI95 `[-12.5155,-4.3453]`;
+- divergence rate `59.78%`.
 
-### JAMMER
+### PREFLOP_FACING_ALL_IN
 
-AveragePolicy:
-- A `-3.459`;
-- B `-5.141`;
-- B-A `-1.682`, CI95 `[-2.767,-0.597]`.
+- frequency `27.24%`;
+- 7402 seat-runs;
+- contribution `-6.2267`;
+- CI95 `[-9.2575,-3.1959]`.
 
-Current Advantage-induced behavior:
-- A `+1.850`;
-- B `-6.580`;
-- B-A `-8.430`, CI95 `[-12.515,-4.345]`.
+This group explains **73.86%** of the total resolved Jammer current-behavior regression.
 
-Aggregation-chain delta:
-- `+6.748`, CI95 `[+2.521,+10.975]`.
+### PREFLOP_ROOT
 
-Therefore the strong Jammer defect is already present upstream in current Advantage behavior. AveragePolicy buffers rather than amplifies the Stage-B-vs-A current-behavior loss.
+- frequency `32.54%`;
+- contribution `-2.2037`;
+- CI95 `[-4.9947,+0.5873]`.
 
-This does not mean the single final Stage-B Advantage snapshot alone caused the historical AveragePolicy regression, because Advantage is reset/refit each iteration. It does mean the current Advantage/behavior chain contains a large resolved defect.
+Numerically the remaining 26.14%, but unresolved.
 
-Combined with the prior stationary Jammer target result, the next target is action-ranking / regret-matching behavior, not K4 or target drift.
+### Postflop
 
-### PASSIVE_CALLER
+For Jammer:
+- no FLOP first divergences;
+- no TURN;
+- no RIVER;
+- no PREFLOP_OTHER.
 
-AveragePolicy B-A:
-- `-1.261`, CI95 `[-2.377,-0.145]`.
+The entire paired current-behavior loss is preflop.
 
-Current behavior B-A:
-- `+2.083`, CI95 `[-1.413,+5.579]`.
+## Outcome-equivalence caution
 
-Aggregation-chain delta:
-- `-3.344`, CI95 `[-6.944,+0.255]`.
+Inside FAI, clearly FOLD-vs-non-FOLD transitions account for 4761/7402 = **64.32%**.
 
-The deployed regression is not reproduced by the final current behavior. Historical aggregation / policy reservoir remains a separate candidate, but the chain delta is unresolved.
+There are also:
+- 2259 `1->9`;
+- 367 `9->1`;
+- 15 rare transitions involving slot 5.
 
-### UNIFORM_LEGAL
+Raw universal-slot divergence is not the same as strategic-value divergence.
 
-AveragePolicy B-A:
-- `-0.416`, unresolved.
+Therefore the next gate does not select on sampled slot mismatch and does not use raw transition count as the primary metric.
 
-Current behavior B-A:
-- `-3.461`, unresolved.
+## Causal synthesis
 
-Aggregation-chain delta:
-- `+3.045`, unresolved.
+We now have:
 
-## Strategic interpretation
+1. global Jammer current-behavior B-A `-8.43`, resolved;
+2. 73.86% of that loss localizes to FAI;
+3. Jammer FAI low-noise targets are Stage-A/B stationary;
+4. aggregate own-target MSE did not show a matching Stage-B degradation;
+5. K4 improves estimator variance but noise is not failure-specific.
 
-There is no single Stage-B mechanism.
+The leading hypothesis is now:
 
-Highest priority is the resolved Jammer current-behavior loss because:
-- it is large;
-- it is upstream of AveragePolicy;
-- its previously audited facing-all-in target is stationary A->B;
-- own-target MSE did not show a matching global degradation.
+**small Advantage action-gap/sign errors are amplified by production regret matching at FAI states.**
 
-The next question is therefore:
+Production RM is nonlinear:
+- positive outputs are clipped/normalized;
+- all-nonpositive outputs enter softmax fallback.
 
-**Where does the -8.43 chips/hand current-behavior Jammer loss first manifest?**
-
-Do not train a fix before localizing it.
+MSE can therefore stay similar while action support and policy EV change sharply.
 
 ## Active gate
 
 Run:
 
 ```bash
-bash tools/run_lt2_hu_behavior_first_divergence.sh
+bash tools/run_lt2_jammer_fai_broad_calibration.sh
 ```
 
-It replays Stage A/B current Advantage-induced behavior in lock-step under the same forensic HU scenarios, deals, baselines, hero seats and RNG streams.
+The audit samples 48 broad common FAI states, 8 per forensic seed, **before** sampling the FAI action and without selecting on A/B divergence or terminal outcome.
 
-First-divergence groups:
-- NO_DIVERGENCE;
-- PREFLOP_ROOT;
-- PREFLOP_FACING_ALL_IN;
-- PREFLOP_OTHER;
-- FLOP;
-- TURN;
-- RIVER.
-
-If Jammer loss again concentrates in PREFLOP_FACING_ALL_IN, the next audit will test broad non-selected action-gap / regret-matching calibration there.
+For each anchor:
+- 32 uniform compatible opponent hands;
+- 8 future boards/hand;
+- common Q-like action-gap reference;
+- Stage-A/B raw Advantage;
+- exact production RM behavior;
+- stage-specific true Advantage target;
+- sign/support mistakes;
+- all-nonpositive fallback;
+- mass on truly negative actions;
+- policy regret.
 
 Holdout `20261001..20261006` remains untouched.
 
@@ -119,11 +123,11 @@ DeepCrusher remains deferred.
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_hu_behavior_first_divergence.sh
+bash tools/run_lt2_jammer_fai_broad_calibration.sh
 ```
 
-Wait for `LT2_HU_BEHAVIOR_FIRST_DIVERGENCE_PASS` or the first error.
+Wait for `LT2_JAMMER_FAI_BROAD_CALIBRATION_PASS` or the first error.
 
-Then send `SpinCore_LT2_hu_behavior_first_divergence.json`.
+Then send `SpinCore_LT2_jammer_fai_broad_calibration.json`.
 
 Do not start any training.
