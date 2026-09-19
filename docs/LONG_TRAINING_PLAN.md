@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER FAI LOSS RESOLVED IN POPULATION — FIRST INFOSET FOLD-SHIFT AUDIT UNDERPOWERED — POWERED STRUCTURAL CONFIRMATION ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER FAI INFOSET OVERFOLD CONFIRMED — RAW MARGIN DECOMPOSITION ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -15,98 +15,80 @@ Stage B:
 
 Never rewrite either checkpoint.
 
-## What is already resolved
+## What is now resolved
 
-The natural Jammer population established a genuine FAI current-policy loss:
+The natural Jammer population first established:
 
-- expected FAI B-A `-4.18434` chips/hand;
-- CI95 `[-6.58924,-1.77944]`.
+- deterministic expected FAI B-A `-4.18434` chips/hand;
+- CI95 `[-6.58924,-1.77944]`;
+- Stage-B fold mass +12.24 pp;
+- B_MORE_FOLD harmful;
+- B_LESS_FOLD beneficial.
 
-Stage-B increasing FOLD probability carries the loss:
-
-- B_MORE_FOLD `-5.57116`, resolved;
-- B_LESS_FOLD `+1.38682`, resolved beneficial.
-
-The dominant structural blocks were already identified as:
+The powered low-noise infoset confirmation then froze the upstream high-impact structure:
 
 - legal `{FOLD,CALL}`;
 - one public action before FAI.
 
-## First low-noise infoset fold-shift test
+Within 192 B_MORE_FOLD anchors:
 
-The valid 96-anchor test used 512 explicit reference deals per anchor.
+- policy-value B-A `-24.54921`;
+- CI95 `[-35.58425,-13.51416]`;
+- fold-mass B-A `+0.46907`;
+- reference FOLD-minus-CONTINUE `-40.86355` chips;
+- canonical action-gap MSE worsens by `+0.000714714`, resolved;
+- class-error mass worsens by `+0.127198`, resolved;
+- fallback incidence rises from `6.25%` to `50.00%`;
+- raw-target MSE does not resolve.
 
-B_MORE_FOLD:
+Therefore the Stage-B overfold is confirmed at infoset level and is not a hidden-card / future-board covariance artifact.
 
-- policy-value B-A `-5.92295`;
-- seed-cluster CI95 `[-19.60209,+7.75619]`.
+## Why training is still paused
 
-B_LESS_FOLD:
+The defect is confirmed, but the smallest safe intervention is not yet identified.
 
-- `+7.47850`;
-- seed-cluster CI95 `[-7.99668,+22.95369]`.
+Two mechanisms can coexist:
 
-Both signs align with the full-population mechanism, but neither resolves.
+1. common raw-output offset crosses the zero boundary and changes fallback behavior;
+2. fold-vs-continue raw action gap itself degrades.
 
-This is an underpowered result, not evidence against the mechanism.
+Changing fallback prematurely could mask, but not repair, a real action-gap fit problem.
 
-## Why we still do not train
+No K4 training, fallback patch, regret-matching rewrite, or long-root continuation is authorized yet.
 
-The decision-time causal chain is not yet sufficiently isolated.
+## Active diagnostic
 
-A training modification now would risk fitting a noisy symptom.
+Run the raw-margin decomposition from the completed structural JSON.
 
-No K4 training, RM-loss change, fallback change, or long-root continuation is authorized.
+No new poker simulation is required.
 
-## Powered structural infoset confirmation
+For each anchor:
 
-Canonical contract:
+- decompose Stage A/B legal raw outputs into center and gap;
+- recombine center/gap counterfactually;
+- pass each hybrid through exact production lean regret matching;
+- compute low-noise policy value using the already stored Q reference;
+- evaluate a diagnostic-only argmax fallback probe.
 
-`docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_CONFIRMATION_20260919.md`.
+## Decision logic after decomposition
 
-Frozen inclusion:
+If action-gap drift is dominant:
+- next compare Stage-A vs Stage-B Advantage reservoirs under controlled fresh refits on the same fixed structural cohort;
+- distinguish training-data/target-signal drift from last-fit instability.
 
-- common Jammer FAI;
-- legal slots exactly `0,1`;
-- one public action before FAI.
+If common-offset/fallback drift is dominant:
+- design a translation/zero-crossing stabilization candidate;
+- evaluate it on forensic data before opening holdout.
 
-These criteria come from the upstream full-population localization, not the first low-noise result.
+If both matter:
+- do not accept a one-line fallback fix unless it removes the material residual gap error too.
 
-Within each forensic seed:
-
-- sample 32 B_MORE_FOLD;
-- sample 32 B_LESS_FOLD.
-
-Total:
-
-- 384 anchors;
-- 196,608 explicit reference deals at 64 hands × 8 boards.
-
-Primary metric:
-
-`policy_value_B_minus_A` for B_MORE_FOLD with seed-cluster CI.
-
-## Decision logic
-
-If B_MORE_FOLD resolves negative:
-- confirm a real infoset-level overfold defect in the frozen high-impact structure;
-- inspect raw fold/continue Advantage margins, fallback incidence, and estimator noise there;
-- design the smallest intervention;
-- freeze that intervention before opening any holdout seed.
-
-If B_MORE_FOLD remains unresolved:
-- do not increase sample size again by reflex;
-- decompose residual variance into state heterogeneity, reference noise, and seed composition.
-
-If B_MORE_FOLD resolves positive:
-- reject a direct fold-calibration intervention for this structure;
-- investigate evaluation weighting / hidden-chance covariance.
+Only after an intervention is frozen may holdout `20261001..20261006` be opened.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
-2. Run `bash tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh`.
-3. Wait for `LT2_JAMMER_FAI_STRUCTURAL_INFOSET_CONFIRMATION_PASS`.
-4. Send `SpinCore_LT2_jammer_fai_structural_infoset_confirmation.json`.
-5. Keep holdout `20261001..20261006` untouched.
-6. Do not train.
+2. Pull `main`.
+3. Run `bash tools/run_lt2_jammer_fai_raw_margin_decomposition.sh`.
+4. Send `SpinCore_LT2_jammer_fai_raw_margin_decomposition.json`.
+5. Do not train.
