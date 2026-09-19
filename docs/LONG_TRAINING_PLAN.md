@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER FAI INFOSET OVERFOLD CONFIRMED — RAW MARGIN DECOMPOSITION ACTIVE**
+Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — JAMMER FAI INFOSET OVERFOLD CONFIRMED — ACTION-GAP DRIFT DOMINANT — CONTROLLED REFIT ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -15,80 +15,89 @@ Stage B:
 
 Never rewrite either checkpoint.
 
-## What is now resolved
+## Confirmed defect
 
-The natural Jammer population first established:
-
-- deterministic expected FAI B-A `-4.18434` chips/hand;
-- CI95 `[-6.58924,-1.77944]`;
-- Stage-B fold mass +12.24 pp;
-- B_MORE_FOLD harmful;
-- B_LESS_FOLD beneficial.
-
-The powered low-noise infoset confirmation then froze the upstream high-impact structure:
+The pre-registered high-impact Jammer FAI structure is:
 
 - legal `{FOLD,CALL}`;
 - one public action before FAI.
 
-Within 192 B_MORE_FOLD anchors:
+For B_MORE_FOLD:
 
 - policy-value B-A `-24.54921`;
 - CI95 `[-35.58425,-13.51416]`;
 - fold-mass B-A `+0.46907`;
 - reference FOLD-minus-CONTINUE `-40.86355` chips;
-- canonical action-gap MSE worsens by `+0.000714714`, resolved;
-- class-error mass worsens by `+0.127198`, resolved;
-- fallback incidence rises from `6.25%` to `50.00%`;
-- raw-target MSE does not resolve.
+- canonical action-gap MSE worsens significantly;
+- class-error mass worsens significantly.
 
-Therefore the Stage-B overfold is confirmed at infoset level and is not a hidden-card / future-board covariance artifact.
+This is a real infoset-level Stage-B overfold against the hand-independent Jammer reference.
 
-## Why training is still paused
+## Raw-margin causal decomposition
 
-The defect is confirmed, but the smallest safe intervention is not yet identified.
+Using the exact production lean regret-matching map:
 
-Two mechanisms can coexist:
+- FULL_B `-24.549`;
+- GAP_ONLY `-18.719`, resolved;
+- OFFSET_ONLY `-4.946`, resolved;
+- nonlinear interaction unresolved.
 
-1. common raw-output offset crosses the zero boundary and changes fallback behavior;
-2. fold-vs-continue raw action gap itself degrades.
+Therefore action-gap drift is the larger causal component.
 
-Changing fallback prematurely could mask, but not repair, a real action-gap fit problem.
+A diagnostic argmax fallback recovers `+15.415` versus production B but does not prove B=A.
 
-No K4 training, fallback patch, regret-matching rewrite, or long-root continuation is authorized yet.
+Do not patch fallback alone.
 
-## Active diagnostic
+## Why root training remains paused
 
-Run the raw-margin decomposition from the completed structural JSON.
+We still do not know whether the Stage-B action-gap degradation comes from:
 
-No new poker simulation is required.
+1. the Stage-B Advantage reservoir / target signal;
+2. the final reset/refit and optimizer budget;
+3. reset/fit seed instability.
 
-For each anchor:
+Blindly adding roots can worsen a data-signal problem and wastes compute if the real issue is the fit stage.
 
-- decompose Stage A/B legal raw outputs into center and gap;
-- recombine center/gap counterfactually;
-- pass each hybrid through exact production lean regret matching;
-- compute low-noise policy value using the already stored Q reference;
-- evaluate a diagnostic-only argmax fallback probe.
+## Active experiment
 
-## Decision logic after decomposition
+Controlled fresh-refit audit:
 
-If action-gap drift is dominant:
-- next compare Stage-A vs Stage-B Advantage reservoirs under controlled fresh refits on the same fixed structural cohort;
-- distinguish training-data/target-signal drift from last-fit instability.
+- source checkpoints read-only;
+- no roots;
+- fixed 384-anchor cohort;
+- stored low-noise q reference reused;
+- Stage-A and Stage-B HU reservoirs;
+- paired init and batch seeds;
+- budgets 100, 400, 1600;
+- 3 replicates.
 
-If common-offset/fallback drift is dominant:
-- design a translation/zero-crossing stabilization candidate;
-- evaluate it on forensic data before opening holdout.
+### If Stage-B reservoir stays worse at 1600
 
-If both matter:
-- do not accept a one-line fallback fix unless it removes the material residual gap error too.
+Next:
+- inspect conditional target composition, sampling frequency, iteration weights and hidden-chance noise specifically for the FAI structural class;
+- design a target/reservoir intervention.
 
-Only after an intervention is frozen may holdout `20261001..20261006` be opened.
+### If Stage-B catches Stage A as budget rises
+
+Next:
+- modify fit schedule only;
+- validate on forensic cohort;
+- freeze candidate before holdout.
+
+### If replicate variance dominates
+
+Next:
+- stabilize the reset/refit procedure;
+- consider ensemble/seed selection only if it can be specified without holdout leakage.
+
+## Holdout
+
+Seeds `20261001..20261006` remain sealed until an intervention is frozen.
 
 ## Immediate direction
 
 1. Keep Stage A/B frozen.
 2. Pull `main`.
-3. Run `bash tools/run_lt2_jammer_fai_raw_margin_decomposition.sh`.
-4. Send `SpinCore_LT2_jammer_fai_raw_margin_decomposition.json`.
-5. Do not train.
+3. Run `bash tools/run_lt2_jammer_fai_controlled_refit.sh`.
+4. Send `SpinCore_LT2_jammer_fai_controlled_refit.json`.
+5. Do not resume root training.
