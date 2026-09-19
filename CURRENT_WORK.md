@@ -1,14 +1,14 @@
 # SpinCore Current Work
 
 Date: 2026-09-19
-Status: **LT2 STAGE B PASS — FULL-POPULATION JAMMER FAI LOSS RESOLVED — FIRST LOW-NOISE FOLD-SHIFT INFOSET AUDIT DIRECTIONALLY ALIGNED BUT UNDERPOWERED — POWERED STRUCTURAL CONFIRMATION NEXT — NO TRAINING**
+Status: **LT2 STAGE B PASS — JAMMER FAI INFOSET OVERFOLD CONFIRMED — RAW MARGIN DECOMPOSITION NEXT — NO TRAINING**
 
 ## Active source of truth
 
 Read before new compute:
 
-- `docs/LT2_JAMMER_FAI_FOLD_SHIFT_INFOSET_RESULT_20260919.md`
-- `docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_CONFIRMATION_20260919.md`
+- `docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_RESULT_20260919.md`
+- `docs/LT2_JAMMER_FAI_RAW_MARGIN_DECOMPOSITION_20260919.md`
 - `docs/LT2_JAMMER_FAI_POPULATION_RECONCILIATION_RESULT_20260919.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
@@ -24,109 +24,80 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Full-population FAI result remains canonical
+## Powered structural confirmation — decisive PASS
 
-The full natural Jammer population established:
+Frozen structure:
 
-- deterministic expected FAI B-A `-4.18434` chips/hand;
-- CI95 `[-6.58924,-1.77944]`;
-- Stage-B fold mass +12.24 pp;
-- B_MORE_FOLD contribution `-5.57116`, resolved;
-- B_LESS_FOLD contribution `+1.38682`, resolved.
+- common Jammer FAI;
+- legal exactly `{FOLD,CALL}`;
+- exactly one public action before FAI;
+- 192 B_MORE_FOLD + 192 B_LESS_FOLD anchors;
+- 512 explicit low-noise reference deals per anchor;
+- holdout untouched.
 
-The FAI regression is real in evaluation value.
+### Primary B_MORE_FOLD result
 
-## First low-noise fold-shift infoset audit — valid but inconclusive
+Policy-value B-A:
 
-Integrity:
+- `-24.54921` chips;
+- seed-cluster CI95 `[-35.58425,-13.51416]`.
 
-- 96 anchors;
-- 48 B_MORE_FOLD;
-- 48 B_LESS_FOLD;
-- 64 hands × 8 boards = 512 deals/anchor;
-- read-only;
-- holdout untouched;
-- maximum Stage-A/B canonical gap discrepancy `2.98e-08`.
+Fold-mass B-A:
 
-Candidate pools exactly match the full-population decomposition:
+- `+0.46907`;
+- CI95 `[+0.45307,+0.48508]`.
 
-- B_MORE_FOLD: 7,374;
-- B_LESS_FOLD: 3,287;
-- NO_FOLD_SHIFT: 5,618.
+Reference FOLD-minus-CONTINUE:
 
-### B_MORE_FOLD
+- `-40.86355` chips;
+- CI95 `[-57.51783,-24.20927]`.
 
-Infoset policy-value B-A:
+The Stage-B overfold is therefore confirmed at the decision-time infoset level. It is not explained by realized hidden-card / future-board covariance.
 
-- mean `-5.92295` chips;
-- seed-cluster CI95 `[-19.60209,+7.75619]`.
+### Model geometry
 
-Direction matches the full-population harmful effect but is unresolved.
+Canonical action-gap MSE B-A:
 
-### B_LESS_FOLD
+- `+0.000714714`;
+- CI95 `[+0.000397781,+0.001031647]`.
 
-Infoset policy-value B-A:
+Class-error mass B-A:
 
-- mean `+7.47850`;
-- seed-cluster CI95 `[-7.99668,+22.95369]`.
+- `+0.127198`;
+- CI95 `[+0.058510,+0.195887]`.
 
-Direction matches the full-population beneficial effect but is unresolved.
+Raw-target MSE does not resolve.
 
-Therefore the correct verdict is **underpowered / inconclusive**, not confirmation and not falsification.
+Fallback rate:
 
-## Structural focus was already known upstream
+- Stage A `6.25%`;
+- Stage B `50.00%`.
 
-Before the 96-anchor infoset audit, the full-population reconciliation had already localized most resolved loss to:
-
-- legal actions exactly `{FOLD,CALL}`;
-- one public action before FAI.
-
-A secondary decomposition of the current 96 anchors using those pre-existing criteria gives a negative B_MORE_FOLD signal, but it is not promoted as the final gate because it was not the primary aggregate of the 96-anchor audit.
+This is a mixed signal: fallback/zero-crossing is suspicious, but the fold-vs-continue action gap itself also degrades.
 
 ## Active gate
 
-Run the powered structural confirmation:
+Run a read-only raw-margin decomposition on the already completed structural report.
 
-```bash
-bash tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh
-```
+For each anchor, decompose the two legal raw outputs into:
 
-Frozen structural inclusion:
+- common center / offset;
+- fold-vs-continue gap.
 
-- common Jammer FAI;
-- legal slots exactly `0,1`;
-- exactly one public action before FAI.
+Recombine Stage-A/Stage-B center and gap under exact production lean regret matching.
 
-Within that structure:
+Also run one diagnostic-only argmax fallback counterfactual.
 
-- 32 B_MORE_FOLD anchors per seed;
-- 32 B_LESS_FOLD anchors per seed;
-- 384 anchors total;
-- same 64 hands × 8 boards reference;
-- 196,608 explicit reference deals.
-
-Primary confirmatory metric:
-
-`B_MORE_FOLD policy_value_B_minus_A`
-
-with seed-cluster CI.
-
-The selection still does not use sampled FAI action, terminal outcome, actual-deal Q, low-noise Q, or optimal class.
-
-Holdout `20261001..20261006` remains untouched.
-
-DeepCrusher remains deferred.
+No solver, roots, optimizer steps, memory writes, or holdout use.
 
 ## Immediate user action
 
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh
+bash tools/run_lt2_jammer_fai_raw_margin_decomposition.sh
 ```
 
-Wait for `LT2_JAMMER_FAI_STRUCTURAL_INFOSET_CONFIRMATION_PASS` or the first error.
+Send `SpinCore_LT2_jammer_fai_raw_margin_decomposition.json`.
 
-Then send `SpinCore_LT2_jammer_fai_structural_infoset_confirmation.json`.
-
-Do not start any training.
+Do not start K4 training or resume long training.
