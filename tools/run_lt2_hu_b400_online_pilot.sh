@@ -21,6 +21,13 @@ done
   echo "ERROR: Stage B source SHA mismatch" >&2; exit 4;
 }
 
+"$PYTHON_RUN" -m py_compile \
+  python/spincore/lean_functional_training.py \
+  python/spincore/lean_concurrent_iteration.py \
+  tools/run_lean_functional_training.py \
+  tools/audit_lt2_hu_policy_chain.py
+echo "PYTHON_PREFLIGHT_PASS"
+
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "ERROR: tracked source/index changes present; pilot requires code == HEAD." >&2
   git status --short --untracked-files=no >&2
