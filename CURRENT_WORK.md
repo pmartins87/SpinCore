@@ -1,19 +1,18 @@
 # SpinCore Current Work
 
 Date: 2026-09-19
-Status: **LT2 STAGE B PASS — JAMMER FAI INFOSET OVERFOLD CONFIRMED — 100-STEP ADVANTAGE REFIT IDENTIFIED AS INSUFFICIENT — B400 BROAD GENERALIZATION NEXT — NO ROOT TRAINING**
+Status: **LT2 STAGE B PASS — HU B400 BROAD GENERALIZATION PASS — HU-ONLY 400-STEP INTERVENTION FROZEN — 100-ITERATION ONLINE PILOT NEXT**
 
 ## Active source of truth
 
 Read before new compute:
 
-- `docs/LT2_JAMMER_FAI_STRUCTURAL_INFOSET_RESULT_20260919.md`
-- `docs/LT2_JAMMER_FAI_RAW_MARGIN_DECOMPOSITION_RESULT_20260919.md`
 - `docs/LT2_JAMMER_FAI_CONTROLLED_REFIT_RESULT_20260919.md`
-- `docs/LT2_HU_B400_BROAD_GENERALIZATION_20260919.md`
+- `docs/LT2_HU_B400_BROAD_GENERALIZATION_RESULT_20260919.md`
+- `docs/LT2_HU_B400_ONLINE_PILOT_20260919.md`
 - `docs/LONG_TRAINING_PLAN.md`
 
-Preserve Stage A and Stage B. Do not continue root training beyond iteration 7500.
+Preserve Stage A and Stage B.
 
 ## Preserved checkpoints
 
@@ -25,67 +24,60 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## Controlled refit result — decisive
+## B400 broad gate — PASS
 
-The fixed structural cohort reproduces the production B_MORE_FOLD defect.
+Against JAMMER, all three deterministic Stage-B 400-step HU refits improve significantly versus production Stage B:
 
-Fresh paired refits show:
+- R0: `+16.8266`, CI95 `[+12.8183,+20.8348]`;
+- R1: `+10.8855`, CI95 `[+7.1343,+14.6368]`;
+- R2: `+10.5116`, CI95 `[+6.4837,+14.5395]`.
 
-### 100 steps
-Stage-B reservoir minus Stage-A reservoir:
+All three are positive in absolute Jammer EV.
 
-- `-11.64417` chips;
-- replicate-mean CI95 `[-18.26748,-5.02086]`;
-- all 3 replicates negative.
+Against PASSIVE_CALLER all three also improve significantly.
 
-### 400 steps
-- `+13.91919`;
-- CI95 `[+2.96579,+24.87259]`;
-- all 3 replicates positive.
+Against UNIFORM_LEGAL none regresses significantly; R1 improves significantly.
 
-### 1600 steps
-- `+7.29093`;
-- CI95 `[+3.38533,+11.19653]`;
-- all 3 replicates positive.
+Therefore B400 generalizes beyond the selected FAI cohort.
 
-## Interpretation
+## Frozen intervention
 
-The Stage-B 2M-item Advantage reservoir is not poisoned.
+Change only the implicated domain:
 
-The canonical 100-step reset/refit is insufficient at this mature training stage.
+- THREE_HANDED Advantage fit: **100 steps unchanged**;
+- TRUE_HEADS_UP Advantage fit: **400 steps**;
+- K4: off.
 
-This is not just one unlucky final reset: three fresh 100-step trials remain negative.
+Do not raise 3H to 400 without evidence.
 
-400 is the minimum tested sufficient budget and therefore the candidate intervention.
+The trainer now supports an explicit `hu_advantage_steps` override while preserving old-checkpoint compatibility.
 
-1600 remains a fallback escalation because it is 16x canonical optimizer work.
+## Active gate
 
-## Active gate — broad B400 generalization
+Bounded online continuation from Stage B:
 
-Recreate all three deterministic B400 candidates and evaluate them on the full forensic HU population against:
+- iterations 7501..7600;
+- +100 iterations;
+- +60,000 roots;
+- source Stage B remains read-only;
+- post-pilot: full forensic HU policy-chain comparison of Stage B vs pilot, for both AveragePolicy and current Advantage behavior.
 
-- UNIFORM_LEGAL;
-- PASSIVE_CALLER;
-- JAMMER.
+Primary requirement:
+- current HU behavior must retain a resolved Jammer improvement after online feedback;
+- no resolved material regression against the other weak baselines.
 
-Pair against production Stage A and Stage B using common scenario/deal/seat/RNG streams.
-
-Primary question:
-
-does B400 repair the global Jammer current-behavior regression without causing a resolved material regression against the other baselines?
-
-No holdout and no roots.
+Holdout stays sealed.
 
 ## Immediate user action
 
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_hu_b400_broad_generalization.sh
+bash tools/run_lt2_hu_b400_online_pilot.sh
 ```
 
-Wait for `LT2_HU_B400_BROAD_GENERALIZATION_PASS` or the first error.
+Wait for `LT2_HU_B400_ONLINE_PILOT_PASS` or the first error.
 
-Then send `SpinCore_LT2_hu_b400_broad_generalization.json`.
+Then send `SpinCore_LT2_HU_B400_online_pilot_summary.json`.
 
-Do not resume long training.
+Do not extend beyond iteration 7600 yet.
