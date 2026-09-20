@@ -1,39 +1,36 @@
 # SpinCore — Long-Training Plan
 
-Status: **8000 FROZEN — SINGLE-MODEL FIT-BUDGET ESCALATION REJECTED — ENSEMBLE STABILITY GATE ACTIVE**
+Status: **8000 FROZEN — SIZE-4 ENSEMBLE PARTIAL STABILITY — BROAD EV ADJUDICATION ACTIVE**
 Date: 2026-09-20
 
-## Current diagnosis
+## Ensemble screen
 
-The current HU training-policy problem contains two components:
+On the mature 8000 reservoir:
 
-1. a real but moderate reservoir drift toward more root jamming;
-2. a much larger fresh-fit realization instability.
+- singles are highly unstable;
+- size 2 does not materially help;
+- size 4 sharply contracts global ALL_IN/POT_33 mass dispersion;
+- size 4 only modestly reduces mean TV and leaves p95 at 1.0.
 
-Increasing one fresh model from 400 to 3200 optimizer steps does not remove the instability:
+This is a mixed stability result, not a production pass.
 
-- mean pairwise TV improves only from 0.595 to 0.409;
-- p95 stays near 1.0;
-- argmax disagreement remains about 48%;
-- action-mass trajectories remain non-monotonic.
+## Next adjudication
 
-## Consequence
+Recreate the exact same deterministic 8 fresh400 models.
 
-Do not increase single-model fit budget further.
+Form:
+- ENS4_LEFT = replicas 0,1,2,3;
+- ENS4_RIGHT = replicas 4,5,6,7.
 
-The already-motivated variance-reduction branch is now the active candidate.
+Run both throughout complete HU hands on the full forensic population against:
+- UNIFORM_LEGAL;
+- PASSIVE_CALLER;
+- JAMMER.
 
-## Gate
+Compare against production current behavior at 7500, 7600 and 8000 with common random numbers.
 
-On the frozen iteration-8000 HU reservoir:
+If both ensembles show strategically similar EV and avoid the weak-baseline regressions while retaining the Jammer repair, size 4 becomes a candidate for online integration.
 
-- 8 fresh 400-step models;
-- cache raw Advantage outputs on all forensic HU roots;
-- compare disjoint size-1, size-2 and size-4 raw-output ensembles;
-- unchanged lean regret matching after averaging.
+If EV remains unstable or one ensemble fails materially, reject ensemble as insufficient and move to target/objective geometry.
 
-If size 2 or 4 materially stabilizes root policy, run a broad EV gate before any online integration.
-
-If ensemble also fails, investigate objective / target geometry rather than adding roots.
-
-Holdout remains sealed.
+No new roots and no holdout until adjudicated.
