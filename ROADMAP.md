@@ -4,52 +4,39 @@
 
 - LT0 — **DONE**.
 - LT1 — **DONE**.
-- LT2 Stage A — **PASS**.
 - LT2 Stage B — **PASS / PRESERVED**.
-- HU400 structural gate — **PASS**.
-- HU400 broad fresh-refit gate — **PASS**.
-- HU400 100-iteration online pilot — **PASS**.
-- HU400 refresh to 8000 — **MIXED**.
+- HU400 original FAI repair — **SUPPORTED ACROSS STRUCTURAL, BROAD AND ONLINE GATES**.
 - AveragePolicy at 8000 vs Stage B JAMMER — **RESOLVED IMPROVEMENT**.
-- AveragePolicy weak-baseline tradeoff — **NOT DETECTED**.
-- current behavior at 8000 vs Stage B JAMMER — **RESOLVED IMPROVEMENT**.
-- current behavior at 8000 vs Stage B PASSIVE_CALLER — **RESOLVED REGRESSION**.
-- root training beyond 8000 — **PAUSED**.
+- 7600 -> 8000 current-behavior PASSIVE loss — **RESOLVED**.
+- 7600 -> 8000 current-behavior UNIFORM loss — **RESOLVED**.
+- first-divergence localization — **PREFLOP_ROOT DOMINANT**.
+- apparent root action shift — **POT_33 -> ALL_IN DOMINANT IN SAMPLED DIVERGENCES**.
+- deterministic root probability audit — **NEXT**.
+- further training — **PAUSED**.
 - holdout — **SEALED**.
-- next — **7600 -> 8000 current-behavior first-divergence localization**.
 
-## Why training stops at 8000
+## First-divergence evidence
 
-The deployed AveragePolicy now moves in the desired direction:
+PASSIVE_CALLER root contribution:
+- `-3.056`, CI95 `[-5.251,-0.861]`.
 
-- JAMMER `+1.902`, CI95 entirely positive;
-- no resolved PASSIVE_CALLER or UNIFORM_LEGAL regression.
+UNIFORM_LEGAL root contribution:
+- `-7.469`, CI95 `[-10.548,-4.389]`.
 
-But the training behavior develops a new PASSIVE_CALLER weakness:
+Later streets are small/unresolved.
 
-- `-2.921`, CI95 `[-5.541,-0.302]`.
+JAMMER retains directionally positive FAI contribution while root is mildly negative/unresolved.
 
-Because current behavior drives future trajectory collection, this cannot be ignored before additional roots.
+## Interpretation
 
-## Next read-only gate
+The 400-step fit is not simply globally bad.
 
-Direct iteration 7600 -> 8000 first-divergence attribution across the already-used forensic HU population.
+It fixed the originally identified FAI underfit.
 
-Primary:
-- PASSIVE_CALLER.
+During further online training, however, the current Advantage policy drifts at the initial HU preflop root. Sampled transitions strongly indicate excess movement from the 2-BB open (POT_33) toward ALL_IN.
 
-Classify the first sampled action divergence into:
-- PREFLOP_ROOT;
-- PREFLOP_FACING_ALL_IN;
-- PREFLOP_OTHER;
-- FLOP;
-- TURN;
-- RIVER.
+## Next gate
 
-No roots. No optimizer steps. No holdout.
+Deterministically compare root policy distributions at 7600 and 8000 over every forensic HU scenario.
 
-## Immediate action
-
-Run `bash tools/run_lt2_hu_7600_8000_behavior_first_divergence.sh`.
-
-Do not continue training.
+Do not modify training until root mass shift is quantified.
