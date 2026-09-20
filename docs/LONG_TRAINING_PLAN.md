@@ -1,34 +1,42 @@
 # SpinCore — Long-Training Plan
 
-Status: **8000 FROZEN — OPEN-JAM INFLATION CONFIRMED — CAUSAL SPLIT ACTIVE**
+Status: **8000 FROZEN — TWO-MECHANISM ROOT DRIFT CONFIRMED — FIT-BUDGET STABILITY GATE ACTIVE**
 Date: 2026-09-20
 
-## Established
+## Current causal picture
 
-HU400 repaired the original FAI defect and the AveragePolicy at 8000 improved against Jammer.
+The original HU Jammer FAI defect was caused by insufficient fitting and is repaired by HU400.
 
-A separate current-behavior problem arose from 7600 to 8000 at the initial HU preflop root.
+The later root-policy problem is not one simple failure.
 
-Deterministic full-population audit confirms a massive shift:
-- ALL_IN +56.42 percentage points;
-- POT_33 -45.68 percentage points;
-- root TV 0.732;
-- argmax disagreement 83.3%.
+Paired fresh-400 refits show:
 
-This is not sampled-action noise.
+1. the 8000 reservoir itself has shifted toward more ALL_IN by about 8 percentage points versus 7600;
+2. independent 400-step fresh fits on a fixed reservoir still produce widely different root policies.
 
-## Remaining ambiguity
+The actual production checkpoint jump of +56 pp ALL_IN is therefore an extreme individual-fit realization layered on top of a smaller real reservoir drift.
 
-The Advantage model is reset every iteration with an iteration-dependent initialization seed and freshly fitted.
+## Next minimal intervention test
 
-Hence the final current networks at 7600 and 8000 are individual refit realizations.
+Before changing the algorithm, determine whether the mature reservoir simply requires more optimizer convergence globally.
 
-Before blaming reservoir evolution or the 400-step budget itself, pair fresh refits with identical init and batch seeds across the two reservoirs.
+Frozen iteration-8000 HU reservoir:
 
-## Gate
+- 4 independent fit trajectories;
+- evaluate at 400, 800, 1600, 3200 cumulative steps;
+- common forensic HU root corpus.
 
-Three 400-step paired refits, all 13,585 forensic HU roots.
+Metrics:
+- pairwise mean/p95 TV;
+- argmax disagreement;
+- ALL_IN and POT_33 mass dispersion.
 
-No training roots and no holdout.
+## Branches
 
-Do not continue long training until this split is resolved.
+If stability improves strongly with budget:
+- use smallest stable budget for broad EV validation.
+
+If stability plateaus:
+- proceed to ensemble/stability mechanism rather than more long training.
+
+No roots beyond iteration 8000 and no holdout until this is resolved.
