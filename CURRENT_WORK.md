@@ -1,18 +1,7 @@
 # SpinCore Current Work
 
-Date: 2026-09-19
-Status: **LT2 STAGE B PASS — HU B400 BROAD GENERALIZATION PASS — HU-ONLY 400-STEP INTERVENTION FROZEN — 100-ITERATION ONLINE PILOT NEXT**
-
-## Active source of truth
-
-Read before new compute:
-
-- `docs/LT2_JAMMER_FAI_CONTROLLED_REFIT_RESULT_20260919.md`
-- `docs/LT2_HU_B400_BROAD_GENERALIZATION_RESULT_20260919.md`
-- `docs/LT2_HU_B400_ONLINE_PILOT_20260919.md`
-- `docs/LONG_TRAINING_PLAN.md`
-
-Preserve Stage A and Stage B.
+Date: 2026-09-20
+Status: **LT2 STAGE B PRESERVED — HU400 ONLINE PILOT PASS — CURRENT BEHAVIOR REPAIRED — AVERAGEPOLICY LAGS — REFRESH TO 8000 NEXT**
 
 ## Preserved checkpoints
 
@@ -24,60 +13,62 @@ Stage B:
 - iteration 7500 / 4.5M roots;
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-## B400 broad gate — PASS
+HU400 pilot:
+- iteration 7600 / 4.56M roots;
+- SHA256 `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
 
-Against JAMMER, all three deterministic Stage-B 400-step HU refits improve significantly versus production Stage B:
+## Online pilot result — PASS
 
-- R0: `+16.8266`, CI95 `[+12.8183,+20.8348]`;
-- R1: `+10.8855`, CI95 `[+7.1343,+14.6368]`;
-- R2: `+10.5116`, CI95 `[+6.4837,+14.5395]`.
+Current Advantage behavior, pilot minus Stage B:
 
-All three are positive in absolute Jammer EV.
+- JAMMER: `+4.1830`, CI95 `[+0.3044,+8.0616]`;
+- PASSIVE_CALLER: `+1.3629`, unresolved;
+- UNIFORM_LEGAL: `+8.4233`, CI95 `[+4.3980,+12.4486]`.
 
-Against PASSIVE_CALLER all three also improve significantly.
+The HU400 repair survives 100 real training iterations and online feedback.
 
-Against UNIFORM_LEGAL none regresses significantly; R1 improves significantly.
+## AveragePolicy
 
-Therefore B400 generalizes beyond the selected FAI cohort.
+Pilot minus Stage B:
+
+- JAMMER: `+0.6792`, unresolved;
+- PASSIVE_CALLER: `+0.0045`, unresolved;
+- UNIFORM_LEGAL: `+0.7639`, unresolved.
+
+Deployment policy has not yet moved materially.
+
+This is not a reason to change the intervention. It is the expected consequence of a mature 2M strategy reservoir after only 100 corrected iterations.
 
 ## Frozen intervention
 
-Change only the implicated domain:
-
-- THREE_HANDED Advantage fit: **100 steps unchanged**;
-- TRUE_HEADS_UP Advantage fit: **400 steps**;
-- K4: off.
-
-Do not raise 3H to 400 without evidence.
-
-The trainer now supports an explicit `hu_advantage_steps` override while preserving old-checkpoint compatibility.
+- THREE_HANDED Advantage fit = 100;
+- TRUE_HEADS_UP Advantage fit = 400;
+- K4 off.
 
 ## Active gate
 
-Bounded online continuation from Stage B:
+Continue the pilot checkpoint for exactly 400 more iterations:
 
-- iterations 7501..7600;
-- +100 iterations;
-- +60,000 roots;
-- source Stage B remains read-only;
-- post-pilot: full forensic HU policy-chain comparison of Stage B vs pilot, for both AveragePolicy and current Advantage behavior.
+- 7601..8000;
+- +240,000 roots;
+- cumulative HU400 exposure from Stage B = 500 iterations.
 
-Primary requirement:
-- current HU behavior must retain a resolved Jammer improvement after online feedback;
-- no resolved material regression against the other weak baselines.
+Then compare preserved Stage B directly with iteration 8000 on the full forensic HU policy-chain.
 
-Holdout stays sealed.
+If AveragePolicy still does not move materially after 500 cumulative HU400 iterations, stop and audit policy-memory composition/weighting instead of blindly extending again.
+
+Holdout remains sealed.
 
 ## Immediate user action
 
 Pull `main` and run:
 
 ```bash
-bash tools/run_lt2_hu_b400_online_pilot.sh
+bash tools/run_lt2_hu_b400_refresh_to_8000.sh
 ```
 
-Wait for `LT2_HU_B400_ONLINE_PILOT_PASS` or the first error.
+Wait for `LT2_HU_B400_REFRESH_TO_8000_PASS`.
 
-Then send `SpinCore_LT2_HU_B400_online_pilot_summary.json`.
+Then send `SpinCore_LT2_HU_B400_refresh_to_8000_summary.json`.
 
-Do not extend beyond iteration 7600 yet.
+Do not continue beyond iteration 8000.
