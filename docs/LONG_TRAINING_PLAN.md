@@ -1,50 +1,34 @@
 # SpinCore — Long-Training Plan
 
-Status: **8000 FROZEN — ROOT PREFLOP CURRENT-POLICY DRIFT UNDER DIAGNOSIS**
+Status: **8000 FROZEN — OPEN-JAM INFLATION CONFIRMED — CAUSAL SPLIT ACTIVE**
 Date: 2026-09-20
 
-## Checkpoints
+## Established
 
-Stage B 7500 SHA:
-`3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
+HU400 repaired the original FAI defect and the AveragePolicy at 8000 improved against Jammer.
 
-HU400 pilot 7600 SHA:
-`c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
+A separate current-behavior problem arose from 7600 to 8000 at the initial HU preflop root.
 
-HU400 refresh 8000 SHA:
-`773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
+Deterministic full-population audit confirms a massive shift:
+- ALL_IN +56.42 percentage points;
+- POT_33 -45.68 percentage points;
+- root TV 0.732;
+- argmax disagreement 83.3%.
 
-## What remains valid
+This is not sampled-action noise.
 
-The original Jammer facing-all-in defect was a real underfit problem.
+## Remaining ambiguity
 
-HU400 repaired it in fresh refits, broad population tests and online training.
+The Advantage model is reset every iteration with an iteration-dependent initialization seed and freshly fitted.
 
-The iteration-8000 AveragePolicy also improves significantly against Jammer without a resolved AveragePolicy weak-baseline regression.
+Hence the final current networks at 7600 and 8000 are individual refit realizations.
 
-## New blocker
+Before blaming reservoir evolution or the 400-step budget itself, pair fresh refits with identical init and batch seeds across the two reservoirs.
 
-Between 7600 and 8000, current behavior deteriorates against PASSIVE_CALLER and UNIFORM_LEGAL.
+## Gate
 
-First-divergence attribution localizes the dominant resolved loss to PREFLOP_ROOT.
+Three 400-step paired refits, all 13,585 forensic HU roots.
 
-The sampled root transition matrix is dominated by POT_33 -> ALL_IN.
+No training roots and no holdout.
 
-## Current hypothesis
-
-Online HU400 training is producing a new root-policy geometry drift toward open-jamming.
-
-This is separate from the original FAI overfold defect.
-
-Do not conclude that 400 optimizer steps are globally excessive until deterministic root-policy mass and its state distribution are measured.
-
-## Next gate
-
-Read-only deterministic root-policy audit:
-- all forensic HU roots;
-- no sampled-action selection;
-- mass delta per action;
-- TV and argmax;
-- blind/effective-stack stratification.
-
-No root training beyond 8000 until reviewed.
+Do not continue long training until this split is resolved.
