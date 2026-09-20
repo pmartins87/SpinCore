@@ -1,7 +1,7 @@
 # SpinCore — LT2 HU B400 bounded online continuation pilot
 
 Date: 2026-09-19  
-Status: **ACTIVE — 100-ITERATION ONLINE FEEDBACK GATE**
+Status: **PASS — CURRENT BEHAVIOR IMPROVES; AVERAGEPOLICY REFRESH REQUIRED**
 
 ## Trigger
 
@@ -84,3 +84,7 @@ Stop. The fresh-refit result does not survive online feedback; inspect target/re
 Stop and localize the tradeoff before extension.
 
 Holdout `20261001..20261006` remains sealed.
+
+## Result
+
+See `docs/LT2_HU_B400_ONLINE_PILOT_RESULT_20260920.md`.
