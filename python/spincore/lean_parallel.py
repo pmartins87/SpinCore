@@ -274,13 +274,17 @@ def _collect_chunk(
     exact_opponent_levels: int,
     hu_preflop_board_average_k: int,
     jobs: tuple[RootJob, ...],
+    ensemble_model_states: tuple[dict, ...] | None = None,
 ) -> tuple[RootResult, ...]:
     if _WORKER_SOLVER_PATH is None:
         raise RuntimeError("parallel worker was not initialized")
     if int(hu_preflop_board_average_k) <= 0:
         raise ValueError("hu_preflop_board_average_k must be positive")
 
-    from spincore.lean_action_policy import LeanNeuralActionAdvantagePolicy
+    from spincore.lean_action_policy import (
+        LeanEnsembleActionAdvantagePolicy,
+        LeanNeuralActionAdvantagePolicy,
+    )
     from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
     from spincore.lean_solver_actions import LeanLegacyActionCollector
     from spincore.lean_training_scope import LeanTrainingScope
@@ -288,19 +292,36 @@ def _collect_chunk(
     from spincore_nn.action_models import make_advantage_action_model
 
     solver = SolverLibrary(Path(_WORKER_SOLVER_PATH))
-    _, model = make_advantage_action_model(
-        "C0_V1_FROZEN_CONTROL",
-        device="cpu",
-        seed=int(bundle_seed) & 0x7FFFFFFF,
-    )
-    model.load_state_dict(model_state)
-    model.eval()
-    behavior = LeanNeuralActionAdvantagePolicy(
-        model,
-        selected_representation="C0_V1_FROZEN_CONTROL",
-        device="cpu",
-        ready=bool(model_ready),
-    )
+
+    def _build_model(state_dict, offset: int = 0):
+        _, built = make_advantage_action_model(
+            "C0_V1_FROZEN_CONTROL",
+            device="cpu",
+            seed=(int(bundle_seed) + int(offset)) & 0x7FFFFFFF,
+        )
+        built.load_state_dict(state_dict)
+        built.eval()
+        return built
+
+    model = _build_model(model_state)
+    if ensemble_model_states:
+        ensemble_models = [
+            _build_model(state_dict, offset=index + 1)
+            for index, state_dict in enumerate(ensemble_model_states)
+        ]
+        behavior = LeanEnsembleActionAdvantagePolicy(
+            ensemble_models,
+            selected_representation="C0_V1_FROZEN_CONTROL",
+            device="cpu",
+            ready=bool(model_ready),
+        )
+    else:
+        behavior = LeanNeuralActionAdvantagePolicy(
+            model,
+            selected_representation="C0_V1_FROZEN_CONTROL",
+            device="cpu",
+            ready=bool(model_ready),
+        )
     class _BoardReplayCollector(LeanLegacyActionCollector):
         """Canonical collector plus opt-in preflop opponent-action replay.
 
@@ -505,6 +526,7 @@ class ParallelRootExecutor:
         exact_opponent_levels: int,
         jobs: Iterable[RootJob],
         hu_preflop_board_average_k: int = 1,
+        ensemble_model_states: tuple[dict, ...] | None = None,
     ) -> dict[str, float | int]:
         values = list(jobs)
         if not values:
@@ -518,6 +540,8 @@ class ParallelRootExecutor:
 
         # Freeze a small CPU copy of the current fitted advantage model. The
         # parent does not mutate it until every worker finishes this iteration.
+        # An optional tuple of ensemble member states is diagnostic/pilot-only;
+        # ordinary production calls omit it and preserve the historical path.
         model_state = {
             key: value.detach().cpu().clone()
             for key, value in bundle.advantage.state_dict().items()
@@ -536,6 +560,7 @@ class ParallelRootExecutor:
                 int(exact_opponent_levels),
                 int(hu_preflop_board_average_k),
                 chunk,
+                ensemble_model_states,
             )
             for chunk in chunks
         ]
@@ -563,6 +588,11 @@ class ParallelRootExecutor:
             "samples": samples,
             "seconds": float(time.perf_counter() - started),
             "hu_preflop_board_average_k": int(hu_preflop_board_average_k),
+            "ensemble_size": (
+                len(ensemble_model_states)
+                if ensemble_model_states
+                else 1
+            ),
         }
 
 
