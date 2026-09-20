@@ -1,87 +1,64 @@
-# SpinCore Roadmap — active state 2026-09-19
+# SpinCore Roadmap — active state 2026-09-20
 
 ## Active status
 
 - LT0 — **DONE**.
 - LT1 — **DONE**.
 - LT2 Stage A — **PASS**.
-- LT2 Stage B — **PASS** at 4.5M roots / iteration 7500.
-- Jammer FAI infoset overfold — **CONFIRMED**.
-- Action-gap drift — **DOMINANT CAUSAL COMPONENT**.
-- Stage-B reservoir poisoning — **NOT SUPPORTED**.
-- 100-step HU Advantage refit — **INSUFFICIENT**.
-- 400-step HU Advantage refit — **STRUCTURAL PASS**.
-- B400 broad HU generalization — **PASS**.
-- Intervention — **FROZEN AS HU 400 / 3H 100 / K4 OFF**.
-- 100-iteration online continuation pilot — **NEXT**.
-- long continuation beyond 7600 — **NOT AUTHORIZED**.
+- LT2 Stage B — **PASS / PRESERVED**.
+- Jammer FAI overfold — **CONFIRMED**.
+- 100-step HU fit — **INSUFFICIENT**.
+- 400-step HU fit — **STRUCTURAL PASS**.
+- B400 broad generalization — **PASS**.
+- 100-iteration HU400 online pilot — **PASS**.
+- current HU behavior after online feedback — **IMPROVED**.
+- deployed AveragePolicy after 100 iterations — **LAGGING / UNRESOLVED**.
+- policy-memory refresh to iteration 8000 — **NEXT**.
+- long continuation beyond 8000 — **NOT AUTHORIZED**.
 - holdout — **SEALED**.
-- DeepCrusher — **DEFERRED**.
 
-## Broad B400 evidence
+## Pilot evidence
 
-JAMMER, candidate minus production Stage B:
+Stage B -> iteration 7600 current behavior:
 
-- B400_R0: `+16.8266`, CI95 `[+12.8183,+20.8348]`;
-- B400_R1: `+10.8855`, CI95 `[+7.1343,+14.6368]`;
-- B400_R2: `+10.5116`, CI95 `[+6.4837,+14.5395]`.
+- JAMMER `+4.183`, resolved;
+- PASSIVE_CALLER `+1.363`, unresolved;
+- UNIFORM_LEGAL `+8.423`, resolved.
 
-PASSIVE_CALLER:
-- all three B400 candidates improve significantly.
+Stage B -> iteration 7600 AveragePolicy:
 
-UNIFORM_LEGAL:
-- no B400 candidate shows resolved deterioration;
-- R1 improves significantly.
+- JAMMER `+0.679`, unresolved;
+- PASSIVE_CALLER `+0.004`, unresolved;
+- UNIFORM_LEGAL `+0.764`, unresolved.
 
-The repair is therefore population-level rather than a selected-anchor artifact.
+Thus the online learning loop does not destroy the HU400 repair, but deployment memory has barely refreshed.
 
-## Why HU-only
+## Next bounded block
 
-The causal chain and broad validation are HU-specific.
+Source:
+- iteration 7600 SHA `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
 
-Raising the 3H fit budget would be an untested extra intervention and would approximately increase compute for a domain that has not been implicated.
-
-The minimal frozen change is:
-
-- 3H = 100 Advantage fit steps;
-- HU = 400 Advantage fit steps.
-
-## Next gate — online feedback
-
-Create an isolated copy of Stage B and continue exactly 100 iterations:
-
-- 7501..7600;
-- 60k roots;
-- 31 root workers;
-- vectorized fitting;
-- concurrent domain fit;
+Continue:
+- 400 iterations;
+- target 8000;
+- +240k roots;
 - 3H 100;
-- HU 400.
+- HU 400;
+- K4 off.
 
-Then automatically compare Stage B vs pilot on the full forensic HU population using both:
+## Decision at 8000
 
-- deployed AveragePolicy;
-- current Advantage behavior.
+Current behavior must still show positive Jammer movement without a resolved regression elsewhere.
 
-### Pass direction
+AveragePolicy should begin to show measurable Jammer movement.
 
-Current behavior:
-- resolved improvement vs Stage B against JAMMER;
-- no resolved material deterioration against PASSIVE_CALLER or UNIFORM_LEGAL.
-
-AveragePolicy:
-- observe direction, but do not require full repair after only 100 new iterations because most policy-memory samples remain historical.
-
-### If current behavior passes but AveragePolicy lags
-
-Extend the same frozen intervention in another bounded block to refresh policy memory.
-
-### If current behavior fails
-
-Stop before more roots and inspect online target/reservoir feedback.
+If AveragePolicy is still essentially flat after cumulative 500 HU400 iterations:
+- stop;
+- audit policy-memory composition, weighting and AveragePolicy fit;
+- do not solve deployment lag merely by adding more roots.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_hu_b400_online_pilot.sh`.
+Run `bash tools/run_lt2_hu_b400_refresh_to_8000.sh`.
 
-Do not go beyond iteration 7600 until that result is reviewed.
+Stop at iteration 8000.
