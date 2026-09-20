@@ -1,60 +1,65 @@
 # SpinCore Current Work
 
 Date: 2026-09-20
-Status: **ITERATION 8000 FROZEN — AVERAGEPOLICY JAMMER IMPROVEMENT RESOLVED — CURRENT BEHAVIOR PASSIVE REGRESSION RESOLVED — READ-ONLY LOCALIZATION NEXT**
+Status: **ITERATION 8000 FROZEN — PASSIVE/UNIFORM CURRENT-BEHAVIOR LOSS LOCALIZED TO PREFLOP ROOT — DETERMINISTIC ROOT-POLICY AUDIT NEXT**
 
 ## Preserved checkpoints
 
-Stage B:
-- iteration 7500 / 4.5M roots;
+Stage B 7500:
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-HU400 pilot:
-- iteration 7600 / 4.56M roots;
+HU400 pilot 7600:
 - SHA256 `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
 
-HU400 refresh:
-- iteration 8000 / 4.80M roots;
+HU400 refresh 8000:
 - SHA256 `773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
 
-## Deployment AveragePolicy — positive result
+## 7600 -> 8000 first-divergence result
 
-Stage B -> 8000:
+PASSIVE_CALLER:
+- total `-4.2843`, resolved;
+- PREFLOP_ROOT contribution `-3.0561`, CI95 `[-5.2509,-0.8613]` — dominant resolved component.
 
-- JAMMER: `+1.9021`, CI95 `[+0.6874,+3.1168]` — resolved improvement;
-- PASSIVE_CALLER: `+0.7865`, unresolved — no regression;
-- UNIFORM_LEGAL: `+1.1757`, unresolved — no regression.
+UNIFORM_LEGAL:
+- total `-9.3743`, resolved;
+- PREFLOP_ROOT contribution `-7.4686`, CI95 `[-10.5478,-4.3895]` — dominant resolved component.
 
-The deployment policy has begun to absorb the HU400 repair.
+JAMMER:
+- total `+1.3480`, unresolved;
+- FAI `+2.2141`, root `-0.8661`, both unresolved.
 
-## Current Advantage behavior — new tradeoff
+The original FAI repair survives directionally. The new failure is preflop-root drift.
 
-Stage B -> 8000:
+## Root transition clue
 
-- JAMMER: `+5.5310`, resolved improvement;
-- PASSIVE_CALLER: `-2.9214`, CI95 `[-5.5408,-0.3020]` — resolved regression;
-- UNIFORM_LEGAL: `-0.9510`, unresolved.
+Most common root first-divergence:
 
-The preregistered current-behavior no-tradeoff condition therefore fails.
+- `POT_33 -> ALL_IN`: 5,618 seat-runs.
 
-## Decision
+Also:
+- `CHECK_CALL -> ALL_IN`: 1,546;
+- `FOLD -> ALL_IN`: 914.
 
-Do not continue roots.
+This strongly suggests a new open-jam mass shift at iteration 8000, but transition counts are sampled and are not yet a deterministic probability-mass proof.
 
-Freeze iteration 8000 as a deployment candidate, but do not unseal holdout yet.
+## Active gate
 
-Next run is read-only: compare iteration 7600 directly with 8000 and localize the first current-behavior divergence, with PASSIVE_CALLER as the primary target.
+Run a deterministic root-policy distribution audit on every forensic HU root, before any hero action is sampled.
 
-## Immediate user action
+Measure:
+- TV;
+- argmax disagreement;
+- probability-mass change by action;
+- blind and effective-stack localization.
 
-Pull main and run:
+No roots, no optimizer, no holdout.
+
+## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_7600_8000_behavior_first_divergence.sh
+bash tools/run_lt2_hu_root_policy_drift_7600_8000.sh
 ```
 
-Wait for `LT2_HU_7600_8000_BEHAVIOR_FIRST_DIVERGENCE_PASS`.
+Send `SpinCore_LT2_hu_root_policy_drift_7600_8000.json`.
 
-Then send `SpinCore_LT2_hu_7600_8000_behavior_first_divergence.json`.
-
-Do not train beyond iteration 8000.
+Do not train beyond 8000.
