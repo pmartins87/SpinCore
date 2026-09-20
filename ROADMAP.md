@@ -2,41 +2,18 @@
 
 ## Active status
 
-- LT0 — **DONE**.
-- LT1 — **DONE**.
-- LT2 Stage B — **PASS / PRESERVED**.
-- HU400 original FAI repair — **SUPPORTED ACROSS STRUCTURAL, BROAD AND ONLINE GATES**.
-- AveragePolicy at 8000 vs Stage B JAMMER — **RESOLVED IMPROVEMENT**.
-- 7600 -> 8000 current-behavior PASSIVE loss — **RESOLVED**.
-- 7600 -> 8000 current-behavior UNIFORM loss — **RESOLVED**.
-- first-divergence localization — **PREFLOP_ROOT DOMINANT**.
-- apparent root action shift — **POT_33 -> ALL_IN DOMINANT IN SAMPLED DIVERGENCES**.
-- deterministic root probability audit — **NEXT**.
-- further training — **PAUSED**.
+- original Jammer FAI underfit — **CONFIRMED / REPAIRED BY HU400**.
+- AveragePolicy at 8000 vs Stage B Jammer — **RESOLVED IMPROVEMENT**.
+- current-behavior passive/uniform regression — **LOCALIZED TO PREFLOP ROOT**.
+- deterministic root drift 7600 -> 8000 — **CONFIRMED**.
+- ALL_IN root mass: `19.17% -> 75.58%`.
+- POT_33 root mass: `52.65% -> 6.97%`.
+- next causal split — **RESERVOIR EVOLUTION VS FRESH-REFIT REALIZATION**.
+- further roots — **PAUSED**.
 - holdout — **SEALED**.
 
-## First-divergence evidence
+## Next
 
-PASSIVE_CALLER root contribution:
-- `-3.056`, CI95 `[-5.251,-0.861]`.
+Run three same-seed paired 400-step fresh refits from the 7600 and 8000 HU reservoirs and compare deterministic root policies.
 
-UNIFORM_LEGAL root contribution:
-- `-7.469`, CI95 `[-10.548,-4.389]`.
-
-Later streets are small/unresolved.
-
-JAMMER retains directionally positive FAI contribution while root is mildly negative/unresolved.
-
-## Interpretation
-
-The 400-step fit is not simply globally bad.
-
-It fixed the originally identified FAI underfit.
-
-During further online training, however, the current Advantage policy drifts at the initial HU preflop root. Sampled transitions strongly indicate excess movement from the 2-BB open (POT_33) toward ALL_IN.
-
-## Next gate
-
-Deterministically compare root policy distributions at 7600 and 8000 over every forensic HU scenario.
-
-Do not modify training until root mass shift is quantified.
+This distinguishes whether online data changed the learned root signal or whether production current-policy checkpoints are intrinsically unstable across reset/refit seeds.
