@@ -1,42 +1,39 @@
 # SpinCore — Long-Training Plan
 
-Status: **8000 FROZEN — TWO-MECHANISM ROOT DRIFT CONFIRMED — FIT-BUDGET STABILITY GATE ACTIVE**
+Status: **8000 FROZEN — SINGLE-MODEL FIT-BUDGET ESCALATION REJECTED — ENSEMBLE STABILITY GATE ACTIVE**
 Date: 2026-09-20
 
-## Current causal picture
+## Current diagnosis
 
-The original HU Jammer FAI defect was caused by insufficient fitting and is repaired by HU400.
+The current HU training-policy problem contains two components:
 
-The later root-policy problem is not one simple failure.
+1. a real but moderate reservoir drift toward more root jamming;
+2. a much larger fresh-fit realization instability.
 
-Paired fresh-400 refits show:
+Increasing one fresh model from 400 to 3200 optimizer steps does not remove the instability:
 
-1. the 8000 reservoir itself has shifted toward more ALL_IN by about 8 percentage points versus 7600;
-2. independent 400-step fresh fits on a fixed reservoir still produce widely different root policies.
+- mean pairwise TV improves only from 0.595 to 0.409;
+- p95 stays near 1.0;
+- argmax disagreement remains about 48%;
+- action-mass trajectories remain non-monotonic.
 
-The actual production checkpoint jump of +56 pp ALL_IN is therefore an extreme individual-fit realization layered on top of a smaller real reservoir drift.
+## Consequence
 
-## Next minimal intervention test
+Do not increase single-model fit budget further.
 
-Before changing the algorithm, determine whether the mature reservoir simply requires more optimizer convergence globally.
+The already-motivated variance-reduction branch is now the active candidate.
 
-Frozen iteration-8000 HU reservoir:
+## Gate
 
-- 4 independent fit trajectories;
-- evaluate at 400, 800, 1600, 3200 cumulative steps;
-- common forensic HU root corpus.
+On the frozen iteration-8000 HU reservoir:
 
-Metrics:
-- pairwise mean/p95 TV;
-- argmax disagreement;
-- ALL_IN and POT_33 mass dispersion.
+- 8 fresh 400-step models;
+- cache raw Advantage outputs on all forensic HU roots;
+- compare disjoint size-1, size-2 and size-4 raw-output ensembles;
+- unchanged lean regret matching after averaging.
 
-## Branches
+If size 2 or 4 materially stabilizes root policy, run a broad EV gate before any online integration.
 
-If stability improves strongly with budget:
-- use smallest stable budget for broad EV validation.
+If ensemble also fails, investigate objective / target geometry rather than adding roots.
 
-If stability plateaus:
-- proceed to ensemble/stability mechanism rather than more long training.
-
-No roots beyond iteration 8000 and no holdout until this is resolved.
+Holdout remains sealed.
