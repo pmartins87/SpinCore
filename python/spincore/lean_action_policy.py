@@ -46,6 +46,51 @@ def lean_regret_matching_policy(
     return tuple(out)
 
 
+class LeanEnsembleActionAdvantagePolicy:
+    """Average raw outputs from independent AdvantageNets before lean regret matching.
+
+    The models are deliberately combined in prediction space rather than by
+    averaging weights. This preserves the intervention validated by the LT2 HU
+    ensemble audits and leaves the production regret-matching map unchanged.
+    """
+
+    def __init__(
+        self,
+        models,
+        *,
+        selected_representation: str = "C0_V1_FROZEN_CONTROL",
+        device: str = "cpu",
+        ready: bool = True,
+    ):
+        values = list(models)
+        if not values:
+            raise ValueError("ensemble requires at least one Advantage model")
+        self.models = values
+        self.selected_representation = str(selected_representation)
+        self.device = device
+        self.ready = bool(ready)
+
+    def __call__(self, state, observation: bytes, legal: tuple[int, ...]):
+        if not self.ready:
+            return uniform_policy(state, observation, legal)
+
+        import torch
+
+        batch = collate_action_observations(
+            self.selected_representation,
+            [observation],
+            [universal_legal_mask(legal)],
+            device=self.device,
+        )
+        raws = []
+        with torch.no_grad():
+            for model in self.models:
+                model.eval()
+                raws.append(model(batch)[0])
+            raw = torch.stack(raws, dim=0).mean(dim=0).detach().cpu().tolist()
+        return lean_regret_matching_policy(raw, legal)
+
+
 class LeanNeuralActionAdvantagePolicy:
     """Ten-output universal model with the repaired legacy fallback semantics."""
 
