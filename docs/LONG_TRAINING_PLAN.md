@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 STAGE B PASS — ROOT TRAINING PAUSED — INSUFFICIENT 100-STEP ADVANTAGE REFIT IDENTIFIED — B400 BROAD GENERALIZATION ACTIVE**
+Status: **LT2 STAGE B PRESERVED — HU B400 BROAD PASS — HU400/3H100 INTERVENTION FROZEN — 100-ITERATION ONLINE PILOT ACTIVE**
 Date: 2026-09-19
 
 ## Preserved milestones
@@ -15,88 +15,96 @@ Stage B:
 
 Never rewrite either checkpoint.
 
-## Causal chain now resolved to the fit stage
+## Resolved diagnosis
 
-Previously established:
+The Stage-B HU Jammer regression was traced through:
 
-- Jammer current behavior regresses at Stage B;
-- 73.86% localizes to preflop facing-all-in;
-- Stage B overfolds;
-- low-noise infoset reference confirms that overfold is wrong;
-- fold-vs-continue Advantage action-gap drift is the dominant component;
-- fallback is an amplifier but a fallback-only patch is insufficient.
+1. current Advantage behavior;
+2. preflop facing-all-in;
+3. wrong Stage-B overfold;
+4. low-noise infoset action-gap degradation;
+5. insufficient fresh fitting rather than poisoned Stage-B reservoir.
 
-Controlled fresh refits now show:
+Controlled refit:
+- 100 steps fails;
+- 400 and 1600 recover.
 
-- 100 steps: Stage-B reservoir remains worse;
-- 400 steps: Stage-B reservoir is better in all three paired replicates;
-- 1600 steps: Stage-B reservoir remains better in all three paired replicates.
+Broad natural-HU generalization:
+- all three B400 candidates significantly improve versus Stage B against JAMMER;
+- all three significantly improve against PASSIVE_CALLER;
+- none significantly regresses against UNIFORM_LEGAL.
 
-Therefore the reservoir contains usable signal and the canonical 100-step fit is the leading failure mechanism.
+## Frozen intervention
 
-## Why root training is still paused
+Use the smallest evidenced change:
 
-The fixed structural cohort is selected around the known Jammer FAI failure.
+- THREE_HANDED Advantage fit = 100;
+- TRUE_HEADS_UP Advantage fit = 400;
+- K4 = 1/off;
+- no other poker semantics changed.
 
-Before changing the training schedule globally, the 400-step candidate must generalize to the natural HU forensic population.
+The trainer exposes a backward-compatible `hu_advantage_steps` field so old checkpoints load with the historical global budget unless the HU override is explicitly set on continuation.
 
-## Candidate
+## Why not resume long training yet
 
-`advantage_steps=400`.
+Fresh refits prove the signal is present in the reservoir, but they do not prove that the repair survives the online feedback loop.
 
-Reason:
+A corrected HU behavior changes:
 
-- smallest tested budget that clears the primary cohort in all three replicates;
-- 4x canonical optimizer work;
-- materially cheaper than 1600.
+- traversal behavior;
+- newly collected Advantage samples;
+- sampled AveragePolicy targets;
+- future reservoir composition.
 
-1600 is reserved for one escalation branch if 400 fails global Jammer generalization.
+That feedback must be tested before another large block.
 
-## Active broad gate
+## Active pilot
 
-Recreate all three deterministic 400-step Stage-B candidates.
+From Stage B:
 
-Evaluate on all forensic HU scenarios against:
+- +100 iterations;
+- +60,000 roots;
+- target iteration 7600;
+- 31 workers;
+- concurrent fit;
+- vectorized batches;
+- HU 400 / 3H 100.
 
+Stage B itself remains read-only.
+
+## Automatic post-pilot gate
+
+Full forensic HU policy-chain:
+
+- seeds 20260920..20260925;
+- 5000 scenarios/seed;
 - UNIFORM_LEGAL;
 - PASSIVE_CALLER;
-- JAMMER.
+- JAMMER;
+- production Stage B versus pilot;
+- both AveragePolicy and current Advantage behavior.
 
-Use common random numbers and compare with:
+Primary:
+- current behavior retains resolved Jammer improvement;
+- no resolved material regression on other baselines.
 
-- production Stage A;
-- production Stage B.
+Secondary:
+- measure whether AveragePolicy has begun moving in the same direction.
 
-No roots are generated.
+## Next branch
 
-## Decision logic
+If current behavior passes:
+- decide whether to extend 400–500 more iterations based on AveragePolicy movement and policy-memory refresh.
 
-### B400 improves Jammer in all three replicates and does not create a resolved material regression elsewhere
+If current behavior fails:
+- no extension; inspect online target/reservoir dynamics.
 
-Freeze 400 as the training-side intervention.
-
-Next:
-- create a bounded continuation pilot from Stage B;
-- use a small, predefined number of additional iterations;
-- evaluate before any long continuation.
-
-### B400 still fails broad Jammer
-
-Run one broad 1600-step escalation.
-
-### B400 introduces a resolved tradeoff
-
-Do not train.
-Investigate whether the stronger fit is moving toward a different weakness rather than genuine overall improvement.
-
-## Holdout
-
-Seeds `20261001..20261006` remain sealed until the intervention is frozen and a bounded pilot is ready for final validation.
+Holdout `20261001..20261006` remains sealed.
 
 ## Immediate direction
 
-1. Keep Stage A/B frozen.
+1. Keep Stage A/B immutable.
 2. Pull `main`.
-3. Run `bash tools/run_lt2_hu_b400_broad_generalization.sh`.
-4. Send `SpinCore_LT2_hu_b400_broad_generalization.json`.
-5. Do not resume root training.
+3. Run `bash tools/run_lt2_hu_b400_online_pilot.sh`.
+4. Send `SpinCore_LT2_HU_B400_online_pilot_summary.json`.
+5. Do not train beyond iteration 7600 yet.
