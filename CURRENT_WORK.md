@@ -1,54 +1,60 @@
 # SpinCore Current Work
 
 Date: 2026-09-20
-Status: **ITERATION 8000 FROZEN — MORE FIT STEPS FAIL TO STABILIZE CURRENT HU POLICY — MATURE-RESERVOIR ENSEMBLE GATE NEXT**
+Status: **ITERATION 8000 FROZEN — SIZE-4 ENSEMBLE PARTIALLY STABILIZES ROOT FREQUENCIES BUT NOT STATEWISE POLICY — BROAD EV GATE NEXT**
 
-## Refit-budget stability result
+## Mature ensemble stability result
 
-Same frozen iteration-8000 HU Advantage reservoir, four independent trajectories:
+Eight independent fresh400 fits on the frozen iteration-8000 HU reservoir.
 
-| steps | mean pair TV | p95 TV | argmax disagreement |
-|---:|---:|---:|---:|
-| 400 | 0.5950 | 1.0000 | 63.58% |
-| 800 | 0.5395 | 0.9891 | 59.57% |
-| 1600 | 0.4278 | 0.9700 | 46.75% |
-| 3200 | 0.4090 | 0.9640 | 47.71% |
+Single models:
+- mean pair TV `0.5643`;
+- p95 `1.0000`;
+- argmax disagreement `61.01%`;
+- ALL_IN range `42.97 pp`;
+- POT_33 range `40.39 pp`.
 
-3200 cuts mean TV by only about 31% versus 400 while the high-tail disagreement remains almost saturated.
+Size 2 is not useful:
+- mean-TV ratio `0.900`;
+- p95 ratio `1.000`;
+- ALL_IN/POT_33 ranges slightly worse than singles.
 
-ALL_IN mass dispersion is not monotonic:
-- range 400: 10.80 pp;
-- range 800: 44.10 pp;
-- range 1600: 16.67 pp;
-- range 3200: 20.63 pp.
+Size 4:
+- mean TV `0.4814` — only 14.7% lower;
+- p95 `1.0000` — unchanged;
+- argmax disagreement `47.18%` — 22.7% lower;
+- ALL_IN range `10.05 pp` — 76.6% lower;
+- POT_33 range `12.69 pp` — 68.6% lower.
 
-A representative fit trajectory moves ALL_IN:
-`23.11% -> 61.08% -> 35.64% -> 12.85%`
-at 400/800/1600/3200.
+## Interpretation
 
-## Decision
+Size 4 strongly stabilizes aggregate action frequencies but does not make the per-state policy geometries agree.
 
-Do not spend more optimizer steps on a single freshly reset model.
-
-The next gate tests direct variance reduction by averaging independent Advantage estimators.
+Therefore root-TV alone is insufficient to decide whether the ensemble is strategically useful.
 
 ## Active gate
 
-Frozen iteration-8000 HU reservoir:
+Recreate the exact same 8 models and evaluate the two disjoint size-4 ensembles over complete HU hands against:
 
-- 8 independent fresh 400-step fits;
-- same 13,585 forensic HU roots;
-- disjoint ensemble sizes 1, 2 and 4;
-- average raw Advantage outputs before unchanged lean regret matching.
+- UNIFORM_LEGAL;
+- PASSIVE_CALLER;
+- JAMMER.
 
-No roots. No checkpoint mutation. Holdout sealed.
+Context:
+- production current behavior 7500;
+- production current behavior 7600;
+- production current behavior 8000.
+
+The key question is whether residual statewise disagreement translates into chip-EV instability.
+
+No roots. Holdout sealed.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_mature_ensemble_root_stability.sh
+bash tools/run_lt2_hu_mature_ens4_broad_ev.sh
 ```
 
-Send `SpinCore_LT2_hu_mature_ensemble_root_stability.json`.
+Send `SpinCore_LT2_hu_mature_ens4_broad_ev.json`.
 
-Do not train beyond iteration 8000.
+Do not train beyond 8000.
