@@ -6,77 +6,82 @@
 - LT1 — **DONE**.
 - LT2 Stage A — **PASS**.
 - LT2 Stage B — **PASS** at 4.5M roots / iteration 7500.
-- Jammer FAI loss — **CONFIRMED**.
 - Jammer FAI infoset overfold — **CONFIRMED**.
-- Raw center-vs-gap decomposition — **ACTION-GAP DRIFT DOMINANT; OFFSET/FALLBACK SECONDARY**.
-- Fallback-only patch — **REJECTED AS INSUFFICIENT**.
-- Controlled reservoir refit — **PASS; 100 STEPS FAIL, 400/1600 RECOVER**.
-- Stage-B reservoir poisoning hypothesis — **NOT SUPPORTED**.
-- Insufficient Advantage refit budget — **LEADING CAUSE**.
-- B400 broad generalization — **NEXT**.
-- K4 training — **NOT AUTHORIZED**.
-- long root training — **PAUSED**.
+- Action-gap drift — **DOMINANT CAUSAL COMPONENT**.
+- Stage-B reservoir poisoning — **NOT SUPPORTED**.
+- 100-step HU Advantage refit — **INSUFFICIENT**.
+- 400-step HU Advantage refit — **STRUCTURAL PASS**.
+- B400 broad HU generalization — **PASS**.
+- Intervention — **FROZEN AS HU 400 / 3H 100 / K4 OFF**.
+- 100-iteration online continuation pilot — **NEXT**.
+- long continuation beyond 7600 — **NOT AUTHORIZED**.
+- holdout — **SEALED**.
 - DeepCrusher — **DEFERRED**.
 
-## Controlled refit evidence
+## Broad B400 evidence
 
-B_MORE_FOLD, Stage-B-reservoir minus Stage-A-reservoir:
+JAMMER, candidate minus production Stage B:
 
-- 100 steps: `-11.64417`, CI95 `[-18.26748,-5.02086]`;
-- 400 steps: `+13.91919`, CI95 `[+2.96579,+24.87259]`;
-- 1600 steps: `+7.29093`, CI95 `[+3.38533,+11.19653]`.
+- B400_R0: `+16.8266`, CI95 `[+12.8183,+20.8348]`;
+- B400_R1: `+10.8855`, CI95 `[+7.1343,+14.6368]`;
+- B400_R2: `+10.5116`, CI95 `[+6.4837,+14.5395]`.
 
-All three 100-step reps are negative.
-All three 400-step reps are positive.
-All three 1600-step reps are positive.
+PASSIVE_CALLER:
+- all three B400 candidates improve significantly.
 
-Therefore more Stage-B data did not destroy the useful signal. The fitted network fails to extract it at the canonical 100-step budget.
+UNIFORM_LEGAL:
+- no B400 candidate shows resolved deterioration;
+- R1 improves significantly.
 
-## Candidate intervention
+The repair is therefore population-level rather than a selected-anchor artifact.
 
-Use `advantage_steps=400` as the minimum tested sufficient budget.
+## Why HU-only
 
-Do not adopt 1600 yet: it is substantially more expensive and 400 already clears the structural gate in every replicate.
+The causal chain and broad validation are HU-specific.
 
-## Next gate
+Raising the 3H fit budget would be an untested extra intervention and would approximately increase compute for a domain that has not been implicated.
 
-Broad natural-HU forensic evaluation of all three B400 candidates.
+The minimal frozen change is:
 
-Policies:
+- 3H = 100 Advantage fit steps;
+- HU = 400 Advantage fit steps.
 
-- PROD_A;
-- PROD_B;
-- B400_R0;
-- B400_R1;
-- B400_R2.
+## Next gate — online feedback
 
-Baselines:
+Create an isolated copy of Stage B and continue exactly 100 iterations:
 
-- UNIFORM_LEGAL;
-- PASSIVE_CALLER;
-- JAMMER.
+- 7501..7600;
+- 60k roots;
+- 31 root workers;
+- vectorized fitting;
+- concurrent domain fit;
+- 3H 100;
+- HU 400.
 
-Primary:
-- B400 vs PROD_B on JAMMER.
+Then automatically compare Stage B vs pilot on the full forensic HU population using both:
 
-Secondary:
-- B400 vs PROD_B on other baselines;
-- B400 vs PROD_A on JAMMER.
+- deployed AveragePolicy;
+- current Advantage behavior.
 
-If B400 passes broadly:
-- freeze 400 as the intervention;
-- run a bounded continuation pilot from Stage B before any long continuation.
+### Pass direction
 
-If B400 fails only on Jammer:
-- escalate once to 1600 broad gate.
+Current behavior:
+- resolved improvement vs Stage B against JAMMER;
+- no resolved material deterioration against PASSIVE_CALLER or UNIFORM_LEGAL.
 
-If B400 causes a resolved tradeoff:
-- diagnose before training.
+AveragePolicy:
+- observe direction, but do not require full repair after only 100 new iterations because most policy-memory samples remain historical.
 
-Holdout `20261001..20261006` remains sealed.
+### If current behavior passes but AveragePolicy lags
+
+Extend the same frozen intervention in another bounded block to refresh policy memory.
+
+### If current behavior fails
+
+Stop before more roots and inspect online target/reservoir feedback.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_hu_b400_broad_generalization.sh`.
+Run `bash tools/run_lt2_hu_b400_online_pilot.sh`.
 
-No root training yet.
+Do not go beyond iteration 7600 until that result is reviewed.
