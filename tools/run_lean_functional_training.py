@@ -38,6 +38,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--exact-opponent-levels", type=int, default=0)
     p.add_argument("--reservoir-capacity", type=int, default=100000)
     p.add_argument("--advantage-steps", type=int, default=2)
+    p.add_argument(
+        "--hu-advantage-steps",
+        type=int,
+        default=None,
+        help=(
+            "optional TRUE_HEADS_UP-only Advantage fit budget; when omitted, "
+            "HU uses --advantage-steps. On resume, this may be changed only "
+            "together with --additional-iterations."
+        ),
+    )
     p.add_argument("--policy-steps", type=int, default=2)
     p.add_argument("--batch-size", type=int, default=64)
     p.add_argument("--learning-rate", type=float, default=0.001)
@@ -112,6 +122,10 @@ def main() -> int:
         raise SystemExit("--workers must be >= 0")
     if args.hu_preflop_board_average_k is not None and int(args.hu_preflop_board_average_k) <= 0:
         raise SystemExit("--hu-preflop-board-average-k must be positive")
+    if args.hu_advantage_steps is not None and int(args.hu_advantage_steps) < 0:
+        raise SystemExit("--hu-advantage-steps must be nonnegative")
+    if args.resume and args.hu_advantage_steps is not None and int(args.additional_iterations) <= 0:
+        raise SystemExit("--hu-advantage-steps on resume requires --additional-iterations > 0")
 
     workers = int(args.workers)
     if workers == 0:
@@ -130,6 +144,8 @@ def main() -> int:
             }
             if args.hu_preflop_board_average_k is not None:
                 replace_kwargs["hu_preflop_board_average_k"] = int(args.hu_preflop_board_average_k)
+            if args.hu_advantage_steps is not None:
+                replace_kwargs["hu_advantage_steps"] = int(args.hu_advantage_steps)
             config = replace(config, **replace_kwargs)
             finalized = False
         elif finalized:
@@ -153,6 +169,11 @@ def main() -> int:
             exact_opponent_levels=int(args.exact_opponent_levels),
             reservoir_capacity=int(args.reservoir_capacity),
             advantage_steps=int(args.advantage_steps),
+            hu_advantage_steps=(
+                None
+                if args.hu_advantage_steps is None
+                else int(args.hu_advantage_steps)
+            ),
             policy_steps=int(args.policy_steps),
             batch_size=int(args.batch_size),
             learning_rate=float(args.learning_rate),
@@ -192,6 +213,8 @@ def main() -> int:
     print(
         f"FIT_RUNTIME threads={torch.get_num_threads()} batch_mode={args.batch_mode} "
         f"iteration_mode={args.iteration_mode} "
+        f"advantage_steps_3h={config.advantage_steps_for_domain('THREE_HANDED')} "
+        f"advantage_steps_hu={config.advantage_steps_for_domain('TRUE_HEADS_UP')} "
         f"hu_preflop_board_average_k={config.hu_preflop_board_average_k}",
         flush=True,
     )
