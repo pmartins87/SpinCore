@@ -1,13 +1,9 @@
 # SpinCore Current Work
 
 Date: 2026-09-20
-Status: **LT2 STAGE B PRESERVED — HU400 ONLINE PILOT PASS — CURRENT BEHAVIOR REPAIRED — AVERAGEPOLICY LAGS — REFRESH TO 8000 NEXT**
+Status: **ITERATION 8000 FROZEN — AVERAGEPOLICY JAMMER IMPROVEMENT RESOLVED — CURRENT BEHAVIOR PASSIVE REGRESSION RESOLVED — READ-ONLY LOCALIZATION NEXT**
 
 ## Preserved checkpoints
-
-Stage A:
-- iteration 3000 / 1.8M roots;
-- SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
 
 Stage B:
 - iteration 7500 / 4.5M roots;
@@ -17,58 +13,48 @@ HU400 pilot:
 - iteration 7600 / 4.56M roots;
 - SHA256 `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
 
-## Online pilot result — PASS
+HU400 refresh:
+- iteration 8000 / 4.80M roots;
+- SHA256 `773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
 
-Current Advantage behavior, pilot minus Stage B:
+## Deployment AveragePolicy — positive result
 
-- JAMMER: `+4.1830`, CI95 `[+0.3044,+8.0616]`;
-- PASSIVE_CALLER: `+1.3629`, unresolved;
-- UNIFORM_LEGAL: `+8.4233`, CI95 `[+4.3980,+12.4486]`.
+Stage B -> 8000:
 
-The HU400 repair survives 100 real training iterations and online feedback.
+- JAMMER: `+1.9021`, CI95 `[+0.6874,+3.1168]` — resolved improvement;
+- PASSIVE_CALLER: `+0.7865`, unresolved — no regression;
+- UNIFORM_LEGAL: `+1.1757`, unresolved — no regression.
 
-## AveragePolicy
+The deployment policy has begun to absorb the HU400 repair.
 
-Pilot minus Stage B:
+## Current Advantage behavior — new tradeoff
 
-- JAMMER: `+0.6792`, unresolved;
-- PASSIVE_CALLER: `+0.0045`, unresolved;
-- UNIFORM_LEGAL: `+0.7639`, unresolved.
+Stage B -> 8000:
 
-Deployment policy has not yet moved materially.
+- JAMMER: `+5.5310`, resolved improvement;
+- PASSIVE_CALLER: `-2.9214`, CI95 `[-5.5408,-0.3020]` — resolved regression;
+- UNIFORM_LEGAL: `-0.9510`, unresolved.
 
-This is not a reason to change the intervention. It is the expected consequence of a mature 2M strategy reservoir after only 100 corrected iterations.
+The preregistered current-behavior no-tradeoff condition therefore fails.
 
-## Frozen intervention
+## Decision
 
-- THREE_HANDED Advantage fit = 100;
-- TRUE_HEADS_UP Advantage fit = 400;
-- K4 off.
+Do not continue roots.
 
-## Active gate
+Freeze iteration 8000 as a deployment candidate, but do not unseal holdout yet.
 
-Continue the pilot checkpoint for exactly 400 more iterations:
-
-- 7601..8000;
-- +240,000 roots;
-- cumulative HU400 exposure from Stage B = 500 iterations.
-
-Then compare preserved Stage B directly with iteration 8000 on the full forensic HU policy-chain.
-
-If AveragePolicy still does not move materially after 500 cumulative HU400 iterations, stop and audit policy-memory composition/weighting instead of blindly extending again.
-
-Holdout remains sealed.
+Next run is read-only: compare iteration 7600 directly with 8000 and localize the first current-behavior divergence, with PASSIVE_CALLER as the primary target.
 
 ## Immediate user action
 
-Pull `main` and run:
+Pull main and run:
 
 ```bash
-bash tools/run_lt2_hu_b400_refresh_to_8000.sh
+bash tools/run_lt2_hu_7600_8000_behavior_first_divergence.sh
 ```
 
-Wait for `LT2_HU_B400_REFRESH_TO_8000_PASS`.
+Wait for `LT2_HU_7600_8000_BEHAVIOR_FIRST_DIVERGENCE_PASS`.
 
-Then send `SpinCore_LT2_HU_B400_refresh_to_8000_summary.json`.
+Then send `SpinCore_LT2_hu_7600_8000_behavior_first_divergence.json`.
 
-Do not continue beyond iteration 8000.
+Do not train beyond iteration 8000.
