@@ -2,24 +2,29 @@
 
 ## Active status
 
-- original Jammer FAI underfit — **REPAIRED BY MORE COMPLETE HU FITTING**.
+- original Jammer FAI underfit — **REPAIRED BY HU400**.
 - AveragePolicy at 8000 vs Stage B Jammer — **RESOLVED IMPROVEMENT**.
 - root open-jam inflation — **CONFIRMED**.
-- 7600 -> 8000 reservoir effect — **REAL, ABOUT +8 pp ALL_IN UNDER MATCHED FRESH400 REFITS**.
-- production +56 pp ALL_IN jump — **NOT EXPLAINED BY RESERVOIR EVOLUTION ALONE**.
-- fresh 400-step current-policy fit instability — **CONFIRMED**.
-- same-memory budget stability sweep 400/800/1600/3200 — **NEXT**.
+- reservoir evolution contribution — **REAL BUT MODEST RELATIVE TO PRODUCTION EXTREME**.
+- fresh-fit instability — **CONFIRMED**.
+- optimizer-budget escalation through 3200 — **INSUFFICIENT / PLATEAUED**.
+- mature-reservoir 1/2/4 Advantage ensemble stability gate — **NEXT**.
 - further root training — **PAUSED**.
 - holdout — **SEALED**.
 
-## Decision path
+## Why optimizer escalation stops
 
-If a larger fit budget sharply stabilizes the mature 8000 reservoir:
-- select the smallest stable budget;
-- run broad EV/generalization before any online continuation.
+At 3200 steps:
+- pairwise mean TV still `0.409`;
+- p95 TV still `0.964`;
+- argmax disagreement still `47.7%`.
 
-If even 3200 steps remain materially seed-sensitive:
-- do not keep buying optimizer steps;
-- evaluate a small Advantage ensemble / other fit-stability mechanism.
+The fit does not converge to one stable policy geometry.
 
-No production semantic change is authorized yet.
+## Next branch
+
+Use independent 400-step fits as estimators and average raw Advantage outputs before the unchanged regret-matching map.
+
+Test disjoint ensemble sizes 1, 2 and 4 on the full forensic HU root corpus.
+
+Only if ensemble stability is materially better will it proceed to broad EV/generalization.
