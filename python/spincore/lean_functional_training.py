@@ -64,6 +64,7 @@ class LeanFunctionalConfig:
     exact_opponent_levels: int = 0
     reservoir_capacity: int = 100_000
     advantage_steps: int = 2
+    hu_advantage_steps: int | None = None
     policy_steps: int = 2
     batch_size: int = 64
     learning_rate: float = 1e-3
@@ -79,6 +80,8 @@ class LeanFunctionalConfig:
             raise ValueError("reservoir_capacity and batch_size must be positive")
         if self.advantage_steps < 0 or self.policy_steps < 0:
             raise ValueError("optimizer steps must be nonnegative")
+        if self.hu_advantage_steps is not None and self.hu_advantage_steps < 0:
+            raise ValueError("hu_advantage_steps must be nonnegative when set")
         if self.learning_rate <= 0:
             raise ValueError("learning_rate must be positive")
         if not 0.0 < self.heads_up_prob < 1.0:
@@ -87,6 +90,13 @@ class LeanFunctionalConfig:
             raise ValueError("hu_preflop_board_average_k must be positive")
         if self.hu_preflop_board_average_k > 1 and self.exact_opponent_levels != 0:
             raise ValueError("HU preflop board averaging requires exact_opponent_levels=0")
+
+    def advantage_steps_for_domain(self, domain: str) -> int:
+        if domain not in DOMAINS:
+            raise ValueError(f"unknown domain: {domain}")
+        if domain == "TRUE_HEADS_UP" and self.hu_advantage_steps is not None:
+            return int(self.hu_advantage_steps)
+        return int(self.advantage_steps)
 
     def roots_by_domain(self) -> dict[str, int]:
         hu = int(round(self.roots_per_iteration * self.heads_up_prob))
@@ -460,8 +470,9 @@ def run_iteration(
             init_seed=_advantage_reset_seed(seed, domain, iteration),
             lr=config.learning_rate,
         )
+        domain_advantage_steps = config.advantage_steps_for_domain(domain)
         adv_losses = runtime.session.train_advantage(
-            steps=config.advantage_steps,
+            steps=domain_advantage_steps,
             batch_size=config.batch_size,
         )
         fit_seconds = time.perf_counter() - fit_started
@@ -484,6 +495,7 @@ def run_iteration(
             "seconds_per_root": float(tree_seconds / roots),
             "execution_mode": execution_mode,
             "advantage_fit_seconds": float(fit_seconds),
+            "advantage_steps": int(domain_advantage_steps),
             "advantage_fit_profile": dict(runtime.session.last_fit_profile),
             "advantage_loss_last": float(adv_losses[-1]) if adv_losses else None,
             "blind_counts": blind_counts,
