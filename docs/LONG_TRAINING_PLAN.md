@@ -1,79 +1,62 @@
 # SpinCore — Long-Training Plan
 
-Status: **HU400 ONLINE PILOT PASS — POLICY-MEMORY REFRESH TO ITERATION 8000 ACTIVE**
+Status: **ITERATION 8000 FROZEN — DEPLOYMENT POLICY IMPROVES — TRAINING-BEHAVIOR TRADEOFF UNDER FORENSIC REVIEW**
 Date: 2026-09-20
 
-## Immutable milestones
+## Immutable checkpoints
 
-Stage A:
-- iteration 3000 / 1.8M roots;
-- SHA256 `e7dd9c460fe103933ee1b025b1ac7936555aa2802e3520e029b8793f616f3b5c`.
-
-Stage B:
-- iteration 7500 / 4.5M roots;
+Stage B 7500:
 - SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
 
-HU400 pilot:
-- iteration 7600 / 4.56M roots;
+HU400 pilot 7600:
 - SHA256 `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
 
-## Intervention
+HU400 refresh 8000:
+- SHA256 `773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
 
-Frozen:
+## What has succeeded
 
-- 3H Advantage fit = 100;
-- HU Advantage fit = 400;
-- K4 off.
+The original Jammer defect has been repaired at multiple levels.
 
-## Online pilot result
+At iteration 8000 versus Stage B:
 
-The first 100 online HU400 iterations passed.
-
-Current behavior versus Stage B:
-- JAMMER: resolved `+4.183`;
+AveragePolicy:
+- JAMMER: resolved `+1.902`;
 - PASSIVE_CALLER: no resolved regression;
-- UNIFORM_LEGAL: resolved `+8.423`.
+- UNIFORM_LEGAL: no resolved regression.
 
-AveragePolicy did not materially change yet.
+Current behavior:
+- JAMMER: resolved `+5.531`.
 
-## Why another bounded block is justified
+## New blocker
 
-The algorithmic intervention itself has now passed:
+Current behavior versus PASSIVE_CALLER is now:
 
-1. low-noise structural validation;
-2. broad fresh-refit validation;
-3. online-feedback validation.
+- `-2.921`;
+- CI95 `[-5.541,-0.302]`.
 
-The remaining lag is in AveragePolicy deployment memory.
+This violates the preregistered no-current-behavior-tradeoff condition.
 
-Therefore one additional bounded block is justified specifically to refresh policy memory under the corrected behavior.
+## Decision
 
-## Stage C refresh
+No more root training until localized.
 
-- source 7600;
-- target 8000;
-- +400 iterations;
-- +240,000 roots;
-- cumulative HU400 duration from Stage B: 500 iterations.
+Do not discard iteration 8000: its AveragePolicy is a promising deployment candidate.
 
-At 8000 run the full forensic HU policy chain against preserved Stage B.
+Do not unseal holdout yet: first resolve whether the current-behavior regression is a localized training-policy artifact or a broader HU400 tradeoff.
 
-## Stop rule
+## Next gate
 
-If AveragePolicy still has no measurable positive Jammer movement after iteration 8000:
-- stop training;
-- inspect policy-memory replacement/composition;
-- inspect iteration weighting;
-- inspect final policy fit;
-- do not authorize another block merely to wait for drift.
+Read-only direct 7600 -> 8000 first-divergence forensic.
 
-If AveragePolicy begins moving while current behavior remains healthy:
-- then design the next larger continuation gate.
+If one state class dominates the Passive loss:
+- inspect that class next.
 
-Holdout `20261001..20261006` stays sealed.
+If diffuse:
+- evaluate fit-budget/time specialization versus passive exploitation before any continuation.
 
 ## Immediate direction
 
-Run `bash tools/run_lt2_hu_b400_refresh_to_8000.sh`.
+Run `bash tools/run_lt2_hu_7600_8000_behavior_first_divergence.sh`.
 
-Do not go past 8000.
+Stop after the report.
