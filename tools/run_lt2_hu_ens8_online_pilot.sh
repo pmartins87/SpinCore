@@ -17,6 +17,8 @@ done
 
 "$PY" -m py_compile   python/spincore/lean_action_policy.py   python/spincore/lean_parallel.py   tools/run_lt2_hu_ens8_online_pilot.py
 echo "PYTHON_PREFLIGHT_PASS"
+"$PY" -m pytest -q python_tests/test_lean_action_policy_ensemble.py
+echo "ENSEMBLE_POLICY_UNIT_TEST_PASS"
 
 STAMP="$(date +%Y%m%d_%H%M%S)"
 DIR="$ROOT/runs/lt2_hu_ens8_online_pilot/$STAMP"
