@@ -91,7 +91,7 @@ def _clone_state(model)->dict[str,torch.Tensor]:
 def _fit_hu_ensemble(runtime,config,*,count_optimizer_steps:bool)->tuple[list[Any],tuple[dict,...],list[dict[str,Any]],float]:
     """Fit all eight members without consuming authoritative policy RNG."""
     policy_rng_state=runtime.bundle.batch_rng.getstate()
-    counter_before=int(runtime.bundle.counters.get("adv_optimizer_steps",0))
+    counters_before=dict(runtime.bundle.counters)
     models=[]
     states=[]
     meta=[]
@@ -129,7 +129,10 @@ def _fit_hu_ensemble(runtime,config,*,count_optimizer_steps:bool)->tuple[list[An
         runtime.bundle.batch_rng.setstate(policy_rng_state)
 
     if not count_optimizer_steps:
-        runtime.bundle.counters["adv_optimizer_steps"]=counter_before
+        # Bootstrap defines the source-8000 ensemble policy but is not an
+        # iteration. Preserve all authoritative training counters exactly.
+        runtime.bundle.counters.clear()
+        runtime.bundle.counters.update(counters_before)
 
     behavior=LeanEnsembleActionAdvantagePolicy(
         models,
