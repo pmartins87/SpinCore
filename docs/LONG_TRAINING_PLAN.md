@@ -1,39 +1,59 @@
 # SpinCore — Long-Training Plan
 
-Status: **8000 FROZEN — ENSEMBLE MECHANISM BROAD-EV PASS — SIZE-8 REPLICATION ACTIVE**
+Status: **8000 SOURCE FROZEN — ENS8 BROAD-EV PASS — ONLINE ENS8 PILOT ACTIVE**
 Date: 2026-09-20
 
-## What changed
+## Stabilization decision
 
-The size-4 ensemble screen had weak statewise TV stabilization but strong aggregate frequency stabilization.
+The size-8 replication resolved the main composition concern sufficiently for an online pilot.
 
-Broad EV now shows that both disjoint size-4 ensembles are strategically strong:
+ENS8_A and ENS8_B are both strong on all three transparent baselines and both preserve the Stage-B/Jammer repair.
 
-- both positive against all three baselines;
-- both resolved improvements versus Stage B on all three;
-- both improve Passive and Jammer versus 7600;
-- neither has a resolved Uniform regression versus 7600.
+The B-minus-A composition gap contracts relative to ENS4:
+- Uniform and Jammer become unresolved;
+- Passive remains only narrowly resolved at +2.50 chips.
 
-Therefore the residual per-state TV is not, by itself, a failure.
+This is not proof of GTO quality, but it is enough to test the mechanism under actual Deep-CFR feedback.
 
-## Remaining issue
+## Anti-selection rule
 
-Composition still matters:
-- LEFT beats RIGHT significantly on Uniform and Jammer.
+ENS8_B had the higher observed mean EV, but production experimentation will not select it on that basis.
 
-Selecting the better group after observing those outcomes would introduce selection bias.
+The pilot uses ENS8_A, the first predeclared group.
 
-## Next gate
+## Pilot contract
 
-Build two independent size-8 ensembles from sixteen deterministic fresh400 models.
+Source:
+- preserved iteration 8000 checkpoint;
+- exact SHA256 `773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
 
-Evaluate groups sequentially to keep worker memory bounded, but use identical deterministic scenario/deal/seat/RNG schedules so ENS8_B-minus-A remains paired.
+Target:
+- iteration 8100;
+- +100 iterations.
 
-Acceptance direction:
-- both ensembles preserve the Stage-B repair;
-- neither shows a resolved regression versus 7600 on any weak baseline;
-- A/B composition difference should materially contract relative to ENS4 and preferably become unresolved.
+3H:
+- unchanged fresh100.
 
-Only then design an online ensemble-training pilot.
+HU:
+- eight fresh400 estimators from the same evolving HU reservoir;
+- same eight predeclared ENS8_A init/batch seeds reused every iteration;
+- mean raw Advantage output before unchanged lean regret matching;
+- no K4.
 
-No new roots and no holdout yet.
+RNG:
+- ensemble minibatch RNG is isolated from the authoritative sampled-policy RNG.
+
+Artifacts:
+- isolated ordinary checkpoint;
+- mandatory HU ensemble-state sidecar;
+- pilot JSON report.
+
+The ordinary checkpoint is not a complete representation of HU current behavior without the sidecar.
+
+## After pilot
+
+Do not unseal holdout immediately.
+
+First evaluate the iteration-8100 current ENS8 behavior and AveragePolicy on the forensic baselines and trained-policy/cross-play diagnostics.
+
+Only if the online feedback survives should the intervention be frozen for final holdout validation.
