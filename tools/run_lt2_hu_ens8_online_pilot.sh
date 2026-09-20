@@ -15,6 +15,8 @@ done
   echo "ERROR: iteration-8000 SHA mismatch" >&2; exit 4;
 }
 
+export PYTHONPATH="$ROOT/python:$ROOT/tools"
+
 "$PY" -m py_compile   python/spincore/lean_action_policy.py   python/spincore/lean_parallel.py   tools/run_lt2_hu_ens8_online_pilot.py
 echo "PYTHON_PREFLIGHT_PASS"
 "$PY" python_tests/test_lean_action_policy_ensemble.py
@@ -27,7 +29,6 @@ REPORT="$DIR/hu_ens8_online_pilot.json"
 CHECKPOINT="$DIR/checkpoint.pt"
 ENSEMBLE="$DIR/hu_ensemble_state.pt"
 
-export PYTHONPATH="$ROOT/python:$ROOT/tools"
 export SPINCORE_TORCH_THREADS=8
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
