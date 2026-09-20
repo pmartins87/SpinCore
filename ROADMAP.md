@@ -6,59 +6,50 @@
 - LT1 — **DONE**.
 - LT2 Stage A — **PASS**.
 - LT2 Stage B — **PASS / PRESERVED**.
-- Jammer FAI overfold — **CONFIRMED**.
-- 100-step HU fit — **INSUFFICIENT**.
-- 400-step HU fit — **STRUCTURAL PASS**.
-- B400 broad generalization — **PASS**.
-- 100-iteration HU400 online pilot — **PASS**.
-- current HU behavior after online feedback — **IMPROVED**.
-- deployed AveragePolicy after 100 iterations — **LAGGING / UNRESOLVED**.
-- policy-memory refresh to iteration 8000 — **NEXT**.
-- long continuation beyond 8000 — **NOT AUTHORIZED**.
+- HU400 structural gate — **PASS**.
+- HU400 broad fresh-refit gate — **PASS**.
+- HU400 100-iteration online pilot — **PASS**.
+- HU400 refresh to 8000 — **MIXED**.
+- AveragePolicy at 8000 vs Stage B JAMMER — **RESOLVED IMPROVEMENT**.
+- AveragePolicy weak-baseline tradeoff — **NOT DETECTED**.
+- current behavior at 8000 vs Stage B JAMMER — **RESOLVED IMPROVEMENT**.
+- current behavior at 8000 vs Stage B PASSIVE_CALLER — **RESOLVED REGRESSION**.
+- root training beyond 8000 — **PAUSED**.
 - holdout — **SEALED**.
+- next — **7600 -> 8000 current-behavior first-divergence localization**.
 
-## Pilot evidence
+## Why training stops at 8000
 
-Stage B -> iteration 7600 current behavior:
+The deployed AveragePolicy now moves in the desired direction:
 
-- JAMMER `+4.183`, resolved;
-- PASSIVE_CALLER `+1.363`, unresolved;
-- UNIFORM_LEGAL `+8.423`, resolved.
+- JAMMER `+1.902`, CI95 entirely positive;
+- no resolved PASSIVE_CALLER or UNIFORM_LEGAL regression.
 
-Stage B -> iteration 7600 AveragePolicy:
+But the training behavior develops a new PASSIVE_CALLER weakness:
 
-- JAMMER `+0.679`, unresolved;
-- PASSIVE_CALLER `+0.004`, unresolved;
-- UNIFORM_LEGAL `+0.764`, unresolved.
+- `-2.921`, CI95 `[-5.541,-0.302]`.
 
-Thus the online learning loop does not destroy the HU400 repair, but deployment memory has barely refreshed.
+Because current behavior drives future trajectory collection, this cannot be ignored before additional roots.
 
-## Next bounded block
+## Next read-only gate
 
-Source:
-- iteration 7600 SHA `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
+Direct iteration 7600 -> 8000 first-divergence attribution across the already-used forensic HU population.
 
-Continue:
-- 400 iterations;
-- target 8000;
-- +240k roots;
-- 3H 100;
-- HU 400;
-- K4 off.
+Primary:
+- PASSIVE_CALLER.
 
-## Decision at 8000
+Classify the first sampled action divergence into:
+- PREFLOP_ROOT;
+- PREFLOP_FACING_ALL_IN;
+- PREFLOP_OTHER;
+- FLOP;
+- TURN;
+- RIVER.
 
-Current behavior must still show positive Jammer movement without a resolved regression elsewhere.
-
-AveragePolicy should begin to show measurable Jammer movement.
-
-If AveragePolicy is still essentially flat after cumulative 500 HU400 iterations:
-- stop;
-- audit policy-memory composition, weighting and AveragePolicy fit;
-- do not solve deployment lag merely by adding more roots.
+No roots. No optimizer steps. No holdout.
 
 ## Immediate action
 
-Run `bash tools/run_lt2_hu_b400_refresh_to_8000.sh`.
+Run `bash tools/run_lt2_hu_7600_8000_behavior_first_divergence.sh`.
 
-Stop at iteration 8000.
+Do not continue training.
