@@ -2,18 +2,24 @@
 
 ## Active status
 
-- original Jammer FAI underfit — **CONFIRMED / REPAIRED BY HU400**.
+- original Jammer FAI underfit — **REPAIRED BY MORE COMPLETE HU FITTING**.
 - AveragePolicy at 8000 vs Stage B Jammer — **RESOLVED IMPROVEMENT**.
-- current-behavior passive/uniform regression — **LOCALIZED TO PREFLOP ROOT**.
-- deterministic root drift 7600 -> 8000 — **CONFIRMED**.
-- ALL_IN root mass: `19.17% -> 75.58%`.
-- POT_33 root mass: `52.65% -> 6.97%`.
-- next causal split — **RESERVOIR EVOLUTION VS FRESH-REFIT REALIZATION**.
-- further roots — **PAUSED**.
+- root open-jam inflation — **CONFIRMED**.
+- 7600 -> 8000 reservoir effect — **REAL, ABOUT +8 pp ALL_IN UNDER MATCHED FRESH400 REFITS**.
+- production +56 pp ALL_IN jump — **NOT EXPLAINED BY RESERVOIR EVOLUTION ALONE**.
+- fresh 400-step current-policy fit instability — **CONFIRMED**.
+- same-memory budget stability sweep 400/800/1600/3200 — **NEXT**.
+- further root training — **PAUSED**.
 - holdout — **SEALED**.
 
-## Next
+## Decision path
 
-Run three same-seed paired 400-step fresh refits from the 7600 and 8000 HU reservoirs and compare deterministic root policies.
+If a larger fit budget sharply stabilizes the mature 8000 reservoir:
+- select the smallest stable budget;
+- run broad EV/generalization before any online continuation.
 
-This distinguishes whether online data changed the learned root signal or whether production current-policy checkpoints are intrinsically unstable across reset/refit seeds.
+If even 3200 steps remain materially seed-sensitive:
+- do not keep buying optimizer steps;
+- evaluate a small Advantage ensemble / other fit-stability mechanism.
+
+No production semantic change is authorized yet.
