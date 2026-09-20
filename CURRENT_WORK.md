@@ -1,55 +1,60 @@
 # SpinCore Current Work
 
 Date: 2026-09-20
-Status: **ITERATION 8000 FROZEN — DETERMINISTIC OPEN-JAM INFLATION CONFIRMED — PAIRED FRESH-REFIT CAUSAL SPLIT NEXT**
+Status: **ITERATION 8000 FROZEN — RESERVOIR DRIFT + FRESH-FIT INSTABILITY BOTH CONFIRMED — SAME-MEMORY BUDGET STABILITY SWEEP NEXT**
 
-## Root drift confirmation
+## Paired fresh-400 causal split
 
-Across all 13,585 forensic HU roots, iteration 7600 -> 8000:
+Production 7600 -> 8000 root shift:
 
-- TV = `0.73194`;
-- argmax disagreement = `83.26%`;
-- ALL_IN mass `+56.42 pp`;
-- POT_33 mass `-45.68 pp`.
+- ALL_IN `+56.42 pp`;
+- POT_33 `-45.68 pp`;
+- TV `0.73194`.
 
-Absolute ALL_IN mass:
-- 7600: `19.17%`;
-- 8000: `75.58%`.
+Same-seed fresh 400-step refits, 8000 reservoir minus 7600 reservoir:
 
-Absolute POT_33 mass:
-- 7600: `52.65%`;
-- 8000: `6.97%`.
+- ALL_IN mean `+7.97 pp`, replicate CI95 `[+6.31,+9.63]`;
+- paired TV mean `0.33561`.
 
-The shift is broad and strongest in the well-populated >12bb bucket:
-- ALL_IN `+61.26 pp`;
-- POT_33 `-46.18 pp`.
+The reservoir therefore moved toward more jamming, but the production checkpoint difference is much larger than the matched-reservoir effect.
 
-## What this does NOT yet establish
+## Fresh-fit instability
 
-Each iteration resets the current Advantage network from a different deterministic initialization and freshly fits it.
+400-step ALL_IN mass varies strongly across replicate fits even on one fixed reservoir.
 
-Therefore a checkpoint-to-checkpoint current-policy difference mixes:
-1. reservoir evolution;
-2. fresh-fit initialization / batch-sampling realization.
+7600 reservoir:
+- `11.48%, 27.07%, 11.56%`.
+
+8000 reservoir:
+- `18.23%, 36.67%, 19.10%`.
+
+One freshly reset 400-step Advantage network is therefore not a stable representation of the mature reservoir.
 
 ## Active gate
 
-Three paired fresh 400-step refits from the 7600 and 8000 HU Advantage reservoirs.
+Use only the frozen iteration-8000 HU reservoir.
 
-Within each replicate:
-- identical init seed across reservoirs;
-- identical batch-sampling seed across reservoirs.
+Four fit trajectories, each measured at cumulative:
 
-Then evaluate all forensic HU roots deterministically.
+- 400;
+- 800;
+- 1600;
+- 3200 steps.
+
+Measure pairwise root-policy TV, p95, argmax disagreement and ALL_IN/POT_33 mass dispersion.
+
+If more fitting materially contracts the instability, take the smallest stable budget to a broad EV gate.
+
+If not, stop increasing optimizer work and move to the ensemble/stabilization branch already supported by earlier R7.3 evidence.
 
 No new roots. Holdout sealed.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_paired_fresh400_root_refit.sh
+bash tools/run_lt2_hu_refit_budget_root_stability.sh
 ```
 
-Send `SpinCore_LT2_hu_paired_fresh400_root_refit.json`.
+Send `SpinCore_LT2_hu_refit_budget_root_stability.json`.
 
 Do not train beyond 8000.
