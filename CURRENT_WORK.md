@@ -1,65 +1,55 @@
 # SpinCore Current Work
 
 Date: 2026-09-20
-Status: **ITERATION 8000 FROZEN — PASSIVE/UNIFORM CURRENT-BEHAVIOR LOSS LOCALIZED TO PREFLOP ROOT — DETERMINISTIC ROOT-POLICY AUDIT NEXT**
+Status: **ITERATION 8000 FROZEN — DETERMINISTIC OPEN-JAM INFLATION CONFIRMED — PAIRED FRESH-REFIT CAUSAL SPLIT NEXT**
 
-## Preserved checkpoints
+## Root drift confirmation
 
-Stage B 7500:
-- SHA256 `3463aa1dccac2c9f26cb45753b69490cfa52616bdeb21e075b320b1b0d40f7d0`.
+Across all 13,585 forensic HU roots, iteration 7600 -> 8000:
 
-HU400 pilot 7600:
-- SHA256 `c34f19802d3ad5ad3a5d131b083ffcee0e0867667ae0d57324cf35d5fa246b80`.
+- TV = `0.73194`;
+- argmax disagreement = `83.26%`;
+- ALL_IN mass `+56.42 pp`;
+- POT_33 mass `-45.68 pp`.
 
-HU400 refresh 8000:
-- SHA256 `773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
+Absolute ALL_IN mass:
+- 7600: `19.17%`;
+- 8000: `75.58%`.
 
-## 7600 -> 8000 first-divergence result
+Absolute POT_33 mass:
+- 7600: `52.65%`;
+- 8000: `6.97%`.
 
-PASSIVE_CALLER:
-- total `-4.2843`, resolved;
-- PREFLOP_ROOT contribution `-3.0561`, CI95 `[-5.2509,-0.8613]` — dominant resolved component.
+The shift is broad and strongest in the well-populated >12bb bucket:
+- ALL_IN `+61.26 pp`;
+- POT_33 `-46.18 pp`.
 
-UNIFORM_LEGAL:
-- total `-9.3743`, resolved;
-- PREFLOP_ROOT contribution `-7.4686`, CI95 `[-10.5478,-4.3895]` — dominant resolved component.
+## What this does NOT yet establish
 
-JAMMER:
-- total `+1.3480`, unresolved;
-- FAI `+2.2141`, root `-0.8661`, both unresolved.
+Each iteration resets the current Advantage network from a different deterministic initialization and freshly fits it.
 
-The original FAI repair survives directionally. The new failure is preflop-root drift.
-
-## Root transition clue
-
-Most common root first-divergence:
-
-- `POT_33 -> ALL_IN`: 5,618 seat-runs.
-
-Also:
-- `CHECK_CALL -> ALL_IN`: 1,546;
-- `FOLD -> ALL_IN`: 914.
-
-This strongly suggests a new open-jam mass shift at iteration 8000, but transition counts are sampled and are not yet a deterministic probability-mass proof.
+Therefore a checkpoint-to-checkpoint current-policy difference mixes:
+1. reservoir evolution;
+2. fresh-fit initialization / batch-sampling realization.
 
 ## Active gate
 
-Run a deterministic root-policy distribution audit on every forensic HU root, before any hero action is sampled.
+Three paired fresh 400-step refits from the 7600 and 8000 HU Advantage reservoirs.
 
-Measure:
-- TV;
-- argmax disagreement;
-- probability-mass change by action;
-- blind and effective-stack localization.
+Within each replicate:
+- identical init seed across reservoirs;
+- identical batch-sampling seed across reservoirs.
 
-No roots, no optimizer, no holdout.
+Then evaluate all forensic HU roots deterministically.
+
+No new roots. Holdout sealed.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_root_policy_drift_7600_8000.sh
+bash tools/run_lt2_hu_paired_fresh400_root_refit.sh
 ```
 
-Send `SpinCore_LT2_hu_root_policy_drift_7600_8000.json`.
+Send `SpinCore_LT2_hu_paired_fresh400_root_refit.json`.
 
 Do not train beyond 8000.
