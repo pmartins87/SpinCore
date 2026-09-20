@@ -201,8 +201,9 @@ def run_iteration_concurrent_fit(
     def fit_domain(domain: str):
         runtime = runtimes[domain]
         started = time.perf_counter()
+        domain_advantage_steps = config.advantage_steps_for_domain(domain)
         losses = runtime.session.train_advantage(
-            steps=config.advantage_steps,
+            steps=domain_advantage_steps,
             batch_size=config.batch_size,
         )
         elapsed = time.perf_counter() - started
@@ -240,6 +241,7 @@ def run_iteration_concurrent_fit(
             "seconds_per_root": float(before["tree_seconds"] / plan["roots"]),
             "execution_mode": before["execution_mode"],
             "advantage_fit_seconds": float(fit_seconds),
+            "advantage_steps": int(config.advantage_steps_for_domain(domain)),
             "advantage_fit_profile": fit_profile,
             "advantage_loss_last": float(losses[-1]),
             "blind_counts": dict(plan["blind_counts"]),
