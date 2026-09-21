@@ -50,7 +50,15 @@ Before more long training:
 1. benchmark exact-parity process-parallel member fitting;
 2. include snapshot/serialization overhead;
 3. choose the fastest exact layout that preserves all member states/losses;
-4. then resume from iteration 8200 rather than restarting from 8100 or 0.
+4. derive a deterministic iteration target corresponding to approximately 24
+   hours on the Ryzen, rounded to a checkpoint boundary;
+5. resume from iteration 8200 to that precommitted endpoint rather than stopping
+   merely because iteration 8600 was reached.
+
+Iteration 8600 remains a required internal checkpoint for later comparison, but
+the run must not inspect development-set results at 8600 and then make a
+post-hoc continuation decision.  The ~24-hour endpoint is frozen before the
+long run starts.
 
 ## Strategic invariants
 
@@ -74,3 +82,6 @@ Run the Ryzen ENS8 parallel-fit matrix.
 
 Only after exact parity and useful speedup are demonstrated should the
 continuation resume from iteration 8200.
+
+The final target iteration must be calculated from the measured optimized
+throughput so the unattended block is approximately 24 hours long.
