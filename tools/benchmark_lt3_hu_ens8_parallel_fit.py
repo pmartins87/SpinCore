@@ -97,7 +97,8 @@ def main()->int:
             "parallel_worker_fit_seconds":float(par_meta[member]["fit_seconds"]),
         })
 
-    speedup=seq_wall/par_seconds if par_seconds>0 else 0.0
+    parallel_total=float(extra["snapshot_seconds"])+float(par_seconds)
+    speedup=seq_wall/parallel_total if parallel_total>0 else 0.0
     verdict=(
         "PASS"
         if exact and loss_exact and speedup>=1.25
@@ -113,7 +114,8 @@ def main()->int:
         "parallel_concurrency":int(args.concurrency),
         "parallel_threads_per_member":int(args.threads_per_member),
         "sequential_wall_seconds":float(seq_wall),
-        "parallel_wall_seconds":float(par_seconds),
+        "parallel_fit_wall_seconds":float(par_seconds),
+        "parallel_total_seconds":float(parallel_total),
         "speedup":float(speedup),
         "snapshot_seconds":float(extra["snapshot_seconds"]),
         "snapshot_bytes":int(extra["snapshot_bytes"]),
@@ -129,7 +131,8 @@ def main()->int:
 
     print("=== LT3 HU ENS8 PARALLEL FIT BENCHMARK ===")
     print(f"sequential_wall_seconds={seq_wall:.3f}")
-    print(f"parallel_wall_seconds={par_seconds:.3f}")
+    print(f"parallel_fit_wall_seconds={par_seconds:.3f}")
+    print(f"parallel_total_seconds={parallel_total:.3f}")
     print(f"speedup={speedup:.3f}x")
     print(f"state_exact={exact} loss_exact={loss_exact}")
     print(f"snapshot_mib={extra['snapshot_bytes']/1024/1024:.2f}")
