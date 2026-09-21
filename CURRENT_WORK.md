@@ -1,60 +1,59 @@
 # SpinCore Current Work
 
-Date: 2026-09-20
-Status: **ENS8 ONLINE PILOT REACHED 8100 — MECHANICAL PASS — POST-PILOT FORENSIC ADJUDICATION NEXT**
+Date: 2026-09-21
+Status: **ENS8 CURRENT ONLINE FEEDBACK PASS AT 8100 — AVERAGEPOLICY SAFE BUT LAGGING — INDEPENDENT LEARNED-POLICY CROSSPLAY NEXT**
 
-## Online pilot
+## Post-pilot forensic
 
-The isolated ENS8 pilot completed iteration 8100.
+Current ENS8 8000→8100:
 
-Contract:
-- source iteration 8000 remained read-only;
-- +100 iterations / +60,000 roots;
-- 3H unchanged single fresh100;
-- HU 8 x fresh400 with predeclared ENS8_A seeds reused every iteration;
-- raw Advantage average before unchanged lean regret matching;
-- fit RNG isolated from sampled-policy RNG;
-- K4 off;
-- holdout untouched.
+- root mean TV `0.24275`;
+- argmax disagreement `23.82%`;
+- ALL_IN `53.53% → 37.59%`;
+- POT_33 `20.50% → 36.48%`.
 
-Final roots:
-- THREE_HANDED 2,648,700;
-- TRUE_HEADS_UP 2,211,300;
-- total 4,860,000.
+Broad EV 8100−8000:
+- Uniform **+3.995**, CI [+1.970,+6.021], resolved improvement;
+- Passive +1.390, unresolved/no regression;
+- Jammer +1.249, unresolved/no regression.
 
-The run completed without fit/root/ensemble-size failure. HU member losses remained narrow and sampled action frequencies did not show a renewed catastrophic jam explosion.
+Versus current behavior 7600:
+- Passive **+8.272**, resolved;
+- Jammer **+18.698**, resolved;
+- Uniform +2.980, unresolved.
 
-This is not yet a strategic pass.
+Current online ENS8 therefore passes the weak-baseline tradeoff gate.
 
-## Artifact contract
+## AveragePolicy
 
-Current HU behavior at 8100 requires both:
-- the ordinary checkpoint;
-- `hu_ensemble_state.pt`.
+AveragePolicy 8100−8000 is essentially flat on all three baselines:
+- Uniform +0.086;
+- Passive +0.181;
+- Jammer +0.104.
 
-The ordinary checkpoint alone stores only the last Advantage member.
-
-AveragePolicy is ordinary/checkpoint-native because its training targets were generated from ENS8 behavior.
+No regression is detected, but the current-policy gain has not transferred to deployment after only 100 iterations.
 
 ## Active gate
 
-Read-only forensic adjudication:
+Use new preregistered design seeds 20260926..20260930, outside holdout, for learned-policy crossplay.
 
-- rebuild exact ENS8_A at source 8000;
-- deterministic root drift ENS8 8000 → 8100;
-- broad current-behavior EV versus ENS8 8000 and current 7600;
-- AveragePolicy 8100 versus AveragePolicy 8000;
-- Uniform / Passive / Jammer baselines.
+Historical opponent ecosystem:
+- AVG7600;
+- AVG8000;
+- BEH7600;
+- ENS8_8000.
+
+Compare current ENS8 8100 and AveragePolicy 8100 against their 8000 counterparts and run direct seat-balanced pairings.
 
 No roots. Holdout sealed.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_ens8_post_pilot_forensic.sh
+bash tools/run_lt2_hu_ens8_learned_ecosystem_crossplay.sh
 ```
 
-Wait for `LT2_HU_ENS8_POST_PILOT_FORENSIC_PASS`, then send
-`SpinCore_LT2_hu_ens8_post_pilot_forensic.json`.
+Wait for `LT2_HU_ENS8_LEARNED_ECOSYSTEM_CROSSPLAY_PASS`, then send
+`SpinCore_LT2_hu_ens8_learned_ecosystem_crossplay.json`.
 
 Do not train beyond 8100.
