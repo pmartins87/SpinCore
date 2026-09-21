@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **LT3 CONTINUATION PERFORMANCE GATE — 8200 PRESERVED / OPENHOLDEM PAUSED**
+Status: **LT3 24H PARALLEL CONTINUATION AUTHORIZED — 8200 -> 9250 / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -118,7 +118,7 @@ Next gate: integrate persistent mmap + 4x8 fitting into the LT3 continuation
 path and measure end-to-end iteration wall time without generating a long run.
 
 
-## 8200 end-to-end integration gate
+## 8200 end-to-end integration gate — PASS
 
 The fit-only matrix is no longer sufficient to authorize the ~24-hour run.
 The selected 4x8 fitter is now wired into a disposable end-to-end gate from the
@@ -138,3 +138,32 @@ The gate runs in isolated processes:
 
 The source 8200 checkpoint+sidecar remain read-only.  Only after this gate
 passes will the ~24-hour target be frozen.
+
+
+## 24-hour continuation contract — FROZEN
+
+The 8200 end-to-end gate passed with exact semantic parity.
+
+Measured on the same disposable iteration 8201:
+
+- sequential whole iteration: 123.932 s;
+- parallel 4x8 whole iteration: 80.992 s;
+- whole-iteration speedup: 1.5301658x;
+- parallel median over 8201..8203: 81.108 s;
+- historical checkpoint cost: 101.099 s every 50 iterations;
+- planning time including checkpoint amortization: 83.130 s/iteration.
+
+The next long block is frozen before training starts:
+
+- source: durable matched checkpoint+sidecar @8200;
+- target: 9250;
+- additional iterations: 1050;
+- new roots: 630,000;
+- projected total wall: 24.35 h;
+- checkpoint every 50;
+- raw @8600 checkpoint+sidecar preserved automatically;
+- HU fit: exact-parity 4x8;
+- no LT2 final-holdout access;
+- no LT3 sealed-holdout access.
+
+Do not change target based on intermediate results.
