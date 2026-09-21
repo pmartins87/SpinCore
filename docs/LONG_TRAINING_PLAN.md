@@ -1,53 +1,45 @@
 # SpinCore — Long-Training Plan
 
-Status: **ENS8 8100 FINAL HU CANDIDATE FROZEN — SEALED HOLDOUT NEXT**
+Status: **TRAINING CLOSED FOR VALIDATED HU CANDIDATE — DEPLOYMENT INTEGRATION**
 Date: 2026-09-21
 
-## Design-set closure
+## Final strategic result
 
-The candidate survived:
-- broad weak baselines;
-- online Deep-CFR feedback;
-- post-pilot forensic validation;
-- independent learned-policy ecosystem crossplay.
+ENS8 current behavior at iteration 8100 passed the sealed final holdout under all 11 frozen criteria.
 
-Independent design-set learned ecosystem:
-- ENS8 8100 absolute +7.538, CI fully positive;
-- ENS8 8100 − ENS8 8000 +1.453, unresolved/no regression;
-- ENS8 8100 − AVG8100 +13.059, resolved positive.
+No additional roots are justified for this candidate.
 
-Direct seat-balanced:
-- ENS8 8100 vs ENS8 8000 +1.227, unresolved/no regression;
-- ENS8 8100 vs AVG8100 +12.663, resolved positive.
+The strategic experiment is closed.
 
-## Frozen deployment semantics
+## Frozen artifact identity
 
-For TRUE_HEADS_UP:
-- current ENS8 iteration 8100;
-- checkpoint + ensemble sidecar;
-- not AveragePolicy.
+Checkpoint:
+`a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`
 
-No further roots before holdout.
+HU ensemble:
+`c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`
 
-## Final holdout contract
+## Deployment semantics
 
-Seeds 20261001..20261006.
+THREE_HANDED:
+- finalized AveragePolicy from iteration 8100;
+- unchanged canonical inference semantics.
 
-Criteria and non-inferiority margin are frozen in:
-`docs/LT2_HU_ENS8_FINAL_HOLDOUT_PROTOCOL_20260921.md`.
+TRUE_HEADS_UP:
+- current ENS8 from iteration 8100;
+- eight raw Advantage outputs averaged;
+- unchanged lean regret matching.
 
-All criteria must pass.
+## Next mechanical gate
 
-A completed holdout result is not reusable for tuning. Any candidate changed after seeing it requires a new untouched validation family.
+Export a compact inference-only bundle and compare its output against source artifacts over old forensic trajectories.
 
-## After holdout
+Pass requires:
+- zero legal-context mismatches;
+- zero argmax mismatches;
+- zero exact action-resolution mismatches;
+- max probability difference <= 1e-6;
+- no strategic EV calculation;
+- no holdout reuse.
 
-PASS:
-- preserve final candidate;
-- implement/finalize deployment inference path for HU ensemble semantics;
-- run only mechanical integration checks, not policy tuning.
-
-FAIL:
-- preserve failure;
-- do not retune on holdout;
-- return to design data and create a genuinely new candidate/validation family.
+After parity PASS, proceed to the actual runtime/OpenHoldem integration layer while preserving the frozen bundle hash.
