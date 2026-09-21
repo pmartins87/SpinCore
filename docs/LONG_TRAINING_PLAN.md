@@ -85,3 +85,18 @@ continuation resume from iteration 8200.
 
 The final target iteration must be calculated from the measured optimized
 throughput so the unattended block is approximately 24 hours long.
+
+
+## Matrix V1 memory incident
+
+The first process-parallel matrix was terminated after preflight.  Its design
+copied/deserialized the full 2M-sample HU Advantage reservoir into each member
+process and is therefore superseded as memory-unsafe.
+
+The replacement V2 uses a single compact mmap reservoir mirror shared read-only
+by fit workers.  The mirror is intended to persist across training iterations;
+a production continuation must update only reservoir slots actually replaced,
+not rebuild/copy the full reservoir every iteration.
+
+V2 must pass exact final-state and exact final-loss parity before it can be used
+for the 8200 continuation.
