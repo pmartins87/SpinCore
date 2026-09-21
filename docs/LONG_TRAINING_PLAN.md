@@ -1,55 +1,45 @@
 # SpinCore — Long-Training Plan
 
-Status: **ENS8 PILOT 8100 COMPLETE — DESIGN-SET STRATEGIC ADJUDICATION ACTIVE**
-Date: 2026-09-20
+Status: **8100 FROZEN — CURRENT ENS8 FORENSIC PASS — INDEPENDENT LEARNED-POLICY CROSSPLAY ACTIVE**
+Date: 2026-09-21
 
-## Completed pilot
+## Post-pilot conclusion
 
-The isolated ENS8 intervention ran from 8000 to 8100:
+The online ENS8 mechanism survived actual feedback:
 
-- +100 iterations;
-- +60k roots;
-- exact predeclared ENS8_A seed composition reused every iteration;
-- 8 fresh400 HU estimators;
-- raw-output average;
-- unchanged regret matching;
-- 3H fresh100 unchanged;
-- K4 off;
-- holdout untouched.
+- root all-in mass dropped about 16 pp;
+- POT_33 rose about 16 pp;
+- Uniform EV improved significantly;
+- Passive/Jammer did not regress;
+- ENS8 8100 strongly exceeds the old 7600 behavior on Passive and Jammer.
 
-Mechanical execution passed.
+AveragePolicy remains statistically flat versus 8000. This is deployment lag rather than deterioration.
 
-## Why training remains stopped
+## Independent design-set gate
 
-The training report records fit health and trajectory behavior, not strategic EV.
+Before any more training or holdout, evaluate on newly preregistered seeds:
 
-Before any continuation or holdout, verify that online feedback did not reintroduce:
-- root shove inflation;
-- PassiveCaller regression;
-- Uniform regression;
-- deployment/AveragePolicy deterioration.
+`20260926..20260930`
 
-## Post-pilot forensic gate
+These are outside the final sealed holdout.
 
-On the already-seen forensic seeds:
+Historical learned-opponent ecosystem excludes the candidate 8100 and consists of:
+- AVG7600;
+- AVG8000;
+- BEH7600;
+- ENS8_8000.
 
-1. reconstruct ENS8_A from the exact frozen 8000 reservoir;
-2. compare deterministic root policies 8000 versus 8100;
-3. broad weak-baseline evaluation of ENS8 8100 versus:
-   - ENS8 8000;
-   - current 7600;
-4. compare AveragePolicy 8100 versus AveragePolicy 8000.
+Primary paired comparisons:
+- ENS8_8100 − ENS8_8000;
+- AVG_8100 − AVG_8000;
+- ENS8_8100 − AVG_8100.
 
-No new roots or optimizer steps in source artifacts.
+Seat-balanced direct versions are also required.
 
-## After this gate
+## Decision after crossplay
 
-If it passes:
-- run trained-policy/cross-play on the design set;
-- freeze the final intervention;
-- only then unseal holdout.
+If ENS8 8100 has no resolved learned-policy regression and remains competitive with/stronger than AveragePolicy 8100, freeze the HU current ensemble as a deployment candidate and prepare the final holdout protocol.
 
-If it fails:
-- localize the new failure before any additional training.
+If current ENS8 fails, localize before more roots.
 
-Do not train beyond iteration 8100 meanwhile.
+If current ENS8 passes but AveragePolicy remains lagging, do not automatically spend more roots; candidate deployment semantics must be decided from crossplay evidence first.
