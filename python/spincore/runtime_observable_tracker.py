@@ -122,8 +122,12 @@ def _infer_observable_actions(
                 raise ObservableTrackerError("invalid canonical actor")
             if int(observed.street)<int(public.street):
                 raise ObservableTrackerError("observed street moved backwards")
-            if int(observed.street)>int(public.street)+1:
-                raise ObservableTrackerError("observed street skipped")
+            # Do not reject a forward jump here. OpenHoldem derives betround
+            # from visible community cards. A single all-in can therefore make
+            # OH jump directly from preflop/flop/turn to river while SpinCore's
+            # terminal betting street remains where the all-in occurred.
+            # The candidate action is still accepted only if authoritative
+            # apply_exact + card-derived projection reproduces the whole frame.
             if observed.stacks[actor]>public.stacks[actor]:
                 raise ObservableTrackerError("acting stack increased")
             if public.folded[actor] or public.all_in[actor]:
