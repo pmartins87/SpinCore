@@ -190,9 +190,9 @@ int main(int argc, char** argv) {
             max_abs <= tolerance &&
             max_mass_error <= tolerance;
 
-        report_path.parent_path().empty()
-            ? void()
-            : std::filesystem::create_directories(report_path.parent_path());
+        if (!report_path.parent_path().empty()) {
+            std::filesystem::create_directories(report_path.parent_path());
+        }
         std::ofstream report(report_path);
         if (!report) {
             throw std::runtime_error("cannot create parity report");
