@@ -111,6 +111,17 @@ def _blind_index(sb:int,bb:int)->int:
     )
 
 
+def openholdem_betround_from_visible_count(visible:int)->int:
+    """Mirror OpenHoldem CBetroundCalculator's card-derived round semantics."""
+    count=int(visible)
+    mapping={0:1,3:2,4:3,5:4}
+    if count not in mapping:
+        raise OpenHoldemAdapterError(
+            f"unsupported visible community-card count {count}"
+        )
+    return mapping[count]
+
+
 def _validate_cards(hero:tuple[int,int],board:tuple[int,int,int,int,int],visible:int)->None:
     if len(hero)!=2 or len(board)!=5:
         raise OpenHoldemAdapterError("card vector length drift")
@@ -276,13 +287,13 @@ class OpenHoldemSymbolAdapter:
         br=int(frame.betround)
         if br<1 or br>4:
             raise OpenHoldemAdapterError("betround outside 1..4")
-        street=br-1
-        expected_visible=(0,3,4,5)[street]
         visible=int(frame.ncommoncardsknown)
-        if visible!=expected_visible:
+        expected_br=openholdem_betround_from_visible_count(visible)
+        if br!=expected_br:
             raise OpenHoldemAdapterError(
-                f"board-count/betround mismatch: street={street} visible={visible}"
+                f"board-count/betround mismatch: betround={br} visible={visible}"
             )
+        street=br-1
 
         hero=tuple(int(x) for x in frame.hero_cards)
         if hero!=anchor.hero_cards:
@@ -333,8 +344,14 @@ class OpenHoldemSymbolAdapter:
 
 
 def canonical_observable_projection(public_snapshot,board_cards)->ObservedTableSnapshot:
+    # OpenHoldem's betround is derived from which community cards are known,
+    # not from the solver's internal last betting street. This differs after
+    # an all-in runout: SpinCore may be terminal on flop/turn while OpenHoldem
+    # already sees all five board cards and therefore reports river.
+    visible=int(public_snapshot.visible_board_count)
+    street=openholdem_betround_from_visible_count(visible)-1
     return ObservedTableSnapshot(
-        street=int(public_snapshot.street),
+        street=street,
         pot=int(public_snapshot.pot),
         stacks=tuple(int(x) for x in public_snapshot.stacks),
         street_commitments=tuple(int(x) for x in public_snapshot.street_commitments),
