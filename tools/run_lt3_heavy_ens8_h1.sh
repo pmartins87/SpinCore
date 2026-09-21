@@ -51,6 +51,21 @@ if [ -z "$DISK_KIB" ] || [ "$DISK_KIB" -lt $((15*1024*1024)) ]; then
   exit 8
 fi
 
+HOST_C_KIB="$(df -Pk /mnt/c 2>/dev/null | awk 'NR==2 {print $4}' || true)"
+if [ -n "$HOST_C_KIB" ] && [ "$HOST_C_KIB" -lt $((20*1024*1024)) ]; then
+  echo "ERROR: less than 20 GiB free on Windows C: host filesystem." >&2
+  echo "WSL virtual-disk growth could exhaust the host drive during H1." >&2
+  exit 11
+fi
+
+SOURCE_BYTES=$(( $(stat -c%s "$SOURCE_CHECKPOINT") + $(stat -c%s "$SOURCE_ENSEMBLE") ))
+echo "LT3_H1_DISK_PREFLIGHT_PASS"
+echo "training_fs_free_gib=$((DISK_KIB/1024/1024))"
+if [ -n "$HOST_C_KIB" ]; then
+  echo "host_c_free_gib=$((HOST_C_KIB/1024/1024))"
+fi
+echo "source_artifacts_mib=$((SOURCE_BYTES/1024/1024))"
+
 export PYTHONPATH="$ROOT/python:$ROOT/tools"
 "$PY" -m py_compile   python/spincore/lean_action_policy.py   python/spincore/lean_parallel.py   tools/run_lt2_hu_ens8_online_pilot.py   tools/run_lt3_heavy_ens8_h1.py
 echo "LT3_H1_PYTHON_PREFLIGHT_PASS"
