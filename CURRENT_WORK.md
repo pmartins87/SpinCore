@@ -1,57 +1,61 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **PUBLIC SNAPSHOT RECONCILER PASS — OPENHOLDEM HEARTBEAT/LIFECYCLE TRACKER NEXT**
+Status: **HEARTBEAT/LIFECYCLE TRACKER PASS — OPENHOLDEM SYMBOL/SCRAPE ADAPTER NEXT**
 
 ## Frozen strategy/runtime
 
-Strategic candidate and all deployment identities remain frozen.
+All strategic and model identities remain frozen.
 
 No training, EV tuning or holdout reuse is permitted.
 
-## Public snapshot reconciler result
+## Heartbeat/lifecycle result
 
-PASS over 12,000 public transitions.
+PASS:
+- 10,000 canonical transitions;
+- 20,000 duplicate heartbeats;
+- 7,862 MyTurn callbacks;
+- 3,931 actual decision computations;
+- 3,931 repeated MyTurn cache hits;
+- 11,793 ProcessQuery reads;
+- 1,170 NewRound callbacks;
+- 0 action mismatches;
+- 0 transcript mismatches.
 
-Action coverage:
-- FOLD 930;
-- CHECK 702;
-- CALL 4,734;
-- BET_TO 859;
-- RAISE_TO 3,451;
-- ALL_IN 1,324.
+Fail-closed faults:
+- corrupt snapshots 500/500 rejected;
+- wrong-hand snapshots 500/500 rejected;
+- skipped transitions 493/493 rejected;
+- failure latch 500/500;
+- HandReset recovery 500/500.
 
-Alias normalization:
-- 805 all-in calls -> CALL;
-- 3,505 stack-emptying BetTo/RaiseTo -> ALL_IN;
-- alias failures 0.
+## Active integration boundary
 
-Faults:
-- 1,500 no-op snapshots rejected by one-action reconciler;
-- 1,500 corrupt snapshots rejected;
-- 1,196 skipped-action snapshots rejected.
+The state machine is now validated independently from OpenHoldem.
 
-The skipped-action gate did not record skipped attempts separately, so the next lifecycle test explicitly requires skipped_attempts == skipped_rejections.
+Next map actual OpenHoldem scrape/symbol semantics into the runtime's normalized table snapshot.
 
-## Active gate
+The adapter uses documented OH meanings:
+- balanceN = stack behind;
+- currentbetN = current betting-round chips in play;
+- pot = total chips in play including player bets;
+- playersdealtbits = hand participants;
+- playersplayingbits = not-folded participants;
+- playersallinbits = all-in participants;
+- betround 1..4 = preflop..river;
+- userchair/dealerchair and exact blinds;
+- Hero + board cards converted to SpinCore ids.
 
-A fail-closed heartbeat/lifecycle tracker is now implemented above the reconciler.
-
-Contract:
-- duplicate heartbeat = no-op;
-- valid changed snapshot = exactly one canonical action appended;
-- NewRound preserves transcript;
-- MyTurn computes once per canonical state;
-- repeated ProcessQuery returns cached decision only;
-- changed state invalidates cache;
-- wrong hand / corrupt / skipped transition latches failure;
-- only HandReset clears the failure latch.
+Runtime canonicalization:
+- logical 0 = dealer;
+- 3H logical 1/2 = next two dealt chairs clockwise;
+- HU logical 0 = dealer/SB, logical 1 = opponent/BB, logical 2 dead.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_runtime_heartbeat_tracker.sh
+bash tools/run_lt2_openholdem_symbol_adapter.sh
 ```
 
-Wait for `LT2_RUNTIME_HEARTBEAT_TRACKER_PASS`, then send
-`SpinCore_LT2_runtime_heartbeat_tracker.json`.
+Wait for `LT2_OPENHOLDEM_SYMBOL_ADAPTER_PASS`, then send
+`SpinCore_LT2_openholdem_symbol_adapter.json`.
