@@ -42,6 +42,7 @@ jobs:
         run: |
           python -m py_compile \
             python/spincore/openppl_expr.py \
+            python/spincore/openppl_program.py \
             python/spincore/deepcrusher_r8_dc0.py \
             python/spincore/deepcrusher_openppl.py \
             python/spincore/deepcrusher_state.py \
@@ -51,6 +52,10 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/python
         run: python python_tests/test_openppl_expr.py
+      - name: Ordered WHEN program semantics
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: python python_tests/test_openppl_program.py
       - name: Existing DeepCrusher contracts
         env:
           PYTHONPATH: ${{ github.workspace }}/python
