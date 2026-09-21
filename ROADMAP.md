@@ -7,28 +7,30 @@
 - native C++ inference parity — **PASS**;
 - hidden filler invariance — **PASS**;
 - exact public-transcript rebuild — **PASS**;
-- public snapshot -> canonical exact action reconciler — **PASS**;
-- heartbeat/lifecycle tracker + decision cache — **PASS**;
-- OpenHoldem symbol/scrape adapter — **NEXT**;
-- observable-snapshot reconciler integration — **AFTER ADAPTER PASS**;
-- Windows user-DLL bridge — **AFTER OBSERVABLE INTEGRATION**.
+- public snapshot -> exact action reconciler — **PASS**;
+- heartbeat/lifecycle tracker + cache — **PASS**;
+- OpenHoldem symbol/scrape adapter — **PASS**;
+- OpenHoldem observable end-to-end tracker — **NEXT**;
+- Windows native user-DLL — **AFTER E2E PASS**.
 
-## Proven lifecycle behavior
+## Runtime pipeline now available
 
-The tracker survives duplicate heartbeats and NewRound callbacks without
-duplicating transcript state, computes a Hero decision exactly once per
-canonical state, serves repeated ProcessQuery calls from cache, invalidates that
-cache on state mutation and rejects every generated corrupted/wrong-hand/skipped
-transition.
+`OpenHoldem raw symbols -> strict adapter -> observable public snapshot -> canonical exact action transcript -> from-scratch authoritative rebuild -> frozen native inference -> exact lean action`
 
-## Current boundary
+## Current gate
 
-The next risk is not solver or strategy logic. It is translating raw OpenHoldem
-symbols and physical 0..9 chairs into exact LT2 chip/card/seat semantics.
+Prove this whole state-reconstruction path end-to-end without using any
+solver-only fields that real OpenHoldem does not expose.
 
-A strict adapter is now implemented and tested by round-tripping authoritative
-solver states through synthetic OpenHoldem frames plus malformed-frame fault
-injection.
+At Hero turns the rebuilt:
+- SPNNIV1;
+- SPNNIV2;
+- actor/domain;
+- active action mask;
+- lean legal actions;
+- exact action resolver
 
-After PASS, the reconciler will consume the reduced observable OpenHoldem
-snapshot rather than a solver-generated full PublicSnapshot.
+must match authoritative truth exactly.
+
+After PASS, port the already-proven state machine and native inference core into
+the Windows OpenHoldem user-DLL lifecycle.
