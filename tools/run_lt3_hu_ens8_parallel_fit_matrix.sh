@@ -30,7 +30,14 @@ mkdir -p "$DIR"
 export PYTHONPATH="$ROOT/python:$ROOT/tools"
 
 "$PY" -m py_compile   tools/lt3_hu_ens8_parallel_fit.py   tools/benchmark_lt3_hu_ens8_parallel_fit_matrix.py
-echo "LT3_PARALLEL_FIT_MATRIX_PREFLIGHT_PASS"
+MEM_AVAIL_KIB="$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)"
+if [ "$MEM_AVAIL_KIB" -lt $((12*1024*1024)) ]; then
+  echo "ERROR: less than 12 GiB WSL MemAvailable before V2 matrix." >&2
+  free -h >&2 || true
+  exit 12
+fi
+echo "LT3_PARALLEL_FIT_MATRIX_V2_PREFLIGHT_PASS"
+free -h || true
 
 "$PY" tools/benchmark_lt3_hu_ens8_parallel_fit_matrix.py   --solver "$SOLVER"   --source-checkpoint "$SOURCE"   --report "$REPORT"   --parent-threads 8
 
@@ -38,24 +45,24 @@ echo "LT3_PARALLEL_FIT_MATRIX_PREFLIGHT_PASS"
 import json,sys
 from pathlib import Path
 d=json.loads(Path(sys.argv[1]).read_text())
-assert d["schema"]=="SPINCORE_LT3_HU_ENS8_PARALLEL_FIT_MATRIX_V1"
+assert d["schema"]=="SPINCORE_LT3_HU_ENS8_PARALLEL_FIT_MATRIX_V2"
 assert d["verdict"]=="PASS"
 best=d["best_exact_candidate"]
 assert best is not None
 assert best["all_member_states_exact"] is True
 assert best["all_member_loss_last_exact"] is True
-assert float(best["speedup"])>=1.25
+assert float(best["speedup_steady_state"])>=1.25
 assert d["source_checkpoint_read_only"] is True
 assert d["training_roots"]==0
 assert d["holdout_touched"] is False
 print("LT3_HU_ENS8_PARALLEL_FIT_MATRIX_PASS")
 print("best_exact_candidate="+best["name"])
-print("best_speedup="+str(best["speedup"]))
+print("best_speedup="+str(best["speedup_steady_state"]))
 PY
 
 DEST="/mnt/c/Users/Rz9/Downloads"
 if [ -d "$DEST" ]; then
-  cp "$REPORT" "$DEST/SpinCore_LT3_HU_ENS8_parallel_fit_matrix.json"
+  cp "$REPORT" "$DEST/SpinCore_LT3_HU_ENS8_parallel_fit_matrix_v2.json"
 fi
 
-echo "STOP HERE. Send SpinCore_LT3_HU_ENS8_parallel_fit_matrix.json to ChatGPT."
+echo "STOP HERE. Send SpinCore_LT3_HU_ENS8_parallel_fit_matrix_v2.json to ChatGPT."
