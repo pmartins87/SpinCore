@@ -1,68 +1,60 @@
 # SpinCore Current Work
 
 Date: 2026-09-20
-Status: **ITERATION 8000 SOURCE FROZEN — REPLICATED ENS8 BROAD EV PASS — ISOLATED ONLINE ENS8 PILOT 8000→8100 NEXT**
+Status: **ENS8 ONLINE PILOT REACHED 8100 — MECHANICAL PASS — POST-PILOT FORENSIC ADJUDICATION NEXT**
 
-## Replicated ENS8 broad-EV result
+## Online pilot
 
-Both independently composed size-8 ensembles are strongly positive against every forensic baseline.
+The isolated ENS8 pilot completed iteration 8100.
 
-ENS8_A:
-- UNIFORM_LEGAL `+28.097`;
-- PASSIVE_CALLER `+10.961`;
-- JAMMER `+15.052`.
+Contract:
+- source iteration 8000 remained read-only;
+- +100 iterations / +60,000 roots;
+- 3H unchanged single fresh100;
+- HU 8 x fresh400 with predeclared ENS8_A seeds reused every iteration;
+- raw Advantage average before unchanged lean regret matching;
+- fit RNG isolated from sampled-policy RNG;
+- K4 off;
+- holdout untouched.
 
-ENS8_B:
-- UNIFORM_LEGAL `+30.034`;
-- PASSIVE_CALLER `+13.462`;
-- JAMMER `+17.212`.
+Final roots:
+- THREE_HANDED 2,648,700;
+- TRUE_HEADS_UP 2,211,300;
+- total 4,860,000.
 
-Both are resolved improvements versus Stage B 7500 on all three baselines.
+The run completed without fit/root/ensemble-size failure. HU member losses remained narrow and sampled action frequencies did not show a renewed catastrophic jam explosion.
 
-Versus the 7600 pilot:
-- neither group has a resolved Uniform regression;
-- both significantly improve Passive;
-- both significantly improve Jammer.
+This is not yet a strategic pass.
 
-## Composition robustness
+## Artifact contract
 
-ENS8_B minus ENS8_A:
-- Uniform `+1.937`, unresolved;
-- Passive `+2.501`, barely resolved;
-- Jammer `+2.160`, unresolved.
+Current HU behavior at 8100 requires both:
+- the ordinary checkpoint;
+- `hu_ensemble_state.pt`.
 
-The maximum ENS8 composition gap is about half the ENS4 maximum gap.
+The ordinary checkpoint alone stores only the last Advantage member.
 
-Size 8 is therefore the leading stabilization candidate.
-
-## Selection discipline
-
-Do not pick ENS8_B because it happened to score higher.
-
-The online pilot uses ENS8_A (replicas 0..7), the first predeclared group.
+AveragePolicy is ordinary/checkpoint-native because its training targets were generated from ENS8 behavior.
 
 ## Active gate
 
-Run an isolated +100-iteration online-feedback pilot:
+Read-only forensic adjudication:
 
-- source iteration 8000 exact SHA;
-- target 8100;
-- THREE_HANDED unchanged single fresh100;
-- TRUE_HEADS_UP = 8 independent fresh400 fits;
-- exact ENS8_A fit seeds reused every iteration;
-- raw Advantage average before unchanged lean regret matching;
-- K4 off;
-- holdout sealed.
+- rebuild exact ENS8_A at source 8000;
+- deterministic root drift ENS8 8000 → 8100;
+- broad current-behavior EV versus ENS8 8000 and current 7600;
+- AveragePolicy 8100 versus AveragePolicy 8000;
+- Uniform / Passive / Jammer baselines.
 
-The source 8000 checkpoint remains immutable.
+No roots. Holdout sealed.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_ens8_online_pilot.sh
+bash tools/run_lt2_hu_ens8_post_pilot_forensic.sh
 ```
 
-Wait for `LT2_HU_ENS8_ONLINE_PILOT_PASS`, then send
-`SpinCore_LT2_hu_ens8_online_pilot.json`.
+Wait for `LT2_HU_ENS8_POST_PILOT_FORENSIC_PASS`, then send
+`SpinCore_LT2_hu_ens8_post_pilot_forensic.json`.
 
-Do not run the generic trainer beyond 8000.
+Do not train beyond 8100.
