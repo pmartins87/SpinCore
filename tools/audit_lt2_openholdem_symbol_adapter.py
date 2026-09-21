@@ -38,6 +38,7 @@ from spincore.openholdem_symbol_adapter import (
     OpenHoldemRawFrame,
     OpenHoldemSymbolAdapter,
     canonical_observable_projection,
+    openholdem_betround_from_visible_count,
 )
 from spincore.solver import Episode, ResolvedExactAction, SolverLibrary
 
@@ -129,7 +130,7 @@ def _frame(
         hand_id=str(hand_id),
         user_chair=int(logical_to_chair[hero]),
         dealer_chair=int(logical_to_chair[0]),
-        betround=int(public.street)+1,
+        betround=openholdem_betround_from_visible_count(int(public.visible_board_count)),
         sblind=float(e.small_blind),
         bblind=float(e.big_blind),
         playersdealtbits=dealt,
