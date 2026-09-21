@@ -123,10 +123,6 @@ std::pair<std::array<std::array<Card,2>,3>,std::array<Card,5>> runtime_deal(
     return {holes,board};
 }
 
-bool exact_equal(const ExactAction& a,const ExactAction& b) {
-    return a.type==b.type && a.amount_to==b.amount_to;
-}
-
 } // namespace
 
 std::int32_t openholdem_betround_from_visible_count(std::int32_t visible) {
