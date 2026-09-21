@@ -97,3 +97,22 @@ V2 replaces per-worker reservoir copies with one compact mmap mirror:
   one-time costs are reported separately.
 
 Do not rerun V1.  Run only the V2 matrix.
+
+
+## ENS8 parallel matrix V2 — PASS
+
+Measured on the Ryzen against the canonical 8-thread sequential ENS8 fit:
+
+- sequential HU ENS8 fit wall: 114.824 s;
+- 2x8: 83.143 s, 1.381x, exact state/loss parity;
+- 4x8: 73.027 s, 1.572x, exact state/loss parity — **selected**;
+- 8x8: 3777.466 s, exact but severe oversubscription collapse;
+- lower-thread layouts (4x4, 8x4, 8x2) were faster but failed exact
+  state/loss parity and are rejected.
+
+Important: 1.572x is the measured steady-state speedup of the **HU ENS8 fitting
+phase**, not yet the whole training iteration.  A short full-iteration
+integration benchmark is required before calculating the ~24-hour block target.
+
+Next gate: integrate persistent mmap + 4x8 fitting into the LT3 continuation
+path and measure end-to-end iteration wall time without generating a long run.
