@@ -38,6 +38,13 @@ Immediate engineering issue: the current ENS8 fit implementation is
 unnecessarily sequential.  Before resuming 8201+, benchmark process-parallel
 member fitting and require exact state/loss parity.
 
+Operational scheduling constraint: after the performance matrix, do not default
+to a short 8200->8600 run that is likely to finish while the user is unavailable.
+Use the measured optimized iteration wall time to precommit a block of
+approximately 24 hours, rounded to a checkpoint boundary.  Preserve 8600 as an
+internal snapshot for comparison, but continue automatically to the predeclared
+24-hour endpoint without looking at development outcomes mid-run.
+
 
 ## OpenHoldem deployment lane — PAUSED
 
