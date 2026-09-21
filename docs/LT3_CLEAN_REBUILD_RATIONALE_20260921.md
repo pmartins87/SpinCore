@@ -1,13 +1,16 @@
-# LT3 clean rebuild from zero — rationale
+# LT3 clean rebuild from zero — superseded research option
 
 Date: 2026-09-21
 
-## Decision
+## Decision status
 
-The next strategic training line will start from iteration 0 rather than resume
-LT2@8100 or the interrupted LT3 continuation.
+**SUPERSEDED.**
 
-LT2@8100 remains frozen and valid as the comparison baseline.
+A clean-from-zero rebuild is retained only as an optional future path-dependence
+experiment.  It is not required by the current evidence.
+
+The active plan is to preserve the durable LT3@8200 checkpoint+sidecar, prove
+exact-parity ENS8 parallel fitting, and resume from 8200.
 
 ## Why continuation was originally reasonable
 
@@ -71,3 +74,15 @@ First:
 
 The LT2 final holdout is retired and must not be reused for these research
 choices.  The LT3 sealed holdout remains untouched.
+
+
+## Superseding reason
+
+The mature Stage-B diagnosis did not support reservoir poisoning.  The evidence
+localized the material training issue to insufficient HU fresh-fit budget, and
+the same mature reservoir responded positively when refit at 400 steps.  The
+subsequent HU400 online continuation and ENS8 candidate also passed their
+validation gates.
+
+Accordingly, discarding the accumulated state would be an unproven and costly
+choice rather than a necessary repair.
