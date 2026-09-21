@@ -245,6 +245,30 @@ def main():
                         break
 
                     if int(before.actor)==int(hero):
+                        # OpenHoldem chip/card snapshots cannot reveal an
+                        # opponent CHECK. DLLUpdateOnMyTurn is the synchronizing
+                        # evidence that actor order has reached Hero, so force
+                        # any pending silent CHECKs before comparing canonical
+                        # state.
+                        marker=tracker.on_my_turn(
+                            anchor,
+                            observed,
+                            lambda t: ("E2E",t.generation,len(t.transcript)),
+                        )
+                        if marker is None:
+                            failures.append({
+                                "seed":seed,"scenario":scenario,
+                                "kind":"myturn_sync",
+                                "reason":tracker.failure_reason,
+                            })
+                            break
+                        if tracker.transcript_tuples()!=tuple(expected_transcript):
+                            transcript_mismatches+=1
+                            failures.append({
+                                "seed":seed,"scenario":scenario,
+                                "kind":"myturn_transcript",
+                            })
+                            break
                         rebuilt=tracker.canonical_state()
                         if rebuilt is None:
                             failures.append({"seed":seed,"scenario":scenario,"kind":"missing_state"})
@@ -272,38 +296,56 @@ def main():
 
                     new_frame=_frame(hand_id,e,truth,chairs,hero)
                     new_obs=adapter.normalize(new_frame,anchor)
+                    observable_changed=(new_obs!=observed)
                     event=tracker.on_heartbeat(anchor,new_obs)
                     transitions+=1
-                    if event.kind!="ACTION":
-                        failures.append({
-                            "seed":seed,"scenario":scenario,
-                            "kind":"transition","reason":event.reason,
-                        })
-                        break
-                    if event.action!=expected:
-                        exact_action_mismatches+=1
-                        failures.append({
-                            "seed":seed,"scenario":scenario,
-                            "kind":"action",
-                            "expected":(expected.action_type,expected.amount_to),
-                            "got":None if event.action is None else (event.action.action_type,event.action.amount_to),
-                        })
-                        break
-                    if tracker.transcript_tuples()!=tuple(expected_transcript):
-                        transcript_mismatches+=1
-                        failures.append({"seed":seed,"scenario":scenario,"kind":"transcript"})
-                        break
 
-                    # Public canonical state must also match truth after every
-                    # accepted action, including actual board reveals.
-                    rebuilt=tracker.canonical_state()
-                    if rebuilt is None or rebuilt.public_snapshot()!=truth.public_snapshot():
-                        canonical_mismatches+=1
-                        failures.append({
-                            "seed":seed,"scenario":scenario,
-                            "kind":"public_canonical_after_action",
-                        })
-                        break
+                    if not observable_changed:
+                        # A CHECK that does not complete the street is
+                        # intentionally invisible in OH balance/bet/pot/card
+                        # snapshots. It remains pending until later observable
+                        # evidence or DLLUpdateOnMyTurn.
+                        if expected.action_type!=1 or event.kind!="NO_CHANGE":
+                            failures.append({
+                                "seed":seed,"scenario":scenario,
+                                "kind":"silent_transition",
+                                "expected":(expected.action_type,expected.amount_to),
+                                "event":event.kind,
+                                "reason":event.reason,
+                            })
+                            break
+                    else:
+                        if event.kind!="ACTION":
+                            failures.append({
+                                "seed":seed,"scenario":scenario,
+                                "kind":"transition","reason":event.reason,
+                            })
+                            break
+                        if event.action!=expected:
+                            exact_action_mismatches+=1
+                            failures.append({
+                                "seed":seed,"scenario":scenario,
+                                "kind":"action",
+                                "expected":(expected.action_type,expected.amount_to),
+                                "got":None if event.action is None else (event.action.action_type,event.action.amount_to),
+                            })
+                            break
+                        if tracker.transcript_tuples()!=tuple(expected_transcript):
+                            transcript_mismatches+=1
+                            failures.append({"seed":seed,"scenario":scenario,"kind":"transcript"})
+                            break
+
+                        # Once an observable change synchronizes the tracker,
+                        # its canonical public state must match truth, including
+                        # a real street reveal replacing old filler cards.
+                        rebuilt=tracker.canonical_state()
+                        if rebuilt is None or rebuilt.public_snapshot()!=truth.public_snapshot():
+                            canonical_mismatches+=1
+                            failures.append({
+                                "seed":seed,"scenario":scenario,
+                                "kind":"public_canonical_after_action",
+                            })
+                            break
 
                 if failures:
                     break
@@ -356,17 +398,33 @@ def main():
                         failures.append({"seed":seed,"scenario":scenario,"kind":"skip_start"})
                         break
                     first=truth.public_snapshot()
-                    a1=_choose(first,rng)
-                    truth.apply_exact(a1.action_type,a1.amount_to)
-                    if not truth.terminal:
-                        second=truth.public_snapshot()
-                        a2=_choose(second,rng)
-                        truth.apply_exact(a2.action_type,a2.amount_to)
-                        skip_frame=_frame(hand_id+"-S",e,truth,chairs,hero)
-                        skip_obs=adapter.normalize(skip_frame,anchor)
-                        skipped_attempts+=1
-                        if tracker.on_heartbeat(anchor,skip_obs).kind=="FAILED":
-                            skipped_rejections+=1
+                    first_visible=[a for a in _options(first,rng) if a.action_type not in (0,1)]
+                    rng.shuffle(first_visible)
+                    applied_first=False
+                    for a1 in first_visible:
+                        probe=truth.clone()
+                        try:
+                            probe.apply_exact(a1.action_type,a1.amount_to)
+                            if probe.terminal:
+                                continue
+                            second=probe.public_snapshot()
+                            second_visible=[a for a in _options(second,rng) if a.action_type!=1]
+                            if not second_visible:
+                                continue
+                            a2=second_visible[rng.randrange(len(second_visible))]
+                            probe.apply_exact(a2.action_type,a2.amount_to)
+                            skip_frame=_frame(hand_id+"-S",e,probe,chairs,hero)
+                            skip_obs=adapter.normalize(skip_frame,anchor)
+                            skipped_attempts+=1
+                            if tracker.on_heartbeat(anchor,skip_obs).kind=="FAILED":
+                                skipped_rejections+=1
+                            applied_first=True
+                            break
+                        finally:
+                            probe.close()
+                    # No attempt is counted when this hand cannot produce two
+                    # observable-impacting actions. Silent CHECKs are not
+                    # considered skipped observable transitions.
                 finally:
                     tracker.close()
                     truth.close()
