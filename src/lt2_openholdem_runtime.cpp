@@ -135,6 +135,21 @@ std::int32_t openholdem_betround_from_visible_count(std::int32_t visible) {
     }
 }
 
+std::int32_t openholdem_card_id_from_rank_suit(
+    std::int32_t rank,
+    std::int32_t openholdem_suit) {
+    if (rank<2 || rank>14) throw std::runtime_error("OpenHoldem card rank outside 2..14");
+    std::int32_t spin_suit=-1;
+    switch (openholdem_suit) {
+        case 0:spin_suit=1;break; // hearts
+        case 1:spin_suit=2;break; // diamonds
+        case 2:spin_suit=3;break; // clubs
+        case 3:spin_suit=0;break; // spades
+        default:throw std::runtime_error("OpenHoldem card suit outside 0..3");
+    }
+    return (rank-2)*4+spin_suit;
+}
+
 HandAnchor anchor_from_raw_frame(const RawFrame& frame) {
     if (frame.hand_id.empty()) throw std::runtime_error("empty hand id");
     const int user=validate_chair(frame.user_chair,"userchair");
