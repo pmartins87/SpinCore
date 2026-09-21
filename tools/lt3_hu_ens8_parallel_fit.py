@@ -206,6 +206,7 @@ def _worker_init(manifest_path:str,threads:int)->None:
 def _worker_ping()->dict[str,int]:
     if _PACKED is None:
         raise RuntimeError("packed worker not initialized")
+    time.sleep(0.05)
     return {
         "pid":int(os.getpid()),
         "count":int(_PACKED.count),
@@ -273,15 +274,29 @@ class ParallelEnsembleFitter:
         self.threads_per_member=int(threads_per_member)
 
         ctx=mp.get_context("spawn")
+        # Spawn imports Torch before the worker initializer runs, so expose the
+        # intended numerical-library thread contract in the inherited
+        # environment as well as calling torch.set_num_threads in the child.
+        env_names=("OMP_NUM_THREADS","MKL_NUM_THREADS","OPENBLAS_NUM_THREADS")
+        old_env={name:os.environ.get(name) for name in env_names}
+        for name in env_names:
+            os.environ[name]=str(self.threads_per_member)
         started=time.perf_counter()
-        self.pool=ProcessPoolExecutor(
-            max_workers=self.concurrency,
-            mp_context=ctx,
-            initializer=_worker_init,
-            initargs=(str(self.manifest_path),self.threads_per_member),
-        )
-        # Force all workers to spawn before timing a fit.
-        pings=list(self.pool.map(lambda_placeholder, range(self.concurrency)))
+        try:
+            self.pool=ProcessPoolExecutor(
+                max_workers=self.concurrency,
+                mp_context=ctx,
+                initializer=_worker_init,
+                initargs=(str(self.manifest_path),self.threads_per_member),
+            )
+            # Force all workers to spawn before timing a fit.
+            pings=list(self.pool.map(lambda_placeholder, range(self.concurrency)))
+        finally:
+            for name,value in old_env.items():
+                if value is None:
+                    os.environ.pop(name,None)
+                else:
+                    os.environ[name]=value
         self.startup_seconds=float(time.perf_counter()-started)
         self.worker_pings=pings
 
