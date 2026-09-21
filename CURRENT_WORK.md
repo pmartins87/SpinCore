@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **OPENHOLDEM OBSERVABLE E2E FIRST RUN DIAGNOSED — INVISIBLE CHECK SYNCHRONIZATION PATCHED**
+Status: **OPENHOLDEM OBSERVABLE E2E — ALL-IN RUNOUT BETROUND SEMANTICS PATCHED**
 
 ## Frozen strategy/runtime
 
@@ -9,68 +9,58 @@ All strategic/model identities remain frozen.
 
 No training, EV tuning or holdout reuse is permitted.
 
-## First observable-E2E failure
+## Latest E2E failure
 
-The first run stopped after only 7 transitions with:
+The rerun did not reach a strategic comparison. It stopped inside the strict
+OpenHoldem symbol adapter with:
 
-- exact action mismatches: 0;
-- canonical state mismatches: 0;
-- transcript mismatches: 0;
-- failure kind: `transition`;
-- failure reason: null.
+`board-count/betround mismatch: street=1 visible=5`
 
-That pattern identified an observable no-change, not a solver/model divergence.
+This occurred after an all-in runout.
 
 ## Root cause
 
-A poker CHECK changes none of the OpenHoldem fields used by the strict
-observable projection:
+OpenHoldem's `CBetroundCalculator` derives the betting round from which
+community cards are actually known:
 
-- balances;
-- current bets;
-- pot;
-- fold/all-in bits;
-- board cards.
+- river card known -> river;
+- else turn card known -> turn;
+- else first three common cards known -> flop;
+- else preflop.
 
-Therefore an opponent CHECK can be real while the OpenHoldem public snapshot is
-byte-for-byte unchanged.
+SpinCore's terminal hand engine has different internal semantics after an all-in
+runout: when only one player remains actionable, it reveals all five board cards
+and terminates without advancing the internal betting street through every
+remaining round.
 
-The previous observable tracker incorrectly assumed that every voluntary action
-must immediately produce a changed snapshot and therefore returned NO_CHANGE
-where the E2E harness demanded ACTION.
+Therefore a terminal state can legitimately be:
 
-This is a runtime-observability issue, not a strategic issue.
+- SpinCore internal betting street = flop/turn/preflop;
+- visible board count = 5;
+- OpenHoldem betround = river.
 
-## Corrected contract
+The previous synthetic OH frame incorrectly set `betround = solver.street+1`,
+creating an impossible OpenHoldem frame such as flop + five visible board cards.
 
-The observable tracker now:
+## Patch
 
-1. treats an unchanged heartbeat as a no-op;
-2. permits pending silent CHECKs;
-3. when later observable evidence appears, deterministically advances through
-   required CHECKs before the one chip/fold-changing action;
-4. permits at most one chip/fold-changing action per scrape interval;
-5. on `DLLUpdateOnMyTurn`, uses the callback itself as evidence that canonical
-   actor order has reached Hero and reconciles any pending silent CHECKs;
-6. still rejects two observable-impacting actions between frames as a true
-   skipped transition;
-7. rebuilds the canonical state from scratch after synchronization.
+The runtime integration now mirrors OpenHoldem's real card-derived semantics:
 
-This matches the useful legacy DeepSpin lifecycle pattern: heartbeat does not
-drive strategy computation; `DLLUpdateOnMyTurn` is the stable synchronization
-point.
+1. `openholdem_betround_from_visible_count()` maps visible board count
+   0/3/4/5 -> OH betround 1/2/3/4;
+2. synthetic E2E and symbol-adapter frames use that mapping;
+3. canonical observable projection also uses visible board count rather than
+   SpinCore's internal last betting street;
+4. observable reconciliation permits a forward OH betround jump caused by a
+   single all-in runout, but still requires authoritative `apply_exact` plus
+   full-frame equality before accepting it.
 
-## Revised gate
+No strategy, model, action sizing or solver betting rule was changed.
 
-The E2E audit now explicitly requires coverage of:
+## Previous invisible-CHECK patch remains active
 
-- deferred invisible CHECKs;
-- later synchronization of those CHECKs at MyTurn or a changed frame;
-- both domains;
-- preflop and postflop Hero states;
-- actual street reveals;
-- corrupt frame rejection;
-- true skipped-visible-transition rejection.
+OpenHoldem snapshots cannot directly reveal a CHECK. Pending silent checks are
+still synchronized using later observable evidence or `DLLUpdateOnMyTurn`.
 
 ## Immediate action
 
@@ -78,7 +68,7 @@ The E2E audit now explicitly requires coverage of:
 bash tools/run_lt2_openholdem_observable_tracker_e2e.sh
 ```
 
-Wait for `LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_PASS`, then send
-`SpinCore_LT2_openholdem_observable_tracker_e2e.json`.
+Wait for `LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_PASS`.
 
-If it fails again, do not rerun: send the terminal output and JSON.
+If it fails again, do not rerun. Send the terminal output and, if created, the
+latest `SpinCore_LT2_openholdem_observable_tracker_e2e.json`.
