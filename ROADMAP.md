@@ -27,7 +27,7 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 3. Durable continuation checkpoint+sidecar @8200 — **PRESERVED**.
 4. ENS8 exact-parity throughput matrix — **PASS; 4x8 SELECTED**.
 5. 8200 end-to-end semantic + whole-iteration throughput gate — **PASS EXACT; WHOLE-ITERATION 1.530x**.
-6. Resume from 8200 with 4x8 to **9250** (+1050 iterations, projected 24.35 h) — **NEXT / AUTHORIZED**.
+6. Resume from 8200 with 4x8 to **9105** (+905 iterations, projected 20.998 h) — **NEXT / AUTHORIZED**.
 7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint while the same precommitted run continues to 9250.
 8. Development-set adjudication compares the preserved 8600 milestone and the final ~24-hour endpoint.
 9. Continue only while learning evidence justifies more compute.
@@ -93,5 +93,5 @@ Current LT3 status:
 - whole-iteration speedup: **1.530x** (123.932 s -> 80.992 s on shared 8201);
 - parallel median over 8201..8203: **81.108 s**;
 - checkpoint-amortized planning time: **83.130 s/iteration**;
-- precommitted ~24-hour endpoint: **9250** (+1050 iterations), projected **24.35 h**;
-- long continuation 8200 -> 9250: **NEXT / AUTHORIZED**.
+- precommitted ~21-hour endpoint: **9105** (+905 iterations), projected **20.998 h**;
+- long continuation 8200 -> 9105: **NEXT / AUTHORIZED**.
