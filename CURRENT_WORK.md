@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **LT3 HEAVY H1 TRAINING — PRIMARY ACTIVE LANE / OPENHOLDEM PAUSED**
+Status: **LT3 H1 PERFORMANCE GATE — SEQUENTIAL LONG RUN SUPERSEDED / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -14,7 +14,7 @@ The previous OpenHoldem productionization work is preserved but **paused**.
 No OpenHoldem host inspection, DLL installation or table testing is required
 while LT3 training is the user's active priority.
 
-## Primary active lane — LT3 Heavy H1
+## Primary active lane — LT3 H1 performance gate
 
 H1 is preregistered as a research-only continuation from the exact frozen
 LT2 ENS8@8100 checkpoint+sidecar pair:
@@ -32,10 +32,21 @@ LT2 ENS8@8100 checkpoint+sidecar pair:
 - LT2 final holdout: retired / not reused;
 - LT3 sealed holdout: untouched.
 
-The H1 run has a hard stop at iteration 8600.
+The initial sequential H1 launch is now considered **superseded for execution
+quality**. Its strategy contract was valid, but the implementation did not
+first benchmark the obvious independent parallelism across the eight HU members.
 
-After H1 completes, the next step is **development-set adjudication**. Do not
-extend automatically to H2 and do not touch any sealed holdout.
+Before restarting H1, the new mandatory step is an exact-parity throughput
+benchmark:
+
+- reference: current sequential ENS8 fresh400 x8 fit;
+- candidate: process-parallel ENS8 fitting;
+- target host: Ryzen 9;
+- exact member-state equality required;
+- exact final-loss equality required;
+- measured end-to-end speedup must include snapshot/serialization overhead.
+
+Only after this gate passes may H1 restart from the frozen LT2@8100 source.
 
 ## OpenHoldem deployment lane — PAUSED
 
@@ -55,18 +66,14 @@ No deployment work is needed now.
 
 ## Immediate action
 
-Run:
+Stop any still-running sequential H1 process. Then run:
 
 ```bash
-bash tools/run_lt3_heavy_ens8_h1.sh
+bash tools/run_lt3_hu_ens8_parallel_fit_benchmark.sh
 ```
 
-Expected completion sentinel:
+Expected sentinel:
 
-`LT3_HEAVY_ENS8_H1_TRAINING_PASS`
+`LT3_HU_ENS8_PARALLEL_FIT_BENCHMARK_PASS`
 
-Then send:
-
-`SpinCore_LT3_heavy_ens8_H1.json`
-
-Do not restart or extend past 8600 before H1 adjudication.
+Do not restart H1 until this benchmark is adjudicated.
