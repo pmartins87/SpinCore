@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **LT3 H1 PERFORMANCE GATE — SEQUENTIAL LONG RUN SUPERSEDED / OPENHOLDEM PAUSED**
+Status: **LT3 CLEAN-REBUILD DESIGN — CONTINUATION SUPERSEDED / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -14,39 +14,29 @@ The previous OpenHoldem productionization work is preserved but **paused**.
 No OpenHoldem host inspection, DLL installation or table testing is required
 while LT3 training is the user's active priority.
 
-## Primary active lane — LT3 H1 performance gate
+## Primary active lane — LT3 clean rebuild
 
-H1 is preregistered as a research-only continuation from the exact frozen
-LT2 ENS8@8100 checkpoint+sidecar pair:
+LT2 ENS8@8100 remains preserved as the strongest validated baseline, but it
+is no longer the starting point for the next research training line.
 
-- source iteration: 8100;
-- target iteration: 8600;
-- additional iterations: 500;
-- additional training roots: 300,000;
-- 3H Advantage refit: fresh100;
-- HU: ENS8, 8 members x fresh400;
-- K4: off;
-- workers: 31;
-- Torch threads: 8;
-- LT2 production artifacts: read-only;
-- LT2 final holdout: retired / not reused;
-- LT3 sealed holdout: untouched.
+Reason:
 
-The initial sequential H1 launch is now considered **superseded for execution
-quality**. Its strategy contract was valid, but the implementation did not
-first benchmark the obvious independent parallelism across the eight HU members.
+- the serious LT1/LT2 lineage through iteration 7500 used HU fresh100;
+- later causal work showed fresh100 was insufficient on the mature HU reservoir;
+- iterations 7501..8000 repaired this with HU fresh400;
+- iterations 8001..8100 added online ENS8 fresh400;
+- the 8100 candidate passed its frozen holdout, so this history does not make
+  8100 invalid;
+- nevertheless, it is a mixed-lineage candidate rather than a clean run of the
+  corrected training schedule from iteration 0.
 
-Before restarting H1, the new mandatory step is an exact-parity throughput
-benchmark:
+The interrupted continuation reached a durable checkpoint at iteration 8200.
+Preserve it as historical evidence only.  Do not resume it.
 
-- reference: current sequential ENS8 fresh400 x8 fit;
-- candidate: process-parallel ENS8 fitting;
-- target host: Ryzen 9;
-- exact member-state equality required;
-- exact final-loss equality required;
-- measured end-to-end speedup must include snapshot/serialization overhead.
+Before a fresh LT3 run, benchmark independent HU ensemble fitting on the Ryzen
+and freeze the fastest exact-parity execution layout.  Then freeze the
+from-zero algorithmic schedule before generating new roots.
 
-Only after this gate passes may H1 restart from the frozen LT2@8100 source.
 
 ## OpenHoldem deployment lane — PAUSED
 
@@ -66,7 +56,7 @@ No deployment work is needed now.
 
 ## Immediate action
 
-Stop any still-running sequential H1 process. Then run:
+With the sequential continuation stopped, run:
 
 ```bash
 bash tools/run_lt3_hu_ens8_parallel_fit_benchmark.sh
