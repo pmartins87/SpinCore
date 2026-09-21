@@ -33,7 +33,7 @@ jobs:
           python-version: '3.11'
       - name: Compile DC0 Python
         env:
-          PYTHONPATH: \${{ github.workspace }}/python
+          PYTHONPATH: ${{ github.workspace }}/python
         run: |
           python -m py_compile \
             python/spincore/openppl_expr.py \
@@ -44,11 +44,11 @@ jobs:
             tools/audit_deepcrusher_r8_dc0_readiness.py
       - name: Expression semantics
         env:
-          PYTHONPATH: \${{ github.workspace }}/python
+          PYTHONPATH: ${{ github.workspace }}/python
         run: python python_tests/test_openppl_expr.py
       - name: Existing DeepCrusher contracts
         env:
-          PYTHONPATH: \${{ github.workspace }}/python
+          PYTHONPATH: ${{ github.workspace }}/python
         run: |
           python python_tests/test_deepcrusher_openppl_inventory.py
           python python_tests/test_deepcrusher_state_view.py
