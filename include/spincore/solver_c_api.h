@@ -17,10 +17,21 @@ extern "C" {
 typedef struct spincore_solver_state spincore_solver_state; typedef struct spincore_solver_frontier spincore_solver_frontier;
 typedef struct spincore_solver_scenario_v2 {int32_t total_chips,game_is_hu,blind_index,small_blind,big_blind,stack_0,stack_1,stack_2,dead_player_0,dead_player_1,dead_player_count,dealer_id;} spincore_solver_scenario_v2;
 typedef struct spincore_solver_deal_v1 {int32_t hole_0_0,hole_0_1,hole_1_0,hole_1_1,hole_2_0,hole_2_1,board_0,board_1,board_2,board_3,board_4;} spincore_solver_deal_v1;
+typedef struct spincore_solver_public_snapshot_v1 {
+ int32_t terminal,street,actor,domain,current_bet,pot,visible_board_count;
+ int32_t stack_0,stack_1,stack_2;
+ int32_t street_commitment_0,street_commitment_1,street_commitment_2;
+ int32_t total_commitment_0,total_commitment_1,total_commitment_2;
+ int32_t folded_0,folded_1,folded_2;
+ int32_t all_in_0,all_in_1,all_in_2;
+ int32_t legal_fold,legal_check,legal_call,legal_bet,legal_raise,legal_all_in;
+ int32_t to_call,min_raise_to,max_raise_to;
+} spincore_solver_public_snapshot_v1;
 SPINCORE_SOLVER_C_API int32_t spincore_solver_c_abi_version(void); SPINCORE_SOLVER_C_API const char* spincore_solver_last_error(void);
 SPINCORE_SOLVER_C_API spincore_solver_state*spincore_solver_state_create_v2(const spincore_solver_scenario_v2*,uint64_t); SPINCORE_SOLVER_C_API spincore_solver_state*spincore_solver_state_clone(const spincore_solver_state*); SPINCORE_SOLVER_C_API void spincore_solver_state_destroy(spincore_solver_state*);
 /* Phase2B10 additive diagnostic extension. Existing seed-based creation remains authoritative. The explicit-deal constructor accepts card ids 0..51 for live seats and board; dead-seat holes must be -1. The snapshot is read-only and returns the exact private/public deal plus current visible-board count. */
 SPINCORE_SOLVER_C_API spincore_solver_state*spincore_solver_state_create_v2_deal(const spincore_solver_scenario_v2*,const spincore_solver_deal_v1*); SPINCORE_SOLVER_C_API int32_t spincore_solver_state_deal_snapshot_v1(const spincore_solver_state*,spincore_solver_deal_v1*,int32_t*visible_board_count);
+SPINCORE_SOLVER_C_API int32_t spincore_solver_state_public_snapshot_v1(const spincore_solver_state*,spincore_solver_public_snapshot_v1*);
 SPINCORE_SOLVER_C_API int32_t spincore_solver_state_terminal(const spincore_solver_state*); SPINCORE_SOLVER_C_API int32_t spincore_solver_state_actor(const spincore_solver_state*); SPINCORE_SOLVER_C_API int32_t spincore_solver_state_domain(const spincore_solver_state*); SPINCORE_SOLVER_C_API uint32_t spincore_solver_state_legal_mask(const spincore_solver_state*); SPINCORE_SOLVER_C_API int32_t spincore_solver_state_apply_abstract(spincore_solver_state*,int32_t);
 /* Benchmark/runtime bridge: apply one already-resolved exact poker action. type uses ExactActionType: 0 Fold, 1 Check, 2 Call, 3 BetTo, 4 RaiseTo, 5 AllIn. amount_to is ignored for non BetTo/RaiseTo actions. BettingEngine/SpinTraversalState remains the legal-action authority and rejects illegal exact actions. This is required so external reference strategies such as DeepCrusher can retain their own exact sizings instead of being forced through SpinCore's abstraction. */
 SPINCORE_SOLVER_C_API int32_t spincore_solver_state_apply_exact(spincore_solver_state*,int32_t action_type,int32_t amount_to);
