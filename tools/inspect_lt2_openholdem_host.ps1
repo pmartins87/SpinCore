@@ -24,23 +24,62 @@ function Get-PeMachine([string]$Path) {
 }
 
 function Find-OpenHoldemCandidates {
+    $found = @()
+
+    # 1) Prefer the exact executable of a running OpenHoldem process.
+    try {
+        $found += Get-Process -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProcessName -like "*OpenHoldem*" } |
+            ForEach-Object {
+                try { $_.MainModule.FileName } catch { $null }
+            } |
+            Where-Object { $_ -and (Test-Path $_) }
+    } catch {}
+
+    # 2) Resolve shortcuts from Desktop and both Start Menu trees.
+    $shortcutRoots = @(
+        (Join-Path $env:USERPROFILE "Desktop"),
+        (Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"),
+        (Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs")
+    ) | Where-Object { Test-Path $_ } | Select-Object -Unique
+
+    try {
+        $shell = New-Object -ComObject WScript.Shell
+        foreach ($root in $shortcutRoots) {
+            Get-ChildItem -Path $root -Filter "*.lnk" -File -Recurse -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    try {
+                        $target = $shell.CreateShortcut($_.FullName).TargetPath
+                        if ($target -and
+                            [IO.Path]::GetFileName($target) -like "OpenHoldem*.exe" -and
+                            (Test-Path $target)) {
+                            $found += $target
+                        }
+                    } catch {}
+                }
+        }
+    } catch {}
+
+    # 3) Search bounded/common installation roots only. Do not scan all of C:.
     $roots = @(
         (Join-Path $env:USERPROFILE "Desktop"),
         (Join-Path $env:USERPROFILE "Downloads"),
         (Join-Path $env:USERPROFILE "Documents"),
+        $env:ProgramFiles,
+        ${env:ProgramFiles(x86)},
         "C:\OpenHoldem",
         "C:\OpenHoldemBot",
         "C:\OH",
         "C:\Poker"
-    ) | Where-Object { Test-Path $_ } | Select-Object -Unique
+    ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
 
-    $found = @()
     foreach ($root in $roots) {
         try {
-            $found += Get-ChildItem -Path $root -Filter "OpenHoldem.exe" -File -Recurse -ErrorAction SilentlyContinue |
+            $found += Get-ChildItem -Path $root -Filter "OpenHoldem*.exe" -File -Recurse -ErrorAction SilentlyContinue |
                 Select-Object -ExpandProperty FullName
         } catch {}
     }
+
     return @($found | Sort-Object -Unique)
 }
 
@@ -48,7 +87,9 @@ if ([string]::IsNullOrWhiteSpace($OpenHoldemExe)) {
     $candidates = @(Find-OpenHoldemCandidates)
     if ($candidates.Count -eq 0) {
         Write-Host "OPENHOLDEM_HOST_NOT_FOUND"
-        Write-Host "Pass the exact executable path with -OpenHoldemExe 'C:\path\OpenHoldem.exe'."
+        Write-Host "Start the OpenHoldem instance you actually use, then rerun this inspection."
+        Write-Host "The inspector now prefers the executable path of a running OpenHoldem process."
+        Write-Host "You may also pass the exact path with -OpenHoldemExe 'C:\path\OpenHoldem.exe'."
         exit 2
     }
     if ($candidates.Count -gt 1) {
