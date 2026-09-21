@@ -62,6 +62,9 @@ struct SyncResult {
 };
 
 [[nodiscard]] std::int32_t openholdem_betround_from_visible_count(std::int32_t visible);
+[[nodiscard]] std::int32_t openholdem_card_id_from_rank_suit(
+    std::int32_t rank,
+    std::int32_t openholdem_suit);
 [[nodiscard]] HandAnchor anchor_from_raw_frame(const RawFrame& frame);
 [[nodiscard]] ObservedSnapshot normalize_raw_frame(const RawFrame& frame, const HandAnchor& anchor);
 [[nodiscard]] ObservedSnapshot observable_projection(
