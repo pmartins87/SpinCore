@@ -10,27 +10,29 @@
 - public snapshot -> exact action reconciler — **PASS**;
 - heartbeat/lifecycle tracker + cache — **PASS**;
 - OpenHoldem symbol/scrape adapter — **PASS**;
-- OpenHoldem observable end-to-end tracker — **NEXT**;
-- Windows native user-DLL — **AFTER E2E PASS**.
+- observable OpenHoldem end-to-end tracker — **PASS**;
+- native C++ OpenHoldem observable tracker — **NEXT**;
+- Windows OpenHoldem user-DLL binding — **AFTER NATIVE TRACKER PASS**;
+- log-only/shadow table gate — **AFTER DLL BUILD**;
+- action-enabled table gate — **ONLY AFTER SHADOW PASS**.
 
-## Runtime pipeline now available
+## Proven reference pipeline
 
-`OpenHoldem raw symbols -> strict adapter -> observable public snapshot -> canonical exact action transcript -> from-scratch authoritative rebuild -> frozen native inference -> exact lean action`
+`OpenHoldem raw symbols -> strict adapter -> silent-check-aware reconciliation -> exact public transcript -> from-scratch authoritative rebuild -> canonical Hero state`
 
-## Current gate
+The full reference path passed with zero action, transcript or canonical-state mismatches.
 
-Prove this whole state-reconstruction path end-to-end without using any
-solver-only fields that real OpenHoldem does not expose.
+## Productionization step
 
-At Hero turns the rebuilt:
-- SPNNIV1;
-- SPNNIV2;
-- actor/domain;
-- active action mask;
-- lean legal actions;
-- exact action resolver
+The same state semantics are now being moved into native C++ so the final
+OpenHoldem DLL has no Python runtime dependency.
 
-must match authoritative truth exactly.
+The native tracker audit is mechanical only and does not touch strategy, model
+weights, EV or holdout evidence.
 
-After PASS, port the already-proven state machine and native inference core into
-the Windows OpenHoldem user-DLL lifecycle.
+After PASS:
+1. combine native tracker + already-validated native neural runtime;
+2. bind actual OpenHoldem callbacks/GetSymbol access;
+3. verify bundle identity/hash fail-closed;
+4. compile Windows user-DLL;
+5. run log-only shadow mode before any action is enabled.
