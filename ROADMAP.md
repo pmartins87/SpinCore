@@ -27,13 +27,15 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 3. Durable continuation checkpoint+sidecar @8200 — **PRESERVED**.
 4. ENS8 exact-parity throughput matrix — **PASS; 4x8 SELECTED**.
 5. 8200 end-to-end semantic + whole-iteration throughput gate — **PASS EXACT; WHOLE-ITERATION 1.530x**.
-6. Resume from 8200 with 4x8 to **9105** (+905 iterations, projected 20.998 h) — **NEXT / AUTHORIZED**.
-7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint while the same precommitted run continues to 9250.
-8. Development-set adjudication compares the preserved 8600 milestone and the final ~24-hour endpoint.
-9. Continue only while learning evidence justifies more compute.
-10. Freeze the final LT3 candidate.
-11. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
-12. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
+6. Resume from 8200 with 4x8 to **9105** (+905 iterations, projected 20.998 h) — **RUNNING**.
+7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint while the same precommitted run continues to 9105.
+8. After PASS, create a derived finalized evaluation copy of raw 8600, then compare 8100 / 8600 / 9105 on the LT3 development battery without touching the LT3 sealed holdout.
+9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim.
+10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
+11. Continue training only if the development battery and external-strength evidence justify more compute.
+12. Freeze the final LT3 research candidate.
+13. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
+14. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
 
 ### Continuation rationale
 
@@ -94,4 +96,27 @@ Current LT3 status:
 - parallel median over 8201..8203: **81.108 s**;
 - checkpoint-amortized planning time: **83.130 s/iteration**;
 - precommitted ~21-hour endpoint: **9105** (+905 iterations), projected **20.998 h**;
-- long continuation 8200 -> 9105: **NEXT / AUTHORIZED**.
+- long continuation 8200 -> 9105: **RUNNING (started 2026-09-21 13:11 local)**.
+
+
+### External competitiveness / DeepCrusher interpretation
+
+Iteration count alone is not a valid strength estimator. Earlier Stage-A vs
+Stage-B cross-play did not establish a monotonic strength-vs-iteration curve:
+independent runs changed direction and confidence intervals included zero.
+
+The canonical DeepCrusher benchmark therefore uses measured paired chip EV, not
+iteration count. The currently frozen external opponent is DeepCrusher R8 v22.
+A canonical qualification claim requires the DC0 faithful oracle gate first.
+
+DC2 qualification success requires:
+- overall SpinCore-minus-DeepCrusher paired chip EV > 0;
+- 95% CI lower bound > 0;
+- no result driven solely by one isolated blind/position while a major domain
+  collapses;
+- no material illegal-action/action-translation rate.
+
+Until those measurements exist, do not state a crossover iteration at which
+SpinCore "starts beating DeepCrusher". Once 8100 / finalized-8600 / 9105 are
+benchmarked under the same frozen seeds, the observed results may bound a
+crossover interval, but they still do not justify assuming monotonic improvement.
