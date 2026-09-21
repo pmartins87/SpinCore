@@ -199,6 +199,9 @@ def main():
     canonical_mismatches=0
     transcript_mismatches=0
     duplicate_checks=0
+    silent_check_deferrals=0
+    delayed_actions_reconciled_at_myturn=0
+    multi_action_sync_events=0
     failures=[]
     domain_counts={"THREE_HANDED":0,"TRUE_HEADS_UP":0}
     street_counts={str(i):0 for i in range(4)}
@@ -245,6 +248,7 @@ def main():
                         break
 
                     if int(before.actor)==int(hero):
+                        transcript_before_myturn=len(tracker.transcript)
                         # OpenHoldem chip/card snapshots cannot reveal an
                         # opponent CHECK. DLLUpdateOnMyTurn is the synchronizing
                         # evidence that actor order has reached Hero, so force
@@ -262,6 +266,9 @@ def main():
                                 "reason":tracker.failure_reason,
                             })
                             break
+                        delayed_actions_reconciled_at_myturn += (
+                            len(tracker.transcript)-transcript_before_myturn
+                        )
                         if tracker.transcript_tuples()!=tuple(expected_transcript):
                             transcript_mismatches+=1
                             failures.append({
@@ -297,6 +304,7 @@ def main():
                     new_frame=_frame(hand_id,e,truth,chairs,hero)
                     new_obs=adapter.normalize(new_frame,anchor)
                     observable_changed=(new_obs!=observed)
+                    transcript_before_event=len(tracker.transcript)
                     event=tracker.on_heartbeat(anchor,new_obs)
                     transitions+=1
 
@@ -305,6 +313,8 @@ def main():
                         # intentionally invisible in OH balance/bet/pot/card
                         # snapshots. It remains pending until later observable
                         # evidence or DLLUpdateOnMyTurn.
+                        if expected.action_type==1 and event.kind=="NO_CHANGE":
+                            silent_check_deferrals+=1
                         if expected.action_type!=1 or event.kind!="NO_CHANGE":
                             failures.append({
                                 "seed":seed,"scenario":scenario,
@@ -321,6 +331,8 @@ def main():
                                 "kind":"transition","reason":event.reason,
                             })
                             break
+                        if len(tracker.transcript)-transcript_before_event>1:
+                            multi_action_sync_events+=1
                         if event.action!=expected:
                             exact_action_mismatches+=1
                             failures.append({
@@ -441,6 +453,8 @@ def main():
         and canonical_mismatches==0
         and transcript_mismatches==0
         and duplicate_checks>0
+        and silent_check_deferrals>0
+        and (delayed_actions_reconciled_at_myturn>0 or multi_action_sync_events>0)
         and domain_counts["THREE_HANDED"]>0
         and domain_counts["TRUE_HEADS_UP"]>0
         and street_counts["0"]>0
@@ -474,6 +488,9 @@ def main():
         },
         "transitions_checked":transitions,
         "duplicate_heartbeats_checked":duplicate_checks,
+        "silent_check_deferrals":silent_check_deferrals,
+        "delayed_actions_reconciled_at_myturn":delayed_actions_reconciled_at_myturn,
+        "multi_action_sync_events":multi_action_sync_events,
         "street_reveals_checked":street_reveals,
         "hero_canonical_state_checks":hero_state_checks,
         "hero_states_by_domain":domain_counts,
@@ -496,7 +513,10 @@ def main():
     print(f"VERDICT={out['verdict']}")
     print(
         f"transitions={transitions} hero_checks={hero_state_checks} "
-        f"street_reveals={street_reveals} duplicates={duplicate_checks}"
+        f"street_reveals={street_reveals} duplicates={duplicate_checks} "
+        f"silent_checks={silent_check_deferrals} "
+        f"myturn_delayed={delayed_actions_reconciled_at_myturn} "
+        f"multi_sync={multi_action_sync_events}"
     )
     print(f"faults={out['faults']}")
     print("LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_COMPLETE")
