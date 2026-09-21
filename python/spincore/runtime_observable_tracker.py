@@ -75,66 +75,101 @@ def _runtime_deal(
     return tuple(tuple(row) for row in holes),tuple(board)
 
 
-def _infer_observable_action(
+def _infer_observable_actions(
     state,
     observed: ObservedTableSnapshot,
-)->ResolvedExactAction:
-    before=state.public_snapshot()
-    if before.terminal:
-        raise ObservableTrackerError("cannot reconcile from terminal state")
-    actor=int(before.actor)
-    if actor not in (0,1,2):
-        raise ObservableTrackerError("invalid canonical actor")
+    *,
+    target_actor: int | None = None,
+    max_steps: int = 6,
+)->tuple[ResolvedExactAction, ...]:
+    """Infer the unique canonical sequence evidenced by one observable frame.
 
-    if int(observed.street)<int(before.street):
-        raise ObservableTrackerError("observed street moved backwards")
-    if int(observed.street)>int(before.street)+1:
-        raise ObservableTrackerError("observed street skipped")
-    if observed.stacks[actor]>before.stacks[actor]:
-        raise ObservableTrackerError("acting stack increased")
-    if before.folded[actor] or before.all_in[actor]:
-        raise ObservableTrackerError("canonical actor is not actionable")
+    OpenHoldem balance/currentbet/pot/fold snapshots do not expose a CHECK:
+    a check changes neither chips nor cards. Therefore the tracker may lag
+    behind truth by one or more checks until later evidence appears.
 
-    paid=int(before.stacks[actor]-observed.stacks[actor])
-    folded_now=bool(observed.folded[actor]) and not bool(before.folded[actor])
+    Safe rule:
+    - permit any number of forced CHECKs required by actor order;
+    - permit at most one observable-impacting action (fold/call/bet/raise/all-in);
+    - stop as soon as the projected public snapshot matches;
+    - when target_actor is supplied (DLLUpdateOnMyTurn), continue through
+      otherwise invisible CHECKs until that actor is canonical.
 
-    if folded_now:
-        if paid!=0:
-            raise ObservableTrackerError("fold transition paid chips")
-        candidate=ResolvedExactAction(0,0)
-    elif paid==0:
-        candidate=ResolvedExactAction(1,0)
-    else:
-        target=int(before.street_commitments[actor]+paid)
-        if before.to_call>0 and target<=before.current_bet:
-            candidate=ResolvedExactAction(2,0)
-        elif int(observed.stacks[actor])==0:
-            candidate=ResolvedExactAction(5,0)
-        elif before.current_bet==0:
-            candidate=ResolvedExactAction(3,target)
-        else:
-            candidate=ResolvedExactAction(4,target)
-
+    Two chip/fold-changing actions in one scrape interval remain a hard fail:
+    that is a genuinely skipped observable transition.
+    """
     probe=state.clone()
+    actions:list[ResolvedExactAction]=[]
+    visible_actions=0
     try:
-        try:
-            probe.apply_exact(candidate.action_type,candidate.amount_to)
-        except Exception as exc:
-            raise ObservableTrackerError(
-                f"inferred exact action is illegal: {candidate}"
-            ) from exc
-        got=canonical_observable_projection(
-            probe.public_snapshot(),
-            observed.board_cards,
+        for _ in range(int(max_steps)+1):
+            public=probe.public_snapshot()
+            projected=canonical_observable_projection(public,observed.board_cards)
+            actor_ok=(
+                target_actor is None
+                or (not public.terminal and int(public.actor)==int(target_actor))
+            )
+            if projected==observed and actor_ok:
+                return tuple(actions)
+
+            if public.terminal:
+                raise ObservableTrackerError(
+                    "terminal canonical state does not match observed snapshot"
+                )
+
+            actor=int(public.actor)
+            if actor not in (0,1,2):
+                raise ObservableTrackerError("invalid canonical actor")
+            if int(observed.street)<int(public.street):
+                raise ObservableTrackerError("observed street moved backwards")
+            if int(observed.street)>int(public.street)+1:
+                raise ObservableTrackerError("observed street skipped")
+            if observed.stacks[actor]>public.stacks[actor]:
+                raise ObservableTrackerError("acting stack increased")
+            if public.folded[actor] or public.all_in[actor]:
+                raise ObservableTrackerError("canonical actor is not actionable")
+
+            paid=int(public.stacks[actor]-observed.stacks[actor])
+            folded_now=bool(observed.folded[actor]) and not bool(public.folded[actor])
+
+            if folded_now:
+                if paid!=0:
+                    raise ObservableTrackerError("fold transition paid chips")
+                candidate=ResolvedExactAction(0,0)
+                visible_actions+=1
+            elif paid==0:
+                # The only economically silent voluntary action is CHECK.
+                candidate=ResolvedExactAction(1,0)
+            else:
+                target=int(public.street_commitments[actor]+paid)
+                if public.to_call>0 and target<=public.current_bet:
+                    candidate=ResolvedExactAction(2,0)
+                elif int(observed.stacks[actor])==0:
+                    candidate=ResolvedExactAction(5,0)
+                elif public.current_bet==0:
+                    candidate=ResolvedExactAction(3,target)
+                else:
+                    candidate=ResolvedExactAction(4,target)
+                visible_actions+=1
+
+            if visible_actions>1:
+                raise ObservableTrackerError(
+                    "more than one chip/fold-changing action occurred between observable frames"
+                )
+
+            try:
+                probe.apply_exact(candidate.action_type,candidate.amount_to)
+            except Exception as exc:
+                raise ObservableTrackerError(
+                    f"inferred exact action is illegal: {candidate}"
+                ) from exc
+            actions.append(candidate)
+
+        raise ObservableTrackerError(
+            f"observable reconciliation exceeded {max_steps} canonical actions"
         )
     finally:
         probe.close()
-
-    if got!=observed:
-        raise ObservableTrackerError(
-            "one-action candidate does not reproduce observable table snapshot"
-        )
-    return candidate
 
 
 class RuntimeObservableTracker:
@@ -227,26 +262,48 @@ class RuntimeObservableTracker:
             return self._fail("NewRound without active hand")
         return RuntimeSyncEvent("NO_CHANGE")
 
-    def on_heartbeat(
+    def _sync(
         self,
         anchor:OpenHoldemHandAnchor,
         observed:ObservedTableSnapshot,
+        *,
+        target_actor:int | None=None,
     )->RuntimeSyncEvent:
         if self.failed:
             return RuntimeSyncEvent("FAILED",reason=self.failure_reason)
         if self.anchor is None or self._state is None:
-            return self._fail("heartbeat without active hand")
+            return self._fail("sync without active hand")
         if anchor!=self.anchor:
             return self._fail("OpenHoldem hand anchor changed without HandReset")
 
-        if observed==self.observed:
+        current=self._state.public_snapshot()
+        if (
+            observed==self.observed
+            and (
+                target_actor is None
+                or (not current.terminal and int(current.actor)==int(target_actor))
+            )
+        ):
             return RuntimeSyncEvent("NO_CHANGE")
 
         try:
-            action=_infer_observable_action(self._state,observed)
+            actions=_infer_observable_actions(
+                self._state,
+                observed,
+                target_actor=target_actor,
+            )
+            if not actions:
+                return RuntimeSyncEvent("NO_CHANGE")
             new_transcript=list(self.transcript)
-            new_transcript.append(action)
+            new_transcript.extend(actions)
             rebuilt=self._rebuild(self.anchor,observed,new_transcript)
+            if target_actor is not None:
+                rebuilt_public=rebuilt.public_snapshot()
+                if rebuilt_public.terminal or int(rebuilt_public.actor)!=int(target_actor):
+                    rebuilt.close()
+                    raise ObservableTrackerError(
+                        "rebuild did not reach required MyTurn actor"
+                    )
         except Exception as exc:
             return self._fail(f"observable reconciliation/rebuild failed: {exc}")
 
@@ -257,7 +314,17 @@ class RuntimeObservableTracker:
         self.observed=observed
         self.generation+=1
         self._clear_cache()
-        return RuntimeSyncEvent("ACTION",action=action)
+        return RuntimeSyncEvent("ACTION",action=actions[-1])
+
+    def on_heartbeat(
+        self,
+        anchor:OpenHoldemHandAnchor,
+        observed:ObservedTableSnapshot,
+    )->RuntimeSyncEvent:
+        # A duplicate chip/card snapshot is deliberately a no-op here.
+        # Opponent CHECKs are synchronized only when later observable evidence
+        # appears or DLLUpdateOnMyTurn proves that action order reached Hero.
+        return self._sync(anchor,observed,target_actor=None)
 
     def on_my_turn(
         self,
@@ -265,7 +332,13 @@ class RuntimeObservableTracker:
         observed:ObservedTableSnapshot,
         compute_decision:Callable[["RuntimeObservableTracker"],Any],
     ):
-        event=self.on_heartbeat(anchor,observed)
+        if self.anchor is None:
+            return None
+        event=self._sync(
+            anchor,
+            observed,
+            target_actor=int(self.anchor.hero_logical_seat),
+        )
         if event.kind=="FAILED":
             return None
         current=self._state.public_snapshot()
