@@ -2,7 +2,7 @@
 
 ## Primary objective now
 
-**BUILD A CLEAN LT3 TRAINING LINE FROM ITERATION 0.**
+**CONTINUE THE VALIDATED LT2/LT3 LEARNING STATE, AFTER THE ENS8 PERFORMANCE GATE.**
 
 OpenHoldem deployment is paused until the user explicitly returns to it.
 
@@ -23,34 +23,31 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 ## LT3 research/training lane — ACTIVE
 
 1. LT3 H1 plan preregistered — **PASS / READY**.
-2. Sequential LT3 continuation from 8100 — **ABORTED / HISTORICAL ONLY**.
-3. ENS8 exact-parity throughput matrix — **NEXT**.
-4. Freeze the clean-from-zero training schedule — **AFTER PERFORMANCE MATRIX**.
-5. LT3 clean rebuild from iteration 0 — **AFTER SCHEDULE FREEZE**.
-6. Development-set comparisons at preregistered milestones versus preserved LT2 baselines.
+2. Sequential LT3 continuation from 8100 — **INTERRUPTED FOR PERFORMANCE OPTIMIZATION**.
+3. Durable continuation checkpoint+sidecar @8200 — **PRESERVED**.
+4. ENS8 exact-parity throughput matrix — **NEXT**.
+5. Resume from 8200 with the fastest exact-parity execution layout — **AFTER PERFORMANCE MATRIX PASS**.
+6. Development-set adjudication at the preregistered LT3 milestone.
 7. Continue only while learning evidence justifies more compute.
 8. Freeze the final LT3 candidate.
 9. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
 10. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
 
-### Clean rebuild rationale
+### Continuation rationale
 
-The preserved LT2@8100 candidate remains a valid, holdout-passed baseline, but
-its training lineage is mixed:
+The Stage-B diagnosis did **not** support reservoir poisoning.  Instead, the
+mature HU reservoir retained usable signal and the 100-step HU refit budget was
+insufficient to extract it reliably.  HU400 then passed structural, broad and
+online-feedback gates, and ENS8 stabilized the mature current HU behavior.
 
-- iterations 1..7500 used HU fresh100;
-- iterations 7501..8000 used HU fresh400 with a single current model;
-- iterations 8001..8100 introduced online ENS8 fresh400 behavior.
+Therefore there is no evidence that the accumulated learning state must be
+discarded.  Starting again from iteration 0 would be a separate expensive
+research experiment, not a required repair.
 
-The later causal audit showed that HU fresh100 was insufficient at the mature
-Stage-B reservoir.  The Stage-B reservoir itself was not shown to be poisoned,
-which is why continuation was a defensible repair path.  However, continuation
-does not answer the stronger question: what happens when the corrected schedule
-is used from the start?
+The durable LT3 checkpoint+sidecar at iteration 8200 may be resumed **only
+after** the parallel ENS8 implementation proves exact parity with the sequential
+fit semantics.
 
-Therefore LT3 will be a clean rebuild from iteration 0 after the execution
-schedule and parallel fitting are frozen.  The abandoned partial continuation
-checkpoint (8200) is preserved only as evidence and is not a source for LT3.
 
 ## OpenHoldem deployment lane — PAUSED
 
