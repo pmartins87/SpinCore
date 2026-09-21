@@ -1,67 +1,84 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT2 TRAINING CLOSED / LT3 H1 TRAINING ACTIVE**
+Status: **LT3 CLEAN REBUILD DESIGN / NO LONG TRAINING AUTHORIZED YET**
 Date: 2026-09-21
 
-## LT2
+## Preserved LT2 baseline
 
-LT2 ENS8@8100 is frozen.
+LT2 ENS8@8100 remains frozen and valid as the strongest sealed-holdout-passed
+baseline.
 
-Its final strategic holdout passed and its deployment artifacts are preserved.
-No further LT2 training is planned.
+Frozen identities:
+
+- ordinary checkpoint SHA256:
+  `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
+- HU ENS8 sidecar SHA256:
+  `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`.
 
 The LT2 final holdout is retired and must not be reused for LT3 research
 decisions.
 
-## LT3 Heavy H1 — active experiment
+## Why LT3 will start from iteration 0
 
-Purpose: test whether substantially more training beyond the mature LT2@8100
-state produces a real development-set improvement without modifying the frozen
-LT2 production baseline.
+The validated LT2 candidate has a mixed training lineage:
 
-Preregistered H1:
+- iterations 1..7500: 3H fresh100 / HU fresh100;
+- iterations 7501..8000: 3H fresh100 / HU fresh400 single-model behavior;
+- iterations 8001..8100: 3H fresh100 / HU ENS8 fresh400 behavior.
 
-- exact source checkpoint SHA256:
-  `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
-- exact HU ensemble sidecar SHA256:
-  `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`;
-- source iteration: 8100;
-- target iteration: 8600;
-- additional iterations: 500;
-- additional roots: 300,000;
-- expected total roots: 5,160,000;
-- 3H Advantage refit: fresh100;
-- HU ENS8: 8 members x fresh400;
-- HU optimizer steps per iteration: 3,200;
-- K4: off;
-- workers: 31;
-- Torch threads: 8;
-- checkpoint every 50 iterations.
+The mature Stage-B forensic work showed that HU fresh100 was an insufficient fit
+budget: the reservoir still contained useful signal, but 100 optimization steps
+did not reliably extract it.  The reservoir-poisoning hypothesis was not
+supported, which is why continuation was a valid minimal repair at the time.
 
-## Guardrails
+That history does not invalidate LT2@8100: the frozen candidate passed its
+pre-registered final holdout.  However, it does mean LT2@8100 is not a clean
+end-to-end execution of the corrected training recipe.
 
-- LT2 source checkpoint and ensemble remain immutable;
-- LT2 final holdout untouched;
-- LT3 sealed holdout untouched;
-- H1 is research-only and cannot be promoted directly;
-- hard stop at iteration 8600;
-- no automatic H2 continuation.
+The next research line therefore starts from iteration 0.
 
-## After H1
+## Interrupted LT3 continuation
 
-Run the preregistered **development-set battery** and adjudicate H1 against the
-frozen LT2@8100 baseline.
+The sequential 8100->8600 experiment was interrupted after iteration 8240.
+The last durable matched checkpoint+sidecar pair is iteration 8200.
 
-Only if development evidence supports continuation should H2 be designed.
+This partial run is **historical evidence only** and must not be used as the
+source of the clean LT3 rebuild.
 
-The LT3 sealed holdout remains sealed until all research choices are frozen.
+## Mandatory gates before fresh training
 
-## Immediate command
+No new long run is authorized until all of the following are frozen:
 
-```bash
-bash tools/run_lt3_heavy_ens8_h1.sh
-```
+1. exact-parity Ryzen throughput layout for independent HU fits;
+2. memory/disk-safe implementation of that layout;
+3. from-zero algorithmic schedule, including whether ENS8 starts at iteration 1
+   or at a preregistered maturity transition;
+4. checkpoint cadence and disk headroom;
+5. development-set milestone schedule and stop criteria.
 
-Expected completion sentinel:
+The performance benchmark must measure end-to-end wall time including any data
+movement/serialization overhead and must not create an unsafe multi-copy
+reservoir memory footprint.
 
-`LT3_HEAVY_ENS8_H1_TRAINING_PASS`
+## Fresh-line invariants already fixed
+
+- empirical SpinGo 3H/HU/blind/stack sampler;
+- WTA chip-EV utility;
+- SPNNIV1 frozen-control representation;
+- repaired all-nonpositive regret fallback;
+- separate 3H and HU domains;
+- 2M reservoirs per memory/domain unless a separately validated change is made;
+- 600 roots/iteration;
+- 3H fresh100;
+- HU minimum fit budget fresh400;
+- K4 off;
+- LT2 production artifacts read-only;
+- LT2 final holdout never reused;
+- LT3 sealed holdout untouched until all research choices are frozen.
+
+## Immediate next gate
+
+Benchmark and freeze the Ryzen execution strategy for HU ensemble fitting.
+
+Do **not** resume iteration 8200 and do **not** launch a fresh long run until the
+performance and from-zero schedule gates are closed.
