@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **NATIVE SHADOW ENGINE PASS — WINDOWS OPENHOLDEM USER-DLL MOCK-HOST GATE NEXT**
+Status: **WINDOWS SHADOW DLL MOCK-HOST PASS — REAL OPENHOLDEM HOST ARCHITECTURE INSPECTION NEXT**
 
 ## Frozen strategy/runtime
 
@@ -67,35 +67,45 @@ This is exhaustively unit-tested across all 52 cards.
 
 The DLL itself SHA256-verifies the frozen native bundle before loading it.
 
+## Windows mock-host gate result
+
+PASS:
+- MSVC x64 build completed;
+- 2/2 Windows core tests passed;
+- DLL loaded through Windows LoadLibrary;
+- mock OpenHoldem host exports resolved;
+- frozen bundle identity verified;
+- strict HU hand anchor started;
+- MyTurn shadow inference produced a valid decision;
+- probability sum = 1 over 4 legal actions;
+- repeated MyTurn cache remained stable;
+- action-control query barrier remained hard-zero;
+- failure latch remained clear.
+
+Tested DLL SHA256:
+
+`7566be1b3c73207d437171c2b4e94f6a94477786a2a48599994a647808030062`
+
 ## Active gate
 
-A Windows mock OpenHoldem host exports `GetSymbol`, `GetHandnumber` and
-`WriteLog`, loads the actual DLL with `LoadLibrary`, invokes the real
-callbacks, and checks:
+Do **not** copy the DLL into OpenHoldem yet.
 
-- bundle load;
-- hand-anchor creation;
-- HU MyTurn inference;
-- probability/legal-mask consistency;
-- repeated-MyTurn cache stability;
-- duplicate-heartbeat stability;
-- hard-zero action query barrier.
-
-No OpenHoldem client and no real poker table are involved.
+The tested DLL is x64. The actual OpenHoldem executable must first be inspected
+for PE architecture. If it is x86, we must build and validate an x86 DLL before
+real loading.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_openholdem_shadow_dll_windows_gate.sh
+bash tools/run_lt2_openholdem_host_inspection.sh
 ```
 
-Wait for `LT2_OPENHOLDEM_SHADOW_DLL_WINDOWS_GATE_PASS`.
+Expected sentinel when the real host and tested DLL are architecture-compatible:
 
-Then send:
-- terminal output;
-- `SpinCore_LT2_openholdem_shadow_dll_mock_gate.json`.
+`LT2_OPENHOLDEM_HOST_INSPECTION_PASS`
 
-Do not load the DLL into OpenHoldem yet.
+If multiple OpenHoldem executables are found, the script will list them and stop.
+No files are installed or overwritten by this inspection.
 
 
 ## Parallel research lane — LT3 Heavy H1
