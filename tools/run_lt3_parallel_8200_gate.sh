@@ -38,7 +38,7 @@ export MKL_NUM_THREADS=8
 
 "$PY" -m py_compile   python/spincore_nn/reservoir.py   tools/lt3_hu_ens8_parallel_fit.py   tools/lt3_parallel_continuation_core.py   tools/validate_lt3_parallel_8200_gate.py
 
-"$PY" -m unittest python_tests.test_reservoir_write_observer
+"$PY" python_tests/test_reservoir_write_observer.py
 "$PY" python_tests/test_lean_action_policy_ensemble.py
 echo "LT3_8200_PARALLEL_GATE_PREFLIGHT_PASS"
 
