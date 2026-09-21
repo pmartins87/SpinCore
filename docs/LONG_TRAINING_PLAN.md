@@ -1,46 +1,50 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — NATIVE SHADOW DECISION INTEGRATION**
+Status: **TRAINING CLOSED — WINDOWS OPENHOLDEM SHADOW DLL**
 Date: 2026-09-21
 
-## Completed runtime gates
+## Completed gates
 
-- final strategic holdout PASS;
-- Python deployment/source parity PASS;
+- strategic holdout PASS;
+- Python deployment parity PASS;
 - native C++ inference parity PASS;
-- hidden-card filler invariance PASS;
+- hidden filler invariance PASS;
 - exact transcript rebuild PASS;
-- public snapshot reconciler PASS;
-- heartbeat/lifecycle/cache tracker PASS;
+- public action reconciliation PASS;
+- lifecycle/cache PASS;
 - OpenHoldem symbol adapter PASS;
-- observable OpenHoldem E2E PASS;
-- native C++ observable tracker PASS.
+- observable E2E PASS;
+- native C++ tracker PASS;
+- native tracker + frozen inference shadow engine PASS.
 
-## Native tracker evidence
+## Native shadow decision evidence
 
-The C++ tracker completed:
-- 12,000 transitions;
-- 4,785 Hero checks;
-- 2,742 invisible CHECK deferrals;
-- 1,124 MyTurn delayed reconciliations;
-- 962 multi-action synchronization events;
-- 3,660 street reveals;
-- 500/500 corrupt rejections;
-- 500/500 skipped-transition rejections.
+The complete native decision core passed:
+- 1,600 decisions;
+- 1,600 inference calls;
+- 1,600 repeated MyTurn cache hits;
+- 1,600 exact selected-action resolutions;
+- both strategy domains;
+- all streets;
+- 0 failures.
 
-## Current composition gate
+## Windows production boundary
 
-The new native shadow engine combines the validated tracker with the validated neural runtime while keeping action execution disabled.
+A real shadow-only user-DLL is now implemented.
 
-It additionally enforces:
-- exact frozen deployment metadata;
-- external file SHA256 check before load;
-- correct 3H/HU routing;
-- exact seven-label lean active mask in the ten-slot carrier;
-- zero probability on illegal actions;
-- stable SplitMix64-based sampling rather than implementation-dependent `std::uniform_real_distribution`;
-- exact lean-slot -> ExactAction resolution;
-- repeated MyTurn cache identity;
-- cache invalidation after canonical state mutation.
+Important safeguards:
+- Windows callback ABI matches OpenHoldem's user-DLL interface;
+- OpenHoldem host functions are resolved dynamically from the executable;
+- frozen model file SHA256 is verified inside the DLL;
+- embedded model/checkpoint/ensemble identities remain validated;
+- card conversion uses OpenHoldem suit constants and SpinCore's current
+  rank-major id convention;
+- invalid/missing symbols fail closed after a hand anchor is active;
+- no action query returns a positive authorization in this build.
 
-After PASS, proceed to the actual Windows OpenHoldem user-DLL ABI.
+## Current gate
+
+Build the Windows x64 DLL with MSVC, run SpinCore unit tests, then load the DLL
+into a mock OpenHoldem host process.
+
+Only after this passes should the DLL be introduced into OpenHoldem itself.
