@@ -8,27 +8,27 @@
 - hidden filler invariance — **PASS**;
 - exact public-transcript rebuild — **PASS**;
 - public snapshot -> canonical exact action reconciler — **PASS**;
-- OpenHoldem heartbeat/lifecycle tracker + decision cache — **NEXT**;
-- OpenHoldem symbol/scrape adapter — **AFTER TRACKER PASS**;
-- Windows user-DLL integration — **AFTER ADAPTER**.
+- heartbeat/lifecycle tracker + decision cache — **PASS**;
+- OpenHoldem symbol/scrape adapter — **NEXT**;
+- observable-snapshot reconciler integration — **AFTER ADAPTER PASS**;
+- Windows user-DLL bridge — **AFTER OBSERVABLE INTEGRATION**.
 
-## Established runtime chain
+## Proven lifecycle behavior
 
-`scraped public state -> normalized public snapshot -> canonical action reconciler -> exact transcript -> from-scratch solver rebuild -> frozen native inference -> exact lean action`
+The tracker survives duplicate heartbeats and NewRound callbacks without
+duplicating transcript state, computes a Hero decision exactly once per
+canonical state, serves repeated ProcessQuery calls from cache, invalidates that
+cache on state mutation and rejects every generated corrupted/wrong-hand/skipped
+transition.
 
-## Current gate
+## Current boundary
 
-Validate lifecycle behavior around the reconciler:
+The next risk is not solver or strategy logic. It is translating raw OpenHoldem
+symbols and physical 0..9 chairs into exact LT2 chip/card/seat semantics.
 
-- duplicate heartbeats;
-- NewRound;
-- MyTurn;
-- repeated ProcessQuery;
-- cache invalidation;
-- hand identity;
-- failure latch;
-- HandReset recovery.
+A strict adapter is now implemented and tested by round-tripping authoritative
+solver states through synthetic OpenHoldem frames plus malformed-frame fault
+injection.
 
-Skipped-transition fault injection now records exact attempts and exact rejections.
-
-After PASS, bind the tracker to actual OpenHoldem state/symbol acquisition.
+After PASS, the reconciler will consume the reduced observable OpenHoldem
+snapshot rather than a solver-generated full PublicSnapshot.
