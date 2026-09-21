@@ -1,46 +1,53 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — OPENHOLDEM OBSERVABLE END-TO-END INTEGRATION**
+Status: **TRAINING CLOSED — NATIVE OPENHOLDEM PRODUCTIONIZATION**
 Date: 2026-09-21
 
-## Completed runtime gates
+## Completed reference gates
 
 - final strategic holdout PASS;
 - Python deployment/source parity PASS;
 - native C++ inference parity PASS;
-- hidden filler invariance PASS;
+- hidden-card filler invariance PASS;
 - exact transcript rebuild PASS;
 - public snapshot one-action reconciler PASS;
 - heartbeat/lifecycle/cache tracker PASS;
-- OpenHoldem symbol/scrape adapter PASS.
+- OpenHoldem symbol adapter PASS;
+- full observable OpenHoldem E2E tracker PASS.
 
-## Symbol adapter evidence
+## Final reference evidence
 
-The strict OpenHoldem normalization gate passed 9,000 frames across 370 physical
-chair layouts, both domains and all streets with zero mismatches.
+The observable E2E gate completed:
+- 10,000 transitions;
+- 3,916 Hero canonical checks;
+- 1,972 street reveals;
+- 1,769 invisible CHECK deferrals;
+- 719 MyTurn delayed reconciliations;
+- 689 multi-action synchronization events;
+- 500/500 corrupt-frame rejections;
+- 500/500 skipped-transition rejections.
 
-All 1,200 malformed frames were rejected.
+There were zero exact-action, transcript or canonical-state mismatches.
 
-## Final pre-DLL integration gate
+## Native productionization
 
-Real OpenHoldem does not expose the solver's full PublicSnapshot.
+The reference architecture is no longer the open question.
 
-The observable tracker therefore works only from:
-- hand anchor;
-- normalized balances/current bets/pot;
-- dealt/playing/all-in status;
-- visible board;
-- Hero cards.
+The next risk is implementation-language drift while porting that architecture
+to the Windows C++ DLL.
 
-For each changed frame:
-1. infer the canonical exact action;
-2. append to public transcript;
-3. rebuild state from hand start with actual visible cards;
-4. replace hidden cards with deterministic fillers;
-5. replay transcript through authoritative exact-action API.
+A reusable native runtime module now owns:
+- raw OpenHoldem-style frame normalization;
+- logical seat mapping;
+- blind-index validation;
+- card-derived betround semantics;
+- invisible CHECK handling;
+- exact public transcript;
+- hidden-card filler construction;
+- from-scratch canonical rebuild;
+- fail-closed synchronization.
 
-At Hero turns, the result must exactly match authoritative SPNNIV1/SPNNIV2 and
-lean action semantics.
+The native audit must pass before model inference and OpenHoldem callbacks are
+joined in the same DLL.
 
-Once this passes, the architecture is ready to be translated to the actual
-Windows OpenHoldem user-DLL callbacks.
+After native tracker PASS, no further strategic training is planned.
