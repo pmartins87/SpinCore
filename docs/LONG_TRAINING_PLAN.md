@@ -1,45 +1,53 @@
 # SpinCore — Long-Training Plan
 
-Status: **8100 FROZEN — CURRENT ENS8 FORENSIC PASS — INDEPENDENT LEARNED-POLICY CROSSPLAY ACTIVE**
+Status: **ENS8 8100 FINAL HU CANDIDATE FROZEN — SEALED HOLDOUT NEXT**
 Date: 2026-09-21
 
-## Post-pilot conclusion
+## Design-set closure
 
-The online ENS8 mechanism survived actual feedback:
+The candidate survived:
+- broad weak baselines;
+- online Deep-CFR feedback;
+- post-pilot forensic validation;
+- independent learned-policy ecosystem crossplay.
 
-- root all-in mass dropped about 16 pp;
-- POT_33 rose about 16 pp;
-- Uniform EV improved significantly;
-- Passive/Jammer did not regress;
-- ENS8 8100 strongly exceeds the old 7600 behavior on Passive and Jammer.
+Independent design-set learned ecosystem:
+- ENS8 8100 absolute +7.538, CI fully positive;
+- ENS8 8100 − ENS8 8000 +1.453, unresolved/no regression;
+- ENS8 8100 − AVG8100 +13.059, resolved positive.
 
-AveragePolicy remains statistically flat versus 8000. This is deployment lag rather than deterioration.
+Direct seat-balanced:
+- ENS8 8100 vs ENS8 8000 +1.227, unresolved/no regression;
+- ENS8 8100 vs AVG8100 +12.663, resolved positive.
 
-## Independent design-set gate
+## Frozen deployment semantics
 
-Before any more training or holdout, evaluate on newly preregistered seeds:
+For TRUE_HEADS_UP:
+- current ENS8 iteration 8100;
+- checkpoint + ensemble sidecar;
+- not AveragePolicy.
 
-`20260926..20260930`
+No further roots before holdout.
 
-These are outside the final sealed holdout.
+## Final holdout contract
 
-Historical learned-opponent ecosystem excludes the candidate 8100 and consists of:
-- AVG7600;
-- AVG8000;
-- BEH7600;
-- ENS8_8000.
+Seeds 20261001..20261006.
 
-Primary paired comparisons:
-- ENS8_8100 − ENS8_8000;
-- AVG_8100 − AVG_8000;
-- ENS8_8100 − AVG_8100.
+Criteria and non-inferiority margin are frozen in:
+`docs/LT2_HU_ENS8_FINAL_HOLDOUT_PROTOCOL_20260921.md`.
 
-Seat-balanced direct versions are also required.
+All criteria must pass.
 
-## Decision after crossplay
+A completed holdout result is not reusable for tuning. Any candidate changed after seeing it requires a new untouched validation family.
 
-If ENS8 8100 has no resolved learned-policy regression and remains competitive with/stronger than AveragePolicy 8100, freeze the HU current ensemble as a deployment candidate and prepare the final holdout protocol.
+## After holdout
 
-If current ENS8 fails, localize before more roots.
+PASS:
+- preserve final candidate;
+- implement/finalize deployment inference path for HU ensemble semantics;
+- run only mechanical integration checks, not policy tuning.
 
-If current ENS8 passes but AveragePolicy remains lagging, do not automatically spend more roots; candidate deployment semantics must be decided from crossplay evidence first.
+FAIL:
+- preserve failure;
+- do not retune on holdout;
+- return to design data and create a genuinely new candidate/validation family.
