@@ -100,3 +100,24 @@ not rebuild/copy the full reservoir every iteration.
 
 V2 must pass exact final-state and exact final-loss parity before it can be used
 for the 8200 continuation.
+
+
+## ENS8 parallel matrix V2 result — PASS
+
+The exact-parity matrix selected **4 concurrent members x 8 Torch threads**.
+
+Measured:
+
+- sequential HU ENS8 fit: 114.824 s;
+- 4x8 HU ENS8 fit: 73.027 s;
+- steady-state HU fit speedup: 1.5723587x;
+- all eight final model states exact;
+- all eight final losses exact.
+
+Do not interpret 1.572x as the final whole-training speedup.  Root collection,
+3H fitting, strategy sampling, mmap maintenance, checkpoints and other iteration
+work remain outside this fit-only ratio.
+
+Before freezing the ~24-hour target, run a bounded full-iteration throughput
+gate with the selected 4x8 implementation and derive the target from measured
+end-to-end wall time.
