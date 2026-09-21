@@ -38,7 +38,11 @@ import audit_lt2_stage_a_b_first_divergence as fd
 from spincore.legacy_scenario import LegacyScenarioConfig, LegacyScenarioSampler
 from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
 from spincore.lean_solver_actions import lean_legal_actions, resolve_lean_exact
-from spincore.openholdem_symbol_adapter import OpenHoldemRawFrame, OpenHoldemSymbolAdapter
+from spincore.openholdem_symbol_adapter import (
+    OpenHoldemRawFrame,
+    OpenHoldemSymbolAdapter,
+    openholdem_betround_from_visible_count,
+)
 from spincore.runtime_observable_tracker import RuntimeObservableTracker
 from spincore.solver import Episode, ResolvedExactAction, SolverLibrary
 
@@ -108,7 +112,7 @@ def _frame(hand_id,e,state,chairs,hero):
         hand_id=str(hand_id),
         user_chair=int(chairs[hero]),
         dealer_chair=int(chairs[0]),
-        betround=int(p.street)+1,
+        betround=openholdem_betround_from_visible_count(int(p.visible_board_count)),
         sblind=float(e.small_blind),
         bblind=float(e.big_blind),
         playersdealtbits=dealt,
