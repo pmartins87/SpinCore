@@ -1,58 +1,57 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **EXACT TRANSCRIPT REBUILD PASS — PUBLIC SNAPSHOT ACTION RECONCILER NEXT**
+Status: **PUBLIC SNAPSHOT RECONCILER PASS — OPENHOLDEM HEARTBEAT/LIFECYCLE TRACKER NEXT**
 
 ## Frozen strategy/runtime
 
-Strategic candidate and model identities remain frozen.
+Strategic candidate and all deployment identities remain frozen.
 
 No training, EV tuning or holdout reuse is permitted.
 
-## Canonical rebuild result
+## Public snapshot reconciler result
 
-PASS:
-- 5,000 Hero decision states;
-- 20,000 alternate from-scratch rebuilds;
-- 83,724 legal exact-action comparisons;
-- both 3H and HU;
-- all four streets;
-- public transcript length up to 15 voluntary actions.
+PASS over 12,000 public transitions.
 
-Rebuild inputs:
-- original scenario;
-- Hero cards;
-- visible board;
-- hidden-card fillers;
-- exact public voluntary transcript.
+Action coverage:
+- FOLD 930;
+- CHECK 702;
+- CALL 4,734;
+- BET_TO 859;
+- RAISE_TO 3,451;
+- ALL_IN 1,324.
 
-Replaying that transcript through the authoritative exact-action solver API reproduced the canonical state exactly.
+Alias normalization:
+- 805 all-in calls -> CALL;
+- 3,505 stack-emptying BetTo/RaiseTo -> ALL_IN;
+- alias failures 0.
 
-## Remaining OpenHoldem problem
+Faults:
+- 1,500 no-op snapshots rejected by one-action reconciler;
+- 1,500 corrupt snapshots rejected;
+- 1,196 skipped-action snapshots rejected.
 
-The runtime no longer needs a persistent hidden deal.
-
-It needs a reliable event tracker that converts successive public snapshots into the exact canonical transcript.
-
-The validated LT2 convention must normalize economically equivalent aliases:
-- all-in call -> CALL;
-- stack-emptying aggression -> ALL_IN;
-- non-all-in opening aggression -> BET_TO;
-- non-all-in aggression facing a bet -> RAISE_TO.
-
-Skipped or corrupted snapshots must fail closed rather than inventing a transcript.
+The skipped-action gate did not record skipped attempts separately, so the next lifecycle test explicitly requires skipped_attempts == skipped_rejections.
 
 ## Active gate
 
-A public runtime snapshot ABI and deterministic one-action reconciler are now implemented.
+A fail-closed heartbeat/lifecycle tracker is now implemented above the reconciler.
 
-The mechanical gate generates diverse exact actions, arbitrary legal raise sizes, all-in aliases and fault injections.
+Contract:
+- duplicate heartbeat = no-op;
+- valid changed snapshot = exactly one canonical action appended;
+- NewRound preserves transcript;
+- MyTurn computes once per canonical state;
+- repeated ProcessQuery returns cached decision only;
+- changed state invalidates cache;
+- wrong hand / corrupt / skipped transition latches failure;
+- only HandReset clears the failure latch.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_public_snapshot_reconciler.sh
+bash tools/run_lt2_runtime_heartbeat_tracker.sh
 ```
 
-Wait for `LT2_PUBLIC_SNAPSHOT_RECONCILER_PASS`, then send
-`SpinCore_LT2_public_snapshot_reconciler.json`.
+Wait for `LT2_RUNTIME_HEARTBEAT_TRACKER_PASS`, then send
+`SpinCore_LT2_runtime_heartbeat_tracker.json`.
