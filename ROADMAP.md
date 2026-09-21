@@ -39,3 +39,16 @@ Required properties:
 
 After PASS, load the exact same DLL into OpenHoldem with autoplayer/action use
 still disabled and inspect shadow logs.
+
+
+## Parallel LT3 research lane
+
+- LT3 H1 plan preregistered — **READY**;
+- LT3 H1 8100->8600 heavy continuation — **NEXT / PARALLEL**;
+- LT3 development battery — **AFTER H1**;
+- LT3 H2 — **CONDITIONAL ON H1**;
+- LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**;
+- LT3 deployment promotion — **NOT AUTHORIZED**.
+
+LT3 cannot modify the frozen LT2 production artifacts or reuse the LT2 final
+holdout.
