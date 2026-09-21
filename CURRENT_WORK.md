@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **LT3 CLEAN-REBUILD DESIGN — CONTINUATION SUPERSEDED / OPENHOLDEM PAUSED**
+Status: **LT3 CONTINUATION PERFORMANCE GATE — 8200 PRESERVED / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -14,28 +14,29 @@ The previous OpenHoldem productionization work is preserved but **paused**.
 No OpenHoldem host inspection, DLL installation or table testing is required
 while LT3 training is the user's active priority.
 
-## Primary active lane — LT3 clean rebuild
+## Primary active lane — LT3 continuation from preserved 8200
 
-LT2 ENS8@8100 remains preserved as the strongest validated baseline, but it
-is no longer the starting point for the next research training line.
+LT2 ENS8@8100 remains the frozen sealed-holdout-passed baseline.
 
-Reason:
+The interrupted LT3 continuation has a durable matched checkpoint+sidecar at
+iteration 8200.  It is preserved and remains eligible for continuation.
 
-- the serious LT1/LT2 lineage through iteration 7500 used HU fresh100;
-- later causal work showed fresh100 was insufficient on the mature HU reservoir;
-- iterations 7501..8000 repaired this with HU fresh400;
-- iterations 8001..8100 added online ENS8 fresh400;
-- the 8100 candidate passed its frozen holdout, so this history does not make
-  8100 invalid;
-- nevertheless, it is a mixed-lineage candidate rather than a clean run of the
-  corrected training schedule from iteration 0.
+Why we are **not** restarting from zero:
 
-The interrupted continuation reached a durable checkpoint at iteration 8200.
-Preserve it as historical evidence only.  Do not resume it.
+- the Stage-B reservoir-poisoning hypothesis was not supported;
+- controlled fresh refits showed usable signal remained in the mature reservoir;
+- the material defect was insufficient HU fitting (fresh100), repaired by HU400;
+- HU400 passed structural, broad and online-feedback validation;
+- ENS8 then stabilized the mature HU current behavior and the 8100 candidate
+  passed the pre-registered sealed holdout.
 
-Before a fresh LT3 run, benchmark independent HU ensemble fitting on the Ryzen
-and freeze the fastest exact-parity execution layout.  Then freeze the
-from-zero algorithmic schedule before generating new roots.
+Thus there is no evidence that the accumulated 0..8100 learning state is
+invalid.  A clean-from-zero run would be a separate research arm, not a required
+repair.
+
+Immediate engineering issue: the current ENS8 fit implementation is
+unnecessarily sequential.  Before resuming 8201+, benchmark process-parallel
+member fitting and require exact state/loss parity.
 
 
 ## OpenHoldem deployment lane — PAUSED
@@ -56,7 +57,7 @@ No deployment work is needed now.
 
 ## Immediate action
 
-With the sequential continuation stopped, run:
+With the sequential continuation stopped and 8200 preserved, run:
 
 ```bash
 bash tools/run_lt3_hu_ens8_parallel_fit_benchmark.sh
