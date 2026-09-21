@@ -86,7 +86,8 @@ For ENS8 fresh-member fitting specifically, sequential execution is not an
 accepted final implementation unless the process-parallel benchmark fails exact
 parity or provides no material speedup.
 
-Current H1 status:
-- sequential H1 launch: **ABORT / SUPERSEDED FOR PERFORMANCE REVIEW**;
-- ENS8 parallel-fit exact-parity benchmark: **NEXT**;
-- H1 restart from frozen LT2@8100: **ONLY AFTER PERFORMANCE GATE**.
+Current LT3 status:
+- sequential continuation reached a durable matched checkpoint+sidecar at **8200**;
+- fit-only ENS8 matrix: **PASS; 4x8 exact-parity selected**;
+- end-to-end semantic/throughput gate from 8200: **NEXT**;
+- ~24-hour continuation from 8200: **NOT AUTHORIZED UNTIL THAT GATE PASSES**.
