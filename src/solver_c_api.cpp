@@ -192,6 +192,56 @@ int32_t spincore_solver_state_deal_snapshot_v1(
     }, -1);
 }
 
+
+int32_t spincore_solver_state_public_snapshot_v1(
+    const spincore_solver_state* s,
+    spincore_solver_public_snapshot_v1* out
+) {
+    return guard([&]() {
+        if (!s || !out) throw std::invalid_argument("null public-snapshot arguments");
+        const auto& hand = s->impl.hand();
+        const auto& betting = hand.betting();
+        const auto& players = betting.players();
+
+        *out = spincore_solver_public_snapshot_v1{};
+        out->terminal = hand.terminal() ? 1 : 0;
+        out->street = static_cast<int32_t>(betting.street());
+        out->actor = hand.terminal() ? -1 : betting.actor();
+        out->domain = spincore::strategy_domain(betting.topology()) == StrategyDomain::TrueHeadsUp ? 1 : 0;
+        out->current_bet = betting.current_bet();
+        out->pot = betting.pot();
+        out->visible_board_count = static_cast<int32_t>(hand.visible_board_count());
+
+        out->stack_0 = players[0].stack; out->stack_1 = players[1].stack; out->stack_2 = players[2].stack;
+        out->street_commitment_0 = players[0].street_commitment;
+        out->street_commitment_1 = players[1].street_commitment;
+        out->street_commitment_2 = players[2].street_commitment;
+        out->total_commitment_0 = players[0].total_commitment;
+        out->total_commitment_1 = players[1].total_commitment;
+        out->total_commitment_2 = players[2].total_commitment;
+        out->folded_0 = players[0].folded ? 1 : 0;
+        out->folded_1 = players[1].folded ? 1 : 0;
+        out->folded_2 = players[2].folded ? 1 : 0;
+        out->all_in_0 = players[0].all_in ? 1 : 0;
+        out->all_in_1 = players[1].all_in ? 1 : 0;
+        out->all_in_2 = players[2].all_in ? 1 : 0;
+
+        if (!hand.terminal() && betting.actor() >= 0) {
+            const auto legal = betting.legal_actions(betting.actor());
+            out->legal_fold = legal.fold ? 1 : 0;
+            out->legal_check = legal.check ? 1 : 0;
+            out->legal_call = legal.call ? 1 : 0;
+            out->legal_bet = legal.bet ? 1 : 0;
+            out->legal_raise = legal.raise ? 1 : 0;
+            out->legal_all_in = legal.all_in ? 1 : 0;
+            out->to_call = legal.to_call;
+            out->min_raise_to = legal.min_raise_to;
+            out->max_raise_to = legal.max_raise_to;
+        }
+        return 0;
+    }, -1);
+}
+
 spincore_solver_state* spincore_solver_state_clone(const spincore_solver_state* s) {
     return guard([&]() -> spincore_solver_state* {
         if (!s) throw std::invalid_argument("null state");
