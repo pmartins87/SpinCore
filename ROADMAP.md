@@ -2,39 +2,22 @@
 
 ## Active status
 
-- strategic training for validated HU candidate — **CLOSED**;
-- final sealed HU holdout — **PASS 11/11**;
-- frozen hybrid deployment bundle — **CREATED**;
-- Python deployment/source parity — **PASS EXACT**;
-- legacy OpenHoldem runtime review — **COMPLETE**;
-- native C++ inference parity — **NEXT**;
-- OpenHoldem state/lifecycle integration — **AFTER NATIVE PARITY**.
+- strategic candidate ENS8@8100 — **FROZEN / HOLDOUT PASS**;
+- Python deployment parity — **PASS EXACT**;
+- native C++ inference parity — **PASS**;
+- OpenHoldem legacy-first review — **COMPLETE**;
+- hidden-card/future-board filler invariance — **NEXT**;
+- live OpenHoldem shadow-state reconstruction — **AFTER FILLER GATE**;
+- user-DLL action bridge — **AFTER STATE RECONSTRUCTION**.
 
-## Frozen identity
+## Native runtime result
 
-Hybrid deployment bundle SHA256:
+Standalone C++ reproduces the frozen deployment model with zero argmax mismatch and max probability drift only `2.527e-05`.
 
-`87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
+## Current blocker
 
-No model or strategy change is allowed.
+The next issue is reconstructing the exact canonical public solver state from observable table information.
 
-## Native runtime phase
+The proposed bridge uses deterministic fillers only for information that must be strategically invisible at the current decision.
 
-The legacy embedded-inference architecture is retained in principle, but the old duplicated observation feature logic is not.
-
-First prove that a standalone C++ implementation reproduces the frozen Python deployment model on canonical SPNNIV1 fixtures.
-
-Then reuse that exact C++ inference core inside the OpenHoldem user-DLL bridge.
-
-## After native parity
-
-Implement:
-- OpenHoldem lifecycle callbacks;
-- canonical state acquisition/reconstruction;
-- exact HU/3H domain routing;
-- canonical lean legal/action resolver;
-- fail-closed invalid-state barrier;
-- reproducible mixed-strategy sampling and decision audit;
-- cached `ProcessQuery` outputs.
-
-No table authorization follows from native parity alone.
+That invariance is now tested explicitly before building the live tracker.
