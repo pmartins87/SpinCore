@@ -6,33 +6,29 @@
 - Python deployment parity — **PASS EXACT**;
 - native C++ inference parity — **PASS**;
 - hidden filler invariance — **PASS**;
-- exact public-transcript from-scratch rebuild — **PASS**;
-- public snapshot -> canonical exact action reconciler — **NEXT**;
-- OpenHoldem heartbeat tracker + fail-closed cache — **AFTER RECONCILER PASS**;
-- Windows user-DLL bridge — **AFTER TRACKER**.
+- exact public-transcript rebuild — **PASS**;
+- public snapshot -> canonical exact action reconciler — **PASS**;
+- OpenHoldem heartbeat/lifecycle tracker + decision cache — **NEXT**;
+- OpenHoldem symbol/scrape adapter — **AFTER TRACKER PASS**;
+- Windows user-DLL integration — **AFTER ADAPTER**.
 
-## Runtime architecture now established
+## Established runtime chain
 
-At Hero decision:
-1. use hand-start scenario;
-2. use actual Hero cards;
-3. use actual visible board;
-4. fill only still-hidden cards;
-5. replay exact public voluntary transcript;
-6. query authoritative solver observation/legal/exact sizing;
-7. run frozen native deployment model.
+`scraped public state -> normalized public snapshot -> canonical action reconciler -> exact transcript -> from-scratch solver rebuild -> frozen native inference -> exact lean action`
 
-## Remaining event-tracking problem
+## Current gate
 
-The DLL sees table snapshots, not authoritative action objects.
+Validate lifecycle behavior around the reconciler:
 
-The tracker must infer one canonical exact action from each observed public transition and reject:
-- skipped transitions;
-- impossible stack/pot changes;
-- domain drift;
-- illegal exact actions;
-- ambiguous alias semantics.
+- duplicate heartbeats;
+- NewRound;
+- MyTurn;
+- repeated ProcessQuery;
+- cache invalidation;
+- hand identity;
+- failure latch;
+- HandReset recovery.
 
-Canonical alias normalization follows the validated lean strategy convention.
+Skipped-transition fault injection now records exact attempts and exact rejections.
 
-After this gate passes, wire the reconciler into the actual OpenHoldem heartbeat/lifecycle callbacks.
+After PASS, bind the tracker to actual OpenHoldem state/symbol acquisition.
