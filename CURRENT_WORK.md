@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **LT3 21H PARALLEL CONTINUATION AUTHORIZED — 8200 -> 9105 / OPENHOLDEM PAUSED**
+Status: **LT3 21H PARALLEL CONTINUATION RUNNING — 8200 -> 9105 / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -64,17 +64,15 @@ No deployment work is needed now.
 
 ## Immediate action
 
-With the sequential continuation stopped and 8200 preserved, run:
+The 8200 -> 9105 long block is already running.  Do not start another trainer,
+do not pull/restart merely to observe progress, and do not alter the target.
 
-```bash
-bash tools/run_lt3_hu_ens8_parallel_fit_benchmark.sh
-```
+Expected success sentinel:
 
-Expected sentinel:
+`LT3_PARALLEL_8200_9105_TRAINING_PASS`
 
-`LT3_HU_ENS8_PARALLEL_FIT_BENCHMARK_PASS`
-
-Do not restart H1 until this benchmark is adjudicated.
+If the run fails, preserve the run directory and inspect the existing
+training.log/report before any restart.
 
 
 ## ENS8 parallel matrix incident
@@ -167,3 +165,21 @@ The next long block is frozen before training starts:
 - no LT3 sealed-holdout access.
 
 Do not change target based on intermediate results. The earlier 9250/24.35 h plan is superseded.
+
+
+## After 9105 PASS
+
+1. Preserve the finalized 9105 checkpoint+ENS8 sidecar and hashes.
+2. Keep the automatically preserved 8600 milestone raw and immutable.
+3. Finalize AveragePolicy on a **derived copy** of 8600 for evaluation; do not
+   mutate the raw milestone.
+4. Compare finalized 8100 / finalized-copy 8600 / finalized 9105 on the LT3
+   development battery.  Do not touch the LT3 sealed holdout.
+5. Finish the DeepCrusher DC0 faithful-oracle gate against frozen R8 v22 if it
+   is still incomplete.
+6. Run DC1 mechanical paired smoke, then DC2 qualification.
+7. Decide whether more roots are justified only from those results.
+
+There is currently no defensible iteration-number forecast for when SpinCore
+will beat DeepCrusher.  Earlier training evidence did not establish monotonic
+strength growth with iteration count.
