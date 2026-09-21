@@ -26,7 +26,7 @@ if (Test-Path $BuildDir) {
 & cmake -S $SourceDir -B $BuildDir -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed: $LASTEXITCODE" }
 
-& cmake --build $BuildDir --config Release --target spincore_tests spincore_lt2_openholdem_shadow_dll spincore_lt2_openholdem_shadow_dll_mock_host -- /m
+& cmake --build $BuildDir --config Release --target spincore_tests spincore_v2_fresh_process_probe spincore_lt2_openholdem_shadow_dll spincore_lt2_openholdem_shadow_dll_mock_host -- /m
 if ($LASTEXITCODE -ne 0) { throw "MSVC build failed: $LASTEXITCODE" }
 Write-Host "WINDOWS_SHADOW_DLL_BUILD_PASS"
 
