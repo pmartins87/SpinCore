@@ -1,0 +1,55 @@
+name: SpinCore DeepCrusher DC0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deepcrusher_dc0.yml'
+      - 'python/spincore/openppl_expr.py'
+      - 'python/spincore/deepcrusher_r8_dc0.py'
+      - 'python/spincore/deepcrusher_openppl.py'
+      - 'python/spincore/deepcrusher_state.py'
+      - 'python/spincore/deepcrusher_benchmark.py'
+      - 'python_tests/test_openppl_expr.py'
+      - 'python_tests/test_deepcrusher_*.py'
+      - 'tools/audit_deepcrusher_r8_dc0_readiness.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spincore-deepcrusher-dc0
+  cancel-in-progress: true
+
+jobs:
+  dc0-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile DC0 Python
+        env:
+          PYTHONPATH: \${{ github.workspace }}/python
+        run: |
+          python -m py_compile \
+            python/spincore/openppl_expr.py \
+            python/spincore/deepcrusher_r8_dc0.py \
+            python/spincore/deepcrusher_openppl.py \
+            python/spincore/deepcrusher_state.py \
+            python/spincore/deepcrusher_benchmark.py \
+            tools/audit_deepcrusher_r8_dc0_readiness.py
+      - name: Expression semantics
+        env:
+          PYTHONPATH: \${{ github.workspace }}/python
+        run: python python_tests/test_openppl_expr.py
+      - name: Existing DeepCrusher contracts
+        env:
+          PYTHONPATH: \${{ github.workspace }}/python
+        run: |
+          python python_tests/test_deepcrusher_openppl_inventory.py
+          python python_tests/test_deepcrusher_state_view.py
+          python python_tests/test_deepcrusher_benchmark_contract.py
