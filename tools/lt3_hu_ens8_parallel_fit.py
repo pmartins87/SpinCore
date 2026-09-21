@@ -3,27 +3,17 @@ from __future__ import annotations
 
 """Memory-safe process-parallel HU ENS8 fresh fitting.
 
-The original draft copied the full 2M-sample Python reservoir into every
-subprocess.  That is not acceptable on the 64-GB Ryzen / WSL memory envelope.
-This implementation instead builds one compact, persistent mmap mirror of the
-HU Advantage reservoir.  Worker processes open the mirror read-only and sample
-indices with the exact historical Python-random stream.
-
-Important contracts:
-- same ENS8_A member init/batch seeds;
-- same 400 optimizer steps per member;
-- same batch size and sample order;
-- same vectorized SPNNIV1 tensor construction semantics;
-- no mutation of source checkpoints;
-- process workers never deserialize the full Python reservoir.
-
-For a long run the mirror is built once, then updated only at reservoir slots
-actually replaced by new samples.  The benchmark uses the same infrastructure.
+The authoritative training reservoir remains the historical Python
+UniformReservoir.  A compact mmap mirror is built once and then updated through
+an observational reservoir-write hook.  Fit workers open that mirror read-only,
+sample the same indices from the same fixed member RNG streams, and therefore
+can reproduce the canonical 8-thread sequential fits exactly while running
+independent members concurrently.
 """
 
 import argparse
+import copy
 from concurrent.futures import ProcessPoolExecutor
-import gc
 import hashlib
 import json
 import multiprocessing as mp
@@ -33,7 +23,7 @@ import random
 import resource
 import sys
 import time
-from typing import Any
+from typing import Any,Callable
 
 import numpy as np
 import torch
@@ -43,6 +33,7 @@ sys.path.insert(0,str(ROOT/"python"))
 sys.path.insert(0,str(ROOT/"tools"))
 
 import audit_lt2_stage_a_b_first_divergence as fd
+from spincore.lean_action_policy import LeanEnsembleActionAdvantagePolicy
 from spincore_nn.action_models import make_advantage_action_model
 from spincore_nn.training import train_step
 
@@ -76,7 +67,7 @@ def _manifest_files(root:Path)->dict[str,Path]:
 
 
 class PackedAdvantageReservoir:
-    """Compact mmap mirror of the authoritative Python reservoir."""
+    """Compact mmap mirror of a full authoritative HU Advantage reservoir."""
 
     def __init__(self,manifest_path:Path,*,mode:str="r"):
         self.manifest_path=Path(manifest_path).resolve()
@@ -99,6 +90,7 @@ class PackedAdvantageReservoir:
         self.weights=np.memmap(
             files["weights"],dtype=np.float32,mode=mode,shape=(self.count,)
         )
+        self.write_updates=0
 
     @classmethod
     def build(cls,memory,root:Path,*,chunk_size:int=8192):
@@ -107,6 +99,10 @@ class PackedAdvantageReservoir:
         count=len(memory.items)
         if count<=0:
             raise ValueError("cannot pack empty reservoir")
+        if count!=int(memory.capacity):
+            raise RuntimeError(
+                "LT3 persistent mmap currently requires a saturated reservoir"
+            )
         files=_manifest_files(root)
         obs=np.memmap(files["observations"],dtype=np.uint8,mode="w+",shape=(count,126))
         legal=np.memmap(files["legal"],dtype=np.uint8,mode="w+",shape=(count,10))
@@ -118,7 +114,7 @@ class PackedAdvantageReservoir:
             end=min(count,start+int(chunk_size))
             chunk=memory.items[start:end]
             observations=[s.observation for s in chunk]
-            if any(len(x)!=126 or x[:8]!=b"SPNNIV1\x00" for x in observations):
+            if any(len(v)!=126 or v[:8]!=b"SPNNIV1\x00" for v in observations):
                 raise RuntimeError("bad SPNNIV1 observation in reservoir")
             raw=np.frombuffer(b"".join(observations),dtype=np.uint8).reshape(-1,126)
             obs[start:end]=raw
@@ -135,7 +131,7 @@ class PackedAdvantageReservoir:
             "schema":PACKED_SCHEMA,
             "count":int(count),
             "capacity":int(memory.capacity),
-            "seen":int(memory.seen),
+            "seen_at_build":int(memory.seen),
             "observation_bytes":126,
             "action_slots":10,
             "build_seconds":elapsed,
@@ -146,7 +142,7 @@ class PackedAdvantageReservoir:
         manifest.write_text(json.dumps(meta,indent=2,sort_keys=True)+"\n",encoding="utf-8")
         return cls(manifest,mode="r+"),meta
 
-    def _write_row(self,index:int,sample)->None:
+    def update(self,index:int,sample)->None:
         i=int(index)
         if not 0<=i<self.count:
             raise IndexError("packed reservoir index out of range")
@@ -157,24 +153,29 @@ class PackedAdvantageReservoir:
         self.legal[i]=np.asarray(sample.legal,dtype=np.uint8)
         self.targets[i]=np.asarray(sample.target,dtype=np.float32)
         self.weights[i]=np.float32(sample.weight)
+        self.write_updates+=1
 
-    def update(self,index:int,sample)->None:
-        self._write_row(index,sample)
+    def bind_authoritative(
+        self,
+        memory,
+        *,
+        extra_observer:Callable[[int,Any],None]|None=None,
+    )->None:
+        if len(memory.items)!=self.count or int(memory.capacity)!=self.count:
+            raise RuntimeError("packed/authoritative reservoir shape drift")
 
-    def flush(self)->None:
-        for mm in (self.observations,self.legal,self.targets,self.weights):
-            mm.flush()
+        def observer(index:int,sample)->None:
+            self.update(index,sample)
+            if extra_observer is not None:
+                extra_observer(index,sample)
 
-    def close(self)->None:
-        self.flush()
-        del self.observations,self.legal,self.targets,self.weights
+        memory.set_write_observer(observer)
 
     def batch(self,indices:list[int]):
         idx=np.asarray(indices,dtype=np.int64)
         raw=np.asarray(self.observations[idx],dtype=np.uint8)
         if np.any(raw[:,93]>32):
             raise ValueError("bad history length in packed reservoir")
-
         numeric=raw[:,15:79].copy().view("<f4").reshape(-1,16)
         batch={
             "cards":torch.from_numpy(np.array(raw[:,8:15],dtype=np.int64,copy=True,order="C")),
@@ -187,6 +188,14 @@ class PackedAdvantageReservoir:
         target=torch.from_numpy(np.array(self.targets[idx],dtype=np.float32,copy=True,order="C"))
         weights=torch.from_numpy(np.array(self.weights[idx],dtype=np.float32,copy=True,order="C"))
         return batch,target,weights
+
+    def flush(self)->None:
+        for mm in (self.observations,self.legal,self.targets,self.weights):
+            mm.flush()
+
+    def close(self)->None:
+        self.flush()
+        del self.observations,self.legal,self.targets,self.weights
 
 
 def _worker_init(manifest_path:str,threads:int)->None:
@@ -219,6 +228,8 @@ def _worker_fit(task:tuple[int,dict[str,Any]])->dict[str,Any]:
         raise RuntimeError("packed worker not initialized")
     member,contract=task
     member=int(member)
+    if int(contract.get("member_steps",-1))!=MEMBER_STEPS:
+        raise RuntimeError("member-step contract drift")
     init_seed,batch_seed=member_seeds(member)
 
     cfg,model=make_advantage_action_model(
@@ -250,13 +261,18 @@ def _worker_fit(task:tuple[int,dict[str,Any]])->dict[str,Any]:
         "losses":[float(x) for x in losses],
         "loss_last":float(losses[-1]),
         "state":_clone_state(model),
+        "optimizer_state":copy.deepcopy(optimizer.state_dict()),
         "maxrss_kib":int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),
         "pid":int(os.getpid()),
     }
 
 
+def _ping_task(_x):
+    return _worker_ping()
+
+
 class ParallelEnsembleFitter:
-    """Persistent worker pool; safe to reuse across training iterations."""
+    """Persistent fit pool; startup cost is paid once per long training run."""
 
     def __init__(
         self,
@@ -274,9 +290,6 @@ class ParallelEnsembleFitter:
         self.threads_per_member=int(threads_per_member)
 
         ctx=mp.get_context("spawn")
-        # Spawn imports Torch before the worker initializer runs, so expose the
-        # intended numerical-library thread contract in the inherited
-        # environment as well as calling torch.set_num_threads in the child.
         env_names=("OMP_NUM_THREADS","MKL_NUM_THREADS","OPENBLAS_NUM_THREADS")
         old_env={name:os.environ.get(name) for name in env_names}
         for name in env_names:
@@ -289,8 +302,7 @@ class ParallelEnsembleFitter:
                 initializer=_worker_init,
                 initargs=(str(self.manifest_path),self.threads_per_member),
             )
-            # Force all workers to spawn before timing a fit.
-            pings=list(self.pool.map(lambda_placeholder, range(self.concurrency)))
+            pings=list(self.pool.map(_ping_task,range(self.concurrency)))
         finally:
             for name,value in old_env.items():
                 if value is None:
@@ -305,22 +317,23 @@ class ParallelEnsembleFitter:
         tasks=[(member,self.contract) for member in range(ENSEMBLE_SIZE)]
         results=list(self.pool.map(_worker_fit,tasks,chunksize=1))
         wall=float(time.perf_counter()-started)
-        results.sort(key=lambda x:int(x["member"]))
-        states=tuple(r["state"] for r in results)
+        results.sort(key=lambda row:int(row["member"]))
+        states=tuple(row["state"] for row in results)
         meta=[
             {
-                "member":int(r["member"]),
-                "init_seed":int(r["init_seed"]),
-                "batch_seed":int(r["batch_seed"]),
-                "steps":int(r["steps"]),
-                "fit_seconds":float(r["fit_seconds"]),
-                "loss_last":float(r["loss_last"]),
-                "maxrss_kib":int(r["maxrss_kib"]),
-                "pid":int(r["pid"]),
+                "member":int(row["member"]),
+                "init_seed":int(row["init_seed"]),
+                "batch_seed":int(row["batch_seed"]),
+                "steps":int(row["steps"]),
+                "fit_seconds":float(row["fit_seconds"]),
+                "loss_last":float(row["loss_last"]),
+                "maxrss_kib":int(row["maxrss_kib"]),
+                "pid":int(row["pid"]),
             }
-            for r in results
+            for row in results
         ]
-        return states,meta,wall
+        last_optimizer=results[ENSEMBLE_SIZE-1]["optimizer_state"]
+        return states,meta,wall,last_optimizer
 
     def close(self)->None:
         self.pool.shutdown(wait=True,cancel_futures=False)
@@ -330,10 +343,6 @@ class ParallelEnsembleFitter:
 
     def __exit__(self,*_exc):
         self.close()
-
-
-def lambda_placeholder(_x):
-    return _worker_ping()
 
 
 def make_fit_contract(runtime,config)->dict[str,Any]:
@@ -346,13 +355,14 @@ def make_fit_contract(runtime,config)->dict[str,Any]:
     }
 
 
-def install_parallel_result(runtime,states,*,config)->None:
-    """Install the same authoritative post-fit state as sequential ENS8.
-
-    Sequential ENS8 leaves member 7 in bundle.advantage and counts eight resets
-    plus 8x400 optimizer steps.  The full current behavior is installed by the
-    caller from all eight returned member states.
-    """
+def install_parallel_result(
+    runtime,
+    states,
+    optimizer_state,
+    *,
+    config,
+)->None:
+    """Install exact sequential post-fit member-7 model/optimizer/counters."""
     last=ENSEMBLE_SIZE-1
     init_seed,_=member_seeds(last)
     runtime.session.reset_advantage_network(
@@ -360,9 +370,34 @@ def install_parallel_result(runtime,states,*,config)->None:
         lr=float(config.learning_rate),
     )
     runtime.bundle.advantage.load_state_dict(states[last])
+    runtime.bundle.adv_opt.load_state_dict(optimizer_state)
+
+    # reset_advantage_network above accounts for one of the eight canonical
+    # resets.  The fit occurred in isolated workers, so reproduce the remaining
+    # seven reset counters and all 8x400 optimizer-step counters explicitly.
     runtime.bundle.counters["advantage_resets"]+=ENSEMBLE_SIZE-1
     runtime.bundle.counters["adv_optimizer_steps"]+=ENSEMBLE_SIZE*MEMBER_STEPS
     runtime.bundle.counters["advantage_ready"]=1
+
+
+def install_ensemble_behavior(runtime,states)->list[Any]:
+    """Install all eight current models as the authoritative HU behavior."""
+    models=[]
+    for state in states:
+        model=copy.deepcopy(runtime.bundle.advantage)
+        model.load_state_dict(state)
+        model.eval()
+        models.append(model)
+    behavior=LeanEnsembleActionAdvantagePolicy(
+        models,
+        selected_representation=REPRESENTATION,
+        device="cpu",
+        ready=True,
+    )
+    runtime.session.behavior=behavior
+    runtime.session.collector.policy=behavior
+    runtime.bundle.counters["advantage_ready"]=1
+    return models
 
 
 def tensor_states_equal(a,b)->bool:
@@ -391,7 +426,6 @@ def parse_args():
 
 
 def main()->int:
-    # Kept only as a small manual worker smoke entry point.
     args=parse_args()
     if args.manifest is None or args.member is None:
         raise SystemExit("manual worker requires --manifest --member")
