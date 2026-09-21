@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **OPENHOLDEM OBSERVABLE E2E PASS — NATIVE C++ TRACKER NEXT**
+Status: **NATIVE C++ TRACKER PASS — TRACKER + FROZEN NATIVE INFERENCE SHADOW GATE NEXT**
 
 ## Frozen strategy/runtime
 
@@ -9,55 +9,48 @@ All strategic/model identities remain frozen.
 
 No training, EV tuning or holdout reuse is permitted.
 
-## Observable E2E result
+## Native tracker result
 
 PASS:
-- 10,000 public transitions;
-- 3,916 Hero canonical-state checks;
-- 1,972 real street reveals;
-- 1,769 invisible CHECK deferrals;
-- 719 delayed actions reconciled specifically at MyTurn;
-- 689 multi-action synchronization events;
-- 0 exact-action mismatches;
-- 0 canonical-state mismatches;
-- 0 transcript mismatches.
+- 12,000 observable transitions;
+- 4,785 Hero canonical-state checks;
+- 2,742 invisible CHECK deferrals;
+- 1,124 delayed actions reconciled at MyTurn;
+- 962 multi-action synchronization events;
+- 3,660 street reveals;
+- 500/500 corrupt-frame rejections;
+- 500/500 skipped-transition rejections;
+- 0 failures.
 
-Fault rejection:
-- corrupt frames: 500/500;
-- skipped observable transitions: 500/500.
-
-Both 3H and HU and all four streets were covered.
-
-## Architecture now accepted
-
-The runtime may:
-
-1. read only actual OpenHoldem-observable state;
-2. defer silent opponent CHECKs;
-3. use MyTurn as synchronization evidence;
-4. infer one visible public action plus required silent CHECKs;
-5. maintain a canonical exact transcript;
-6. rebuild from hand start using Hero cards + currently visible board + deterministic hidden fillers;
-7. obtain exact canonical observation/legal/action semantics for inference.
+The Python/reference architecture and the native C++ implementation now agree at the level needed for productionization.
 
 ## Active gate
 
-The proven reference implementation was Python.
+The next component joins:
 
-The production DLL cannot depend on Python, so the same adapter/tracker/rebuild logic is now implemented in native C++:
+1. native OpenHoldem tracker/rebuild;
+2. frozen native LT2 neural bundle;
+3. exact lean legal mask;
+4. domain routing:
+   - 3H -> AveragePolicy;
+   - HU -> ENS8 raw-mean + regret matching;
+5. deterministic auditable sampling;
+6. canonical exact action resolution;
+7. one-decision-per-generation cache.
 
-- `include/spincore/lt2_openholdem_runtime.hpp`
-- `src/lt2_openholdem_runtime.cpp`
+This is still **SHADOW_NO_TABLE_ACTION**.
 
-A native audit drives the C++ implementation through deterministic 3H/HU hands, all blind levels, physical chair layouts, silent CHECKs, street reveals, MyTurn synchronization and fail-closed fault cases.
+The runner also verifies the native deployment binary SHA256 before execution.
 
-No model inference is included in this gate; native neural inference already has its own independent PASS.
+Expected native bundle SHA256:
+
+`2b79ab7ff746a9c1c3dd73dbc0a1d6884a471813cf34b9cb126790c4c4cbb123`
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_native_openholdem_tracker_audit.sh
+bash tools/run_lt2_native_openholdem_shadow_engine_audit.sh
 ```
 
-Wait for `LT2_NATIVE_OPENHOLDEM_TRACKER_PASS`, then send
-`SpinCore_LT2_native_openholdem_tracker.json`.
+Wait for `LT2_NATIVE_OPENHOLDEM_SHADOW_ENGINE_PASS`, then send
+`SpinCore_LT2_native_openholdem_shadow_engine.json`.
