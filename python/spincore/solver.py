@@ -34,6 +34,44 @@ class _ScenarioV2(C.Structure):
 class _DealV1(C.Structure):
     _fields_=[('hole_0_0',C.c_int32),('hole_0_1',C.c_int32),('hole_1_0',C.c_int32),('hole_1_1',C.c_int32),('hole_2_0',C.c_int32),('hole_2_1',C.c_int32),('board_0',C.c_int32),('board_1',C.c_int32),('board_2',C.c_int32),('board_3',C.c_int32),('board_4',C.c_int32)]
 
+class _PublicSnapshotV1(C.Structure):
+    _fields_=[
+        ('terminal',C.c_int32),('street',C.c_int32),('actor',C.c_int32),('domain',C.c_int32),
+        ('current_bet',C.c_int32),('pot',C.c_int32),('visible_board_count',C.c_int32),
+        ('stack_0',C.c_int32),('stack_1',C.c_int32),('stack_2',C.c_int32),
+        ('street_commitment_0',C.c_int32),('street_commitment_1',C.c_int32),('street_commitment_2',C.c_int32),
+        ('total_commitment_0',C.c_int32),('total_commitment_1',C.c_int32),('total_commitment_2',C.c_int32),
+        ('folded_0',C.c_int32),('folded_1',C.c_int32),('folded_2',C.c_int32),
+        ('all_in_0',C.c_int32),('all_in_1',C.c_int32),('all_in_2',C.c_int32),
+        ('legal_fold',C.c_int32),('legal_check',C.c_int32),('legal_call',C.c_int32),
+        ('legal_bet',C.c_int32),('legal_raise',C.c_int32),('legal_all_in',C.c_int32),
+        ('to_call',C.c_int32),('min_raise_to',C.c_int32),('max_raise_to',C.c_int32),
+    ]
+
+@dataclass(frozen=True)
+class PublicSnapshot:
+    terminal:bool
+    street:int
+    actor:int
+    domain:int
+    current_bet:int
+    pot:int
+    visible_board_count:int
+    stacks:tuple[int,int,int]
+    street_commitments:tuple[int,int,int]
+    total_commitments:tuple[int,int,int]
+    folded:tuple[bool,bool,bool]
+    all_in:tuple[bool,bool,bool]
+    legal_fold:bool
+    legal_check:bool
+    legal_call:bool
+    legal_bet:bool
+    legal_raise:bool
+    legal_all_in:bool
+    to_call:int
+    min_raise_to:int
+    max_raise_to:int
+
 def _dead(e:Episode)->tuple[int,...]:
     if len(e.stacks)!=3: raise ValueError('exactly three seat stacks required')
     d=tuple(int(x) for x in e.dead_players)
@@ -76,6 +114,8 @@ class SolverLibrary:
         if self.explicit_deal_available:
             create_deal.argtypes=[C.POINTER(_ScenarioV2),C.POINTER(_DealV1)];create_deal.restype=C.c_void_p
             snapshot.argtypes=[C.c_void_p,C.POINTER(_DealV1),C.POINTER(C.c_int32)];snapshot.restype=C.c_int32
+        public_snapshot=L.spincore_solver_state_public_snapshot_v1
+        public_snapshot.argtypes=[C.c_void_p,C.POINTER(_PublicSnapshotV1)];public_snapshot.restype=C.c_int32
         L.spincore_solver_state_clone.argtypes=[C.c_void_p];L.spincore_solver_state_clone.restype=C.c_void_p
         L.spincore_solver_state_destroy.argtypes=[C.c_void_p];L.spincore_solver_state_destroy.restype=None
         L.spincore_solver_state_terminal.argtypes=[C.c_void_p];L.spincore_solver_state_terminal.restype=C.c_int32
@@ -132,6 +172,21 @@ class SolverState:
         holes=((int(d.hole_0_0),int(d.hole_0_1)),(int(d.hole_1_0),int(d.hole_1_1)),(int(d.hole_2_0),int(d.hole_2_1)))
         board=(int(d.board_0),int(d.board_1),int(d.board_2),int(d.board_3),int(d.board_4))
         return DealSnapshot(holes,board,int(visible.value))
+    def public_snapshot(self)->PublicSnapshot:
+        s=_PublicSnapshotV1()
+        if self.owner.lib.spincore_solver_state_public_snapshot_v1(self._p(),C.byref(s))!=0:raise RuntimeError(self.owner.error() or 'public snapshot failed')
+        return PublicSnapshot(
+            terminal=bool(s.terminal),street=int(s.street),actor=int(s.actor),domain=int(s.domain),
+            current_bet=int(s.current_bet),pot=int(s.pot),visible_board_count=int(s.visible_board_count),
+            stacks=(int(s.stack_0),int(s.stack_1),int(s.stack_2)),
+            street_commitments=(int(s.street_commitment_0),int(s.street_commitment_1),int(s.street_commitment_2)),
+            total_commitments=(int(s.total_commitment_0),int(s.total_commitment_1),int(s.total_commitment_2)),
+            folded=(bool(s.folded_0),bool(s.folded_1),bool(s.folded_2)),
+            all_in=(bool(s.all_in_0),bool(s.all_in_1),bool(s.all_in_2)),
+            legal_fold=bool(s.legal_fold),legal_check=bool(s.legal_check),legal_call=bool(s.legal_call),
+            legal_bet=bool(s.legal_bet),legal_raise=bool(s.legal_raise),legal_all_in=bool(s.legal_all_in),
+            to_call=int(s.to_call),min_raise_to=int(s.min_raise_to),max_raise_to=int(s.max_raise_to),
+        )
     @property
     def terminal(self):return bool(self.owner.lib.spincore_solver_state_terminal(self._p()))
     @property
