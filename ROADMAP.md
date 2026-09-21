@@ -12,25 +12,30 @@
 - OpenHoldem symbol/scrape adapter — **PASS**;
 - observable OpenHoldem end-to-end tracker — **PASS**;
 - native C++ OpenHoldem observable tracker — **PASS**;
-- native tracker + frozen inference shadow engine — **NEXT**;
-- Windows OpenHoldem user-DLL binding — **AFTER SHADOW ENGINE PASS**;
-- Windows DLL build + symbol/query dry-run — **AFTER BINDING**;
-- log-only real-table shadow gate — **AFTER DLL DRY-RUN**;
-- action-enabled table gate — **ONLY AFTER SHADOW PASS**.
+- native tracker + frozen inference shadow engine — **PASS**;
+- Windows user-DLL compile/load + mock-host gate — **NEXT**;
+- real OpenHoldem shadow load — **AFTER WINDOWS MOCK PASS**;
+- real-table log-only shadow gate — **AFTER OPENHOLDEM LOAD PASS**;
+- action-enabled gate — **ONLY AFTER REAL SHADOW PASS**.
 
-## Native production chain
+## Windows user-DLL gate
 
-`OH raw frame -> native strict adapter -> native observable tracker -> canonical Hero state -> frozen native model -> sampled lean slot -> canonical exact action`
+The next gate validates the actual Windows ABI boundary without touching a real
+table.
 
-The next audit exercises the entire chain except actual OpenHoldem callbacks and actual table action.
+A mock host emulates the minimum OpenHoldem exports required by the DLL and
+loads the produced `SpinCore_LT2_Shadow.dll`.
 
-## Safety / rollout order
+Required properties:
+1. all core/unit tests pass under MSVC;
+2. DLL loads via Windows `LoadLibrary`;
+3. host function lookup succeeds;
+4. internal bundle SHA256 gate succeeds;
+5. a strict hand anchor is built from OH symbols;
+6. MyTurn produces exactly one cached shadow decision;
+7. probability mass/legal mask are valid;
+8. all action-control dll$ queries remain zero;
+9. no table action path exists in this build.
 
-No step may skip directly to action-enabled play.
-
-Required sequence:
-1. native shadow engine PASS;
-2. Windows DLL compile/load PASS;
-3. OpenHoldem callback/query dry-run PASS;
-4. real-table log-only shadow PASS;
-5. only then consider exposing action symbols.
+After PASS, load the exact same DLL into OpenHoldem with autoplayer/action use
+still disabled and inspect shadow logs.
