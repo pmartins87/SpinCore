@@ -121,3 +121,24 @@ work remain outside this fit-only ratio.
 Before freezing the ~24-hour target, run a bounded full-iteration throughput
 gate with the selected 4x8 implementation and derive the target from measured
 end-to-end wall time.
+
+
+## 8200 end-to-end gate result — PASS
+
+The selected 4x8 fitter passed full semantic parity on the same disposable
+iteration 8201.  Source 8200 artifacts remained unchanged.
+
+Measured:
+
+- sequential iteration 8201: 123.932 s;
+- parallel iteration 8201: 80.992 s;
+- whole-iteration speedup: 1.5301658x;
+- parallel 8201..8203 median: 81.108 s;
+- checkpoint amortization: 2.022 s/iteration;
+- planning time: 83.130 s/iteration.
+
+The frozen continuation target is iteration **9250**, or +1050 iterations from
+8200.  The gate projects 24.346 h including historical end-block overhead.
+
+Iteration 8600 is preserved automatically as a raw internal checkpoint+ENS8
+sidecar but does not stop or alter the precommitted run.
