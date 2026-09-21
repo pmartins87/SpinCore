@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **LT3 CONTINUATION PAUSED FOR ENS8 THROUGHPUT GATE**
+Status: **LT3 8200 -> 9105 EXACT-PARITY CONTINUATION RUNNING**
 Date: 2026-09-21
 
 ## Preserved baseline and continuation state
@@ -55,10 +55,7 @@ Before more long training:
 5. resume from iteration 8200 to that precommitted endpoint rather than stopping
    merely because iteration 8600 was reached.
 
-Iteration 8600 remains a required internal checkpoint for later comparison, but
-the run must not inspect development-set results at 8600 and then make a
-post-hoc continuation decision.  The ~24-hour endpoint is frozen before the
-long run starts.
+Iteration 8600 remains a required internal raw checkpoint for later comparison. The active run continues without adjudication to the frozen 9105 endpoint. Evaluation of 8600 requires finalizing AveragePolicy on a derived copy after the run, because the raw in-run milestone is deliberately not finalized.
 
 ## Strategic invariants
 
@@ -142,3 +139,20 @@ The user-adjusted frozen continuation target is iteration **9105**, or +905 iter
 
 Iteration 8600 is preserved automatically as a raw internal checkpoint+ENS8
 sidecar but does not stop or alter the precommitted run.
+
+
+## Post-run strength adjudication
+
+After the 9105 PASS, do not automatically launch more training.
+
+First compare 8100, a derived finalized copy of 8600, and finalized 9105 on the
+development battery.  Then use the external DeepCrusher benchmark.
+
+The canonical external opponent remains frozen DeepCrusher R8 v22.  The
+benchmark match engine and exact-action bridge exist, but the DeepCrusher
+decision oracle must still satisfy DC0 source/runtime fidelity before a
+canonical strength claim.
+
+No iteration-to-strength extrapolation is authorized.  DC2, not iteration
+count, defines external qualification: positive paired chip EV with the overall
+95% CI lower bound above zero and no major-domain collapse.
