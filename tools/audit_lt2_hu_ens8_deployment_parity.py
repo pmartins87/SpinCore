@@ -140,7 +140,7 @@ def main():
             hands[domain]+=1
             deal_seed=fd._mix64(int(seed),int(scenario),0xD34A1)
             state=solver.create(episode,int(deal_seed))
-            rng=random.Random(fd._mix64(int(seed),int(scenario),0xD3P10))
+            rng=random.Random(fd._mix64(int(seed),int(scenario),0xD3A10))
             try:
                 local=0
                 while not state.terminal:
