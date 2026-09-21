@@ -96,3 +96,34 @@ Then send:
 - `SpinCore_LT2_openholdem_shadow_dll_mock_gate.json`.
 
 Do not load the DLL into OpenHoldem yet.
+
+
+## Parallel research lane — LT3 Heavy H1
+
+LT3 has been opened as a research-only lane while LT2 deployment work continues.
+
+H1 is preregistered as a 500-iteration continuation from the exact frozen
+LT2 ENS8@8100 checkpoint+sidecar pair:
+
+- target 8600;
+- +300,000 roots;
+- 3H fresh100 unchanged;
+- HU ENS8 = 8 x fresh400 unchanged;
+- K4 off;
+- 31 workers / Torch threads 8;
+- LT2 artifacts read-only;
+- LT2 final holdout retired;
+- LT3 sealed holdout not touched.
+
+Run:
+
+```bash
+bash tools/run_lt3_heavy_ens8_h1.sh
+```
+
+Expected completion sentinel:
+
+`LT3_HEAVY_ENS8_H1_TRAINING_PASS`
+
+The Windows OpenHoldem shadow-DLL mock-host gate remains the deployment-lane
+next step and may be run separately.
