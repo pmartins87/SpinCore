@@ -1,45 +1,51 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED FOR VALIDATED HU CANDIDATE — DEPLOYMENT INTEGRATION**
+Status: **TRAINING CLOSED — DEPLOYMENT ENGINEERING ONLY**
 Date: 2026-09-21
 
-## Final strategic result
+## Strategic closure
 
-ENS8 current behavior at iteration 8100 passed the sealed final holdout under all 11 frozen criteria.
+The validated candidate passed:
+- post-training weak baselines;
+- independent learned-policy crossplay;
+- final sealed holdout;
+- exact Python deployment/source parity.
 
-No additional roots are justified for this candidate.
+The strategic candidate is frozen.
 
-The strategic experiment is closed.
+## Deployment artifact
 
-## Frozen artifact identity
+SHA256:
 
-Checkpoint:
-`a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`
+`87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
 
-HU ensemble:
-`c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`
+Semantics:
+- 3H AveragePolicy;
+- HU current ENS8@8100.
 
-## Deployment semantics
+## Native C++ step
 
-THREE_HANDED:
-- finalized AveragePolicy from iteration 8100;
-- unchanged canonical inference semantics.
+The next runtime implementation follows the useful legacy DeepSpin pattern of local inference inside the OpenHoldem bridge.
 
-TRUE_HEADS_UP:
-- current ENS8 from iteration 8100;
-- eight raw Advantage outputs averaged;
-- unchanged lean regret matching.
+Before any OpenHoldem symbol/state integration, the neural runtime itself must match Python.
 
-## Next mechanical gate
+Native implementation covers:
+- SPNNIV1 decode;
+- embeddings;
+- PyTorch-compatible GRU math;
+- dense layers;
+- 3H masked softmax;
+- HU eight-member raw Advantage average;
+- lean regret matching.
 
-Export a compact inference-only bundle and compare its output against source artifacts over old forensic trajectories.
+Parity fixtures use old forensic seeds only and contain no holdout evaluation.
 
-Pass requires:
-- zero legal-context mismatches;
+PASS requires:
+- both domains covered;
+- preflop and postflop covered;
 - zero argmax mismatches;
-- zero exact action-resolution mismatches;
-- max probability difference <= 1e-6;
-- no strategic EV calculation;
-- no holdout reuse.
+- zero illegal mass;
+- finite outputs;
+- max probability drift within the committed numerical tolerance.
 
-After parity PASS, proceed to the actual runtime/OpenHoldem integration layer while preserving the frozen bundle hash.
+After PASS, continue to actual OpenHoldem bridge construction. Do not run more strategic tests.
