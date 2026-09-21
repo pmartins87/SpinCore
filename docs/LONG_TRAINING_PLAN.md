@@ -1,40 +1,42 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — OPENHOLDEM PUBLIC EVENT TRACKING**
+Status: **TRAINING CLOSED — OPENHOLDEM LIFECYCLE/CACHE INTEGRATION**
 Date: 2026-09-21
 
 ## Deployment progress
 
 Completed:
-- strategic holdout PASS;
-- Python deployment/source parity PASS;
-- native C++ inference parity PASS;
-- hidden-card filler invariance PASS;
-- exact public-transcript rebuild PASS.
+- final strategic holdout;
+- Python deployment/source parity;
+- native C++ inference parity;
+- hidden-card filler invariance;
+- exact transcript rebuild;
+- public snapshot one-action reconciliation.
 
-## Proven rebuild property
+## Reconciler evidence
 
-The canonical state can be reconstructed from scratch at Hero decisions without retaining hidden opponent/future cards across streets.
+12,000 transitions covered all six exact action types and both domains.
 
-This removes the stale-filler-board problem.
-
-## Current integration gate
-
-The new runtime public snapshot exposes:
-- terminal/street/actor/domain;
-- pot/current bet;
-- per-seat stacks;
-- per-seat street/total commitments;
-- folded/all-in flags;
-- current legal exact-action bounds.
-
-The reconciler derives the canonical exact action from one public transition and verifies it by applying the action through the authoritative solver and demanding an exact public-snapshot match.
-
-Canonicalization:
+Canonical aliases were validated with zero failures:
 - all-in call -> CALL;
-- stack-emptying aggression -> ALL_IN;
-- otherwise BET_TO/RAISE_TO according to the pre-action state.
+- stack-emptying aggression -> ALL_IN.
 
-Fault injection must prove that no-op, corrupted and skipped-action snapshots fail closed.
+## Lifecycle layer
 
-After PASS, implement the OpenHoldem heartbeat shadow tracker and cached Hero-decision interface.
+The next tracker is strategy-agnostic.
+
+Its sole job is to guarantee reliable state/event semantics around OpenHoldem callbacks:
+
+1. duplicate heartbeat does not mutate transcript;
+2. exactly one valid transition appends exactly one action;
+3. NewRound never resets hand transcript;
+4. MyTurn computes once for the current canonical state;
+5. repeated ProcessQuery is cache-only;
+6. any state change invalidates the cache;
+7. invalid hand identity, corrupted transition or skipped transition fails closed;
+8. a failure remains latched until HandReset;
+9. HandReset permits clean recovery.
+
+This gate uses only old forensic data and no model inference.
+
+After PASS, implement the actual OpenHoldem scraper/symbol normalization layer.
