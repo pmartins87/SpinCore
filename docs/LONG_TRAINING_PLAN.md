@@ -1,46 +1,43 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — OPENHOLDEM RUNTIME STATE INTEGRATION**
+Status: **TRAINING CLOSED — OPENHOLDEM CANONICAL STATE REBUILD**
 Date: 2026-09-21
 
-## Completed deployment gates
+## Deployment progress
 
-- final strategic holdout: PASS;
-- Python compact bundle/source parity: exact PASS;
-- native C++ model inference parity: PASS.
+Completed:
+- strategic holdout PASS;
+- Python deployment/source parity PASS;
+- native C++ inference parity PASS;
+- hidden-card filler invariance PASS.
 
-No further strategic training/testing is planned for this candidate.
+## Proven filler property
 
-## Current runtime question
+Across 6,000 states and 36,000 alternate completions, opponent private cards and unrevealed future board cards did not affect the current canonical inference/action state.
 
-The authoritative solver requires a complete card deal to instantiate a state.
+This permits deterministic legal fillers for information unavailable to OpenHoldem.
 
-OpenHoldem only exposes:
-- Hero private cards;
-- visible public board;
-- public betting/table state.
+## Rebuild rather than mutate hidden board
 
-The bridge therefore needs filler values for strategically hidden card positions.
+A filler chosen preflop may not equal the real turn/river card later revealed.
 
-This is safe only if those fillers cannot alter the current canonical observation, legal actions or exact action resolution.
+The runtime should therefore not rely on one persistent hidden complete deal across the whole hand.
 
-## Mechanical prerequisite
+Instead, at each Hero decision:
+1. instantiate the original scenario again;
+2. set Hero cards and every currently visible board card exactly;
+3. fill only still-hidden card positions deterministically;
+4. replay the accumulated exact public action transcript;
+5. ask the authoritative solver for canonical observation/legal/action resolution;
+6. run the frozen native inference model.
 
-Use old forensic trajectories and repeatedly replace:
-- opponent private holes;
-- unrevealed future board.
+## Current mechanical gate
 
-Preserve:
-- current actor's Hero cards;
-- visible board;
-- scenario;
-- complete public lean action path.
-
-Require exact equality of:
+Exact transcript replay must reproduce:
 - actor/domain;
 - SPNNIV1;
-- SPNNIV2 public metadata;
-- legal action set;
-- every legal action's exact resolver output.
+- SPNNIV2;
+- legal lean action set;
+- exact resolver output for every current legal action.
 
-After PASS, implement the live OpenHoldem shadow-state tracker with fail-closed ambiguity handling.
+Only after this passes should the OpenHoldem snapshot/history reconciliation layer be implemented.
