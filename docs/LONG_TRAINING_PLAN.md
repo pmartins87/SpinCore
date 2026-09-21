@@ -1,59 +1,55 @@
 # SpinCore — Long-Training Plan
 
-Status: **8000 SOURCE FROZEN — ENS8 BROAD-EV PASS — ONLINE ENS8 PILOT ACTIVE**
+Status: **ENS8 PILOT 8100 COMPLETE — DESIGN-SET STRATEGIC ADJUDICATION ACTIVE**
 Date: 2026-09-20
 
-## Stabilization decision
+## Completed pilot
 
-The size-8 replication resolved the main composition concern sufficiently for an online pilot.
+The isolated ENS8 intervention ran from 8000 to 8100:
 
-ENS8_A and ENS8_B are both strong on all three transparent baselines and both preserve the Stage-B/Jammer repair.
+- +100 iterations;
+- +60k roots;
+- exact predeclared ENS8_A seed composition reused every iteration;
+- 8 fresh400 HU estimators;
+- raw-output average;
+- unchanged regret matching;
+- 3H fresh100 unchanged;
+- K4 off;
+- holdout untouched.
 
-The B-minus-A composition gap contracts relative to ENS4:
-- Uniform and Jammer become unresolved;
-- Passive remains only narrowly resolved at +2.50 chips.
+Mechanical execution passed.
 
-This is not proof of GTO quality, but it is enough to test the mechanism under actual Deep-CFR feedback.
+## Why training remains stopped
 
-## Anti-selection rule
+The training report records fit health and trajectory behavior, not strategic EV.
 
-ENS8_B had the higher observed mean EV, but production experimentation will not select it on that basis.
+Before any continuation or holdout, verify that online feedback did not reintroduce:
+- root shove inflation;
+- PassiveCaller regression;
+- Uniform regression;
+- deployment/AveragePolicy deterioration.
 
-The pilot uses ENS8_A, the first predeclared group.
+## Post-pilot forensic gate
 
-## Pilot contract
+On the already-seen forensic seeds:
 
-Source:
-- preserved iteration 8000 checkpoint;
-- exact SHA256 `773b5d523c7fc5fcbfc3d10cb1f5be6429e50f4283259df9134963db8d274886`.
+1. reconstruct ENS8_A from the exact frozen 8000 reservoir;
+2. compare deterministic root policies 8000 versus 8100;
+3. broad weak-baseline evaluation of ENS8 8100 versus:
+   - ENS8 8000;
+   - current 7600;
+4. compare AveragePolicy 8100 versus AveragePolicy 8000.
 
-Target:
-- iteration 8100;
-- +100 iterations.
+No new roots or optimizer steps in source artifacts.
 
-3H:
-- unchanged fresh100.
+## After this gate
 
-HU:
-- eight fresh400 estimators from the same evolving HU reservoir;
-- same eight predeclared ENS8_A init/batch seeds reused every iteration;
-- mean raw Advantage output before unchanged lean regret matching;
-- no K4.
+If it passes:
+- run trained-policy/cross-play on the design set;
+- freeze the final intervention;
+- only then unseal holdout.
 
-RNG:
-- ensemble minibatch RNG is isolated from the authoritative sampled-policy RNG.
+If it fails:
+- localize the new failure before any additional training.
 
-Artifacts:
-- isolated ordinary checkpoint;
-- mandatory HU ensemble-state sidecar;
-- pilot JSON report.
-
-The ordinary checkpoint is not a complete representation of HU current behavior without the sidecar.
-
-## After pilot
-
-Do not unseal holdout immediately.
-
-First evaluate the iteration-8100 current ENS8 behavior and AveragePolicy on the forensic baselines and trained-policy/cross-play diagnostics.
-
-Only if the online feedback survives should the intervention be frozen for final holdout validation.
+Do not train beyond iteration 8100 meanwhile.
