@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **LT3 24H PARALLEL CONTINUATION AUTHORIZED — 8200 -> 9250 / OPENHOLDEM PAUSED**
+Status: **LT3 21H PARALLEL CONTINUATION AUTHORIZED — 8200 -> 9105 / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -140,7 +140,7 @@ The source 8200 checkpoint+sidecar remain read-only.  Only after this gate
 passes will the ~24-hour target be frozen.
 
 
-## 24-hour continuation contract — FROZEN
+## 21-hour continuation contract — FROZEN
 
 The 8200 end-to-end gate passed with exact semantic parity.
 
@@ -156,14 +156,14 @@ Measured on the same disposable iteration 8201:
 The next long block is frozen before training starts:
 
 - source: durable matched checkpoint+sidecar @8200;
-- target: 9250;
-- additional iterations: 1050;
-- new roots: 630,000;
-- projected total wall: 24.35 h;
+- target: 9105;
+- additional iterations: 905;
+- new roots: 543,000;
+- projected total wall: 20.998 h;
 - checkpoint every 50;
 - raw @8600 checkpoint+sidecar preserved automatically;
 - HU fit: exact-parity 4x8;
 - no LT2 final-holdout access;
 - no LT3 sealed-holdout access.
 
-Do not change target based on intermediate results.
+Do not change target based on intermediate results. The earlier 9250/24.35 h plan is superseded.
