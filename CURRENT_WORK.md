@@ -1,9 +1,9 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **NATIVE C++ INFERENCE PARITY PASS — OPENHOLDEM CANONICAL-STATE RECONSTRUCTION PREREQUISITE NEXT**
+Status: **NATIVE C++ INFERENCE PASS — HIDDEN-FILLER INVARIANCE PASS — EXACT PUBLIC-TRANSCRIPT REBUILD NEXT**
 
-## Frozen strategic/runtime identities
+## Frozen deployment
 
 Python hybrid deployment:
 `87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
@@ -11,46 +11,48 @@ Python hybrid deployment:
 Native C++ deployment:
 `2b79ab7ff746a9c1c3dd73dbc0a1d6884a471813cf34b9cb126790c4c4cbb123`
 
-Checkpoint:
-`a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`
+No strategic changes are allowed.
 
-HU ensemble:
-`c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`
+## Hidden-card reconstruction result
 
-## Native inference parity
+PASS over:
+- 6,000 current states;
+- 36,000 alternate hidden-card completions;
+- 145,734 legal exact-action resolution checks;
+- both domains;
+- all four streets.
 
-PASS:
-- 7,302 decision records;
-- 5,242 3H;
-- 2,060 HU;
-- all four streets covered;
-- max probability drift `2.527e-05` under `2e-4` tolerance;
-- argmax mismatches 0;
-- illegal mass 0;
-- nonfinite outputs 0.
+Changing opponent holes and unrevealed future board cards caused zero differences in:
+- actor/domain;
+- SPNNIV1;
+- SPNNIV2;
+- lean legal actions;
+- exact action resolution.
 
-The neural runtime is no longer the blocker.
+## Runtime architecture consequence
 
-## OpenHoldem reconstruction problem
+The OpenHoldem bridge may safely generate deterministic fillers for currently hidden cards.
 
-Real OpenHoldem does not know opponent private cards or future board cards, but the authoritative solver constructor accepts a complete deal.
+However, a persistent filler board cannot simply survive a future street reveal if the real card differs from the filler.
 
-The runtime plan is:
-- preserve Hero hole cards;
-- preserve visible board;
-- fill only unknown opponent holes and unrevealed future board deterministically;
-- replay the exact observed public action path;
-- obtain canonical SPNNIV1/legal/action semantics from the authoritative solver.
+Therefore the bridge will reconstruct the authoritative state from the hand start at each Hero decision:
+- original tournament scenario;
+- Hero hole cards;
+- currently visible board;
+- deterministic fillers for remaining hidden cards;
+- exact public voluntary action transcript.
 
-Before using this architecture, hidden fillers must be proven irrelevant to current public-state inference.
+## Active gate
+
+Prove that replaying the exact public action transcript through the authoritative `apply_exact` solver API reproduces the live canonical state exactly at Hero decisions.
+
+No inference, EV, training or holdout reuse.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_runtime_hidden_filler_invariance.sh
+bash tools/run_lt2_runtime_exact_transcript_rebuild.sh
 ```
 
-Wait for `LT2_RUNTIME_HIDDEN_FILLER_INVARIANCE_PASS`, then send
-`SpinCore_LT2_runtime_hidden_filler_invariance.json`.
-
-No training and no holdout reuse.
+Wait for `LT2_RUNTIME_EXACT_TRANSCRIPT_REBUILD_PASS`, then send
+`SpinCore_LT2_runtime_exact_transcript_rebuild.json`.
