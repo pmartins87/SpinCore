@@ -1,83 +1,56 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **FINAL HU HOLDOUT PASS — HYBRID PYTHON DEPLOYMENT PARITY EXACT — NATIVE C++ INFERENCE PARITY NEXT**
+Status: **NATIVE C++ INFERENCE PARITY PASS — OPENHOLDEM CANONICAL-STATE RECONSTRUCTION PREREQUISITE NEXT**
 
-## Frozen strategic candidate
+## Frozen strategic/runtime identities
 
-TRUE_HEADS_UP:
-- current ENS8 @ iteration 8100.
-
-THREE_HANDED:
-- finalized AveragePolicy @ iteration 8100.
-
-Strategic testing is closed.
-
-## Frozen deployment artifact
-
-`SpinCore_LT2_hybrid_deployment_8100.pt`
-
-SHA256:
-
+Python hybrid deployment:
 `87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
 
-Source:
-- checkpoint `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
-- HU ensemble `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`.
+Native C++ deployment:
+`2b79ab7ff746a9c1c3dd73dbc0a1d6884a471813cf34b9cb126790c4c4cbb123`
 
-## Deployment parity
+Checkpoint:
+`a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`
 
-PASS over:
-- 3,000 hands;
-- 10,599 decisions;
-- 105,990 probability values;
-- both 3H and HU.
+HU ensemble:
+`c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`
 
-Observed:
-- max probability diff 0.0;
-- mean probability diff 0.0;
-- legal-context mismatches 0;
+## Native inference parity
+
+PASS:
+- 7,302 decision records;
+- 5,242 3H;
+- 2,060 HU;
+- all four streets covered;
+- max probability drift `2.527e-05` under `2e-4` tolerance;
 - argmax mismatches 0;
-- exact action-resolution mismatches 0.
+- illegal mass 0;
+- nonfinite outputs 0.
 
-## Legacy-first runtime decision
+The neural runtime is no longer the blocker.
 
-Historical `deepspin/user_deepspin.cpp` was reviewed before OpenHoldem integration.
+## OpenHoldem reconstruction problem
 
-Preserve:
-- infer on `DLLUpdateOnMyTurn`;
-- cache decision for `ProcessQuery`;
-- no strategic recompute on heartbeat;
-- explicit hand/round lifecycle.
+Real OpenHoldem does not know opponent private cards or future board cards, but the authoritative solver constructor accepts a complete deal.
 
-Do not preserve:
-- duplicated manual 292-feature observation;
-- silent zero-default state substitutions;
-- independently reimplemented sizing semantics.
+The runtime plan is:
+- preserve Hero hole cards;
+- preserve visible board;
+- fill only unknown opponent holes and unrevealed future board deterministically;
+- replay the exact observed public action path;
+- obtain canonical SPNNIV1/legal/action semantics from the authoritative solver.
 
-The LT2 bridge must use canonical solver state/observation/action semantics.
-
-## Active gate
-
-Native C++ inference parity.
-
-This checks the cross-language model runtime needed by the eventual Windows/OpenHoldem user-DLL:
-- SPNNIV1 decoding;
-- embeddings;
-- GRU;
-- MLP;
-- 3H masked softmax;
-- HU ENS8 raw mean + lean regret matching.
-
-No strategy change and no holdout reuse.
+Before using this architecture, hidden fillers must be proven irrelevant to current public-state inference.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_native_cpp_inference_parity.sh
+bash tools/run_lt2_runtime_hidden_filler_invariance.sh
 ```
 
-Wait for `LT2_NATIVE_CPP_INFERENCE_PARITY_PASS`, then send
-`SpinCore_LT2_cpp_inference_parity.json`.
+Wait for `LT2_RUNTIME_HIDDEN_FILLER_INVARIANCE_PASS`, then send
+`SpinCore_LT2_runtime_hidden_filler_invariance.json`.
 
-Keep `SpinCore_LT2_cpp_deployment_8100.bin` in Downloads.
+No training and no holdout reuse.
