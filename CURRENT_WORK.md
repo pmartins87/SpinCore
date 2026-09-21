@@ -75,3 +75,25 @@ Expected sentinel:
 `LT3_HU_ENS8_PARALLEL_FIT_BENCHMARK_PASS`
 
 Do not restart H1 until this benchmark is adjudicated.
+
+
+## ENS8 parallel matrix incident
+
+The first parallel-fit matrix (V1) was terminated after preflight.  Source
+inspection found that V1 serialized the complete 2M-sample HU Advantage
+reservoir and then deserialized that Python object graph independently in each
+fit subprocess.  That design is not acceptable for the Ryzen/WSL memory
+envelope and is superseded regardless of the exact OS termination reason.
+
+V2 replaces per-worker reservoir copies with one compact mmap mirror:
+
+- observations, legal masks, targets and weights are stored once;
+- workers open the mirror read-only;
+- each member reproduces the historical Python-random sample-index stream;
+- the canonical sequential path remains the exact parity reference;
+- full Python reservoirs are released before worker pools are created;
+- worker RSS is recorded;
+- steady-state fit speedup excludes one-time pool/mirror initialization but both
+  one-time costs are reported separately.
+
+Do not rerun V1.  Run only the V2 matrix.
