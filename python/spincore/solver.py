@@ -83,6 +83,7 @@ class SolverLibrary:
         L.spincore_solver_state_domain.argtypes=[C.c_void_p];L.spincore_solver_state_domain.restype=C.c_int32
         L.spincore_solver_state_legal_mask.argtypes=[C.c_void_p];L.spincore_solver_state_legal_mask.restype=C.c_uint32
         L.spincore_solver_state_apply_abstract.argtypes=[C.c_void_p,C.c_int32];L.spincore_solver_state_apply_abstract.restype=C.c_int32
+        L.spincore_solver_state_apply_exact.argtypes=[C.c_void_p,C.c_int32,C.c_int32];L.spincore_solver_state_apply_exact.restype=C.c_int32
         L.spincore_solver_state_universal_legal_mask.argtypes=[C.c_void_p,C.c_uint32];L.spincore_solver_state_universal_legal_mask.restype=C.c_uint32
         L.spincore_solver_state_apply_universal.argtypes=[C.c_void_p,C.c_uint32,C.c_int32];L.spincore_solver_state_apply_universal.restype=C.c_int32
         L.spincore_solver_state_resolve_universal_exact.argtypes=[C.c_void_p,C.c_uint32,C.c_int32,C.POINTER(C.c_int32),C.POINTER(C.c_int32)];L.spincore_solver_state_resolve_universal_exact.restype=C.c_int32
@@ -141,6 +142,12 @@ class SolverState:
         m=int(self.owner.lib.spincore_solver_state_legal_mask(self._p()));return tuple(i for i in range(6) if m&(1<<i))
     def apply(self,a:int):
         if self.owner.lib.spincore_solver_state_apply_abstract(self._p(),int(a))!=0:raise RuntimeError(self.owner.error() or 'apply failed')
+        return self
+    def apply_exact(self,action_type:int,amount_to:int=0):
+        action=int(action_type);amount=int(amount_to)
+        if action<0 or action>5:raise ValueError('exact action type must be 0..5')
+        if amount<0:raise ValueError('exact action amount_to must be nonnegative')
+        if self.owner.lib.spincore_solver_state_apply_exact(self._p(),action,amount)!=0:raise RuntimeError(self.owner.error() or 'apply exact failed')
         return self
     def child(self,a:int):
         c=self.clone()
