@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-"""LT3 exact-parity 4x8 continuation from durable iteration 8200 to 9250.
+"""LT3 exact-parity 4x8 continuation from durable iteration 8200 to 9105.
 
 This is the long research block authorized by the 8200 end-to-end gate.
 It preserves the source checkpoint+sidecar read-only, uses the exact-parity
 4x8 HU ENS8 fitter, persists checkpoints every 50 iterations, preserves an
 internal raw milestone at 8600, and finalizes AveragePolicy only at the final
-9250 endpoint.
+9105 endpoint.
 """
 
 import argparse
@@ -41,12 +41,12 @@ import lt3_parallel_continuation_core as core
 DOMAIN_HU="TRUE_HEADS_UP"
 DOMAIN_3H="THREE_HANDED"
 SOURCE_ITERATION=8200
-TARGET_ITERATION=9250
+TARGET_ITERATION=9105
 MILESTONE_ITERATION=8600
 CHECKPOINT_EVERY=50
 ENSEMBLE_SIZE=8
 MEMBER_STEPS=400
-SCHEMA="SPINCORE_LT3_PARALLEL_CONTINUATION_8200_9250_V1"
+SCHEMA="SPINCORE_LT3_PARALLEL_CONTINUATION_8200_9105_V1"
 ENSEMBLE_SCHEMA="SPINCORE_LT3_HU_ENS8_CURRENT_STATE_V1"
 
 
@@ -85,7 +85,7 @@ def _save_ensemble(
 )->None:
     payload={
         "schema":ENSEMBLE_SCHEMA,
-        "research_lane":"LT3_PARALLEL_8200_9250",
+        "research_lane":"LT3_PARALLEL_8200_9105",
         "source_checkpoint":str(source_checkpoint.resolve()),
         "source_ensemble_state":str(source_ensemble.resolve()),
         "completed_iteration":int(completed_iteration),
@@ -274,7 +274,7 @@ def main()->int:
             _atomic_json(report_path,{
                 "schema":SCHEMA,
                 "status":"RUNNING",
-                "research_lane":"LT3_PARALLEL_8200_9250",
+                "research_lane":"LT3_PARALLEL_8200_9105",
                 "source_iteration":SOURCE_ITERATION,
                 "target_iteration":TARGET_ITERATION,
                 "completed_iteration":completed,
@@ -356,7 +356,7 @@ def main()->int:
     payload={
         "schema":SCHEMA,
         "status":"PASS",
-        "research_lane":"LT3_PARALLEL_8200_9250",
+        "research_lane":"LT3_PARALLEL_8200_9105",
         "production_status":"RESEARCH_ONLY_NOT_PROMOTED",
         "source_checkpoint":str(source_checkpoint),
         "source_ensemble":str(source_ensemble),
@@ -416,7 +416,7 @@ def main()->int:
     _atomic_json(report_path,payload)
     mirror.close()
 
-    print("LT3_PARALLEL_8200_9250_TRAINING_PASS")
+    print("LT3_PARALLEL_8200_9105_TRAINING_PASS")
     print(f"report={report_path}")
     print(f"checkpoint={output_checkpoint}")
     print(f"ensemble={output_ensemble}")
