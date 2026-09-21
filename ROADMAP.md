@@ -11,28 +11,26 @@
 - heartbeat/lifecycle tracker + cache — **PASS**;
 - OpenHoldem symbol/scrape adapter — **PASS**;
 - observable OpenHoldem end-to-end tracker — **PASS**;
-- native C++ OpenHoldem observable tracker — **NEXT**;
-- Windows OpenHoldem user-DLL binding — **AFTER NATIVE TRACKER PASS**;
-- log-only/shadow table gate — **AFTER DLL BUILD**;
+- native C++ OpenHoldem observable tracker — **PASS**;
+- native tracker + frozen inference shadow engine — **NEXT**;
+- Windows OpenHoldem user-DLL binding — **AFTER SHADOW ENGINE PASS**;
+- Windows DLL build + symbol/query dry-run — **AFTER BINDING**;
+- log-only real-table shadow gate — **AFTER DLL DRY-RUN**;
 - action-enabled table gate — **ONLY AFTER SHADOW PASS**.
 
-## Proven reference pipeline
+## Native production chain
 
-`OpenHoldem raw symbols -> strict adapter -> silent-check-aware reconciliation -> exact public transcript -> from-scratch authoritative rebuild -> canonical Hero state`
+`OH raw frame -> native strict adapter -> native observable tracker -> canonical Hero state -> frozen native model -> sampled lean slot -> canonical exact action`
 
-The full reference path passed with zero action, transcript or canonical-state mismatches.
+The next audit exercises the entire chain except actual OpenHoldem callbacks and actual table action.
 
-## Productionization step
+## Safety / rollout order
 
-The same state semantics are now being moved into native C++ so the final
-OpenHoldem DLL has no Python runtime dependency.
+No step may skip directly to action-enabled play.
 
-The native tracker audit is mechanical only and does not touch strategy, model
-weights, EV or holdout evidence.
-
-After PASS:
-1. combine native tracker + already-validated native neural runtime;
-2. bind actual OpenHoldem callbacks/GetSymbol access;
-3. verify bundle identity/hash fail-closed;
-4. compile Windows user-DLL;
-5. run log-only shadow mode before any action is enabled.
+Required sequence:
+1. native shadow engine PASS;
+2. Windows DLL compile/load PASS;
+3. OpenHoldem callback/query dry-run PASS;
+4. real-table log-only shadow PASS;
+5. only then consider exposing action symbols.
