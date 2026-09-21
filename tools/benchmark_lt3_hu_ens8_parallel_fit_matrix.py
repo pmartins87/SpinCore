@@ -128,7 +128,7 @@ def main()->int:
             concurrency=int(cand["concurrency"]),
             threads_per_member=int(cand["threads"]),
         ) as fitter:
-            states,meta,fit_wall=fitter.fit()
+            states,meta,fit_wall,_last_optimizer=fitter.fit()
             startup=float(fitter.startup_seconds)
             pings=list(fitter.worker_pings)
 
