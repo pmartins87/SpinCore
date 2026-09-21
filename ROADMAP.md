@@ -2,28 +2,39 @@
 
 ## Active status
 
-- original Jammer FAI underfit — **REPAIRED**.
-- mature single-model instability — **CONFIRMED**.
-- replicated ENS8 broad EV — **PASS**.
-- ENS8 online feedback — **PASS**.
-- independent learned-policy crossplay — **PASS**.
-- final sealed HU holdout — **PASS 11/11**.
-- HU current ENS8 @8100 — **STRATEGICALLY FROZEN**.
-- strategic tuning for this candidate — **CLOSED**.
-- compact deployment artifact + inference parity — **NEXT**.
+- strategic training for validated HU candidate — **CLOSED**;
+- final sealed HU holdout — **PASS 11/11**;
+- frozen hybrid deployment bundle — **CREATED**;
+- Python deployment/source parity — **PASS EXACT**;
+- legacy OpenHoldem runtime review — **COMPLETE**;
+- native C++ inference parity — **NEXT**;
+- OpenHoldem state/lifecycle integration — **AFTER NATIVE PARITY**.
 
-## Holdout closure
+## Frozen identity
 
-The frozen candidate passed every criterion committed before unsealing seeds 20261001..20261006.
+Hybrid deployment bundle SHA256:
 
-Do not reuse the holdout for tuning or candidate selection.
+`87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
 
-## Deployment phase
+No model or strategy change is allowed.
 
-Create a hybrid inference bundle:
-- 3H AveragePolicy;
-- HU current ENS8.
+## Native runtime phase
 
-Require exact/mechanical distribution and action-resolution parity on old forensic trajectories.
+The legacy embedded-inference architecture is retained in principle, but the old duplicated observation feature logic is not.
 
-Only mechanical integration work is allowed from this point for the frozen candidate.
+First prove that a standalone C++ implementation reproduces the frozen Python deployment model on canonical SPNNIV1 fixtures.
+
+Then reuse that exact C++ inference core inside the OpenHoldem user-DLL bridge.
+
+## After native parity
+
+Implement:
+- OpenHoldem lifecycle callbacks;
+- canonical state acquisition/reconstruction;
+- exact HU/3H domain routing;
+- canonical lean legal/action resolver;
+- fail-closed invalid-state barrier;
+- reproducible mixed-strategy sampling and decision audit;
+- cached `ProcessQuery` outputs.
+
+No table authorization follows from native parity alone.
