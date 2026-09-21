@@ -1,53 +1,46 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — NATIVE OPENHOLDEM PRODUCTIONIZATION**
+Status: **TRAINING CLOSED — NATIVE SHADOW DECISION INTEGRATION**
 Date: 2026-09-21
 
-## Completed reference gates
+## Completed runtime gates
 
 - final strategic holdout PASS;
 - Python deployment/source parity PASS;
 - native C++ inference parity PASS;
 - hidden-card filler invariance PASS;
 - exact transcript rebuild PASS;
-- public snapshot one-action reconciler PASS;
+- public snapshot reconciler PASS;
 - heartbeat/lifecycle/cache tracker PASS;
 - OpenHoldem symbol adapter PASS;
-- full observable OpenHoldem E2E tracker PASS.
+- observable OpenHoldem E2E PASS;
+- native C++ observable tracker PASS.
 
-## Final reference evidence
+## Native tracker evidence
 
-The observable E2E gate completed:
-- 10,000 transitions;
-- 3,916 Hero canonical checks;
-- 1,972 street reveals;
-- 1,769 invisible CHECK deferrals;
-- 719 MyTurn delayed reconciliations;
-- 689 multi-action synchronization events;
-- 500/500 corrupt-frame rejections;
+The C++ tracker completed:
+- 12,000 transitions;
+- 4,785 Hero checks;
+- 2,742 invisible CHECK deferrals;
+- 1,124 MyTurn delayed reconciliations;
+- 962 multi-action synchronization events;
+- 3,660 street reveals;
+- 500/500 corrupt rejections;
 - 500/500 skipped-transition rejections.
 
-There were zero exact-action, transcript or canonical-state mismatches.
+## Current composition gate
 
-## Native productionization
+The new native shadow engine combines the validated tracker with the validated neural runtime while keeping action execution disabled.
 
-The reference architecture is no longer the open question.
+It additionally enforces:
+- exact frozen deployment metadata;
+- external file SHA256 check before load;
+- correct 3H/HU routing;
+- exact seven-label lean active mask in the ten-slot carrier;
+- zero probability on illegal actions;
+- stable SplitMix64-based sampling rather than implementation-dependent `std::uniform_real_distribution`;
+- exact lean-slot -> ExactAction resolution;
+- repeated MyTurn cache identity;
+- cache invalidation after canonical state mutation.
 
-The next risk is implementation-language drift while porting that architecture
-to the Windows C++ DLL.
-
-A reusable native runtime module now owns:
-- raw OpenHoldem-style frame normalization;
-- logical seat mapping;
-- blind-index validation;
-- card-derived betround semantics;
-- invisible CHECK handling;
-- exact public transcript;
-- hidden-card filler construction;
-- from-scratch canonical rebuild;
-- fail-closed synchronization.
-
-The native audit must pass before model inference and OpenHoldem callbacks are
-joined in the same DLL.
-
-After native tracker PASS, no further strategic training is planned.
+After PASS, proceed to the actual Windows OpenHoldem user-DLL ABI.
