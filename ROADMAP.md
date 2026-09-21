@@ -5,24 +5,21 @@
 - original Jammer FAI underfit — **REPAIRED**.
 - mature single-model instability — **CONFIRMED**.
 - replicated ENS8 broad EV — **PASS**.
-- ENS8 online pilot 8000→8100 — **COMPLETE**.
-- current ENS8 post-pilot weak-baseline gate — **PASS**.
-- AveragePolicy 8100 safety — **PASS / FLAT**.
-- AveragePolicy capture of current gains — **LAGGING**.
-- independent learned-policy ecosystem crossplay — **NEXT**.
-- iteration 8100 — **FROZEN PENDING CROSSPLAY**.
-- holdout — **SEALED**.
+- ENS8 online pilot 8000→8100 — **PASS**.
+- post-pilot weak-baseline gate — **PASS**.
+- independent learned-policy crossplay — **PASS**.
+- HU current ENS8 @8100 — **FROZEN FINAL CANDIDATE**.
+- AveragePolicy 8100 — **SAFE BUT LAGGING / NOT HU CANDIDATE**.
+- final sealed holdout — **AUTHORIZED / NEXT**.
 
-## New design evidence
+## Independent crossplay
 
-ENS8 online feedback moved root behavior strongly away from deep-stack open jamming while improving Uniform significantly and not regressing Passive/Jammer.
+ENS8 8100 is clearly positive against a mixed historical learned-opponent ecosystem and strongly outperforms AveragePolicy 8100.
 
-This is strategically encouraging, but the AveragePolicy has not yet absorbed the improvement.
+Versus ENS8 8000 it is directionally positive with no resolved regression both in ecosystem and direct seat-balanced play.
 
-## Next gate
+## Final gate
 
-Use preregistered, previously unused design seeds 20260926..20260930.
+Run exactly one completed validation on sealed seeds 20261001..20261006 under the committed protocol.
 
-Test ENS8 8100 against historical learned policies, both as a common-opponent ecosystem comparison and direct seat-balanced crossplay.
-
-If current ENS8 survives, it becomes eligible to be frozen as the HU deployment candidate before holdout.
+No training, member selection, threshold changes or seed changes after holdout outcomes are observed.
