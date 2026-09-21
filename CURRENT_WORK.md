@@ -116,3 +116,25 @@ integration benchmark is required before calculating the ~24-hour block target.
 
 Next gate: integrate persistent mmap + 4x8 fitting into the LT3 continuation
 path and measure end-to-end iteration wall time without generating a long run.
+
+
+## 8200 end-to-end integration gate
+
+The fit-only matrix is no longer sufficient to authorize the ~24-hour run.
+The selected 4x8 fitter is now wired into a disposable end-to-end gate from the
+preserved 8200 checkpoint.
+
+The gate runs in isolated processes:
+
+- one sequential control iteration: 8201;
+- three parallel 4x8 disposable iterations: 8201..8203;
+- exact semantic fingerprint comparison after the shared 8201 iteration;
+- authoritative reservoir-write indices/sample digests;
+- model and optimizer states;
+- RNG states and counters;
+- sampler state;
+- HU ensemble member states;
+- whole-iteration wall time.
+
+The source 8200 checkpoint+sidecar remain read-only.  Only after this gate
+passes will the ~24-hour target be frozen.
