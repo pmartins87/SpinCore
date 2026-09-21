@@ -1,6 +1,6 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — WINDOWS OPENHOLDEM SHADOW DLL**
+Status: **TRAINING CLOSED — WINDOWS SHADOW DLL MOCK PASS / REAL HOST PRELOAD**
 Date: 2026-09-21
 
 ## Completed gates
@@ -48,3 +48,27 @@ Build the Windows x64 DLL with MSVC, run SpinCore unit tests, then load the DLL
 into a mock OpenHoldem host process.
 
 Only after this passes should the DLL be introduced into OpenHoldem itself.
+
+
+## Windows shadow DLL mock-host result
+
+PASS:
+- exact Windows x64 user-DLL built;
+- Windows core tests 2/2 PASS;
+- LoadLibrary/mock-host PASS;
+- host exports resolved;
+- strict hand anchor and MyTurn inference PASS;
+- probability/legal-mask checks PASS;
+- repeated MyTurn cache PASS;
+- hard-zero action-query barrier PASS.
+
+Exact tested DLL SHA256:
+
+`7566be1b3c73207d437171c2b4e94f6a94477786a2a48599994a647808030062`
+
+## Next deployment gate
+
+Inspect the architecture of the real `OpenHoldem.exe` before copying any DLL.
+
+If the host is x64, the exact tested binary may proceed to the real shadow-load
+gate. If the host is x86, build/test a separate x86 shadow DLL first.
