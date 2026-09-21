@@ -1,55 +1,52 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **INDEPENDENT LEARNED-POLICY CROSSPLAY PASS — ENS8 8100 FROZEN AS FINAL HU CANDIDATE — FINAL HOLDOUT AUTHORIZED**
+Status: **FINAL HU HOLDOUT PASS — ENS8@8100 STRATEGIC CANDIDATE FROZEN — DEPLOYMENT PARITY NEXT**
 
-## Independent design-set result
+## Final sealed holdout
 
-New preregistered seeds 20260926..20260930:
+All 11 preregistered primary criteria passed.
 
-Historical learned ecosystem:
-- ENS8 8000 absolute: +6.086;
-- ENS8 8100 absolute: **+7.538**, CI [+4.575,+10.502];
-- ENS8 8100 − ENS8 8000: +1.453, CI [-0.434,+3.339];
-- ENS8 8100 − AVG 8100: **+13.059**, CI [+9.704,+16.414].
+Highlights:
 
-Direct:
-- ENS8 8100 vs ENS8 8000: +1.227, CI [-0.711,+3.165];
-- ENS8 8100 vs AVG 8100: **+12.663**, CI [+9.509,+15.817].
+- learned ecosystem ENS8 8100 absolute: +8.177, CI [+5.504,+10.850];
+- ecosystem 8100−8000: +1.223, CI [-0.488,+2.933], non-inferiority PASS;
+- ecosystem 8100−AVG8100: +12.608, CI [+9.528,+15.689];
+- direct 8100 vs 8000: +0.510, CI [-1.231,+2.252], non-inferiority PASS;
+- direct 8100 vs AVG8100: +7.195, CI [+4.342,+10.048];
+- Uniform absolute +31.811;
+- Passive absolute +10.288;
+- Jammer absolute +13.996.
 
-Current ENS8 8100 therefore passes the independent learned-policy design gate.
+The holdout is closed. Do not rerun it or tune from it.
 
-AveragePolicy remains lagged and is not the HU deployment candidate.
-
-## Frozen candidate
+## Frozen HU candidate
 
 TRUE_HEADS_UP current ENS8 @ iteration 8100.
 
-Required artifact pair:
-- ordinary iteration-8100 checkpoint;
-- iteration-8100 `hu_ensemble_state.pt`.
+Exact artifacts:
+- checkpoint SHA256 `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
+- ensemble sidecar SHA256 `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`.
 
-No more training or member changes before final holdout.
+## Deployment engineering
 
-## Final holdout
+Strategic testing is finished for this candidate.
 
-Protocol frozen in:
-`docs/LT2_HU_ENS8_FINAL_HOLDOUT_PROTOCOL_20260921.md`
+Next:
+- export a compact hybrid deployment bundle;
+- THREE_HANDED remains finalized AveragePolicy;
+- TRUE_HEADS_UP uses the frozen current ENS8 raw-output ensemble;
+- mechanically prove inference parity against source artifacts.
 
-Seeds:
-`20261001..20261006`
-
-All primary acceptance criteria are committed before outcomes.
-
-One completed holdout run is final; no tuning or rerun from its result.
+No roots, no EV gate and no holdout reuse.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_ens8_final_holdout.sh
+bash tools/run_lt2_hu_ens8_deployment_parity.sh
 ```
 
-Wait for `LT2_HU_ENS8_FINAL_HOLDOUT_COMPLETE`, then send
-`SpinCore_LT2_hu_ens8_final_holdout.json`.
+Wait for `LT2_HYBRID_DEPLOYMENT_PARITY_PASS`, then send
+`SpinCore_LT2_hybrid_deployment_parity.json`.
 
-Do not train beyond 8100.
+Keep `SpinCore_LT2_hybrid_deployment_8100.pt` in Downloads.
