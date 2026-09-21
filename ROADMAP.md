@@ -1,31 +1,28 @@
-# SpinCore Roadmap — active state 2026-09-20
+# SpinCore Roadmap — active state 2026-09-21
 
 ## Active status
 
 - original Jammer FAI underfit — **REPAIRED**.
 - mature single-model instability — **CONFIRMED**.
-- more single-model optimizer steps — **REJECTED**.
 - replicated ENS8 broad EV — **PASS**.
-- ENS8 online-feedback pilot 8000→8100 — **MECHANICALLY COMPLETE/PASS**.
-- post-pilot strategic forensic gate — **NEXT**.
-- iteration 8000 source — **FROZEN**.
-- iteration 8100 pilot — **NO FURTHER TRAINING YET**.
+- ENS8 online pilot 8000→8100 — **COMPLETE**.
+- current ENS8 post-pilot weak-baseline gate — **PASS**.
+- AveragePolicy 8100 safety — **PASS / FLAT**.
+- AveragePolicy capture of current gains — **LAGGING**.
+- independent learned-policy ecosystem crossplay — **NEXT**.
+- iteration 8100 — **FROZEN PENDING CROSSPLAY**.
 - holdout — **SEALED**.
 
-## Pilot evidence
+## New design evidence
 
-The pilot added exactly 60,000 roots and completed 100 iterations with the intended ENS8 current behavior.
+ENS8 online feedback moved root behavior strongly away from deep-stack open jamming while improving Uniform significantly and not regressing Passive/Jammer.
 
-Training diagnostics stayed mechanically stable. This does not establish strategic improvement.
+This is strategically encouraging, but the AveragePolicy has not yet absorbed the improvement.
 
-## Next
+## Next gate
 
-Compare:
-- source ENS8_A at 8000;
-- online ENS8 at 8100;
-- current production 7600;
-- AveragePolicy 8000 and 8100.
+Use preregistered, previously unused design seeds 20260926..20260930.
 
-Use the full forensic HU population and the three established transparent baselines.
+Test ENS8 8100 against historical learned policies, both as a common-opponent ecosystem comparison and direct seat-balanced crossplay.
 
-If the online ensemble and deployment policy survive, run trained-policy/cross-play as the final design-set gate before holdout.
+If current ENS8 survives, it becomes eligible to be frozen as the HU deployment candidate before holdout.
