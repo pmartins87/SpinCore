@@ -5,26 +5,34 @@
 - strategic candidate ENS8@8100 — **FROZEN / HOLDOUT PASS**;
 - Python deployment parity — **PASS EXACT**;
 - native C++ inference parity — **PASS**;
-- hidden opponent/future-board filler invariance — **PASS**;
-- exact public-transcript canonical rebuild — **NEXT**;
-- OpenHoldem snapshot-to-transcript reconciler — **AFTER REBUILD PASS**;
-- live user-DLL bridge — **AFTER RECONCILER**.
+- hidden filler invariance — **PASS**;
+- exact public-transcript from-scratch rebuild — **PASS**;
+- public snapshot -> canonical exact action reconciler — **NEXT**;
+- OpenHoldem heartbeat tracker + fail-closed cache — **AFTER RECONCILER PASS**;
+- Windows user-DLL bridge — **AFTER TRACKER**.
 
-## Runtime reconstruction architecture
+## Runtime architecture now established
 
-The authoritative solver remains the only source of observation/legal/action semantics.
+At Hero decision:
+1. use hand-start scenario;
+2. use actual Hero cards;
+3. use actual visible board;
+4. fill only still-hidden cards;
+5. replay exact public voluntary transcript;
+6. query authoritative solver observation/legal/exact sizing;
+7. run frozen native deployment model.
 
-At a Hero decision, reconstruct from scratch using:
-- hand-start scenario;
-- Hero hole cards;
-- currently visible board;
-- deterministic fillers only for hidden cards;
-- exact public action transcript.
+## Remaining event-tracking problem
 
-This avoids stale future-card fillers and avoids maintaining a second poker engine inside the DLL.
+The DLL sees table snapshots, not authoritative action objects.
 
-## Next gate
+The tracker must infer one canonical exact action from each observed public transition and reject:
+- skipped transitions;
+- impossible stack/pot changes;
+- domain drift;
+- illegal exact actions;
+- ambiguous alias semantics.
 
-Prove exact state parity for transcript replay across old forensic trajectories.
+Canonical alias normalization follows the validated lean strategy convention.
 
-After that, solve the remaining OpenHoldem-specific problem: reliably deriving the exact public transcript from successive scraped table snapshots, failing closed on ambiguity.
+After this gate passes, wire the reconciler into the actual OpenHoldem heartbeat/lifecycle callbacks.
