@@ -23,12 +23,14 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 ## LT3 research/training lane — ACTIVE
 
 1. LT3 H1 plan preregistered — **PASS / READY**.
-2. LT3 H1 heavy continuation 8100 -> 8600 — **NEXT / ACTIVE**.
-3. LT3 H1 development-set adjudication — **AFTER H1 TRAINING PASS**.
-4. LT3 H2 — **ONLY IF H1 EVIDENCE JUSTIFIES IT**.
-5. Freeze final LT3 research choices.
-6. LT3 sealed holdout — **ONLY AFTER FREEZE**.
-7. LT3 deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
+2. LT3 H1 heavy continuation 8100 -> 8600 — **PAUSED / SUPERSEDED PENDING PERFORMANCE GATE**.
+3. ENS8 exact-parity throughput benchmark — **NEXT**.
+4. LT3 H1 optimized restart 8100 -> 8600 — **ONLY AFTER BENCHMARK PASS**.
+5. LT3 H1 development-set adjudication — **AFTER OPTIMIZED H1 TRAINING PASS**.
+6. LT3 H2 — **ONLY IF H1 EVIDENCE JUSTIFIES IT**.
+7. Freeze final LT3 research choices.
+8. LT3 sealed holdout — **ONLY AFTER FREEZE**.
+9. LT3 deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
 
 ### H1 training contract
 
@@ -63,3 +65,28 @@ Preserved state:
 
 Resume this lane only when the user explicitly asks to return to OpenHoldem
 deployment.
+
+
+## Mandatory performance gate before long training
+
+No future multi-hour training block may start merely because the algorithmic
+contract is correct.
+
+Before any run expected to exceed 60 minutes, the training implementation must
+pass a dedicated throughput gate on the target Ryzen host:
+
+1. identify the dominant wall-time component;
+2. benchmark obvious independent parallelism;
+3. require exact or explicitly bounded numerical parity;
+4. measure end-to-end speedup including serialization/snapshot overhead;
+5. record CPU utilization and memory headroom;
+6. only then freeze the execution plan for the long run.
+
+For ENS8 fresh-member fitting specifically, sequential execution is not an
+accepted final implementation unless the process-parallel benchmark fails exact
+parity or provides no material speedup.
+
+Current H1 status:
+- sequential H1 launch: **ABORT / SUPERSEDED FOR PERFORMANCE REVIEW**;
+- ENS8 parallel-fit exact-parity benchmark: **NEXT**;
+- H1 restart from frozen LT2@8100: **ONLY AFTER PERFORMANCE GATE**.
