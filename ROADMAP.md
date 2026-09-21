@@ -5,19 +5,26 @@
 - strategic candidate ENS8@8100 — **FROZEN / HOLDOUT PASS**;
 - Python deployment parity — **PASS EXACT**;
 - native C++ inference parity — **PASS**;
-- OpenHoldem legacy-first review — **COMPLETE**;
-- hidden-card/future-board filler invariance — **NEXT**;
-- live OpenHoldem shadow-state reconstruction — **AFTER FILLER GATE**;
-- user-DLL action bridge — **AFTER STATE RECONSTRUCTION**.
+- hidden opponent/future-board filler invariance — **PASS**;
+- exact public-transcript canonical rebuild — **NEXT**;
+- OpenHoldem snapshot-to-transcript reconciler — **AFTER REBUILD PASS**;
+- live user-DLL bridge — **AFTER RECONCILER**.
 
-## Native runtime result
+## Runtime reconstruction architecture
 
-Standalone C++ reproduces the frozen deployment model with zero argmax mismatch and max probability drift only `2.527e-05`.
+The authoritative solver remains the only source of observation/legal/action semantics.
 
-## Current blocker
+At a Hero decision, reconstruct from scratch using:
+- hand-start scenario;
+- Hero hole cards;
+- currently visible board;
+- deterministic fillers only for hidden cards;
+- exact public action transcript.
 
-The next issue is reconstructing the exact canonical public solver state from observable table information.
+This avoids stale future-card fillers and avoids maintaining a second poker engine inside the DLL.
 
-The proposed bridge uses deterministic fillers only for information that must be strategically invisible at the current decision.
+## Next gate
 
-That invariance is now tested explicitly before building the live tracker.
+Prove exact state parity for transcript replay across old forensic trajectories.
+
+After that, solve the remaining OpenHoldem-specific problem: reliably deriving the exact public transcript from successive scraped table snapshots, failing closed on ambiguity.
