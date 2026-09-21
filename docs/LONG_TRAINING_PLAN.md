@@ -1,74 +1,67 @@
 # SpinCore — Long-Training Plan
 
-Status: **TRAINING CLOSED — WINDOWS SHADOW DLL MOCK PASS / REAL HOST PRELOAD**
+Status: **LT2 TRAINING CLOSED / LT3 H1 TRAINING ACTIVE**
 Date: 2026-09-21
 
-## Completed gates
+## LT2
 
-- strategic holdout PASS;
-- Python deployment parity PASS;
-- native C++ inference parity PASS;
-- hidden filler invariance PASS;
-- exact transcript rebuild PASS;
-- public action reconciliation PASS;
-- lifecycle/cache PASS;
-- OpenHoldem symbol adapter PASS;
-- observable E2E PASS;
-- native C++ tracker PASS;
-- native tracker + frozen inference shadow engine PASS.
+LT2 ENS8@8100 is frozen.
 
-## Native shadow decision evidence
+Its final strategic holdout passed and its deployment artifacts are preserved.
+No further LT2 training is planned.
 
-The complete native decision core passed:
-- 1,600 decisions;
-- 1,600 inference calls;
-- 1,600 repeated MyTurn cache hits;
-- 1,600 exact selected-action resolutions;
-- both strategy domains;
-- all streets;
-- 0 failures.
+The LT2 final holdout is retired and must not be reused for LT3 research
+decisions.
 
-## Windows production boundary
+## LT3 Heavy H1 — active experiment
 
-A real shadow-only user-DLL is now implemented.
+Purpose: test whether substantially more training beyond the mature LT2@8100
+state produces a real development-set improvement without modifying the frozen
+LT2 production baseline.
 
-Important safeguards:
-- Windows callback ABI matches OpenHoldem's user-DLL interface;
-- OpenHoldem host functions are resolved dynamically from the executable;
-- frozen model file SHA256 is verified inside the DLL;
-- embedded model/checkpoint/ensemble identities remain validated;
-- card conversion uses OpenHoldem suit constants and SpinCore's current
-  rank-major id convention;
-- invalid/missing symbols fail closed after a hand anchor is active;
-- no action query returns a positive authorization in this build.
+Preregistered H1:
 
-## Current gate
+- exact source checkpoint SHA256:
+  `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
+- exact HU ensemble sidecar SHA256:
+  `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`;
+- source iteration: 8100;
+- target iteration: 8600;
+- additional iterations: 500;
+- additional roots: 300,000;
+- expected total roots: 5,160,000;
+- 3H Advantage refit: fresh100;
+- HU ENS8: 8 members x fresh400;
+- HU optimizer steps per iteration: 3,200;
+- K4: off;
+- workers: 31;
+- Torch threads: 8;
+- checkpoint every 50 iterations.
 
-Build the Windows x64 DLL with MSVC, run SpinCore unit tests, then load the DLL
-into a mock OpenHoldem host process.
+## Guardrails
 
-Only after this passes should the DLL be introduced into OpenHoldem itself.
+- LT2 source checkpoint and ensemble remain immutable;
+- LT2 final holdout untouched;
+- LT3 sealed holdout untouched;
+- H1 is research-only and cannot be promoted directly;
+- hard stop at iteration 8600;
+- no automatic H2 continuation.
 
+## After H1
 
-## Windows shadow DLL mock-host result
+Run the preregistered **development-set battery** and adjudicate H1 against the
+frozen LT2@8100 baseline.
 
-PASS:
-- exact Windows x64 user-DLL built;
-- Windows core tests 2/2 PASS;
-- LoadLibrary/mock-host PASS;
-- host exports resolved;
-- strict hand anchor and MyTurn inference PASS;
-- probability/legal-mask checks PASS;
-- repeated MyTurn cache PASS;
-- hard-zero action-query barrier PASS.
+Only if development evidence supports continuation should H2 be designed.
 
-Exact tested DLL SHA256:
+The LT3 sealed holdout remains sealed until all research choices are frozen.
 
-`7566be1b3c73207d437171c2b4e94f6a94477786a2a48599994a647808030062`
+## Immediate command
 
-## Next deployment gate
+```bash
+bash tools/run_lt3_heavy_ens8_h1.sh
+```
 
-Inspect the architecture of the real `OpenHoldem.exe` before copying any DLL.
+Expected completion sentinel:
 
-If the host is x64, the exact tested binary may proceed to the real shadow-load
-gate. If the host is x86, build/test a separate x86 shadow DLL first.
+`LT3_HEAVY_ENS8_H1_TRAINING_PASS`
