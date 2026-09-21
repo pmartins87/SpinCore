@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **OPENHOLDEM OBSERVABLE E2E — ALL-IN RUNOUT BETROUND SEMANTICS PATCHED**
+Status: **OPENHOLDEM OBSERVABLE E2E PASS — NATIVE C++ TRACKER NEXT**
 
 ## Frozen strategy/runtime
 
@@ -9,66 +9,55 @@ All strategic/model identities remain frozen.
 
 No training, EV tuning or holdout reuse is permitted.
 
-## Latest E2E failure
+## Observable E2E result
 
-The rerun did not reach a strategic comparison. It stopped inside the strict
-OpenHoldem symbol adapter with:
+PASS:
+- 10,000 public transitions;
+- 3,916 Hero canonical-state checks;
+- 1,972 real street reveals;
+- 1,769 invisible CHECK deferrals;
+- 719 delayed actions reconciled specifically at MyTurn;
+- 689 multi-action synchronization events;
+- 0 exact-action mismatches;
+- 0 canonical-state mismatches;
+- 0 transcript mismatches.
 
-`board-count/betround mismatch: street=1 visible=5`
+Fault rejection:
+- corrupt frames: 500/500;
+- skipped observable transitions: 500/500.
 
-This occurred after an all-in runout.
+Both 3H and HU and all four streets were covered.
 
-## Root cause
+## Architecture now accepted
 
-OpenHoldem's `CBetroundCalculator` derives the betting round from which
-community cards are actually known:
+The runtime may:
 
-- river card known -> river;
-- else turn card known -> turn;
-- else first three common cards known -> flop;
-- else preflop.
+1. read only actual OpenHoldem-observable state;
+2. defer silent opponent CHECKs;
+3. use MyTurn as synchronization evidence;
+4. infer one visible public action plus required silent CHECKs;
+5. maintain a canonical exact transcript;
+6. rebuild from hand start using Hero cards + currently visible board + deterministic hidden fillers;
+7. obtain exact canonical observation/legal/action semantics for inference.
 
-SpinCore's terminal hand engine has different internal semantics after an all-in
-runout: when only one player remains actionable, it reveals all five board cards
-and terminates without advancing the internal betting street through every
-remaining round.
+## Active gate
 
-Therefore a terminal state can legitimately be:
+The proven reference implementation was Python.
 
-- SpinCore internal betting street = flop/turn/preflop;
-- visible board count = 5;
-- OpenHoldem betround = river.
+The production DLL cannot depend on Python, so the same adapter/tracker/rebuild logic is now implemented in native C++:
 
-The previous synthetic OH frame incorrectly set `betround = solver.street+1`,
-creating an impossible OpenHoldem frame such as flop + five visible board cards.
+- `include/spincore/lt2_openholdem_runtime.hpp`
+- `src/lt2_openholdem_runtime.cpp`
 
-## Patch
+A native audit drives the C++ implementation through deterministic 3H/HU hands, all blind levels, physical chair layouts, silent CHECKs, street reveals, MyTurn synchronization and fail-closed fault cases.
 
-The runtime integration now mirrors OpenHoldem's real card-derived semantics:
-
-1. `openholdem_betround_from_visible_count()` maps visible board count
-   0/3/4/5 -> OH betround 1/2/3/4;
-2. synthetic E2E and symbol-adapter frames use that mapping;
-3. canonical observable projection also uses visible board count rather than
-   SpinCore's internal last betting street;
-4. observable reconciliation permits a forward OH betround jump caused by a
-   single all-in runout, but still requires authoritative `apply_exact` plus
-   full-frame equality before accepting it.
-
-No strategy, model, action sizing or solver betting rule was changed.
-
-## Previous invisible-CHECK patch remains active
-
-OpenHoldem snapshots cannot directly reveal a CHECK. Pending silent checks are
-still synchronized using later observable evidence or `DLLUpdateOnMyTurn`.
+No model inference is included in this gate; native neural inference already has its own independent PASS.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_openholdem_observable_tracker_e2e.sh
+bash tools/run_lt2_native_openholdem_tracker_audit.sh
 ```
 
-Wait for `LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_PASS`.
-
-If it fails again, do not rerun. Send the terminal output and, if created, the
-latest `SpinCore_LT2_openholdem_observable_tracker_e2e.json`.
+Wait for `LT2_NATIVE_OPENHOLDEM_TRACKER_PASS`, then send
+`SpinCore_LT2_native_openholdem_tracker.json`.
