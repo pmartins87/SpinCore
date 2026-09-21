@@ -17,7 +17,7 @@ target_link_libraries(spincore_solver_c PRIVATE spincore)
 target_include_directories(spincore_solver_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 enable_testing()
 add_executable(spincore_tests
- tests/test_main.cpp tests/test_card.cpp tests/test_flop_canonicalization.cpp tests/test_hand_evaluator.cpp tests/test_hand_semantics.cpp tests/test_card_semantics_v2.cpp tests/test_ruleset_contract.cpp tests/test_scenario_sampler.cpp tests/test_game_topology.cpp tests/test_action_abstraction.cpp tests/test_action_abstraction_v2.cpp tests/test_betting_engine.cpp tests/test_preflop_ontology.cpp tests/test_postflop_ontology.cpp tests/test_hand_engine.cpp tests/test_hand_infoset_adapter.cpp tests/test_neural_encoder.cpp tests/test_neural_encoder_v2.cpp tests/test_neural_encoder_v3.cpp tests/test_tournament_value.cpp tests/test_spin_traversal_state.cpp tests/test_solver_frontier.cpp)
+ tests/test_main.cpp tests/test_card.cpp tests/test_lt2_openholdem_runtime.cpp tests/test_flop_canonicalization.cpp tests/test_hand_evaluator.cpp tests/test_hand_semantics.cpp tests/test_card_semantics_v2.cpp tests/test_ruleset_contract.cpp tests/test_scenario_sampler.cpp tests/test_game_topology.cpp tests/test_action_abstraction.cpp tests/test_action_abstraction_v2.cpp tests/test_betting_engine.cpp tests/test_preflop_ontology.cpp tests/test_postflop_ontology.cpp tests/test_hand_engine.cpp tests/test_hand_infoset_adapter.cpp tests/test_neural_encoder.cpp tests/test_neural_encoder_v2.cpp tests/test_neural_encoder_v3.cpp tests/test_tournament_value.cpp tests/test_spin_traversal_state.cpp tests/test_solver_frontier.cpp)
 target_link_libraries(spincore_tests PRIVATE spincore spincore_solver_c)
 add_test(NAME spincore_tests COMMAND spincore_tests)
 add_executable(spincore_v2_fresh_process_probe tests/v2_fresh_process_probe.cpp)
@@ -37,3 +37,20 @@ add_executable(spincore_lt2_native_openholdem_tracker_audit tools/lt2_native_ope
 target_link_libraries(spincore_lt2_native_openholdem_tracker_audit PRIVATE spincore)
 add_executable(spincore_lt2_native_openholdem_shadow_engine_audit tools/lt2_native_openholdem_shadow_engine_audit.cpp)
 target_link_libraries(spincore_lt2_native_openholdem_shadow_engine_audit PRIVATE spincore)
+
+if(WIN32)
+ add_library(spincore_lt2_openholdem_shadow_dll SHARED
+  dll/openholdem/user_spincore_lt2_shadow.cpp)
+ target_link_libraries(spincore_lt2_openholdem_shadow_dll PRIVATE spincore bcrypt)
+ target_include_directories(spincore_lt2_openholdem_shadow_dll PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ target_compile_definitions(spincore_lt2_openholdem_shadow_dll PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+ set_target_properties(spincore_lt2_openholdem_shadow_dll PROPERTIES
+  OUTPUT_NAME "SpinCore_LT2_Shadow"
+  PREFIX "")
+
+ add_executable(spincore_lt2_openholdem_shadow_dll_mock_host
+  tools/lt2_openholdem_shadow_dll_mock_host.cpp)
+ set_target_properties(spincore_lt2_openholdem_shadow_dll_mock_host PROPERTIES
+  ENABLE_EXPORTS ON)
+ target_compile_definitions(spincore_lt2_openholdem_shadow_dll_mock_host PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
+endif()
