@@ -137,8 +137,8 @@ Measured:
 - checkpoint amortization: 2.022 s/iteration;
 - planning time: 83.130 s/iteration.
 
-The frozen continuation target is iteration **9250**, or +1050 iterations from
-8200.  The gate projects 24.346 h including historical end-block overhead.
+The user-adjusted frozen continuation target is iteration **9105**, or +905 iterations from
+8200. Using the same gate planning rate, the projected wall time is 20.998 h including historical end-block overhead. The earlier 9250/24.346 h target is superseded.
 
 Iteration 8600 is preserved automatically as a raw internal checkpoint+ENS8
 sidecar but does not stop or alter the precommitted run.
