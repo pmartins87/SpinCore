@@ -25,14 +25,15 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 1. LT3 H1 plan preregistered — **PASS / READY**.
 2. Sequential LT3 continuation from 8100 — **INTERRUPTED FOR PERFORMANCE OPTIMIZATION**.
 3. Durable continuation checkpoint+sidecar @8200 — **PRESERVED**.
-4. ENS8 exact-parity throughput matrix — **NEXT**.
-5. Resume from 8200 with the fastest exact-parity execution layout in a **~24-hour precommitted block** — **AFTER PERFORMANCE MATRIX PASS**.
-6. Preserve iteration 8600 as an internal comparison checkpoint; final block target is derived from measured throughput and rounded to a checkpoint boundary before training starts.
-7. Development-set adjudication compares the preserved 8600 milestone and the final ~24-hour endpoint.
-8. Continue only while learning evidence justifies more compute.
-9. Freeze the final LT3 candidate.
-10. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
-11. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
+4. ENS8 exact-parity throughput matrix — **PASS; 4x8 SELECTED**.
+5. 8200 end-to-end semantic + whole-iteration throughput gate — **NEXT**.
+6. Resume from 8200 with 4x8 in a **~24-hour precommitted block** — **ONLY AFTER END-TO-END GATE PASS**.
+7. Preserve iteration 8600 as an internal comparison checkpoint; final block target is derived from measured throughput and rounded to a checkpoint boundary before training starts.
+8. Development-set adjudication compares the preserved 8600 milestone and the final ~24-hour endpoint.
+9. Continue only while learning evidence justifies more compute.
+10. Freeze the final LT3 candidate.
+11. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
+12. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
 
 ### Continuation rationale
 
