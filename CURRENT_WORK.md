@@ -1,58 +1,58 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **NATIVE C++ INFERENCE PASS — HIDDEN-FILLER INVARIANCE PASS — EXACT PUBLIC-TRANSCRIPT REBUILD NEXT**
+Status: **EXACT TRANSCRIPT REBUILD PASS — PUBLIC SNAPSHOT ACTION RECONCILER NEXT**
 
-## Frozen deployment
+## Frozen strategy/runtime
 
-Python hybrid deployment:
-`87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
+Strategic candidate and model identities remain frozen.
 
-Native C++ deployment:
-`2b79ab7ff746a9c1c3dd73dbc0a1d6884a471813cf34b9cb126790c4c4cbb123`
+No training, EV tuning or holdout reuse is permitted.
 
-No strategic changes are allowed.
+## Canonical rebuild result
 
-## Hidden-card reconstruction result
+PASS:
+- 5,000 Hero decision states;
+- 20,000 alternate from-scratch rebuilds;
+- 83,724 legal exact-action comparisons;
+- both 3H and HU;
+- all four streets;
+- public transcript length up to 15 voluntary actions.
 
-PASS over:
-- 6,000 current states;
-- 36,000 alternate hidden-card completions;
-- 145,734 legal exact-action resolution checks;
-- both domains;
-- all four streets.
+Rebuild inputs:
+- original scenario;
+- Hero cards;
+- visible board;
+- hidden-card fillers;
+- exact public voluntary transcript.
 
-Changing opponent holes and unrevealed future board cards caused zero differences in:
-- actor/domain;
-- SPNNIV1;
-- SPNNIV2;
-- lean legal actions;
-- exact action resolution.
+Replaying that transcript through the authoritative exact-action solver API reproduced the canonical state exactly.
 
-## Runtime architecture consequence
+## Remaining OpenHoldem problem
 
-The OpenHoldem bridge may safely generate deterministic fillers for currently hidden cards.
+The runtime no longer needs a persistent hidden deal.
 
-However, a persistent filler board cannot simply survive a future street reveal if the real card differs from the filler.
+It needs a reliable event tracker that converts successive public snapshots into the exact canonical transcript.
 
-Therefore the bridge will reconstruct the authoritative state from the hand start at each Hero decision:
-- original tournament scenario;
-- Hero hole cards;
-- currently visible board;
-- deterministic fillers for remaining hidden cards;
-- exact public voluntary action transcript.
+The validated LT2 convention must normalize economically equivalent aliases:
+- all-in call -> CALL;
+- stack-emptying aggression -> ALL_IN;
+- non-all-in opening aggression -> BET_TO;
+- non-all-in aggression facing a bet -> RAISE_TO.
+
+Skipped or corrupted snapshots must fail closed rather than inventing a transcript.
 
 ## Active gate
 
-Prove that replaying the exact public action transcript through the authoritative `apply_exact` solver API reproduces the live canonical state exactly at Hero decisions.
+A public runtime snapshot ABI and deterministic one-action reconciler are now implemented.
 
-No inference, EV, training or holdout reuse.
+The mechanical gate generates diverse exact actions, arbitrary legal raise sizes, all-in aliases and fault injections.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_runtime_exact_transcript_rebuild.sh
+bash tools/run_lt2_public_snapshot_reconciler.sh
 ```
 
-Wait for `LT2_RUNTIME_EXACT_TRANSCRIPT_REBUILD_PASS`, then send
-`SpinCore_LT2_runtime_exact_transcript_rebuild.json`.
+Wait for `LT2_PUBLIC_SNAPSHOT_RECONCILER_PASS`, then send
+`SpinCore_LT2_public_snapshot_reconciler.json`.
