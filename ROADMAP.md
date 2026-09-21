@@ -3,41 +3,29 @@
 ## Active status
 
 - original Jammer FAI underfit — **REPAIRED**.
-- mature single-model fit instability — **CONFIRMED**.
+- mature single-model instability — **CONFIRMED**.
 - more single-model optimizer steps — **REJECTED**.
-- size-2 ensemble — **NOT USEFUL**.
-- size-4 broad strategic EV — **PASS**, composition variance remains.
-- replicated size-8 broad strategic EV — **PASS**.
-- size-8 composition robustness — **MATERIALLY IMPROVED / NOT PERFECT**.
-- isolated size-8 online-feedback pilot 8000→8100 — **NEXT**.
-- original iteration-8000 source — **FROZEN**.
+- replicated ENS8 broad EV — **PASS**.
+- ENS8 online-feedback pilot 8000→8100 — **MECHANICALLY COMPLETE/PASS**.
+- post-pilot strategic forensic gate — **NEXT**.
+- iteration 8000 source — **FROZEN**.
+- iteration 8100 pilot — **NO FURTHER TRAINING YET**.
 - holdout — **SEALED**.
 
-## ENS8 evidence
+## Pilot evidence
 
-Both independent ENS8 groups:
-- are decisively positive against Uniform, Passive and Jammer;
-- beat Stage B significantly on all three;
-- significantly improve Passive and Jammer versus 7600;
-- show no resolved Uniform regression versus 7600.
+The pilot added exactly 60,000 roots and completed 100 iterations with the intended ENS8 current behavior.
 
-Composition B-minus-A:
-- Uniform +1.94 unresolved;
-- Passive +2.50 barely resolved;
-- Jammer +2.16 unresolved.
+Training diagnostics stayed mechanically stable. This does not establish strategic improvement.
 
-This is materially tighter than the ENS4 split.
+## Next
 
-## Online intervention
+Compare:
+- source ENS8_A at 8000;
+- online ENS8 at 8100;
+- current production 7600;
+- AveragePolicy 8000 and 8100.
 
-Use ENS8_A by preregistration order, not by observed EV.
+Use the full forensic HU population and the three established transparent baselines.
 
-For HU each iteration:
-- fit eight independent 400-step models on the same reservoir;
-- reuse the exact predeclared ENS8_A init/batch seeds;
-- average raw Advantage outputs;
-- apply unchanged lean regret matching.
-
-3H remains single fresh100.
-
-Pilot only to iteration 8100. No generic continuation and no holdout yet.
+If the online ensemble and deployment policy survive, run trained-policy/cross-play as the final design-set gate before holdout.
