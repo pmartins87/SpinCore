@@ -220,6 +220,7 @@ def main():
                                 "nonce":fd._mix64(seed,scenario,decision_index,0xDEC1DE),
                             }
 
+                        compute_before=compute_counter[0]
                         first=tracker.on_my_turn(hand_id,before,compute)
                         myturn_callbacks+=1
                         second=tracker.on_my_turn(hand_id,before,compute)
@@ -230,12 +231,13 @@ def main():
                                 "kind":"myturn_cache_value",
                             })
                             break
-                        if compute_counter[0] != decision_computations + 1:
+                        expected_compute_count=compute_before+1
+                        if compute_counter[0] != expected_compute_count:
                             lifecycle_failures.append({
                                 "seed":seed,"scenario":scenario,
                                 "kind":"myturn_recomputed",
                                 "counter":compute_counter[0],
-                                "expected":decision_computations+1,
+                                "expected":expected_compute_count,
                             })
                             break
                         decision_computations+=1
