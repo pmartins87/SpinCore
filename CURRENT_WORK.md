@@ -1,52 +1,83 @@
 # SpinCore Current Work
 
 Date: 2026-09-21
-Status: **FINAL HU HOLDOUT PASS — ENS8@8100 STRATEGIC CANDIDATE FROZEN — DEPLOYMENT PARITY NEXT**
+Status: **FINAL HU HOLDOUT PASS — HYBRID PYTHON DEPLOYMENT PARITY EXACT — NATIVE C++ INFERENCE PARITY NEXT**
 
-## Final sealed holdout
+## Frozen strategic candidate
 
-All 11 preregistered primary criteria passed.
+TRUE_HEADS_UP:
+- current ENS8 @ iteration 8100.
 
-Highlights:
+THREE_HANDED:
+- finalized AveragePolicy @ iteration 8100.
 
-- learned ecosystem ENS8 8100 absolute: +8.177, CI [+5.504,+10.850];
-- ecosystem 8100−8000: +1.223, CI [-0.488,+2.933], non-inferiority PASS;
-- ecosystem 8100−AVG8100: +12.608, CI [+9.528,+15.689];
-- direct 8100 vs 8000: +0.510, CI [-1.231,+2.252], non-inferiority PASS;
-- direct 8100 vs AVG8100: +7.195, CI [+4.342,+10.048];
-- Uniform absolute +31.811;
-- Passive absolute +10.288;
-- Jammer absolute +13.996.
+Strategic testing is closed.
 
-The holdout is closed. Do not rerun it or tune from it.
+## Frozen deployment artifact
 
-## Frozen HU candidate
+`SpinCore_LT2_hybrid_deployment_8100.pt`
 
-TRUE_HEADS_UP current ENS8 @ iteration 8100.
+SHA256:
 
-Exact artifacts:
-- checkpoint SHA256 `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
-- ensemble sidecar SHA256 `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`.
+`87e46b40cb43bb89cb46bf3b760bbac5c8282491fd3d6da73d1bbe28329b278c`
 
-## Deployment engineering
+Source:
+- checkpoint `a51dbbed71090e45f2c4f5db6297f72eab848990b38650702b436e2aa60ca4bf`;
+- HU ensemble `c44b817f75304db352eedc33febbd180e6d038e0580c91be0b9befdbdb08f181`.
 
-Strategic testing is finished for this candidate.
+## Deployment parity
 
-Next:
-- export a compact hybrid deployment bundle;
-- THREE_HANDED remains finalized AveragePolicy;
-- TRUE_HEADS_UP uses the frozen current ENS8 raw-output ensemble;
-- mechanically prove inference parity against source artifacts.
+PASS over:
+- 3,000 hands;
+- 10,599 decisions;
+- 105,990 probability values;
+- both 3H and HU.
 
-No roots, no EV gate and no holdout reuse.
+Observed:
+- max probability diff 0.0;
+- mean probability diff 0.0;
+- legal-context mismatches 0;
+- argmax mismatches 0;
+- exact action-resolution mismatches 0.
+
+## Legacy-first runtime decision
+
+Historical `deepspin/user_deepspin.cpp` was reviewed before OpenHoldem integration.
+
+Preserve:
+- infer on `DLLUpdateOnMyTurn`;
+- cache decision for `ProcessQuery`;
+- no strategic recompute on heartbeat;
+- explicit hand/round lifecycle.
+
+Do not preserve:
+- duplicated manual 292-feature observation;
+- silent zero-default state substitutions;
+- independently reimplemented sizing semantics.
+
+The LT2 bridge must use canonical solver state/observation/action semantics.
+
+## Active gate
+
+Native C++ inference parity.
+
+This checks the cross-language model runtime needed by the eventual Windows/OpenHoldem user-DLL:
+- SPNNIV1 decoding;
+- embeddings;
+- GRU;
+- MLP;
+- 3H masked softmax;
+- HU ENS8 raw mean + lean regret matching.
+
+No strategy change and no holdout reuse.
 
 ## Immediate action
 
 ```bash
-bash tools/run_lt2_hu_ens8_deployment_parity.sh
+bash tools/run_lt2_native_cpp_inference_parity.sh
 ```
 
-Wait for `LT2_HYBRID_DEPLOYMENT_PARITY_PASS`, then send
-`SpinCore_LT2_hybrid_deployment_parity.json`.
+Wait for `LT2_NATIVE_CPP_INFERENCE_PARITY_PASS`, then send
+`SpinCore_LT2_cpp_inference_parity.json`.
 
-Keep `SpinCore_LT2_hybrid_deployment_8100.pt` in Downloads.
+Keep `SpinCore_LT2_cpp_deployment_8100.bin` in Downloads.
