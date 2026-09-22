@@ -199,11 +199,11 @@ When Others Fold Force
 """)
         self.assertEqual(
             p.evaluate("f$x",{"a":1,"b":0,"AmountToCall":2}),
-            DirectAction("RaiseTo",6),
+            DirectAction("RaiseTo",6,"bb_expression"),
         )
         self.assertEqual(
             p.evaluate("f$x",{"a":0,"b":1,"AmountToCall":2}),
-            DirectAction("RaiseBy",0.5),
+            DirectAction("RaiseBy",0.5,"pot_fraction"),
         )
 
     def test_eof_without_action_fails_closed(self):
