@@ -32,7 +32,7 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 8. Post-9105 development battery — **PASS / INCONCLUSIVE; SEALED HOLDOUT UNTOUCHED**. Corrected execution completed on the frozen seed/protocol. AveragePolicy 8100 -> 9105 ALL = -0.055 chips/hand, 95% CI [-2.636,+2.526]; 3H = -2.303 [-4.841,+0.235]; HU = +2.630 [-2.151,+7.411]. Current HU ENS8 direct 8100 -> 9105 = -0.804 [-7.391,+5.784]. Policy drift is measurable, especially HU, but no resolved strength improvement was demonstrated.
 9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim. **Preparation is active in parallel with LT3 training**: expression semantics, ordered WHEN/SET control flow, canonical list parsing, hand-scoped user variables, persistent me_* memory semantics and full-source compile audit tooling are now implemented; native symbol coverage, exact action sizing and runtime-trace parity remain.
 10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
-11. Canonical promotion training remains **UNPROVEN** by the development battery, but an explicitly separate utilization continuation 9105 -> 10105 is **READY** so the Ryzen need not sit idle while DC0 is engineered. This block is research-only, preserves 9105, saves raw 9600, adds 600,000 roots and touches no sealed holdout. Its existence must not be interpreted as evidence that more roots improve strength.
+11. Canonical promotion training remains **UNPROVEN** by the development battery, but the separate utilization continuation 9105 -> 10105 is **RUNNING HEALTHY** so the Ryzen is not idle while DC0 is engineered. Run directory: `runs/lt3_parallel_9105_10105/20260922_132104`. Preflight PASS; 9106/9107 completed at 80.12/77.10 s. This block is research-only, preserves 9105, saves raw 9600, adds 600,000 roots and touches no sealed holdout. Its existence must not be interpreted as evidence that more roots improve strength.
 12. Freeze the final LT3 research candidate.
 13. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
 14. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
@@ -116,15 +116,17 @@ Completed foundation work:
 - full frozen-source OpenPPL compile audit and a static-preparation runner added;
 - exact R8 v22 operational source vendored in SpinCore with SHA256 pin so CI can test the real frozen artifact;
 - full-source compile gate passes on the real 1,270,138-byte R8 source: 1,267 sections, 721 functions, 545 hand-list sections;
-- primitive native-symbol bridge started and fail-closed coverage audit added: 27/269 primitive state symbols implemented; frozen environment profile resolves another 76 source identifiers, leaving 166 substantive unresolved;
+- strict primitive/native bridge plus frozen environment profile are active; pinned OpenPPL library overlay resolves 126 direct source dependencies that were previously misclassified as native; OpenHoldem-compatible card/hand provider raises direct provider coverage to 60 source identifiers; source-level direct unresolved dependencies are now 20;
 - DC0 CI corrected to execute pytest-style contracts instead of merely importing files and is currently PASS.
 
 Post-9105 development tooling is now frozen in `docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md` and `tools/run_lt3_post9105_dev_battery.sh`.
 
 Still blocking canonical DC0:
-- complete native/OpenPPL symbol provider from SpinCore state/history;
+- complete the **transitive** native/OpenPPL leaf provider. Current static closure: 336 native leaves, 201 resolved, 135 syntactically unresolved before pruning Hold'em-dead Omaha branches and freezing game/table constants;
+- port exact action-history / raiser / caller semantics from the preserved OpenHoldem implementation;
+- close substantive equity leaves, including `prwin/prtie` and the R8 backup-opponent-all-in-range multiplex symbols;
 - exact DeepCrusher sizing/action conversion into ExternalExactAction;
-- frozen environment treatment for optional PokerTracker/network/chair/log symbols — **PASS** via `GGPoker_NoPT_NoNotes_V1`; `prwin/prtie` remain substantive and are not environment-filled;
+- frozen environment treatment for optional PokerTracker/network/chair/log symbols — **PASS** via `GGPoker_NoPT_NoNotes_V1`;
 - broad parity fixtures against real OpenHoldem traces, including preflop/flop/turn/river and sizing.
 
 The historical R8 v22 OpenHoldem smoke proves the frozen artifact itself loaded and made 153 decisions, but the five original smoke logs are not stored in the DeepCrusher repository, so that audit document alone is not sufficient as an oracle parity fixture.
