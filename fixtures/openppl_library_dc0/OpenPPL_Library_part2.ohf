@@ -1,0 +1,2671 @@
+// GENERATED PROVENANCE SNAPSHOT FOR SPINCORE DC0
+// Source repository: pmartins87/myoh_private
+// This file concatenates OpenPPL library components verbatim below.
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_OutsCounter.ohf blob=f86a94d10b74f2c09f3d2c5dcee2334e36c9c9ae =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+//
+// Based on the outs-counter by HTC, CiderTime and Winngy
+//
+// Technical changes
+//   * split code, introducing NOutsFlop and NOutsTurn
+//   * replaced f$rankhiflop by TopFlopCard, similar for mid and lo.
+//   * replaced f$bothcards by npcbits
+//
+//*****************************************************************************
+
+##NOuts##
+WHEN IsFlop RETURN NOutsFlop FORCE
+WHEN IsTurn RETURN NOutsTurn FORCE
+
+##NOutsFlop##
+(!(ispair) && pokerval&threeofakind && nrankedcommon==2                     ? 4 : 0)+
+
+//Set outs cider
+(ispair && pokerval&threeofakind                                            ? 8 : 0)+
+
+//2P OUTS cider
+(pokerval&twopair && nrankedcommon==1                                       ? 4 :
+ pokerval&twopair && pokervalcommon<twopair && !(ispair) && nouts==4
+                                                                            ? 4 : 0)+
+
+//FLUSH OUTS
+(nsuited==4 && nsuitedcommon==2 && `((~srankbits&0x7ffe)>>srankhiplayer)<=4 ? 9 :
+ nsuited==4 && nsuitedcommon==2 && `((~srankbits&0x7ffe)>>srankhiplayer) >4 ? 8 :
+ nsuited==4 && nsuitedcommon==3 && `((~srankbits&0x7ffe)>>srankhiplayer)<=1 ? 9 :
+ nsuited==4 && nsuitedcommon==3 && `((~srankbits&0x7ffe)>>srankhiplayer) >1
+                                && `((~srankbits&0x7ffe)>>srankhiplayer) <4 ? 4 : 0)+
+
+
+//STRAIGHT OUTS
+(nstraight==4 && nstraightfillcommon>1 &&
+ ((rankbits&16398) != 16398 && (rankbits&28674) != 28674)                   ? 8 :
+ (rankbits>>ranklo)==0b1011101                                              ? 9 :
+ (nstraight==4 && nstraightcommon<=3 && rankloplayer>rankhicommon &&
+  rankhiplayer-rankloplayer<=2 &&
+  ((rankbits&16398) != 16398 && (rankbits&28674) != 28674)   )              ? 8 :
+ nstraightfill==1 && nstraightfillcommon>=2 && !((ranklocommon>8 &&
+ npcbits==1) && (islopair || ismidpair))                                ? 4 : 0)+
+
+//OVERCARD OUTS
+(rankloplayer>rankhicommon && rankloplayer>=11 && nopponentsplaying==1 &&
+ (nsuitedcommon<=2 && nsuited==nsuitedcommon ? 0 : 1) &&
+ nstraightfillcommon>1 && !ispair                                           ? 4 : 0)+
+
+//cider  overs w/bd flush
+(rankloplayer>rankhicommon &&  nopponentsplaying>1 && nsuited==3
+ && nsuitedcommon==1 && nstraightfillcommon>2                               ? 3 :
+
+//cider overs w/OESD
+ rankloplayer>rankhicommon &&  nopponentsplaying>1 && nsuitedcommon==1
+ && nstraight==4 && !(nstraightcommon>3) && !(rankbits&16386 &&
+  rankbits&8196) && !(nrankedcommon==1 && pokerval&threeofakind)            ? 3 :  0)+
+
+
+//cider
+(rankloplayer>rankhicommon  && nsuitedcommon==2 && nsuited==4
+                                                                            ? 4  : 0)+
+
+
+((nsuited==3 && nsuitedcommon==2 && rankloplayer>rankhicommon &&
+  nstraightfillcommon>=2)                                                   ?1.5:
+ (nsuited==3 && nsuitedcommon==2 && rankhiplayer>rankhicommon &&
+  rankloplayer<rankhicommon && nstraightfillcommon>=2)                      ?1.5:
+ (nsuited==3 && nsuited>nsuitedcommon && nstraightfillcommon>2 &&
+  rankloplayer>rankhicommon && rankloplayer>=12)                            ? 2 : 0 )+
+
+  //Pair to 2P out ALL cider or Ispair to set
+(nrankedcommon==1 && !(ispair) && pokerval&onepair && rankhiplayer>
+ rankhicommon                                                               ? 4 :
+ nrankedcommon==1 && !(ispair) && pokerval&onepair && rankloplayer>
+ SecondTopFlopCard && rankhiplayer==rankhicommon                                ? 4 :
+ nopponentsplaying==1 && pokerval&onepair && !(ispair) && nrankedcommon==1
+ && (islopair || ismidpair)                                                 ? 3 :
+ ispair                                                                     ? 2 :
+ pokerval&onepair && nrankedcommon==1 && (nsuitedcommon==1 || nsuited==3)
+   && !(SecondTopFlopCard>=9)                                                   ? 2 : 0) +
+
+//BACKDOOR OUTS
+(issuited && rankhiplayer==14 && nsuited==3 && nsuitedcommon==1             ?1.5:
+ issuited && nsuited==3 && nsuitedcommon==1                                 ? 1 :
+ nsuitedcommon==2 && nsuited==3 && `(((~srankbits)&0x7ffe)>>srankhiplayer)<3                       ? 1 :     //cider
+                                           0)+
+(nstraight==3 && rankloplayer>rankhicommon && nstraightcommon==1            ?1.5: 0)+
+
+
+//cider Runner top card
+(rankhiplayer>rankhicommon && nsuited==3 && nsuitedcommon==1                ? 1.5 : 0 )+
+
+//DISCOUNT OUTS FOR DANGEROUS BOARDS
+(nrankedcommon==2                                                           ?-3.5:
+ nrankedcommon==3                                                           ?-10 : 0)+
+
+
+//All cider  flush board
+((nsuitedcommon==3 && nsuited==3 && pokerval<twopair) ||
+ (nsuitedcommon==2 && nsuited<3 && pokerval<twopair) && !(nstraightfill==1) ? -2 : 0) +
+
+//ALL cider  my high end for OESD will fill hi straight or big chance of tie
+( nstraight==4 && !(nstraightcommon>3) && !(rankbits&16386 &&
+  rankbits&8196)  && rankloplayer>=8 && !(rankloplayer>rankhicommon)        ? -2 : 0) +
+
+//discount gut for possible FD cider
+
+( nsuitedcommon==2 && nstraightfill==1                                      ? -1 : 0) +
+
+//discount OES that is ass end and lots of overs
+(nstraight==4 && nstraightcommon==2 && rankhiplayer<ranklocommon
+  && rankloplayer>6                                                       ? -4 : 0 ) +
+
+//discount draw to 2P that might fill a st8 draw  cider
+(rankloplayer>8 && nrankedcommon==1 && SecondTopFlopCard>8 && pokerval&onepair
+ && nopponentsplaying>1   && !(nsuited>nsuitedcommon)                              ? -1 :0) +
+
+(rankloplayer>rankhicommon && rankloplayer>=12 &&
+ ( (nsuitedcommon==nsuited)||(nstraightcommon==nstraight) )                   ?
+            -(nsuitedcommon>1||nstraightcommon>1?nsuitedcommon+nstraightcommon:0): 0)+
+{( (nstraight==4&&nstraightfillcommon>2&&((rankbits&16398)!=16398&&(rankbits&28674)!=28674))
+ || (nstraightfill==1 && nstraightfillcommon>=2)
+ || ((rankbits>>ranklo)==0b1011101) )
+
+ ? -( (nsuitedcommon==2 && !(nstraightfill==1))                             ? 2 :
+
+
+
+ nsuitedcommon==3 && nsuited>nsuitedcommon &&
+ `((~srankbits&0x7ffe)>>srankhiplayer)<=2                                   ? 2 :
+ nsuitedcommon==3                                                           ? 8 : 0):0}
+
+
+##NOutsTurn##
+//2P OUTS cider
+(pokerval&twopair && nrankedcommon==1                                       ? 4 :
+ pokerval&twopair && pokervalcommon<twopair && nrankedcommon>=2
+ && !(ispair) && nouts==4                                                   ? 4 : 0)+
+
+//FLUSH OUTS
+(nsuited==4 && nsuitedcommon==2 && `((~srankbits&0x7ffe)>>srankhiplayer)<=4 ? 9 :
+ nsuited==4 && nsuitedcommon==2 && `((~srankbits&0x7ffe)>>srankhiplayer) >4 ? 8 :
+ nsuited==4 && nsuitedcommon==3 && `((~srankbits&0x7ffe)>>srankhiplayer)<=1 ? 9 :
+ nsuited==4 && nsuitedcommon==3 && `((~srankbits&0x7ffe)>>srankhiplayer) >1
+                                && `((~srankbits&0x7ffe)>>srankhiplayer) <4 ? 3 : 0)+
+
+//STRAIGHT OUTS
+(nstraight==4 && nstraightfillcommon>1 &&
+ ((rankbits&16398) != 16398 && (rankbits&28674) != 28674)                   ? 8 :
+ (rankbits>>ranklo)==0b1011101                                              ? 9 :
+ (nstraight==4 && nstraightcommon==3 && rankloplayer>rankhicommon &&
+  rankhiplayer-rankloplayer<=2 &&
+  ((rankbits&16398) != 16398 && (rankbits&28674) != 28674)   )              ? 8 :
+ nstraightfill==1 && nstraightfillcommon>2                                 ? 4 : 0)+
+
+//OVERCARD OUTS
+
+//cider
+(rankloplayer>rankhicommon &&  ((nopponentsplaying>1 && nsuited==3
+ && nsuitedcommon==1) || (nopponentsplaying<3)) && (nstraightfillcommon>2
+ || nopponentsplaying<3) && !nbetsround2>2                                  ? 3 : 0)+
+
+//Overs for OESD cider
+(nstraight==4 && nstraightcommon<=3 && rankloplayer>rankhicommon &&
+  rankhiplayer-rankloplayer<=2 &&
+  ((rankbits&16398) != 16398 && (rankbits&28674) != 28674)                  ? 3 : 0)+
+
+(rankloplayer>rankhicommon && rankloplayer>=12 &&
+ (nsuitedcommon>=2 && nsuited==nsuitedcommon ? 0 : 1) &&
+ nstraightfillcommon>2         ? 3 : 0)+
+((nsuited==4 && nsuitedcommon==2 && rankloplayer>rankhicommon &&
+  nstraightfillcommon>=2)                                                   ? 2 :
+ (nsuited==4 && nsuitedcommon==2 && rankhiplayer>rankhicommon &&
+  rankloplayer<rankhicommon && nstraightfillcommon>=2)                      ? 1 : 0)+
+
+
+
+                             //Turn
+
+(!(ispair) && pokerval&threeofakind && nrankedcommon==2                     ? 4 : 0)+
+
+(ispair && pokerval&threeofakind                                            ? 8 : 0)+
+
+           //Pair to 2P out ALL cider or Ispair to trips
+(nrankedcommon==1 && !(ispair) && pokerval&onepair && rankhiplayer>
+ rankhicommon                                                               ? 4 :
+ nrankedcommon==1 && !(ispair) && pokerval&onepair && rankloplayer>
+ SecondTopFlopCard && rankhiplayer==rankhicommon                                ? 4 :
+ ispair && rankhiplayer>rankhicommon                                        ? 5 :
+ ispair                                                                     ? 2 : 0) +
+
+                    //DISCOUNT OUTS FOR DANGEROUS BOARDS
+(pokervalcommon&twopair                                                     ?-12 :
+ nrankedcommon==2 && ($$cr0==$$cr3 || $$cr1==$$cr3 || $$cr2==$$cr3)         ?-1  :
+ nrankedcommon==2                                                           ?-3  :
+ nrankedcommon==3                                                           ?-12 : 0)+
+
+//All cider
+((nsuitedcommon==3 && nsuited==3 && pokerval<twopair) ||
+ (nsuitedcommon==2 && nsuited<3 && pokerval<twopair) && !(nstraightfill==1) ? -2 : 0) +
+
+//ALL cider my high end for OESD will fill hi straight or big chance of tie
+(nstraightfillcommon>1 && nstraight==4 && rankloplayer>=8
+ && !(rankloplayer>rankhicommon)                                            ? -2 : 0) +
+
+//discount gut for possible FD cider
+( nsuitedcommon==2 && nstraightfill==1 && nsuited<4
+  && !(pokerval&twopair && nrankedcommon==1)                                ? -1 : 0) +
+
+//discount draw to 2P that might fill a st8 draw  cider
+(rankloplayer>8 && nrankedcommon==1 && SecondTopFlopCard>8 && pokerval&onepair
+ && nopponentsplaying>1   && !(nsuited>nsuitedcommon)                              ? -1 :0) +
+
+(rankloplayer>rankhicommon && rankloplayer>=12 &&
+ ( (nsuitedcommon==nsuited)||(nstraightcommon==nstraight) )                   ?
+            -(nsuitedcommon>1||nstraightcommon>1?nsuitedcommon+nstraightcommon:0): 0)+
+{( (nstraight==4&&nstraightfillcommon>2&&((rankbits&16398)!=16398&&(rankbits&28674)!=28674))
+ || (nstraightfill==1 && nstraightfillcommon>=2)
+ || ((rankbits>>ranklo)==0b1011101) )
+ ? -( (nsuitedcommon==2&&($$cs0==$$cs3 || $$cs1==$$cs3 || $$cs2==$$cs3))    ? 0 :
+
+  (nsuitedcommon==2 &&  !(nstraightfill==1) && nsuited<3)                     ? 2 :
+
+ nsuitedcommon==3 && nsuited>nsuitedcommon &&
+ `((~srankbits&0x7ffe)>>srankhiplayer)<=2                                   ? 2 :
+ nsuitedcommon==3                                                           ? 8 : 0):0}
+ 
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Players_and_Opponents.ohf blob=95f19957e7f135bc0b4b5e0b4d4ed208e3043df7 =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - Players and Opponents
+//
+//*****************************************************************************
+
+##HandIsHeadsup##
+TwoPlayersCompetingForThisPot
+
+##TableIsHeadsup##
+WHEN istournament AND OnlyTwoPlayersLeftAtTournamentTable RETURN true FORCE
+WHEN (NOT istournament) AND (nplayersdealt = 2) RETURN true FORCE
+
+##TwoPlayersCompetingForThisPot##
+// Just to create some verbosity in HandIsHeadsup
+WHEN nplayersplaying = 2 RETURN true FORCE
+
+##OnlyTwoPlayersLeftAtTournamentTable##
+// Just to create some verbosity in HandIsHeadsup
+WHEN (not istournament) RETURN false FORCE
+// Players in tournaments get always dealt even if they are sitting out.
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=297&t=19778
+// So we check seated players
+WHEN (nplayersseated = 2) RETURN true FORCE
+
+##PlayersAtStartOfThisRound##
+nplayersround_currentround
+
+##Opponents##
+OpponentsLeft
+
+##OpponentsAtTable##
+nopponentsseated
+
+##OpponentIsAllin##
+nopponentsallin > 0
+
+##NumberOfOpponentsAllin##
+nopponentsallin 
+
+##OpponentsLeft##
+// Does also consider players who are allin 
+// (contrary to Shankys, who consider players allin in this round, but not from previous rounds).
+nopponentsplaying
+
+##OpponentsOnFlop##
+(nplayersround_flop - 1)
+
+##OpponentsOnTurn##
+(nplayersround_turn - 1)
+
+##OpponentsOnRiver##
+(nplayersround_river - 1)
+
+##OpponentsWithLowerStack##
+  (((balance0 + currentbet0) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0001) > 0) ? 1:0)
++ (((balance1 + currentbet1) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0002) > 0) ? 1:0)
++ (((balance2 + currentbet2) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0004) > 0) ? 1:0)
++ (((balance3 + currentbet3) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0008) > 0) ? 1:0)
++ (((balance4 + currentbet4) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0010) > 0) ? 1:0)
++ (((balance5 + currentbet5) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0020) > 0) ? 1:0)
++ (((balance6 + currentbet6) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0040) > 0) ? 1:0)
++ (((balance7 + currentbet7) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0080) > 0) ? 1:0)
++ (((balance8 + currentbet8) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0100) > 0) ? 1:0)
++ (((balance9 + currentbet9) < MaximumPossibleBetsizeInDollars) AND ((playersseatedbits & 0x0200) > 0) ? 1:0)
+
+##StillToActPreflop##
+// Precondition: first action, but this gets checked in StillToAct
+WHEN InBigBlind RETURN 0 FORCE
+WHEN InSmallBlind RETURN 1 FORCE
+// Not in the blinds
+WHEN (MissingSmallBlind > 0) RETURN (nchairsdealtleft + 1) FORCE
+WHEN Others RETURN (nchairsdealtleft + 2) FORCE
+
+##StillToActPostflop##
+// Precondition: first action, but this gets checked in StillToAct
+((OpponentsLeft + 1) - betposition)
+
+##StillToAct##
+(BotsActionsOnThisRoundIncludingChecks > 0) ? HINT_StillToAct_Is_Only_Valid_On_First_Orbit :
+(IsPreflop AND (BotsActionsOnThisRoundIncludingChecks == 0)) ? StillToActPreflop:
+((betround != preflop) AND (BotsActionsOnThisRoundIncludingChecks == 0)) ? StillToActPostflop:
+0
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Position_Symbols.ohf blob=a511dd2b3daf4150e2bfd5a7a58437fcbfda0c55 =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+ 
+//*****************************************************************************
+//
+// OpenPPL - Position Symbols
+//
+//*****************************************************************************
+
+// Standard PPL accepts two spellings for the position symbols
+// "In BigBlind" and "InBigBlind", "In Button" and "InButton", ...
+// Our parser is able to ignore the fillerword "In ",
+// but to be more user-friendly and to simplify the converter (less error-handling)
+// we decided to provide both forms of naming in the library.
+
+##SmallBlind##
+WHEN (userchair < 0) RETURN false FORCE
+WHEN (userchair == smallblindchair) RETURN true FORCE
+
+##BigBlind##
+WHEN (userchair < 0) RETURN false FORCE
+WHEN (userchair == bigblindchair) RETURN true FORCE
+
+##Button##
+// If the game in not 10-handed, some positions would be both "normal" and in the blinds.
+// E.g. for a 9-handed game big-blind would also be counted as EarlyPosition1.
+// Therefore we check for "Not InTheBlinds", except for button,
+// because "InButton" makes sense even if the game is headsup.
+(dealposition == nplayersdealt)
+
+##CutOff##
+[(dealposition == nplayersdealt - 1) AND NOT InTheBlinds]
+
+##MiddlePosition3##
+[(dealposition == nplayersdealt - 2) AND NOT InTheBlinds]
+
+##MiddlePosition2##
+[(dealposition == nplayersdealt - 3) AND NOT InTheBlinds]
+
+##MiddlePosition1##
+[(dealposition == nplayersdealt - 4) AND NOT InTheBlinds]
+
+##EarlyPosition3##
+[(dealposition == nplayersdealt - 5) AND NOT InTheBlinds]
+
+##EarlyPosition2##
+[(dealposition == nplayersdealt - 6) AND NOT InTheBlinds]
+
+##EarlyPosition1##
+[(dealposition == nplayersdealt - 7) AND NOT InTheBlinds]
+
+##UTG##
+// Under the gun - first to act preflop, 
+// independent of the players at the table (at least 3).
+// This symbols is especially useful to sitout 
+// after the last hand of a session (before the next blind).
+WHEN (userchair < 0) RETURN false FORCE
+WHEN (userchair == utgchair) RETURN true FORCE
+
+##InSmallBlind##
+SmallBlind
+
+##InBigBlind##
+BigBlind
+
+##TheBlinds##
+// To be used: In TheBlinds
+InTheBlinds
+
+##InTheBlinds##
+(InSmallBlind OR InBigBlind)
+
+##EarlyPosition##
+InEarlyPosition
+
+##InEarlyPosition##
+(InEarlyPosition1 OR InEarlyPosition2 OR InEarlyPosition3)
+
+##MiddlePosition##
+InMiddlePosition
+
+##InMiddlePosition##
+(InMiddlePosition1 OR InMiddlePosition2 OR InMiddlePosition3)
+
+##LatePosition##
+InLatePosition
+
+##InLatePosition##
+(InCutOff OR InButton)
+
+##InButton##
+Button
+
+##InCutOff##
+CutOff
+
+##InMiddlePosition3##
+MiddlePosition3
+
+##InMiddlePosition2##
+MiddlePosition2
+
+##InMiddlePosition1##
+MiddlePosition1
+
+##InEarlyPosition3##
+EarlyPosition3
+
+##InEarlyPosition2##
+EarlyPosition2
+
+##InEarlyPosition1##
+EarlyPosition1
+
+##InUTG##
+UTG
+
+##First##
+0
+
+##Middle##
+1
+
+##Last##
+2
+
+##Position##
+(betposition == 1) ? First :
+(betposition == nplayersplaying) ? Last :
+Middle
+
+##FirstCallerPosition##
+// We have to search starting from early positions,
+// as we want to detect the first one.
+EarlyPosition1Calling  ? 9 :
+EarlyPosition2Calling  ? 8 :
+EarlyPosition3Calling  ? 7 :
+MiddlePosition1Calling ? 6 :
+MiddlePosition2Calling ? 5 :
+MiddlePosition3Calling ? 4 :
+CutOffCalling          ? 3 :
+ButtonCalling          ? 2 :
+SmallBlindCalling      ? 1 :
+// Can't be big blind (0), as it is for the first orbit preflop only
+HINT_No_FirstCaller
+
+##FirstRaiserPosition##
+// We have to search starting from early positions,
+// as we want to detect the first one.
+EarlyPosition1Raising  ? 9 :
+EarlyPosition2Raising  ? 8 :
+EarlyPosition3Raising  ? 7 :
+MiddlePosition1Raising ? 6 :
+MiddlePosition2Raising ? 5 :
+MiddlePosition3Raising ? 4 :
+CutOffRaising          ? 3 :
+ButtonRaising          ? 2 :
+SmallBlindRaising ? 1 :
+// Can't be big blind (0), as it is for the first orbit preflop only
+HINT_No_FirstRaiser
+
+##LastCallerPosition##
+// Can't be big blind (0), as it is for the first orbit preflop only
+SmallBlindCalling      ? 1 :
+ButtonCalling          ? 2 :
+CutOffCalling          ? 3 :
+MiddlePosition3Calling ? 4 :
+MiddlePosition2Calling ? 5 :
+MiddlePosition1Calling ? 6 :
+EarlyPosition3Calling  ? 7 :
+EarlyPosition2Calling  ? 8 :
+EarlyPosition1Calling  ? 9 :
+HINT_No_LastCaller
+
+##LastRaiserPosition##
+// Handling the case of blind-raisers only first
+[IsPreflop AND (ncallbets <= 1)] ? HINT_There_Are_No_true_Raisers :
+// Big blind = 0
+BigBlindRaising ? 0 :
+// Small blind = 1
+SmallBlindRaising ? 1 :
+// Normal players:
+// Button = 2, CutOff = 3, ...
+(nplayersdealt - DealPositionLastRaiser + 2)
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Technical_Betting_Action_Symbols.ohf blob=46bcf9c89b914c211a08052855c6c502a164d342 =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+##PrevActionWasAllin##
+   (prevaction == 4) // Allin
+OR (prevaction == 5) // Jamming the slider
+
+##PlayersRaisingOrColdCallingTheLastRaise##
+// Counting the last raiser + all cold callers
+(currentbet_lastraiserchair <= 0) ? 0 :
+  (currentbet0 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet1 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet2 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet3 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet4 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet5 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet6 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet7 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet8 == currentbet_lastraiserchair ? 1 : 0)
++ (currentbet9 == currentbet_lastraiserchair ? 1 : 0)
+
+##ChecksAfterHero##
+// No checks preflop. Not even big blind can check (game over).
+// We ignore additional blind-posters however.
+WHEN IsPreflop RETURN 0 FORCE
+// We called or raised, therefore no longer any checks possible
+WHEN (currentbet > 0) RETURN 0 FORCE
+// We did not yet act, therefore no checks behind us possible
+WHEN ((BotsActionsOnThisRoundIncludingChecks == 0) AND (currentbet == 0)) RETURN 0 FORCE
+// A bet to call and the first bettor must sit behind us.
+// Consider all playing players between the user 
+// and the first bettor.
+WHEN (AmountToCall > 0) RETURN (BetPositionFirstRaiser - betposition - 1) FORCE
+// Nobody betting.
+// Consider all playing players behind the user.
+// Potentially counting players who did not yet act,
+// but this is acceptable for a remporary result.
+WHEN Others RETURN (nplayersplaying - betposition) FORCE
+
+##ChecksInFrontOfHero##
+// No checks preflop. Not even big blind can check (game over).
+// We ignore additional blind-posters however.
+WHEN IsPreflop RETURN 0 FORCE
+// I did already act, so no longer any posters in front of me
+// (at my 2nd turn)
+WHEN (currentbet > 0) RETURN 0 FORCE
+WHEN (BotsActionsOnThisRoundIncludingChecks > 0) RETURN 0 FORCE
+// A bet to call, consider all playing players in front of the first bettor
+WHEN (AmountToCall > 0) RETURN (BetPositionFirstRaiser - 1) FORCE
+// All players before us checked, not even open-folds can throw this logic off.
+WHEN Others RETURN [betposition - 1] FORCE
+
+##BetPositionFirstRaiser##
+WHEN (firstraiserchair < 0) RETURN HINT_No_FirstRaiser FORCE
+WHEN (firstraiserchair == 0) RETURN ac_betpos0 FORCE
+WHEN (firstraiserchair == 1) RETURN ac_betpos1 FORCE
+WHEN (firstraiserchair == 2) RETURN ac_betpos2 FORCE
+WHEN (firstraiserchair == 3) RETURN ac_betpos3 FORCE
+WHEN (firstraiserchair == 4) RETURN ac_betpos4 FORCE
+WHEN (firstraiserchair == 5) RETURN ac_betpos5 FORCE
+WHEN (firstraiserchair == 6) RETURN ac_betpos6 FORCE
+WHEN (firstraiserchair == 7) RETURN ac_betpos7 FORCE
+WHEN (firstraiserchair == 8) RETURN ac_betpos8 FORCE
+WHEN (firstraiserchair == 9) RETURN ac_betpos9 FORCE
+
+##NoVillainBetOrRaisedOnFlop##
+((raisbits_flop & ~(1<<userchair)) == 0)
+
+##NoVillainBetOrRaisedOnTurn##
+((raisbits_turn & ~(1<<userchair)) == 0)
+
+##RaisesBeforeOurFirstActionThisRoundPostflop##
+(nopponentstruelyraising > 0) ? (nopponentstruelyraising - 1) : 0
+
+##AntesPresent##
+// First orbit preflop only,
+// as this function tries to guess the antes from the bets.
+   [(currentbet0 > 0) AND (currentbet0 < sblind) AND (balance0 > 0)]
+OR [(currentbet1 > 0) AND (currentbet1 < sblind) AND (balance1 > 0)]
+OR [(currentbet2 > 0) AND (currentbet2 < sblind) AND (balance2 > 0)]
+OR [(currentbet3 > 0) AND (currentbet3 < sblind) AND (balance3 > 0)]
+OR [(currentbet4 > 0) AND (currentbet4 < sblind) AND (balance4 > 0)]
+OR [(currentbet5 > 0) AND (currentbet5 < sblind) AND (balance5 > 0)]
+OR [(currentbet6 > 0) AND (currentbet6 < sblind) AND (balance6 > 0)]
+OR [(currentbet7 > 0) AND (currentbet7 < sblind) AND (balance7 > 0)]
+OR [(currentbet8 > 0) AND (currentbet8 < sblind) AND (balance8 > 0)]
+OR [(currentbet9 > 0) AND (currentbet9 < sblind) AND (balance9 > 0)]
+
+##NumberOfOpponentsLimpingPreflop##
+// First orbit preflop only
+// Does not count the user
+// Does not count the big-blind, who can't limp
+  [(currentbet0 == bblind) AND (userchair != 0) AND (bigblindchair != 0) ? 1 : 0]
++ [(currentbet1 == bblind) AND (userchair != 1) AND (bigblindchair != 1) ? 1 : 0]
++ [(currentbet2 == bblind) AND (userchair != 2) AND (bigblindchair != 2) ? 1 : 0]
++ [(currentbet3 == bblind) AND (userchair != 3) AND (bigblindchair != 3) ? 1 : 0]
++ [(currentbet4 == bblind) AND (userchair != 4) AND (bigblindchair != 4) ? 1 : 0]
++ [(currentbet5 == bblind) AND (userchair != 5) AND (bigblindchair != 5) ? 1 : 0]
++ [(currentbet6 == bblind) AND (userchair != 6) AND (bigblindchair != 6) ? 1 : 0]
++ [(currentbet7 == bblind) AND (userchair != 7) AND (bigblindchair != 7) ? 1 : 0]
++ [(currentbet8 == bblind) AND (userchair != 8) AND (bigblindchair != 8) ? 1 : 0]
++ [(currentbet9 == bblind) AND (userchair != 9) AND (bigblindchair != 9) ? 1 : 0]
+
+##RaisesBeforeOurFirstAction##
+WHEN (BotsActionsOnThisRoundIncludingChecks > 0) RETURN 0 FORCE
+WHEN (betround > preflop) RETURN RaisesBeforeOurFirstActionThisRoundPostflop FORCE
+WHEN  Others RETURN nopponentstruelyraising FORCE
+
+##RaisesSinceLastPlayOnOurSecondAction##
+// If we checked the first time the bettor sits behind us.
+[didchec AND (nopponentstruelyraising > 0) ] ? (nopponentstruelyraising - 1) :
+[didchec AND (nopponentstruelyraising == 0)] ? 0 :
+// Otherwise: either we were the first bettor
+// or there was a bet and maybe raises in front of us,
+// so all technical "raises" behind us are true raises
+nopponentstruelyraising
+
+##RaisesSinceLastPlayAfterOurSecondAction##
+// Now all technical raises are true raises, no bettors possible
+nopponentstruelyraising
+
+##OpponentsWithHigherStack##
+// No need to tinker with memory symbols here,
+// this logic is valid for all betting rounds.
+  (((balance0 + currentbet0) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance1 + currentbet1) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance2 + currentbet2) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance3 + currentbet3) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance4 + currentbet4) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance5 + currentbet5) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance6 + currentbet6) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance7 + currentbet7) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance8 + currentbet8) > MaximumPossibleBetsizeInDollars) ? 1: 0)
++ (((balance9 + currentbet9) > MaximumPossibleBetsizeInDollars) ? 1: 0)
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Technical_Card_Symbols.ohf blob=dca44fa819d62d39e3480f4e0294be31f3a114a6 =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - Technical Card Symbols
+//
+//*****************************************************************************
+
+##FirstCardOfPokerVal##
+((pokerval >> 16) BitAnd 0x0F)
+
+##SecondCardOfPokerVal##
+((pokerval >> 12) BitAnd 0x0F)
+
+##ThirdCardOfPokerVal##
+((pokerval >> 8) BitAnd 0x0F)
+
+##FourthCardOfPokerVal##
+((pokerval >> 4) BitAnd 0x0F)
+
+##FifthCardOfPokerVal##
+((pokerval >> 0) BitAnd 0x0F)
+
+##OneCardStraightPossibleOnTurn_AceHigh##
+//........................AKQJT98765432a-
+(BitCount(RankBitsCommonTurn & 0b111110000000000) >= 4)   
+
+##OneCardStraightPossibleOnTurn_KingHigh##
+(BitCount(RankBitsCommonTurn & 0b011111000000000) >= 4)  
+
+##OneCardStraightPossibleOnTurn_QueenHigh##
+(BitCount(RankBitsCommonTurn & 0b001111100000000) >= 4)  
+
+##OneCardStraightPossibleOnTurn_JackHigh##
+(BitCount(RankBitsCommonTurn & 0b000111110000000) >= 4)  
+
+##OneCardStraightPossibleOnTurn_TenHigh##
+(BitCount(RankBitsCommonTurn & 0b000011111000000) >= 4)  
+
+##OneCardStraightPossibleOnTurn_NineHigh##
+(BitCount(RankBitsCommonTurn & 0b000001111100000) >= 4)  
+
+##OneCardStraightPossibleOnTurn_EightHigh##
+(BitCount(RankBitsCommonTurn & 0b000000111110000) >= 4)   
+
+##OneCardStraightPossibleOnTurn_SevenHigh##
+(BitCount(RankBitsCommonTurn & 0b000000011111000) >= 4)   
+
+##OneCardStraightPossibleOnTurn_SixHigh##
+(BitCount(RankBitsCommonTurn & 0b000000001111100) >= 4)   
+
+##OneCardStraightPossibleOnTurn_FiveHigh##
+(BitCount(RankBitsCommonTurn & 0b000000000111110) >= 4)
+
+##RankBitsAce##
+// Including ace low
+// AKQJT98765432a-
+0b0100000000000010
+
+##RankBitsCommonLowCardsOnly##
+// Bits 8..ace(low), last bit is unused
+(rankbitscommon & 0b111111110)
+
+##RankBitsCommonFlop##
+  (FirstFlopCard != ace ? 2**FirstFlopCard : RankBitsAce)
+| (SecondFlopCard != ace ? 2**SecondFlopCard : RankBitsAce)
+| (ThirdFlopCard != ace ? 2**ThirdFlopCard : RankBitsAce)
+
+##RankBitsCommonTurn##
+  RankBitsCommonFlop
+| (TurnCard != ace ? 2**TurnCard : RankBitsAce)
+
+##RankBitsCommonRiver##
+// As this can only be called at the river it is identical to rankbiscommon
+rankbitscommon
+
+##SecondTopFlopCard_PairOnFlop##
+PairOnFlop AND FirstFlopCard  == SecondFlopCard AND FirstFlopCard  > ThirdFlopCard  ? ThirdFlopCard :
+PairOnFlop AND FirstFlopCard  == SecondFlopCard AND FirstFlopCard  < ThirdFlopCard  ? FirstFlopCard :
+PairOnFlop AND FirstFlopCard  == ThirdFlopCard AND FirstFlopCard  > SecondFlopCard  ? SecondFlopCard :
+PairOnFlop AND FirstFlopCard  == ThirdFlopCard AND FirstFlopCard  < SecondFlopCard  ? FirstFlopCard :
+PairOnFlop AND SecondFlopCard  == ThirdFlopCard AND SecondFlopCard  > FirstFlopCard  ? FirstFlopCard :
+PairOnFlop AND SecondFlopCard  == ThirdFlopCard AND SecondFlopCard  < FirstFlopCard  ? SecondFlopCard :
+-1
+
+##SecondTopFlopCard_UnpairedFlop##
+NOT PairOnFlop AND FirstFlopCard  >= SecondFlopCard AND FirstFlopCard  >= ThirdFlopCard  AND SecondFlopCard >= ThirdFlopCard  ? SecondFlopCard :
+NOT PairOnFlop AND FirstFlopCard  >= SecondFlopCard AND FirstFlopCard  >= ThirdFlopCard  AND SecondFlopCard <= ThirdFlopCard  ? ThirdFlopCard  :
+NOT PairOnFlop AND SecondFlopCard >= FirstFlopCard  AND SecondFlopCard >= ThirdFlopCard  AND FirstFlopCard  >= ThirdFlopCard  ? FirstFlopCard  :
+NOT PairOnFlop AND SecondFlopCard >= FirstFlopCard  AND SecondFlopCard >= ThirdFlopCard  AND FirstFlopCard  <= ThirdFlopCard  ? ThirdFlopCard  :
+NOT PairOnFlop AND ThirdFlopCard  >= FirstFlopCard  AND ThirdFlopCard  >= SecondFlopCard AND FirstFlopCard  >= SecondFlopCard ? FirstFlopCard  :
+NOT PairOnFlop AND ThirdFlopCard  >= FirstFlopCard  AND ThirdFlopCard  >= SecondFlopCard AND FirstFlopCard  <= SecondFlopCard ? SecondFlopCard :
+-1
+
+##Srankbitsavailable##
+// Available suited cards for other players,
+// possibly contributing to a flush or straight flush
+// The binary negation works on full prevision.
+// We have to discard everything above ace high
+// plus ace-low and the unused lowest bit.
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=156&t=19262
+((BITNOT Rankbits_DominantSuit) BITAND ConstAllRanksWithoutAceLow)
+
+##RankOfTopPairOnBoard##
+// Searching board pairs top down
+board$AA ? ace :
+board$KK ? king :
+board$QQ ? queen :
+board$JJ ? jack :
+board$TT ? ten :
+board$99 ? 9 :
+board$88 ? 8 :
+board$77 ? 7 :
+board$66 ? 6 :
+board$55 ? 5 :
+board$44 ? 4 :
+board$33 ? 3 :
+board$22 ? 2 :
+HINT_There_Is_No_Pair_On_The_Board
+
+##RankOfBottomPairOnBoard##
+// Searching board pairs bottom up
+board$22 ? 2 :
+board$33 ? 3 :
+board$44 ? 4 :
+board$55 ? 5 :
+board$66 ? 6 :
+board$77 ? 7 :
+board$88 ? 8 :
+board$99 ? 9 :
+board$TT ? ten :
+board$JJ ? jack :
+board$QQ ? queen :
+board$KK ? king :
+board$AA ? ace :
+HINT_There_Is_No_Pair_On_The_Board
+
+##RankOfSetOnBoard##
+// Precondition: set on board
+trankcommon
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Technical_HandStrength_Symbols.ohf blob=46ae3103e8bd425c4d3d6fc72c25a8450f2ea2a2 =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - Technical HandStrength Symbols
+//
+//*****************************************************************************
+
+##FirstHoleCardPairsTheBoard##
+WHEN (RankOfFirstHoleCard <= 0) RETURN false FORCE
+WHEN (RankOfFirstHoleCard == FirstFlopCard) RETURN true FORCE
+WHEN (RankOfFirstHoleCard == SecondFlopCard) RETURN true FORCE
+WHEN (RankOfFirstHoleCard == ThirdFlopCard) RETURN true FORCE
+WHEN (RankOfFirstHoleCard == TurnCard) RETURN true FORCE
+WHEN (RankOfFirstHoleCard == RiverCard) RETURN true FORCE
+
+##SecondHoleCardPairsTheBoard##
+WHEN (RankOfSecondHoleCard <= 0) RETURN false FORCE
+WHEN (RankOfSecondHoleCard == FirstFlopCard) RETURN true FORCE
+WHEN (RankOfSecondHoleCard == SecondFlopCard) RETURN true FORCE
+WHEN (RankOfSecondHoleCard == ThirdFlopCard) RETURN true FORCE
+WHEN (RankOfSecondHoleCard == TurnCard) RETURN true FORCE
+WHEN (RankOfSecondHoleCard == RiverCard) RETURN true FORCE
+
+##HighCardOfCommonStraight##
+WHEN board$AKQJT RETURN ace FORCE
+WHEN board$KQJT9 RETURN king FORCE
+WHEN board$QJT98 RETURN queen FORCE
+WHEN board$JT987 RETURN jack FORCE
+WHEN board$T9876 RETURN ten FORCE
+WHEN board$98765 RETURN Nine FORCE
+WHEN board$87654 RETURN Eight FORCE
+WHEN board$76543 RETURN Seven FORCE
+WHEN board$65432 RETURN Six FORCE
+WHEN board$5432A RETURN Five FORCE
+WHEN Others RETURN ERROR_Board_Does_Not_Have_Any_Straight__Do_Not_Call_This_Function FORCE
+
+##HighCardOfOurStraight##
+// Precondition: we have a straight
+//....................AKQJT98765432a-
+BitCount(rankbits & 0b111110000000000) == 5 ? ace   :
+BitCount(rankbits & 0b011111000000000) == 5 ? king  :
+BitCount(rankbits & 0b001111100000000) == 5 ? queen :
+BitCount(rankbits & 0b000111110000000) == 5 ? jack  :
+BitCount(rankbits & 0b000011111000000) == 5 ? ten   :
+BitCount(rankbits & 0b000001111100000) == 5 ? Nine  :
+BitCount(rankbits & 0b000000111110000) == 5 ? Eight :
+BitCount(rankbits & 0b000000011111000) == 5 ? Seven :
+BitCount(rankbits & 0b000000001111100) == 5 ? Six   :
+BitCount(rankbits & 0b000000000111110) == 5 ? Five  :
+ERROR_We_Dont_Have_Any_Straight__Do_Not_Call_This_Function
+
+##NumberOfPossibleBetterStraights##
+WHEN (HighCardOfOurStraight == ace)   RETURN 0 FORCE
+WHEN (HighCardOfOurStraight == king)  RETURN NumberOfPossibleStraightsAceHigh           FORCE
+WHEN (HighCardOfOurStraight == queen) RETURN NumberOfPossibleStraightsKingHighOrBetter  FORCE
+WHEN (HighCardOfOurStraight == jack)  RETURN NumberOfPossibleStraightsQueenHighOrBetter FORCE
+WHEN (HighCardOfOurStraight == ten)   RETURN NumberOfPossibleStraightsJackHighOrBetter  FORCE
+WHEN (HighCardOfOurStraight == Nine)  RETURN NumberOfPossibleStraightsTenHighOrBetter   FORCE
+WHEN (HighCardOfOurStraight == Eight) RETURN NumberOfPossibleStraightsNineHighOrBetter  FORCE
+WHEN (HighCardOfOurStraight == Seven) RETURN NumberOfPossibleStraightsEightHighOrBetter FORCE
+WHEN (HighCardOfOurStraight == Six)   RETURN NumberOfPossibleStraightsSevenHighOrBetter FORCE
+WHEN (HighCardOfOurStraight == Five)  RETURN NumberOfPossibleStraightsSixHighOrBetter   FORCE
+// We don't have any straight
+WHEN Others RETURN NumberOfPossibleStraightsFiveHighOrBetter FORCE
+
+##NumberOfPossibleStraightsAceHigh##
+// No HighOrBetter straights to cherck for
+WHEN StraightPossibleAceHigh RETURN 1 FORCE
+
+##NumberOfPossibleStraightsKingHighOrBetter##
+WHEN StraightPossibleKingHigh RETURN (1 + NumberOfPossibleStraightsAceHigh) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsAceHigh FORCE
+
+##NumberOfPossibleStraightsQueenHighOrBetter##
+WHEN StraightPossibleQueenHigh RETURN (1 + NumberOfPossibleStraightsKingHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsKingHighOrBetter FORCE
+
+##NumberOfPossibleStraightsJackHighOrBetter##
+WHEN StraightPossibleJackHigh RETURN (1 + NumberOfPossibleStraightsQueenHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsQueenHighOrBetter FORCE
+
+##NumberOfPossibleStraightsTenHighOrBetter##
+WHEN StraightPossibleTenHigh RETURN (1 + NumberOfPossibleStraightsJackHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsJackHighOrBetter FORCE
+
+##NumberOfPossibleStraightsNineHighOrBetter##
+WHEN StraightPossibleNineHigh RETURN (1 + NumberOfPossibleStraightsTenHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsTenHighOrBetter FORCE
+
+##NumberOfPossibleStraightsEightHighOrBetter##
+WHEN StraightPossibleEightHigh RETURN (1 + NumberOfPossibleStraightsNineHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsNineHighOrBetter FORCE
+
+##NumberOfPossibleStraightsSevenHighOrBetter##
+WHEN StraightPossibleSevenHigh RETURN (1 + NumberOfPossibleStraightsEightHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsEightHighOrBetter FORCE
+
+##NumberOfPossibleStraightsSixHighOrBetter##
+WHEN StraightPossibleSixHigh RETURN (1 + NumberOfPossibleStraightsSevenHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsSevenHighOrBetter FORCE
+
+##NumberOfPossibleStraightsFiveHighOrBetter##
+WHEN StraightPossibleFiveHigh RETURN (1 + NumberOfPossibleStraightsSixHighOrBetter) FORCE
+WHEN Others RETURN NumberOfPossibleStraightsSixHighOrBetter FORCE
+
+##StraightPossibleAceHigh##
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b111110000000000) >= 3) RETURN true FORCE
+
+##StraightPossibleKingHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$A RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b011111000000000) >= 3) RETURN true FORCE
+
+##StraightPossibleQueenHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$K RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b001111100000000) >= 3) RETURN true FORCE
+
+##StraightPossibleJackHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$Q RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000111110000000) >= 3) RETURN true FORCE
+
+##StraightPossibleTenHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$J RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000011111000000) >= 3) RETURN true FORCE
+
+##StraightPossibleNineHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$T RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000001111100000) >= 3) RETURN true FORCE
+
+##StraightPossibleEightHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$9 RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000000111110000) >= 3) RETURN true FORCE
+
+##StraightPossibleSevenHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$8 RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000000011111000) >= 3) RETURN true FORCE
+
+##StraightPossibleSixHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$7 RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000000001111100) >= 3) RETURN true FORCE
+
+##StraightPossibleFiveHigh##
+// Checking if such a straight would lead to a HighOrBetter straight
+WHEN board$6 RETURN false FORCE
+//.....................................AKQJT98765432a-
+WHEN (BitCount(rankbitscommon BitAnd 0b000000000111110) >= 3) RETURN true FORCE
+
+##TopBitOfRankBitsCommon##
+(1 << rankhicommon)
+
+##SecondTopBitOfRankBitsCommon##
+(1 << SecondBestBoardCard)
+
+##ThirdTopBitOfRankBitsCommon##
+(1 << ThirdBestBoardCard)
+
+##FourthTopBitOfRankBitsCommon##
+(1 << FourthBestBoardCard)
+
+##FifthTopBitOfRankBitsCommon##
+(1 << FifthBestBoardCard)
+
+##RankBitsCommonWithoutTopBit##
+rankbitscommon & ~TopBitOfRankBitsCommon
+
+##RankBitsCommonWithoutTopTwoBits##
+RankBitsCommonWithoutTopBit & ~SecondTopBitOfRankBitsCommon
+
+##RankBitsCommonWithoutTopThreeBits##
+RankBitsCommonWithoutTopTwoBits & ~ThirdTopBitOfRankBitsCommon
+
+##RankBitsCommonWithoutTopFourBits##
+RankBitsCommonWithoutTopThreeBits & ~FourthTopBitOfRankBitsCommon
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Technical_Position_Symbols.ohf blob=4f1006169b55049202fb60a04eb085df7a33ce9c =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+
+##DealPositionLastRaiser##
+// This function does also count blind-raisers.
+(AggressorChair == 0) ? ac_dealpos0 :
+(AggressorChair == 1) ? ac_dealpos1 :
+(AggressorChair == 2) ? ac_dealpos2 :
+(AggressorChair == 3) ? ac_dealpos3 :
+(AggressorChair == 4) ? ac_dealpos4 :
+(AggressorChair == 5) ? ac_dealpos5 :
+(AggressorChair == 6) ? ac_dealpos6 :
+(AggressorChair == 7) ? ac_dealpos7 :
+(AggressorChair == 8) ? ac_dealpos8 :
+(AggressorChair == 9) ? ac_dealpos9 :
+HINT_There_Are_No_true_Raisers
+
+##EarlyPosition1Calling##
+(callbits_preflop >> ep1chair) & 1 == 1
+
+##EarlyPosition2Calling##
+(callbits_preflop >> ep2chair) & 1 == 1
+
+##EarlyPosition3Calling##
+(callbits_preflop >> ep3chair) & 1 == 1
+
+##MiddlePosition1Calling##
+(callbits_preflop >> mp1chair) & 1 == 1
+
+##MiddlePosition2Calling##
+(callbits_preflop >> mp2chair) & 1 == 1
+
+##MiddlePosition3Calling##
+(callbits_preflop >> mp3chair) & 1 == 1
+
+##CutOffCalling##
+(callbits_preflop >> cutoffchair) & 1 == 1
+
+##ButtonCalling##
+(callbits_preflop >> buttonchair) & 1 == 1
+
+##SmallBlindCalling##
+(callbits_preflop >> smallblindchair) & 1 == 1
+
+##BigBlindCalling##
+(callbits_preflop >> bigblindchair) & 1 == 1
+
+##EarlyPosition1Raising##
+[(raisbits_preflop >> ep1chair) & 1 == 1]
+
+##EarlyPosition2Raising##
+[(raisbits_preflop >> ep2chair) & 1 == 1]
+
+##EarlyPosition3Raising##
+[(raisbits_preflop >> ep3chair) & 1 == 1]
+
+##MiddlePosition1Raising##
+[(raisbits_preflop >> mp1chair) & 1 == 1]
+
+##MiddlePosition2Raising##
+[(raisbits_preflop >> mp2chair) & 1 == 1]
+
+##MiddlePosition3Raising##
+[(raisbits_preflop >> mp3chair) & 1 == 1]
+
+##CutOffRaising##
+[(raisbits_preflop >> cutoffchair) & 1 == 1]
+
+##ButtonRaising##
+[(raisbits_preflop >> buttonchair) & 1 == 1]
+
+##SmallBlindRaising##
+    [(raisbits_preflop >> smallblindchair) & 1 == 1]
+AND [SmallBlindCurrentBet >= 1.01]
+
+##BigBlindRaising##
+    [(raisbits_preflop >> bigblindchair) & 1 == 1]
+AND [BigBlindCurrentBet >= 1.01]
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Technical_Stacksizes.ohf blob=0ad9ddf5692a3ca9e41af878e461884e49809955 =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - StackSizes - supporting technical functions
+//
+// The stacksize-symbols are accessible by the multiplexer-engine
+// e.g. as StartingStackSize_dealerchair or Stack_raischair.
+//
+//*****************************************************************************
+
+##StartingStackSize0##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance0 + currentbet0 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize1##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance1 + currentbet1 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize2##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance2 + currentbet2 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize3##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance3 + currentbet3 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize4##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance4 + currentbet4 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize5##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance5 + currentbet5 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize6##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance6 + currentbet6 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize7##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance7 + currentbet7 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize8##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance8 + currentbet8 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##StartingStackSize9##
+// StartingStackSize of chair X,
+// to be used by the multiplexer e.g as "StartingStackSize_dealerchair"
+// Amount in bets (big blinds for preflop).
+// Works preflop only.
+(bet > 0) ? ((balance9 + currentbet9 + ante) / bet) :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##MaxStillToActStackSizeAfterSmallBlind##
+// Only one player behind SB, so it is easy
+// Per definition for first orbit preflop only.
+StartingStackSize_bigblindchair
+
+##MaxStillToActStackSizeAfterButton##
+// Per definition for first orbit preflop only
+StartingStackSize_smallblindchair > MaxStillToActStackSizeAfterSmallBlind ?
+  StartingStackSize_smallblindchair : MaxStillToActStackSizeAfterSmallBlind
+
+##MaxStillToActStackSizeAfterCutOff##
+// Per definition for first orbit preflop only
+StartingStackSize_buttonchair > MaxStillToActStackSizeAfterButton ?
+  StartingStackSize_buttonchair : MaxStillToActStackSizeAfterButton
+
+##MaxStillToActStackSizeAfterMiddlePosition3##
+// Per definition for first orbit preflop only
+StartingStackSize_cutoffchair > MaxStillToActStackSizeAfterCutOff?
+  StartingStackSize_cutoffchair : MaxStillToActStackSizeAfterCutOff
+
+##MaxStillToActStackSizeAfterMiddlePosition2##
+// Per definition for first orbit preflop only
+StartingStackSize_mp3chair > MaxStillToActStackSizeAfterMiddlePosition3 ?
+  StartingStackSize_mp3chair : MaxStillToActStackSizeAfterMiddlePosition3
+
+##MaxStillToActStackSizeAfterMiddlePosition1##
+// Per definition for first orbit preflop only
+StartingStackSize_mp2chair > MaxStillToActStackSizeAfterMiddlePosition2 ?
+  StartingStackSize_mp2chair : MaxStillToActStackSizeAfterMiddlePosition2
+
+##MaxStillToActStackSizeAfterEarlyPosition3##
+// Per definition for first orbit preflop only
+StartingStackSize_mp1chair > MaxStillToActStackSizeAfterMiddlePosition1 ?
+  StartingStackSize_mp1chair : MaxStillToActStackSizeAfterMiddlePosition1
+
+##MaxStillToActStackSizeAfterEarlyPosition2##
+// Per definition for first orbit preflop only
+StartingStackSize_ep3chair > MaxStillToActStackSizeAfterEarlyPosition3 ?
+  StartingStackSize_ep3chair : MaxStillToActStackSizeAfterEarlyPosition3
+
+##MaxStillToActStackSizeAfterEarlyPosition1##
+// Per definition for first orbit preflop only
+StartingStackSize_ep2chair > MaxStillToActStackSizeAfterEarlyPosition2 ?
+  StartingStackSize_ep2chair : MaxStillToActStackSizeAfterEarlyPosition2
+
+##MinStillToActStackSizeAfterSmallBlind##
+// Only one player behind SB, so it is easy
+StartingStackSize_bigblindchair
+
+##MinStillToActStackSizeAfterButton##
+StartingStackSize_smallblindchair < MinStillToActStackSizeAfterSmallBlind ?
+  StartingStackSize_smallblindchair : MinStillToActStackSizeAfterSmallBlind
+
+##MinStillToActStackSizeAfterCutOff##
+StartingStackSize_buttonchair < MinStillToActStackSizeAfterButton ?
+  StartingStackSize_buttonchair : MinStillToActStackSizeAfterButton
+
+##MinStillToActStackSizeAfterMiddlePosition3##
+StartingStackSize_cutoffchair < MinStillToActStackSizeAfterCutOff ?
+  StartingStackSize_cutoffchair : MinStillToActStackSizeAfterCutOff
+
+##MinStillToActStackSizeAfterMiddlePosition2##
+StartingStackSize_mp3chair < MinStillToActStackSizeAfterMiddlePosition3 ?
+  StartingStackSize_mp3chair : MinStillToActStackSizeAfterMiddlePosition3
+
+##MinStillToActStackSizeAfterMiddlePosition1##
+StartingStackSize_mp2chair < MinStillToActStackSizeAfterMiddlePosition2 ?
+  StartingStackSize_mp2chair : MinStillToActStackSizeAfterMiddlePosition2
+
+##MinStillToActStackSizeAfterEarlyPosition3##
+StartingStackSize_mp1chair < MinStillToActStackSizeAfterMiddlePosition1 ?
+  StartingStackSize_mp1chair : MinStillToActStackSizeAfterMiddlePosition1
+
+##MinStillToActStackSizeAfterEarlyPosition2##
+StartingStackSize_ep3chair < MinStillToActStackSizeAfterEarlyPosition3 ?
+  StartingStackSize_ep3chair : MinStillToActStackSizeAfterEarlyPosition3
+
+##MinStillToActStackSizeAfterEarlyPosition1##
+StartingStackSize_ep2chair < MinStillToActStackSizeAfterEarlyPosition2 ?
+  StartingStackSize_ep2chair : MinStillToActStackSizeAfterEarlyPosition2
+
+##CalculateMaxOpponentStackSize##
+WHEN (nopponentsseated <= 0) RETURN 0 FORCE
+WHEN (bblind <= 0) RETURN ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap FORCE
+WHEN (balance_rank0 == (MyTotalMoney)) RETURN (balance_rank1 / bblind) FORCE
+WHEN Others RETURN (balance_rank0 / bblind) FORCE
+
+##CalculateMinOpponentStackSize##
+(nopponentsseated <= 0) ? 0 :
+(bblind <= 0) ? ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap :
+[ 1 / bblind *
+[ nplayersdealt == 10 ?
+    (balance_rank9 == (MyTotalMoney) ? balance_rank8 : balance_rank9) :
+  nplayersdealt == 9 ?
+    (balance_rank8 == (MyTotalMoney) ? balance_rank7 : balance_rank8) :
+  nplayersdealt == 8 ?
+    (balance_rank7 == (MyTotalMoney) ? balance_rank6 : balance_rank7) :
+  nplayersdealt == 7 ?
+    (balance_rank6 == (MyTotalMoney) ? balance_rank5 : balance_rank6) :
+  nplayersdealt == 6 ?
+    (balance_rank5 == (MyTotalMoney) ? balance_rank4 : balance_rank5) :
+  nplayersdealt == 5 ?
+    (balance_rank4 == (MyTotalMoney) ? balance_rank3 : balance_rank4) :
+  nplayersdealt == 4 ?
+    (balance_rank3 == (MyTotalMoney) ? balance_rank2 : balance_rank3) :
+  nplayersdealt == 3 ?
+    (balance_rank2 == (MyTotalMoney) ? balance_rank1 : balance_rank2) :
+  nplayersdealt == 2 ?
+    (balance_rank1 == (MyTotalMoney) ? balance_rank0 : balance_rank1) :
+ERROR_No_Opponents_Detected__Check_Your_TableMap]]
+
+##Stack0##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+// To be renamed to StackChair0?
+[bblind > 0] ? [balance0 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack1##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance1 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack2##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance2 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack3##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance3 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack4##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance4 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack5##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance5 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack6##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance6 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack7##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance7 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack8##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance8 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+##Stack9##
+// Stacks are Shanky-style in big-blinds
+// Balances are OH-style in dollars
+[bblind > 0] ? [balance9 / bblind] :
+ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap
+
+//
+// 'Synonyms for StackX to avoid confusion
+//
+##StackSize0##
+Stack0
+
+##StackSize1##
+Stack1
+
+##StackSize2##
+Stack2
+
+##StackSize3##
+Stack3
+
+##StackSize4##
+Stack4
+
+##StackSize5##
+Stack5
+
+##StackSize6##
+Stack6
+
+##StackSize7##
+Stack7
+
+##StackSize8##
+Stack8
+
+##StackSize9##
+Stack9
+
+
+
+
+
+
+
+// !!!! Move to separate file Technical Betsizee!
+
+
+
+##EffectiveBetsizeInDollars0##
+WHEN (currentbet0 <= MyTotalMoney) RETURN currentbet0 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars1##
+WHEN (currentbet1 <= MyTotalMoney) RETURN currentbet1 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars2##
+WHEN (currentbet2 <= MyTotalMoney) RETURN currentbet2 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars3##
+WHEN (currentbet3 <= MyTotalMoney) RETURN currentbet3 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars4##
+WHEN (currentbet4 <= MyTotalMoney) RETURN currentbet4 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars5##
+WHEN (currentbet5 <= MyTotalMoney) RETURN currentbet5 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars6##
+WHEN (currentbet6 <= MyTotalMoney) RETURN currentbet6 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars7##
+WHEN (currentbet7 <= MyTotalMoney) RETURN currentbet7 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars8##
+WHEN (currentbet8 <= MyTotalMoney) RETURN currentbet8 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectiveBetsizeInDollars9##
+WHEN (currentbet9 <= MyTotalMoney) RETURN currentbet9 FORCE
+WHEN Others RETURN MyTotalMoney FORCE
+
+##EffectivePotSizeInDollars##
+  potcommon
++ EffectiveBetsizeInDollars0
++ EffectiveBetsizeInDollars1
++ EffectiveBetsizeInDollars2
++ EffectiveBetsizeInDollars3
++ EffectiveBetsizeInDollars4
++ EffectiveBetsizeInDollars5
++ EffectiveBetsizeInDollars6
++ EffectiveBetsizeInDollars7
++ EffectiveBetsizeInDollars8
++ EffectiveBetsizeInDollars9
+
+##EffectivePotSize##
+(BigBlindSize > 0) ? (EffectivePotSizeInDollars / BigBlindSize) : EffectivePotSizeInDollars 
+
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Tournament_Symbols.ohf blob=7e811c265613b998b37aba45213422d428e639be =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - Tournament Symbols
+//
+//*****************************************************************************
+
+
+##EarlyStage##
+When NOT PreBubble Return false Force
+When Not f$Stack_12P Return false FORCE
+// Was 5 changed to 3 Trish compatibility for most casinos today even non turbo
+	// StartingBigBlindSize excellent for SnG & MTTSnG, but people tweeking this for MTTs
+	// should consider late reg, and re-entry game types
+WHEN (BigBlindSize <= (3 * StartingBigBlindSize)) RETURN true FORCE
+
+##MiddleStage##
+When NOT PreBubble Return false Force
+WHEN EarlyStage RETURN false FORCE
+WHEN LateStage RETURN false FORCE
+WHEN Others RETURN true FORCE
+
+##LateStage##
+When NOT PreBubble Return false Force
+When EarlyStage Return false Force
+When BigBlindSize >= 160 And (TableMzone < 12 OR EffectiveMzone < 10) Return true FORCE
+// @Trish check this temporary inclusion
+When BigBlindSize >= 100 And Not f$Stack_12P Return true FORCE
+When EffectiveMzone <= 10*f$Mfactor Return true FORCE
+
+##BubbleStage##
+When IsBubble Return true Force
+
+##ITMStage##
+When InTheMoney Return true Force
+
+##HUStage##
+When TableIsHeadsup Return true Force
+
+
+##ShortStackStage##
+When MTTGameStage = 4  And EffectiveMzone < 14*f$Mfactor Return true FORCE  // MTT Red Zone ShortStackStage
+When HUStage  And EffectiveMzone < 20*f$Mfactor Return true FORCE
+When ITMStage  And EffectiveMzone < 14*f$Mfactor Return true FORCE
+When BubbleStage  And EffectiveMzone < 12*f$Mfactor Return true FORCE
+When LateStage  And EffectiveMzone < 16*f$Mfactor Return true FORCE
+When MiddleStage  And EffectiveMzone < 14*f$Mfactor Return true FORCE
+When EarlyStage And EffectiveMzone < (StartingStackSize * 0.40)*f$Mfactor Return true FORCE
+When isspin And Not ismtt And StartingStackSize = 25 And EffectiveMzone < 14*f$Mfactor Return true FORCE
+When isspin And Not ismtt And StartingStackSize = 15 And EffectiveMzone < 8*f$Mfactor Return true FORCE
+When isspin And ismtt And StartingStackSize = 25 And EffectiveMzone <= 12*f$Mfactor Return true FORCE
+When isspin And ismtt And StartingStackSize = 15 And EffectiveMzone <= 5*f$Mfactor Return true FORCE
+
+
+// Worth thinking about //
+// More specific to STT SNG or MTT Final Table
+// 1 = EarlyStage, 2 = MiddleStage, 3 = LateStage, 4 = BubbleStage, 5 = ITMStage, 6 = HUStage, and special ShortStackStage
+##STTGameStage##
+When HUStage 		Return 6 Force
+When ITMStage 		Return 5 Force
+When BubbleStage 	Return 4 Force
+When LateStage 		Return 3 Force 
+When MiddleStage 	Return 2 Force   
+When EarlyStage 	Return 1 Force 
+
+//////////////////////////////////////////////////////
+
+
+##f$Stack_12P##
+// WHEN EffectiveActiveStackInBigBlinds >= 12 Return true FORCE
+EffectiveMzone >= 12*f$Mfactor
+
+
+##Mzone##
+balance / (bblind + sblind + (ante*nplayersseated))
+
+##ActiveMzone##
+(balance / (bblind + sblind) + (ante*nplayersseated)) * (nplayersseated / nchairs)
+
+##EffectiveMzone##
+((EffectiveActiveStackInBigBlinds * bblind) / (bblind + sblind + (ante*nplayersseated)))
+
+##EffectiveActiveMzone##
+((EffectiveActiveStackInBigBlinds * bblind) / (bblind + sblind + (ante*nplayersseated))) * (nplayersseated/nchairs)
+
+##TableMzone##
+((f$TableAverageStackAtStartOfHand*bblind)  / (bblind + sblind + ante))
+
+##f$Mfactor##
+bblind / (bblind + sblind + (ante*nplayersseated))
+
+##f$TheBiggestActiveOpponentsChipsLegacy##
+// This can be simplified from 13.1.3
+bigstackchair == ep1chair ? balance_ep1chair + currentbet_ep1chair :
+bigstackchair == ep2chair ? balance_ep2chair + currentbet_ep2chair :
+bigstackchair == ep3chair ? balance_ep3chair + currentbet_ep3chair :
+bigstackchair == mp1chair ? balance_mp1chair + currentbet_mp1chair :
+bigstackchair == mp2chair ? balance_mp2chair + currentbet_mp2chair :
+bigstackchair == mp3chair ? balance_mp3chair + currentbet_mp3chair :
+bigstackchair == cutoffchair ? balance_cutoffchair + currentbet_cutoffchair :
+bigstackchair == dealerchair ? balance_dealerchair + currentbet_dealerchair :
+bigstackchair == smallblindchair ? balance_smallblindchair + currentbet_smallblindchair :
+bigstackchair == bigblindchair ? balance_bigblindchair + currentbet_bigblindchair :
+balance + currentbet
+
+##f$TheBiggestActiveOpponentsChips##
+balance_bigstackchair + currentbet_bigstackchair
+
+##f$TheBiggestActiveOpponentsStack##
+f$TheBiggestActiveOpponentsChips / bblind
+
+##EffectiveActiveStackInBigBlinds##
+balance + currentbet < f$TheBiggestActiveOpponentsChips ? (balance + currentbet) / bblind :
+f$TheBiggestActiveOpponentsStack
+
+##EffectiveStackInBigBlinds##
+balance + currentbet < balance_bigstackchair + currentbet_bigstackchair ? (balance + currentbet) / bblind :
+(balance_bigstackchair + currentbet_bigstackchair) / bblind
+
+##EffectiveActiveStack##
+balance + currentbet < f$TheBiggestActiveOpponentsChips ? balance + currentbet :
+f$TheBiggestActiveOpponentsChips
+
+##EffectiveStack##
+balance + currentbet < balance_bigstackchair + currentbet_bigstackchair ? balance + currentbet :
+balance_bigstackchair + currentbet_bigstackchair
+
+##f$TotalDollarsAtThisTable##
+// Different to TotalChipsAtTheTable this is not effective just relative
+  pot
++ balance0
++ balance1
++ balance2
++ balance3
++ balance4
++ balance5
++ balance6
++ balance7
++ balance8
++ balance9
+
+##f$TableAverageStackAtStartOfHand##
+// Different to AverageStackSize, as that is based on effective pot size
+(f$TotalDollarsAtThisTable/bblind) / nplayersdealt 
+
+
+// More specific to MTT except Final Table
+// 1 = Green Zone, 2 = Yellow Zone, 3 = Orange Zone, 4 = Red Zone, 5 = Dead Zone
+##MTTGameStage##
+When EffectiveMzone >= 20 							Return 1 Force 
+When EffectiveMzone >= 13 And EffectiveMzone < 20 	Return 2 Force 
+When EffectiveMzone >= 6 And EffectiveMzone < 13 	Return 3 Force 
+When EffectiveMzone >= 3 And EffectiveMzone < 6 	Return 4 Force 
+When EffectiveMzone>= 0 And EffectiveMzone < 3 		Return 5 Force 
+
+//////////////////////////////////////////////////////
+
+
+// Specific to Spin Games
+// 1 = 3-Handed, 2 = Heads-Up
+##STTSPinGameStage##
+When TableIsThreeHanded Return 1 FORCE
+When TableIsHeadsup 	Return 2 FORCE
+
+// 1 = EarlyStage, 2 = MiddleStage, 3 = Heads-Up
+##MTTSPinGameStage##
+When StartingStackSize = 25 And EffectiveMzone > 17*f$Mfactor Return 1 FORCE
+When StartingStackSize = 15 And EffectiveMzone > 10*f$Mfactor Return 1 FORCE
+When StartingStackSize = 25 And EffectiveMzone > 12*f$Mfactor And EffectiveMzone <= 17*f$Mfactor Return 2 FORCE
+When StartingStackSize = 15 And EffectiveMzone > 5*f$Mfactor And EffectiveMzone <= 10*f$Mfactor  Return 2 FORCE
+When TableIsHeadsup Return 3 FORCE
+
+//////////////////////////////////////////////////////
+
+
+##PreBubble##
+When TableIsHeadsup Return false FORCE
+// Above is ok for now but maybe...
+// When OnlyTwoPlayersLeftAtTournamentTable Return false FORCE
+When InTheMoney Return false FORCE
+When IsBubble Return false FORCE
+When Others Return true Force 
+
+##InTheMoney##
+WHEN NOT istournament RETURN false FORCE
+When isdon Return false FORCE
+WHEN (PlayersLeftInTournament <= PaidPlaces) RETURN true FORCE
+
+##IsBubble##
+WHEN NOT istournament RETURN false FORCE
+WHEN (PlayersLeftInTournament == (PaidPlaces + 1)) RETURN true FORCE
+
+##TableIsThreeHanded##
+WHEN isspin AND nplayersseated = 3 RETURN true FORCE
+WHEN istournament AND (NOT isspin) AND maxnplayersdealt = 3 RETURN true FORCE
+WHEN (NOT istournament) AND (nplayersdealt = 3) RETURN true FORCE
+
+##TableIsShortHanded##
+// Note, In MTTs we can be reseated at tables with varying numbers of players
+WHEN istournament AND maxnplayersdealt  > 3 And maxnplayersdealt <= 6 RETURN true FORCE
+WHEN (NOT istournament) AND (nplayersdealt > 3) And (nplayersdealt <= 6) RETURN true FORCE
+
+##TableIsFullRing##
+WHEN istournament AND maxnplayersdealt > 6 RETURN true FORCE
+WHEN (NOT istournament) AND (nplayersdealt > 6) RETURN true FORCE
+
+##TableIsMultiTable##
+When NOT istournament Return false FORCE
+When ismtt And NOT isfinaltable Return true Force
+
+##PaidPlaces##
+WHEN NOT istournament RETURN false FORCE
+// TableIsHeadsup is true if OnlyTwoPlayersLeftAtTournamentTable
+	// Therefore IsBubble and TableIsHeadsup can coexist 
+	// Perhaps change to maxnplayersdealt in OpenPPL_Library_Players_and_Opponents.ohf
+WHEN TableIsHeadsup RETURN PaidPlacesHeadsup FORCE
+WHEN TableIsThreeHanded RETURN PaidPlacesThreeHanded FORCE
+WHEN TableIsShortHanded RETURN PaidPlacesShortHanded FORCE
+WHEN TableIsFullRing RETURN PaidPlacesFullRing FORCE
+WHEN TableIsMultiTable RETURN PaidPlacesMultiTableTournament FORCE
+
+##PaidPlacesHeadsup##
+1
+
+##PaidPlacesThreeHanded##
+1
+
+##PaidPlacesShortHanded##
+WHEN isdon RETURN 3 FORCE
+WHEN Others RETURN 2 FORCE
+
+##PaidPlacesFullRing##
+When isdon And maxnplayersdealt = 8 Return 4 Force
+WHEN isdon RETURN 5 FORCE
+WHEN Others RETURN 3 FORCE
+
+##PaidPlacesMultiTableTournament##
+WHEN (mtt_paid_places > 0) RETURN mtt_paid_places FORCE
+WHEN Others	RETURN HINT_UnknownPaidPlacesMultiTable FORCE
+
+##PlayersLeftInTournament##
+WHEN isspin RETURN nplayersseated FORCE
+WHEN NOT istournament RETURN nplayersseated FORCE
+WHEN NOT ismtt RETURN nplayersseated FORCE
+WHEN Others RETURN PlayersLeftInMultiTableTournament FORCE
+
+##PlayersLeftInMultiTableTournament##
+WHEN (mtt_players_remaining > 0) RETURN mtt_players_remaining FORCE
+WHEN isfinaltable RETURN nplayersseated FORCE
+WHEN Others	RETURN HINT_PlayersLeftInMultiTableTournament FORCE
+
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Update_History.ohf blob=8e8d83ec850d8e46e8c884797f479af6ed78623d =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - Update Of History Symbols
+//
+// For history symbols and other information,
+// that can't be retrieved from OH-symbols
+// and not from the current gamestate either.
+//
+//*****************************************************************************
+
+##CalculateBotsLastPreflopActionForUpdateAfterAutoplayerAction##
+// This function is a nearly identical copy of BotsLastAction.
+// Unfortunately the logical value can change after autoplayer-action,
+// but not the technical value (due to symbol-caching)
+// and we need both values at the same heartbeat,
+// one for execution (bot-logic) and the other one to update the history.
+// The most easy solution was this code-clone.
+//
+// We removed the first lines of BotsLastAction
+// WHEN [IsPreflop AND (BotsActionsOnThisRoundIncludingChecks == 0)] RETURN None FORCE
+// WHEN (betround != preflop) RETURN BotsLastPreflopAction FORCE
+// because BotsActionsOnThisRoundIncludingChecks and BotsLastPreflopAction
+// could be [cached] after the first action and we could get wrong results.
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=156&t=20395
+// Computing BotsLastAction from prevation
+// k_prevaction_undefined = -2
+// k_prevaction_fold = -1
+// k_prevaction_check = 0   // new in OpenHoldem
+// k_prevaction_call = 1
+// k_prevaction_raise = 2   // min-raise
+// k_prevaction_betsize = 3	// "stated wager", i.e. using f$betsize
+// k_prevaction_allin = 4
+// k_prevaction_jam = 5     // allin with the slider
+//
+// We do no longer check for successful and failed allins
+// because this function gets used for the initialization of BotsLastPreflopAction
+// This update happens potentiually multiple times preflop, not only once on the flop,
+// and at the same heartbeat when the action was executed,
+// so we can't check if the balance is zero, as the casino did not yet update
+// and we did not yet scrape again.
+WHEN PrevActionWasAllin RETURN RaiseMax FORCE
+// Raising (FL and NL)
+WHEN ((prevaction == 2) OR (prevaction == 3)) RETURN Raise FORCE
+// calling
+WHEN (prevaction == 1) RETURN Call FORCE
+// Checking postflop
+WHEN ((prevaction == 0) AND (betround > 1) AND (currentbet == 0)) RETURN Check FORCE
+// Checking preflop
+WHEN ((prevaction == 0) AND (betround == 1) AND (currentbet <= bblind)) RETURN Check FORCE
+// "Checking" when it was a call
+// Actually OpenHoldem does auto-adapt prevaction after such actions
+// but we try to be extra safe
+WHEN ((prevaction == 0) AND (betround == 1) AND (currentbet > bblind)) RETURN Call FORCE
+// Folding (might be used in sitout formulas)
+WHEN (prevaction == -1) RETURN Fold FORCE
+// No autoplayer-actions, but human being acting at ManualMode
+WHEN sitename$openholdem RETURN (HINT_Counting_Only_Autoplayer_Actions_Not_Manual_User_Actions + None) FORCE
+// None
+WHEN (prevaction == -1) RETURN None FORCE
+WHEN Others RETURN ERROR_IncorrectBotsLastAction FORCE
+
+##CalculateStartingChips##
+// Precondition: first hand, preflop
+(currentbet + balance + ante)
+
+##CalculateStartingStackSize##
+// Precondition: first hand, preflop
+WHEN (StartingChips <= 0) RETURN 0 FORCE
+WHEN (bblind > 0) RETURN (StartingChips / bblind) FORCE
+WHEN Others RETURN ERROR_Blinds_Not_Recognized_Correctly__Check_Your_TableMap FORCE
+
+##UpdateMemorySymbolsOnHandReset##
+WHEN ResetOldGameStateAtHandReset
+WHEN Others
+WHEN Others SET me_st_MemRaisesBeforeFlop_0
+WHEN Others SET me_st_MemRaisesOnFlop_0
+WHEN Others SET me_st_MemRaisesOnTurn_0
+WHEN Others SET me_st_MemMaxOpponentStackSize_0
+WHEN Others SET me_st_MemMinOpponentStackSize_0
+WHEN Others SET me_st_MemBotsLastPreflopAction_None
+WHEN Others SET me_st_MemBotsLastFlopAction_None
+WHEN Others SET me_st_MemBotsLastTurnAction_None
+// Reset starting chips, stacksize and bigblind-size once at the beginning of the session
+WHEN (handsplayed <= 1) SET me_st_MemStartingChips_0
+WHEN (handsplayed <= 1) SET me_st_MemStartingStackSize_0
+WHEN (handsplayed <= 1) SET me_st_MemStartingBigBlindSize_0
+// Execute UpdateMemorySymbolsOnNewRound unconditionally, but don't do anything
+WHEN UpdateMemorySymbolsOnNewRound
+
+##UpdateMemorySymbolsOnNewRound##
+WHEN Others SET me_st_MemRaises_0
+WHEN Others SET me_st_MemChecks_0
+WHEN Others SET me_st_MemCalls_0
+WHEN Others SET me_st_MemBets_0
+
+##UpdateMemorySymbolsAfterAutoplayerAction##
+// This function is the preferred place to store and update memory symbola
+// as it is our turn and we see stable frames, i.e. absence of casino animations
+//
+// At first we set the flag me_st_MemUpdateOfOpenPPLMemorySymbolsInProgress_true
+// as during the update we have partially inconsistent information,
+// as the OpenHoldem-symbols are already updated (e.g. didrais, ...).
+// This could cause some OpenPPl-symbols like BotsActionsOnThisRoundIncludingChecks
+// to be off by one, so we have to adapt.
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=120&t=20275&p=142396#p142396
+WHEN Others SET me_st_MemUpdateOfOpenPPLMemorySymbolsInProgress_true
+WHEN Others SET me_st_MemRaises_Raises
+WHEN Others SET me_st_MemChecks_Checks
+WHEN Others SET me_st_MemCalls_Calls
+WHEN Others SET me_st_MemBets_Bets
+WHEN IsPreflop SET me_st_MemBotsLastPreflopAction_CalculateBotsLastPreflopActionForUpdateAfterAutoplayerAction
+// CalculateBotsLastPreflopActionForUpdateAfterAutoplayerAction
+// can also be used on other betting-rounds, as it is not specific to preflop.
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=297&t=20960
+WHEN IsFlop    SET me_st_MemBotsLastFlopAction_CalculateBotsLastPreflopActionForUpdateAfterAutoplayerAction
+WHEN IsTurn    SET me_st_MemBotsLastTurnAction_CalculateBotsLastPreflopActionForUpdateAfterAutoplayerAction
+WHEN IsPreflop SET me_st_MemRaisesBeforeFlop_Raises
+WHEN IsFlop SET me_st_MemRaisesOnFlop_Raises
+WHEN IsTurn SET me_st_MemRaisesOnTurn_Raises
+WHEN (me_re_MemStartingBigBlindSize <= 0) SET me_st_MemStartingBigBlindSize_StartingBigBlindSize
+WHEN (me_re_MemStartingChips <= 0) SET me_st_MemStartingChips_StartingChips
+WHEN (me_re_MemStartingStackSize <= 0) SET me_st_MemStartingStackSize_StartingStackSize
+WHEN (me_re_MemMaxOpponentStackSize <= 0) SET me_st_MemMaxOpponentStackSize_MaxOpponentStackSize
+WHEN (me_re_MemMinOpponentStackSize <= 0) SET me_st_MemMinOpponentStackSize_MinOpponentStackSize
+// Finally remember a heartbeat ID so that be become able to detect
+// if a symbol gets used before the next scrape (e.g by the debug-tab).
+// In this case we have to return the new value (e.g. of "Raises")
+// and not a computed result based on the "old" value + ActionsSinceLastPlay.
+WHEN CreateHeartbeatIDAfterAutoplayerAction
+// Terminating the open-ended when-condition above
+// to execute the next one for sure.
+WHEN Others
+// Remember current game-state to avoid duplicte updates
+// of memory-symbols in case an action has no effect.
+WHEN RememberCurrentGameStateAfterAutoplayeraction
+// Terminating the open-ended when-condition above
+// to execute the next one for sure.
+WHEN Others
+WHEN Others SET me_st_MemUpdateOfOpenPPLMemorySymbolsInProgress_false
+
+//*****************************************************************************
+//
+// Detecting already executed updates of memory-symbols
+// that conflict with the normal way of evaluation
+//
+// Usually we calculate symbols like "Raises" based on old, stable values
+// plus RaisesSinceLastPlay (based on nopponentstruelyraising, computed 
+// with the info of the current orbit).
+// This however does no longer work if we store a new "old" value
+// at the end of my turn after an autoplayer action.
+// true, all critical work is done, but code in other threads
+// (especially the debug-tab) might request these symbols.
+// Then OpenHoldem would temporarily display invalid info
+// and people would be confused.
+// To avoid countless "bug"-reports, we remember and compare
+// a heartbeat-ID and then return the new value without
+// any computed updates based on an old frame
+// (that usually displays some ActionsSinceLastPlay by other players).
+//
+// Affected are the action counters
+// Calls, Checks, Raises
+//
+//*****************************************************************************
+
+##CreateHeartbeatIDAfterAutoplayerAction##
+// As there are no heartbeat-counters 
+// and we don't want things to complicated
+// we use randomheartbeat as a "nearly unique" ID.
+me_st_heartbeatID_randomheartbeat
+
+##OpenPPLHistorySymbolsAlreadyUpdatedThisHeartbeatAfterAutoplayerAction##
+WHEN (me_re_heartbeatID == randomheartbeat) RETURN true FORCE
+
+//*****************************************************************************
+//
+// Avoid duplicate updates in case an autoplayer action had no effect.
+// In this case we must not update the symbols again (increase counters, ...).
+// To prevent this problem we remember the current game-state (partially)
+// and then verify that it has changed.
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=110&t=19407
+//
+//*****************************************************************************
+
+##GameStateChangedSinceLastAutoplayerAction##
+// Change in dealerchair => new hand
+   (dealerchair != me_re_MemOldGameStateDealerChair)
+// Change in currentbet => we did act 
+// and the autoplayer executed successfully   
+OR (currentbet  != me_re_MemOldGameStateCurrentBet)
+// Change in potsize: somebody else behind us acted, 
+// so we checked or folded successfully
+OR (pot			    != me_re_MemOldGameStatePotSize)
+// Change in betround, if everybody checked 
+// and potsize is the same
+OR (betround    != me_re_MemOldGameStateBetround)
+
+##RememberCurrentGameStateAfterAutoplayeraction##
+// We can't use AND and OR here because of short circuiting.
+// We must use an operator that evaluates both sites.
+// The final result is meaningless.
+    me_st_MemOldGameStateCurrentBet_currentbet
+XOR me_st_MemOldGameStatePotSize_pot
+XOR me_st_MemOldGameStateBetround_betround
+// _dealerchair is a multiplexer-postfix nowadays
+// that gets textually replaced by its current value.
+// So we need an additional underscore here for a correct me_st_x_y-command.
+XOR me_st_MemOldGameStateDealerChair__dealerchair
+
+##ResetOldGameStateAtHandReset##
+// We have to explicitly reset the old game-state at hand-reset,
+// as RememberCurrentGameStateAfterAutoplayeraction won't get executed
+// if a user simulates e.g. at Manualmode and just clicks "Reset".
+// http://www.maxinmontreal.com/forums/viewtopic.php?f=261&t=20226#p142447
+    me_st_MemOldGameStateDealerChair_0
+XOR me_st_MemOldGameStateCurrentBet_0
+XOR me_st_MemOldGameStatePotSize_0
+XOR me_st_MemOldGameStateBetround_0
+
+// ===== SOURCE OpenPPL/OpenPPL_Library/OpenPPL_Library_Verbosity.ohf blob=97c09357ce1320c5d97f44f5c7c43139d6bdfebd =====
+##OpenPPL_License_Text##
+//*****************************************************************************
+//
+// OpenPPL Library
+//   Supporting functions for OpenPPL.
+//   These functions will be loaded by OpenHoldem in the background
+//   and will be available both for OpenPPL and OH-script users.
+//   This library is mostly written in OH-script,
+//   but it can be extended by OpenPPL-functions, as both formats are 100% compatible.
+//
+// OpenPPL is part of the OpenHoldem project
+//   Source code:           https://github.com/OpenHoldem/openholdembot/
+//   Source code:           https://github.com/OpenHoldem/openholdembot/releases
+//   Forums:                http://www.maxinmontreal.com/forums/index.php
+//   Licensed under GPL v3: http://www.gnu.org/licenses/gpl.html
+//
+// The original PPL (Poker Programming Language) got invented by
+//   Shanky Bonusbots:      http://bonusbots.com/support/index.php
+//
+// Required OpenHoldem version: 11.2.0 or later
+//
+// Contributors:
+//   Bob3456
+//   ChuckNeverMuck
+//   CoolBotMe123
+//   CrumbleSunday
+//   Dr.Kaktuz
+//   Efu
+//   Fn101
+//   Fqfq	
+//   Gecko
+//   JConner
+//   Johnny
+//   JokeDoke
+//   KaeKruse
+//   Kyo
+//   Lavezzi
+//   MerzkiyTipon
+//   Morello
+//   MrRuder
+//   Narfal
+//   Nik0
+//   NPNG
+//   Poker_Dog
+//   Postenjak
+//   Rambam
+//   Relhby
+//   Salem
+//   Satanikut
+//   Stangelnator
+//   SteveG1963
+//   Strikles
+//   SuperBlak
+//   TheHighFish
+//   ThemAndMe
+//   Want2Learn
+//   Zolp
+//
+//*****************************************************************************
+
+//*****************************************************************************
+//
+// OpenPPL - Verbosity
+//
+// Some OpenHoldem-symbols are awfully ill-named,
+// thanks to its WinHoldem heritage.
+// Some symbols are named as aweful as rais, swag, $$pr0, etc.
+// We provide meaningful names here to make this library more readable.
+//
+//*****************************************************************************
+
+##IsPreflop##
+(betround == preflop)
+
+##IsFlop##
+(betround == flop)
+
+##IsTurn##
+(betround == turn)
+
+##IsRiver##
+(betround == river)
+
+##IsPostflop##
+NOT IsPreflop
+
+##RankOfFirstHoleCard##
+$$pr0
+
+##RankOfSecondHoleCard##
+$$pr1
+
+##RankOfThirdHoleCard##
+$$pr2
+
+##RankOfFourthHoleCard##
+$$pr3
+
+##RankOfFirstFlopCard##
+$$cr0
+
+##RankOfSecondFlopCard##
+$$cr1
+
+##RankOfThirdFlopCard##
+$$cr2
+
+##RankOfTurnCard##
+$$cr3
+
+##RankOfRiverCard##
+$$cr4
+
+##FirstHoleCardSuit##
+$$ps0
+
+##SecondHoleCardSuit##
+$$ps1
+
+##ThirdHoleCardSuit##
+$$ps2
+
+##FourthHoleCardSuit##
+$$ps3
+
+##SuitOfFirstFlopCard##
+$$cs0
+
+##SuitOfSecondFlopCard##
+$$cs1
+
+##SuitOfThirdFlopCard##
+$$cs2
+
+##SuitOfTurnCard##
+$$cs3
+
+##SuitOfRiverCard##
+$$cs4
+
+##MadeHandThirdCardRank##
+// Useful for the determination of kickers
+// The last 20 bits of pokerval encode the ranks of our made hand
+// Four bits per card
+(pokerval >> 8) & 0x0F
+
+##MadeHandFourthCardRank##
+// Useful for the determination of kickers
+// The last 20 bits of pokerval encode the ranks of our made hand
+// Four bits per card
+(pokerval >> 4) & 0x0F
+
+##MadeHandFifthCardRank##
+// Useful for the determination of kickers
+// The last 20 bits of pokerval encode the ranks of our made hand
+// Four bits per card
+(pokerval >> 0) & 0x0F
+
+//*****************************************************************************
+//
+// OpenPPL - Aliases
+//
+// Alternative names for some symbols
+//
+//*****************************************************************************
+
+##FirstFlopCard##
+RankOfFirstFlopCard
+
+##SecondFlopCard##
+RankOfSecondFlopCard
+
+##ThirdFlopCard##
+RankOfThirdFlopCard
+
+##TurnCard##
+RankOfTurnCard
+
+##RiverCard##
+RankOfRiverCard
+
+##FirstFlopSuit##
+SuitOfFirstFlopCard
+
+##SecondFlopSuit##
+SuitOfSecondFlopCard
+
+##ThirdFlopSuit##
+SuitOfThirdFlopCard
+
+##TurnSuit##
+SuitOfTurnCard
+
+##RiverSuit##
+SuitOfRiverCard
+
