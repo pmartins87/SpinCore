@@ -21,6 +21,7 @@ on:
       - 'tools/audit_deepcrusher_r8_dc0_readiness.py'
       - 'tools/audit_deepcrusher_r8_openppl_compile.py'
       - 'tools/audit_deepcrusher_r8_native_coverage.py'
+      - 'tools/audit_deepcrusher_r8_library_overlay.py'
       - 'tools/audit_benchmark_decisions.py'
       - 'fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt'
   workflow_dispatch:
@@ -59,6 +60,7 @@ jobs:
             tools/audit_deepcrusher_r8_dc0_readiness.py \
             tools/audit_deepcrusher_r8_openppl_compile.py \
             tools/audit_deepcrusher_r8_native_coverage.py \
+            tools/audit_deepcrusher_r8_library_overlay.py \
             tools/audit_benchmark_decisions.py
       - name: Expression semantics
         env:
@@ -98,6 +100,12 @@ jobs:
             --deepcrusher-source fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt \
             --report /tmp/deepcrusher_native_coverage.json
           cat /tmp/deepcrusher_native_coverage.json
+          python tools/audit_deepcrusher_r8_library_overlay.py \
+            --deepcrusher-source fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt \
+            --library fixtures/openppl_library_dc0/OpenPPL_Library_part1.ohf \
+            --library fixtures/openppl_library_dc0/OpenPPL_Library_part2.ohf \
+            --report /tmp/deepcrusher_library_overlay.json
+          cat /tmp/deepcrusher_library_overlay.json
       - name: Observable state contract syntax
         env:
           PYTHONPATH: ${{ github.workspace }}/python
