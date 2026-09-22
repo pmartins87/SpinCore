@@ -119,6 +119,32 @@ When Others BetThirdPot Force
         self.assertEqual(p.evaluate("f$x",{"a":0,"b":1}),DirectAction("BetMax"))
         self.assertEqual(p.evaluate("f$x",{"a":0,"b":0}),DirectAction("BetThirdPot"))
 
+
+    def test_hand_list_membership(self):
+        p=OpenPPLProgram.from_text("""
+##list_open##
+AA AKs AQo
+##f$x##
+When list_open Return 1 Force
+When Others Return 0 Force
+""")
+        self.assertEqual(p.evaluate("f$x",{},hand_class="AA"),ReturnValue(1))
+        self.assertEqual(p.evaluate("f$x",{},hand_class="AKs"),ReturnValue(1))
+        self.assertEqual(p.evaluate("f$x",{},hand_class="AQo"),ReturnValue(1))
+        self.assertEqual(p.evaluate("f$x",{},hand_class="AKo"),ReturnValue(0))
+        self.assertEqual(p.evaluate("f$x",{},hand_class="72o"),ReturnValue(0))
+
+    def test_hand_list_requires_hand_class(self):
+        p=OpenPPLProgram.from_text("""
+##list_open##
+AA
+##f$x##
+When list_open Return 1 Force
+When Others Return 0 Force
+""")
+        with self.assertRaises(OpenPPLProgramError):
+            p.evaluate("f$x",{})
+
     def test_eof_without_action_fails_closed(self):
         p=OpenPPLProgram.from_text("""
 ##f$x##
