@@ -53,7 +53,11 @@ def main() -> int:
         )
 
     native = list(closure.native_identifiers)
-    primitive = {x.lower() for x in DeepCrusherPrimitiveSymbols.supported_symbols()}
+    primitive_direct = {
+        name.lower()
+        for name in native
+        if DeepCrusherPrimitiveSymbols.supports(name)
+    }
     environment = {x.lower() for x in frozen_benchmark_environment(native)}
     library_direct = {
         name.lower()
@@ -61,7 +65,7 @@ def main() -> int:
         if name.lower() in library_names
     }
 
-    resolved_direct = primitive | environment | library_direct
+    resolved_direct = primitive_direct | environment | library_direct
     remaining = sorted(
         (name for name in native if name.lower() not in resolved_direct),
         key=str.lower,
@@ -70,7 +74,7 @@ def main() -> int:
     payload = {
         "schema": "SPINCORE_DEEPCRUSHER_R8_OPENPPL_LIBRARY_OVERLAY_V1",
         "source_native_identifiers": len(native),
-        "primitive_direct_count": sum(1 for x in native if x.lower() in primitive),
+        "primitive_direct_count": len(primitive_direct),
         "environment_direct_count": sum(1 for x in native if x.lower() in environment),
         "openppl_library_direct_count": sum(1 for x in native if x.lower() in library_direct),
         "remaining_direct_count": len(remaining),
