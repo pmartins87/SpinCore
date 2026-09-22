@@ -12,12 +12,14 @@ on:
       - 'python/spincore/deepcrusher_state.py'
       - 'python/spincore/deepcrusher_native_symbols.py'
       - 'python/spincore/deepcrusher_benchmark.py'
+      - 'python/spincore/decision_sanity.py'
       - 'python_tests/test_openppl_expr.py'
       - 'python_tests/test_openppl_program.py'
       - 'python_tests/test_deepcrusher_*.py'
       - 'tools/audit_deepcrusher_r8_dc0_readiness.py'
       - 'tools/audit_deepcrusher_r8_openppl_compile.py'
       - 'tools/audit_deepcrusher_r8_native_coverage.py'
+      - 'tools/audit_benchmark_decisions.py'
       - 'fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt'
   workflow_dispatch:
 
@@ -51,9 +53,11 @@ jobs:
             python/spincore/deepcrusher_state.py \
             python/spincore/deepcrusher_native_symbols.py \
             python/spincore/deepcrusher_benchmark.py \
+            python/spincore/decision_sanity.py \
             tools/audit_deepcrusher_r8_dc0_readiness.py \
             tools/audit_deepcrusher_r8_openppl_compile.py \
-            tools/audit_deepcrusher_r8_native_coverage.py
+            tools/audit_deepcrusher_r8_native_coverage.py \
+            tools/audit_benchmark_decisions.py
       - name: Expression semantics
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -69,7 +73,8 @@ jobs:
           python -m pytest -q \
             python_tests/test_deepcrusher_openppl_inventory.py \
             python_tests/test_deepcrusher_benchmark_contract.py \
-            python_tests/test_deepcrusher_native_symbols.py
+            python_tests/test_deepcrusher_native_symbols.py \
+            python_tests/test_decision_sanity.py
       - name: Full frozen R8 source compile gate
         env:
           PYTHONPATH: ${{ github.workspace }}/python
