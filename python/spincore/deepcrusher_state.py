@@ -172,6 +172,49 @@ class DeepCrusherStateView:
     def hole_suited(self) -> bool:
         return self.same_suit_pair(0, 1)
 
+    @property
+    def canonical_suits(self) -> tuple[int, int, int, int, int, int, int]:
+        """Reconstruct suit-equivalence classes from SPNNIV3.
+
+        SPNNIV3 intentionally removes absolute suit names but preserves every
+        pairwise same-suit relation. OpenPPL strategy logic is suit-permutation
+        invariant, so a deterministic canonical labelling is sufficient for
+        suit counts, suited predicates and hand/board expressions.
+        Unrevealed public-card slots use -1.
+        """
+        visible = [rank > 0 for rank in self.ranks]
+        parent = list(range(7))
+
+        def find(x: int) -> int:
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(a: int, b: int) -> None:
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[rb] = ra
+
+        for left in range(7):
+            if not visible[left]:
+                continue
+            for right in range(left + 1, 7):
+                if visible[right] and self.same_suit_pair(left, right):
+                    union(left, right)
+
+        labels: dict[int, int] = {}
+        out: list[int] = []
+        for index in range(7):
+            if not visible[index]:
+                out.append(-1)
+                continue
+            root = find(index)
+            if root not in labels:
+                labels[root] = len(labels)
+            out.append(labels[root])
+        return tuple(out)  # type: ignore[return-value]
+
     def voluntary_history(self, *, street: int | None = None) -> tuple[PublicActionEvent, ...]:
         return tuple(
             event
