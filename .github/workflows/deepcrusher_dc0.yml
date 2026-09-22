@@ -31,6 +31,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout frozen DeepCrusher R8 v22 fixture
+        uses: actions/checkout@v4
+        with:
+          repository: pmartins87/DeepCrusher
+          ref: r8-v22-stable-20260914
+          path: _deepcrusher_fixture
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -67,6 +74,17 @@ jobs:
           python -m pytest -q \
             python_tests/test_deepcrusher_openppl_inventory.py \
             python_tests/test_deepcrusher_benchmark_contract.py
+      - name: Full frozen R8 source compile gate
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          python tools/preflight_deepcrusher_benchmark.py \
+            --deepcrusher-source _deepcrusher_fixture/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt \
+            --json /tmp/deepcrusher_preflight.json
+          python tools/audit_deepcrusher_r8_openppl_compile.py \
+            --deepcrusher-source _deepcrusher_fixture/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt \
+            --report /tmp/deepcrusher_openppl_compile.json
+          cat /tmp/deepcrusher_openppl_compile.json
       - name: Observable state contract syntax
         env:
           PYTHONPATH: ${{ github.workspace }}/python
