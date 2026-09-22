@@ -192,7 +192,7 @@ def _parse_when(line_number: int, text: str) -> WhenNode:
         return WhenNode(
             condition=_compile_condition(m.group(1)),
             action_kind="direct",
-            action_name=m.group(2).capitalize(),
+            action_name=m.group(2),
             source_line=line_number,
         )
 
