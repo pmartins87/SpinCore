@@ -26,7 +26,7 @@ from spincore.deepcrusher_state import DeepCrusherStateView, STREET_PREFLOP
 SCHEMA = "SPINCORE_PREFLOP_RANGE_EQUITY_V1"
 SOURCE_ZIP_SHA256 = "52a0a87174b0d7cabd5b16fe43387b0807a6abd036e5a61c1aafbc008ecf50c2"
 SOURCE_TXT_SHA256 = "9dd539e2720010684d0006981207489e4f753b1d628f7e0443003b2c7f3e6c9f"
-TABLE_GZIP_SHA256 = "75df8b89b2ffd32a7411c4f7fa30fa560bfeb1917e9b8a3f01777c08d44287a6"
+TABLE_GIT_BLOB_SHA1 = "d86110f6f0935b9b2929df2f71dc7868b8325805"
 TABLE_TEXT_SHA256 = "10b42e456dac1f7fffeb79c3a8eacc80d868d5732d115b11bf8965b5dba597b0"
 SUPPORTED_RANGE_IDS = frozenset({4, 6, 9, 12, 15})
 
@@ -46,8 +46,9 @@ class DeepCrusherPreflopEquityError(RuntimeError):
 def _load_table(path_text: str) -> dict[tuple[int, int], dict[int, float]]:
     path = Path(path_text)
     raw = path.read_bytes()
-    if hashlib.sha256(raw).hexdigest() != TABLE_GZIP_SHA256:
-        raise DeepCrusherPreflopEquityError("preflop equity gzip SHA256 mismatch")
+    # Gzip container bytes are repository-pinned by Git blob SHA-1. Runtime
+    # validation intentionally hashes the canonical decompressed payload because
+    # gzip metadata (mtime/header) is not semantic and may change when rebuilt.
     text_bytes = gzip.decompress(raw)
     if hashlib.sha256(text_bytes).hexdigest() != TABLE_TEXT_SHA256:
         raise DeepCrusherPreflopEquityError("preflop equity text SHA256 mismatch")
