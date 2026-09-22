@@ -144,3 +144,28 @@ scenario count, pairing, policy weights, metric, confidence interval,
 classification rule or stopping rule. The first terminated attempt produced no
 cross-play outcome, so no statistical criterion was adapted after observing a
 result.
+
+
+## Frozen outcome — completed 2026-09-22
+
+The corrected battery completed under the preregistered development protocol.
+No sealed holdout was touched and no promotion was authorized.
+
+Primary AveragePolicy 8100 -> 9105 paired result:
+- ALL: -0.055 chips/hand, 95% CI [-2.636,+2.526] — INCONCLUSIVE;
+- THREE_HANDED: -2.303, 95% CI [-4.841,+0.235] — INCONCLUSIVE;
+- TRUE_HEADS_UP: +2.630, 95% CI [-2.151,+7.411] — INCONCLUSIVE.
+
+Current HU ENS8 8100 -> 9105 direct:
+- -0.804 chips/hand, 95% CI [-7.391,+5.784] — INCONCLUSIVE.
+
+The 8100 -> 9105 AveragePolicy drift is measurable rather than a no-op:
+- overall mean TV 0.04182, p95 0.11972, argmax disagreement 11.76%;
+- THREE_HANDED mean TV 0.03208;
+- TRUE_HEADS_UP mean TV 0.06139, p95 0.14563, argmax disagreement 15.68%.
+
+Thus the development evidence says that training materially changed the policy
+but did not establish that the change improved strength. No further long
+training block is justified from this battery alone. The next evidence gate is
+the frozen DeepCrusher external-strength lane (DC0 -> DC1 -> DC2), comparing
+8100, derived-finalized 8600 and 9105 under the same external protocol.
