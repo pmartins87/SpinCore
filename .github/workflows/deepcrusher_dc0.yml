@@ -7,6 +7,7 @@ on:
       - '.github/workflows/deepcrusher_dc0.yml'
       - 'python/spincore/openppl_expr.py'
       - 'python/spincore/openppl_program.py'
+      - 'fixtures/openppl_library_dc0/**'
       - 'python/spincore/deepcrusher_r8_dc0.py'
       - 'python/spincore/deepcrusher_openppl.py'
       - 'python/spincore/deepcrusher_state.py'
@@ -15,6 +16,7 @@ on:
       - 'python/spincore/decision_sanity.py'
       - 'python_tests/test_openppl_expr.py'
       - 'python_tests/test_openppl_program.py'
+      - 'python_tests/test_openppl_library_overlay.py'
       - 'python_tests/test_deepcrusher_*.py'
       - 'tools/audit_deepcrusher_r8_dc0_readiness.py'
       - 'tools/audit_deepcrusher_r8_openppl_compile.py'
@@ -65,7 +67,9 @@ jobs:
       - name: Ordered WHEN program semantics
         env:
           PYTHONPATH: ${{ github.workspace }}/python
-        run: python python_tests/test_openppl_program.py
+        run: |
+          python python_tests/test_openppl_program.py
+          python -m pytest -q python_tests/test_openppl_library_overlay.py
       - name: Existing DeepCrusher contracts
         env:
           PYTHONPATH: ${{ github.workspace }}/python
