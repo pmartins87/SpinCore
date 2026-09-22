@@ -69,6 +69,9 @@ STAMP="$(date +%Y%m%d_%H%M%S)"
 DIR="$ROOT/runs/lt3_post9105_dev_battery/$STAMP"
 mkdir -p "$DIR"
 P8600="$DIR/checkpoint_8600_finalized.pt"
+P8100_INF="$DIR/policy_8100_inference.pt"
+P8600_INF="$DIR/policy_8600_inference.pt"
+P9105_INF="$DIR/policy_9105_inference.pt"
 
 echo "=== SpinCore LT3 post-9105 development battery ==="
 echo "mode=READ_ONLY DEVELOPMENT EVALUATION; NO TRAINING; NO SEALED HOLDOUT"
@@ -77,8 +80,35 @@ echo "run_dir=$DIR"
 
 "$PY" tools/finalize_lt3_raw_milestone.py   --solver "$SOLVER"   --source-checkpoint "$P8600_RAW"   --expected-source-sha256 "$SHA8600"   --expected-iteration 8600   --output-checkpoint "$P8600"   --report "$DIR/finalize_8600.json"   --threads 8
 
+# Full training checkpoints contain multi-GB reservoirs/optimizer state. Never
+# fan those objects out into evaluation workers. Export compact AveragePolicy-only
+# artifacts once, then let all multiprocessing evaluators load only those.
+echo "--- Export compact inference checkpoints ---"
+"$PY" tools/export_lean_inference_checkpoint.py --source "$P8100" --out "$P8100_INF"
+"$PY" tools/export_lean_inference_checkpoint.py --source "$P8600" --out "$P8600_INF"
+"$PY" tools/export_lean_inference_checkpoint.py --source "$P9105" --out "$P9105_INF"
+
+"$PY" - "$P8100_INF" "$P8600_INF" "$P9105_INF" <<'PY'
+import sys, torch
+for path, iteration in zip(sys.argv[1:], (8100, 8600, 9105)):
+    d=torch.load(path,map_location="cpu",weights_only=False)
+    if d.get("schema")!="SPINCORE_LEAN_FUNCTIONAL_TRAINING_V1":
+        raise SystemExit(f"compact schema mismatch: {path}")
+    if not bool(d.get("finalized")):
+        raise SystemExit(f"compact artifact not finalized: {path}")
+    if int(d.get("completed_iteration",-1))!=iteration:
+        raise SystemExit(f"compact iteration mismatch: {path}")
+    domains=d.get("domains") or {}
+    if set(domains)!={"THREE_HANDED","TRUE_HEADS_UP"}:
+        raise SystemExit(f"compact domain mismatch: {path}")
+    for domain,payload in domains.items():
+        if set(payload)!={"policy"}:
+            raise SystemExit(f"compact artifact contains non-policy state for {domain}: {path}")
+print("LT3_POST9105_COMPACT_INFERENCE_PREFLIGHT_PASS")
+PY
+
 # AveragePolicy pairwise cross-play. Same sampler seed and scenario count for all three pairs.
-for spec in   "8100 8600 $P8100 $P8600"   "8600 9105 $P8600 $P9105"   "8100 9105 $P8100 $P9105"
+for spec in   "8100 8600 $P8100_INF $P8600_INF"   "8600 9105 $P8600_INF $P9105_INF"   "8100 9105 $P8100_INF $P9105_INF"
 do
   set -- $spec
   A="$1"; B="$2"; PA="$3"; PB="$4"
@@ -104,7 +134,7 @@ do
 done
 
 # Transparent weak-baseline context for each finalized AveragePolicy.
-for spec in "8100 $P8100" "8600 $P8600" "9105 $P9105"; do
+for spec in "8100 $P8100_INF" "8600 $P8600_INF" "9105 $P9105_INF"; do
   set -- $spec
   I="$1"; P="$2"
   "$PY" tools/evaluate_lean_strategy_quality.py     --solver "$SOLVER"     --checkpoint "$P"     --scenarios "$QUALITY_SCENARIOS"     --workers "$WORKERS"     --seed "$SEED"     --report "$DIR/quality_${I}.json"
