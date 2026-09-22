@@ -3,8 +3,11 @@ from __future__ import annotations
 import pytest
 
 from spincore.deepcrusher_native_symbols import (
+    BENCHMARK_ENVIRONMENT_PROFILE_ID,
     DeepCrusherPrimitiveSymbols,
+    OPENHOLDEM_UNDEFINED,
     UnknownDeepCrusherNativeSymbol,
+    frozen_benchmark_environment,
 )
 from spincore.deepcrusher_state import (
     ACTION_ALL_IN,
@@ -106,3 +109,25 @@ def test_unknown_symbol_fails_closed():
     s = DeepCrusherPrimitiveSymbols(_view())
     with pytest.raises(UnknownDeepCrusherNativeSymbol):
         s("HaveTopPair")
+
+
+def test_frozen_benchmark_environment_matches_no_pt_ggpoker_contract():
+    env = frozen_benchmark_environment([
+        "network$ggpoker",
+        "network$ipoker",
+        "chair$SomeVillain",
+        "log$Diagnostic",
+        "pt_hands_headsupchair",
+        "colourcode_headsupchair",
+        "prwin",
+        "prtie",
+    ])
+    assert BENCHMARK_ENVIRONMENT_PROFILE_ID == "GGPoker_NoPT_NoNotes_V1"
+    assert env["network$ggpoker"] == 1
+    assert env["network$ipoker"] == 0
+    assert env["chair$SomeVillain"] == OPENHOLDEM_UNDEFINED == -1
+    assert env["log$Diagnostic"] == 1
+    assert env["pt_hands_headsupchair"] == -1
+    assert env["colourcode_headsupchair"] == 0
+    assert "prwin" not in env
+    assert "prtie" not in env
