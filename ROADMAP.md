@@ -30,7 +30,7 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 6. Resume from 8200 with 4x8 to **9105** (+905 iterations, projected 20.998 h) — **RUNNING**.
 7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint while the same precommitted run continues to 9105.
 8. After PASS, create a derived finalized evaluation copy of raw 8600, then compare 8100 / 8600 / 9105 on the LT3 development battery without touching the LT3 sealed holdout.
-9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim.
+9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim. **Preparation is active in parallel with LT3 training**: expression semantics, ordered WHEN/SET control flow, canonical list parsing, hand-scoped user variables, persistent me_* memory semantics and full-source compile audit tooling are now implemented; native symbol coverage, exact action sizing and runtime-trace parity remain.
 10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
 11. Continue training only if the development battery and external-strength evidence justify more compute.
 12. Freeze the final LT3 research candidate.
@@ -98,6 +98,31 @@ Current LT3 status:
 - precommitted ~21-hour endpoint: **9105** (+905 iterations), projected **20.998 h**;
 - long continuation 8200 -> 9105: **RUNNING (started 2026-09-21 13:11 local)**.
 
+
+### DeepCrusher DC0 preparation while LT3 trains
+
+The R8 v22 benchmark lane is intentionally being built without touching the running trainer.
+
+Completed foundation work:
+- frozen R8 v22 operational source/hash pin and transitive dependency inventory;
+- strict OpenHoldem-compatible expression evaluator;
+- ordered OpenPPL WHEN / RETURN / SET control flow;
+- physical-line continuation normalization for the frozen source;
+- direct BetMax/BetPot/fractional-bet action token parsing;
+- all 545 list sections parsed as canonical 169-class hand ranges;
+- actor observable-state bridge now exposes the canonical hero hand class;
+- OpenHoldem user_* variables persist for the hand and clear on hand reset;
+- me_st/me_re/me_inc/me_add/me_sub memory semantics persist until connection reset;
+- full frozen-source OpenPPL compile audit and a static-preparation runner added;
+- DC0 CI corrected to execute pytest-style contracts instead of merely importing files.
+
+Still blocking canonical DC0:
+- complete native/OpenPPL symbol provider from SpinCore state/history;
+- exact DeepCrusher sizing/action conversion into ExternalExactAction;
+- frozen environment treatment for optional PokerTracker/network symbols;
+- broad parity fixtures against real OpenHoldem traces, including preflop/flop/turn/river and sizing.
+
+The historical R8 v22 OpenHoldem smoke proves the frozen artifact itself loaded and made 153 decisions, but the five original smoke logs are not stored in the DeepCrusher repository, so that audit document alone is not sufficient as an oracle parity fixture.
 
 ### External competitiveness / DeepCrusher interpretation
 
