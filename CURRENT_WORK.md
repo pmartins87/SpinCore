@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-22
-Status: **LT3 8200 -> 9105 PASS — POST-9105 DEVELOPMENT BATTERY MEMORY FIX READY / DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
+Status: **LT3 8200 -> 9105 PASS — POST-9105 DEVELOPMENT BATTERY PASS / INCONCLUSIVE — DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -97,24 +97,19 @@ The long training block is complete. Do **not** start more training yet.
 The post-9105 development protocol is frozen before seeing development outcomes:
 `docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md`.
 
-First post-9105 battery attempt: derived 8600 finalization PASS, then host termination at the first 8100 -> 8600 AveragePolicy cross-play. Diagnosis: orchestration regression passed multi-GB training checkpoints directly to 31 spawned workers. No cross-play result was produced. The runner is corrected to export compact policy-only inference artifacts before multiprocessing; statistical protocol is unchanged.
+The corrected post-9105 development battery completed successfully on seed 20260922 with 3000 pairwise scenarios, 2000 weak-baseline scenarios and 31 workers. No sealed holdout was touched.
 
-Canonical next local action:
+Key development result:
+- AveragePolicy 8100 -> 9105 ALL: -0.055 chips/hand, 95% CI [-2.636,+2.526] — INCONCLUSIVE;
+- 3H: -2.303, CI [-4.841,+0.235] — INCONCLUSIVE;
+- HU: +2.630, CI [-2.151,+7.411] — INCONCLUSIVE;
+- current HU ENS8 8100 -> 9105 direct: -0.804, CI [-7.391,+5.784] — INCONCLUSIVE;
+- policy drift 8100 -> 9105 is real but moderate, stronger in HU (mean TV 0.0614, p95 0.1456, argmax disagreement 15.68%) than 3H (mean TV 0.0321);
+- derived 8600 finalization PASS, source unchanged, zero new training roots.
 
-`git pull --ff-only origin main && bash tools/run_lt3_post9105_dev_battery.sh`
+Interpretation: additional 8100 -> 9105 training changed behavior but did not demonstrate a statistically resolved strength gain over 8100. There is therefore no evidence-based reason to start another long training block now.
 
-This runner:
-- verifies the frozen 8600/9105 hashes;
-- finalizes AveragePolicy only on a derived copy of raw 8600;
-- compares finalized AveragePolicy @8100/@8600/@9105 pairwise;
-- compares HU current ENS8 @8100/@8600/@9105 pairwise;
-- measures policy drift and weak-baseline context;
-- does no training and touches no sealed holdout.
-
-Expected terminal sentinel:
-`LT3_POST9105_DEV_BATTERY_COMPLETE`
-
-After that report is interpreted, continue the external-strength lane through DC0 -> DC1 -> DC2 before deciding whether additional training is justified.
+Canonical next action: continue the frozen external-strength lane through DeepCrusher DC0 -> DC1 -> DC2. Benchmark 8100 / derived-finalized 8600 / 9105 under the same frozen external protocol before deciding whether more roots are justified.
 
 
 ## ENS8 parallel matrix incident
