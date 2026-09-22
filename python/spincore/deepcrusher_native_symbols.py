@@ -16,6 +16,10 @@ from spincore.deepcrusher_card_symbols import (
     DeepCrusherCardSymbols,
     UnknownDeepCrusherCardSymbol,
 )
+from spincore.deepcrusher_table_symbols import (
+    DeepCrusherTableSymbols,
+    UnknownDeepCrusherTableSymbol,
+)
 from spincore.deepcrusher_state import (
     DeepCrusherStateView,
     STREET_PREFLOP,
@@ -102,12 +106,20 @@ class DeepCrusherPrimitiveSymbols:
             "InButton", "InSmallBlind", "InBigBlind",
             "nplayersplaying", "nopponentsallin", "OpponentIsAllin",
         }
-        return frozenset(primitive | set(DeepCrusherCardSymbols.fixed_symbols()))
+        return frozenset(
+            primitive
+            | set(DeepCrusherCardSymbols.fixed_symbols())
+            | set(DeepCrusherTableSymbols.fixed_symbols())
+        )
 
     @classmethod
     def supports(cls, name: str) -> bool:
         folded = {item.lower() for item in cls.supported_symbols()}
-        return name.lower() in folded or DeepCrusherCardSymbols.supports(name)
+        return (
+            name.lower() in folded
+            or DeepCrusherCardSymbols.supports(name)
+            or DeepCrusherTableSymbols.supports(name)
+        )
 
     def resolve(self, name: str) -> float:
         if self.environment is not None:
@@ -211,6 +223,11 @@ class DeepCrusherPrimitiveSymbols:
         try:
             return float(DeepCrusherCardSymbols(v).resolve(name))
         except UnknownDeepCrusherCardSymbol:
+            pass
+
+        try:
+            return float(DeepCrusherTableSymbols(v).resolve(name))
+        except UnknownDeepCrusherTableSymbol:
             pass
 
         raise UnknownDeepCrusherNativeSymbol(name)
