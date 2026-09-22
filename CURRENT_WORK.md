@@ -60,8 +60,11 @@ Completed since the 8200 -> 9105 run started:
 - OpenHoldem user-variable lifetime corrected to **persist for the current hand** and clear only on hand reset;
 - OpenHoldem me_* memory commands implemented with connection-scoped persistence;
 - full-source structural compile audit added;
+- exact frozen R8 operational source vendored into SpinCore under a SHA256 pin for CI;
+- the real R8 source now compiles completely through the portable layer: 1,267 sections / 721 functions / 545 hand-list sections — PASS;
+- primitive native-symbol provider and fail-closed coverage audit added: 27 of 269 source-level native identifiers currently implemented, 242 unresolved;
 - static DC0 preparation runner added;
-- CI corrected so pytest-style DeepCrusher contract tests are actually executed.
+- CI corrected so pytest-style DeepCrusher contract tests are actually executed; latest DC0 workflow is PASS.
 
 Evidence for the lifetime semantics comes from the preserved OpenHoldem source,
 not inference: CSymbolEngineOpenPPLUserVariables clears its map on hand reset and
