@@ -20,6 +20,7 @@ from spincore.deepcrusher_table_symbols import (
     DeepCrusherTableSymbols,
     UnknownDeepCrusherTableSymbol,
 )
+from spincore.deepcrusher_history_symbols import DeepCrusherHistorySymbols
 from spincore.deepcrusher_state import (
     DeepCrusherStateView,
     STREET_PREFLOP,
@@ -110,6 +111,7 @@ class DeepCrusherPrimitiveSymbols:
             primitive
             | set(DeepCrusherCardSymbols.fixed_symbols())
             | set(DeepCrusherTableSymbols.fixed_symbols())
+            | set(DeepCrusherHistorySymbols.fixed_symbols())
         )
 
     @classmethod
@@ -119,6 +121,7 @@ class DeepCrusherPrimitiveSymbols:
             name.lower() in folded
             or DeepCrusherCardSymbols.supports(name)
             or DeepCrusherTableSymbols.supports(name)
+            or DeepCrusherHistorySymbols.supports(name)
         )
 
     def resolve(self, name: str) -> float:
@@ -229,6 +232,12 @@ class DeepCrusherPrimitiveSymbols:
             return float(DeepCrusherTableSymbols(v).resolve(name))
         except UnknownDeepCrusherTableSymbol:
             pass
+
+        if DeepCrusherHistorySymbols.supports(name):
+            try:
+                return float(DeepCrusherHistorySymbols(v).resolve(name))
+            except KeyError:
+                pass
 
         raise UnknownDeepCrusherNativeSymbol(name)
 
