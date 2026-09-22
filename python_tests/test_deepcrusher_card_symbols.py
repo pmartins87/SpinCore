@@ -104,8 +104,10 @@ def test_straight_metrics_match_openholdem_window_logic():
         suits=(0, 1, 2, 3, 0, -1, -1),
     )
     s = DeepCrusherCardSymbols(v)
-    # A543 + hero/board combined is one rank short of wheel.
-    assert s("nstraight") == 4
+    # A543 is one rank short of a wheel, but OpenHoldem's nstraight measures
+    # the longest contiguous edge-run inside each five-rank window. With the 2
+    # missing, the longest contiguous run is 5-4-3 = 3; nstraightfill is 1.
+    assert s("nstraight") == 3
     assert s("nstraightfill") == 1
     assert s("nstraightcommon") >= 1
     assert s("nstraightfillcommon") >= 2
