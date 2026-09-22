@@ -206,6 +206,15 @@ When Others Fold Force
             DirectAction("RaiseBy",0.5,"pot_fraction"),
         )
 
+    def test_when_with_tabs(self):
+        p=OpenPPLProgram.from_text("""
+##f$x##
+When\tmyturnbits\t=\t0b00100\tReturn\ttrue\tForce
+When Others Return false Force
+""")
+        self.assertEqual(p.evaluate("f$x",{"myturnbits":4}),ReturnValue(1))
+        self.assertEqual(p.evaluate("f$x",{"myturnbits":2}),ReturnValue(0))
+
     def test_eof_without_action_fails_closed(self):
         p=OpenPPLProgram.from_text("""
 ##f$x##
