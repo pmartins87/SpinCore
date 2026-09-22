@@ -29,10 +29,10 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 5. 8200 end-to-end semantic + whole-iteration throughput gate — **PASS EXACT; WHOLE-ITERATION 1.530x**.
 6. Resume from 8200 with 4x8 to **9105** (+905 iterations) — **PASS**. Completed in 20.303 h with source 8200 unchanged, raw 8600 preserved, final 9105 AveragePolicy finalized, and no holdout access.
 7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint — **PASS / IMMUTABLE**.
-8. Post-9105 development battery protocol frozen before evaluation. First execution finalized the derived 8600 copy but was terminated before the first cross-play outcome because full multi-GB training checkpoints were fanned out to 31 spawned evaluator workers. The runner now exports validated compact policy-only artifacts before multiprocessing; seeds, pairings, metrics and criteria are unchanged. **MEMORY FIX READY TO RERUN; SEALED HOLDOUT UNTOUCHED**.
+8. Post-9105 development battery — **PASS / INCONCLUSIVE; SEALED HOLDOUT UNTOUCHED**. Corrected execution completed on the frozen seed/protocol. AveragePolicy 8100 -> 9105 ALL = -0.055 chips/hand, 95% CI [-2.636,+2.526]; 3H = -2.303 [-4.841,+0.235]; HU = +2.630 [-2.151,+7.411]. Current HU ENS8 direct 8100 -> 9105 = -0.804 [-7.391,+5.784]. Policy drift is measurable, especially HU, but no resolved strength improvement was demonstrated.
 9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim. **Preparation is active in parallel with LT3 training**: expression semantics, ordered WHEN/SET control flow, canonical list parsing, hand-scoped user variables, persistent me_* memory semantics and full-source compile audit tooling are now implemented; native symbol coverage, exact action sizing and runtime-trace parity remain.
 10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
-11. Continue training only if the development battery and external-strength evidence justify more compute.
+11. Additional training is **PAUSED**: the development battery did not resolve a strength gain from 8100 to 9105. Resume training only if external-strength evidence from DC1/DC2 justifies more compute.
 12. Freeze the final LT3 research candidate.
 13. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
 14. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
