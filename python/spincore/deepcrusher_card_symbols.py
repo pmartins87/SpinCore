@@ -272,6 +272,24 @@ def _dominant_suit(cards: Iterable[tuple[int, int]]) -> tuple[int, int]:
     return 0, 0
 
 
+def _suit_rankbits(cards: Iterable[tuple[int, int]], suit: int) -> int:
+    return _rankbits(rank for rank, card_suit in cards if int(card_suit) == int(suit))
+
+
+def _higher_straight_possible(
+    current_high: int,
+    board_ranks: Iterable[int],
+) -> bool:
+    if int(current_high) >= 14:
+        return False
+    board = set(int(x) for x in board_ranks if int(x) > 0)
+    for high in range(14, int(current_high), -1):
+        needed = set(range(high - 4, high + 1))
+        if len(board & needed) >= 3:
+            return True
+    return False
+
+
 def _straight_metrics(ranks: Iterable[int]) -> tuple[int, int]:
     bits = _rankbits(ranks)
     best_connected = 0
@@ -346,7 +364,14 @@ class DeepCrusherCardSymbols:
             "rankhi", "rankhicommon", "rankhiplayer", "rankhipoker",
             "ranklo", "ranklocommon", "rankloplayer", "ranklopoker",
             "srankbits", "srankbitsplayer", "srankbitscommon",
+            "srankhi", "srankhicommon", "srankhiplayer",
+            "sranklo", "sranklocommon", "srankloplayer",
             "ispair", "issuited", "isconnector",
+            "ishipair", "islopair", "ismidpair", "ishistraight", "ishiflush",
+            "suitbitsplayer_hearts", "suitbitsplayer_diamonds",
+            "suitbitsplayer_clubs", "suitbitsplayer_spades",
+            "suitbitscommon_hearts", "suitbitscommon_diamonds",
+            "suitbitscommon_clubs", "suitbitscommon_spades",
             "nsuited", "nsuitedcommon", "tsuit", "tsuitcommon",
             "nstraight", "nstraightcommon", "nstraightfill", "nstraightfillcommon",
             "nranked", "nrankedcommon", "trank", "trankcommon",
@@ -512,7 +537,18 @@ class DeepCrusherCardSymbols:
 
     def _suited_rankbits(self, cards: tuple[tuple[int, int], ...]) -> int:
         suit, _ = _dominant_suit(cards)
-        return _rankbits(rank for rank, card_suit in cards if card_suit == suit)
+        return _suit_rankbits(cards, suit)
+
+    def _srank_components(self) -> tuple[int, int, int]:
+        hole = self._hole()
+        board = self._board()
+        all_cards = hole + board
+        tsuit, _ = _dominant_suit(all_cards)
+        tsuitcommon, _ = _dominant_suit(board)
+        player = _suit_rankbits(hole, tsuit)
+        common_for_all_suit = _suit_rankbits(board, tsuit)
+        common = _suit_rankbits(board, tsuitcommon)
+        return player, common_for_all_suit, common
 
     def _card_expression(self, name: str) -> float:
         match = _CARD_EXPR.fullmatch(name)
@@ -587,12 +623,37 @@ class DeepCrusherCardSymbols:
         if low == "ranklopoker":
             return float(_rank_lo(self._rankbitspoker()))
 
+        srank_player, srank_commonp, srank_common = self._srank_components()
         if low == "srankbits":
-            return float(self._suited_rankbits(all_cards))
+            return float(srank_player | srank_commonp)
         if low == "srankbitsplayer":
-            return float(self._suited_rankbits(hole))
+            return float(srank_player)
         if low == "srankbitscommon":
-            return float(self._suited_rankbits(board))
+            return float(srank_common)
+        if low == "srankhi":
+            return float(_rank_hi(srank_player | srank_commonp))
+        if low == "srankhicommon":
+            return float(_rank_hi(srank_common))
+        if low == "srankhiplayer":
+            return float(_rank_hi(srank_player))
+        if low == "sranklo":
+            return float(_rank_lo(srank_player | srank_commonp))
+        if low == "sranklocommon":
+            return float(_rank_lo(srank_common))
+        if low == "srankloplayer":
+            return float(_rank_lo(srank_player))
+
+        suit_name_to_id = {
+            "hearts": 0, "diamonds": 1, "clubs": 2, "spades": 3,
+        }
+        for prefix, cards in (
+            ("suitbitsplayer_", hole),
+            ("suitbitscommon_", board),
+        ):
+            if low.startswith(prefix):
+                suffix = low[len(prefix):]
+                if suffix in suit_name_to_id:
+                    return float(_suit_rankbits(cards, suit_name_to_id[suffix]))
 
         if low == "ispair":
             return float(hole_ranks[0] == hole_ranks[1])
@@ -600,6 +661,42 @@ class DeepCrusherCardSymbols:
             return float(hole[0][1] == hole[1][1])
         if low == "isconnector":
             return float(abs(hole_ranks[0] - hole_ranks[1]) == 1)
+
+        value = self._value()
+        if low in ("ishipair", "ismidpair", "islopair"):
+            if value.category != CATEGORY_PAIR:
+                return 0.0
+            if len(all_cards) == 2:
+                return float(low == "ishipair")
+            if len(all_cards) < 5 or not board_ranks:
+                return 0.0
+            pair_rank = int(value.tie[0])
+            high_board = max(board_ranks)
+            low_board = min(board_ranks)
+            if pair_rank >= high_board:
+                flag = "ishipair"
+            elif pair_rank > low_board:
+                flag = "ismidpair"
+            else:
+                flag = "islopair"
+            return float(low == flag)
+
+        if low == "ishistraight":
+            return float(
+                value.category == CATEGORY_STRAIGHT
+                and not _higher_straight_possible(value.tie[0], board_ranks)
+            )
+        if low == "ishiflush":
+            if value.category != CATEGORY_FLUSH:
+                return 0.0
+            pcbits = self._pcbits()
+            nibbles = value.nibbles
+            return float(
+                (nibbles[0] == 14 and (pcbits & 0x10))
+                or (nibbles[1] == 13 and (pcbits & 0x08))
+                or (nibbles[2] == 12 and (pcbits & 0x04))
+                or (nibbles[3] == 11 and (pcbits & 0x02))
+            )
 
         if low in ("nsuited", "tsuit"):
             suit, count = _dominant_suit(all_cards)
