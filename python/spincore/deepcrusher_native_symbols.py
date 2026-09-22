@@ -29,6 +29,37 @@ class UnknownDeepCrusherNativeSymbol(KeyError):
     pass
 
 
+BENCHMARK_ENVIRONMENT_PROFILE_ID = "GGPoker_NoPT_NoNotes_V1"
+OPENHOLDEM_UNDEFINED = -1.0
+
+
+def frozen_benchmark_environment(native_identifiers) -> dict[str, float]:
+    """Freeze non-strategic OpenHoldem environment for the offline benchmark.
+
+    The profile represents a GGPoker table with no PokerTracker connection,
+    no named-player chair matches and no manual colour notes.  OpenHoldem's
+    log$ symbols evaluate true as a side-effect-friendly expression, while
+    unavailable PokerTracker/chair$ lookups evaluate kUndefined (-1).
+    prwin/prtie are deliberately NOT supplied here: they are strategic
+    card/equity symbols and must be implemented separately.
+    """
+    out: dict[str, float] = {}
+    for raw in native_identifiers:
+        name = str(raw)
+        low = name.lower()
+        if low.startswith("pt_"):
+            out[name] = OPENHOLDEM_UNDEFINED
+        elif low.startswith("log$"):
+            out[name] = 1.0
+        elif low.startswith("chair$"):
+            out[name] = OPENHOLDEM_UNDEFINED
+        elif low.startswith("network$"):
+            out[name] = 1.0 if low == "network$ggpoker" else 0.0
+        elif low.startswith("colourcode"):
+            out[name] = 0.0
+    return out
+
+
 @dataclass(frozen=True)
 class DeepCrusherPrimitiveSymbols:
     view: DeepCrusherStateView
