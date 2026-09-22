@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-22
-Status: **LT3 8200 -> 9105 PASS — POST-9105 DEVELOPMENT BATTERY PASS / INCONCLUSIVE — DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
+Status: **LT3 9105 -> 10105 UTILIZATION CONTINUATION READY / POST-9105 BATTERY INCONCLUSIVE — DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -107,9 +107,17 @@ Key development result:
 - policy drift 8100 -> 9105 is real but moderate, stronger in HU (mean TV 0.0614, p95 0.1456, argmax disagreement 15.68%) than 3H (mean TV 0.0321);
 - derived 8600 finalization PASS, source unchanged, zero new training roots.
 
-Interpretation: additional 8100 -> 9105 training changed behavior but did not demonstrate a statistically resolved strength gain over 8100. There is therefore no evidence-based reason to start another long training block now.
+Interpretation: additional 8100 -> 9105 training changed behavior but did not demonstrate a statistically resolved strength gain over 8100. The battery alone did not justify a claim that more roots improve strength. However, keeping the otherwise-idle Ryzen training while DC0 is engineered is now treated as a separate **research-utilization lane**, not as a conclusion that 9105 was insufficient.
 
-Canonical next action: continue the frozen external-strength lane through DeepCrusher DC0 -> DC1 -> DC2. Benchmark 8100 / derived-finalized 8600 / 9105 under the same frozen external protocol before deciding whether more roots are justified.
+A frozen continuation from finalized 9105 -> 10105 (+1000 iterations / +600,000 roots, projected ~23.2 h) is ready. It preserves source 9105 read-only, preserves raw milestone 9600, checkpoints every 50, touches no sealed holdout and cannot supersede 8100/8600/9105 from training evidence alone.
+
+In parallel, DC0 now also includes:
+- decision-level benchmark traces with hole cards, visible board, pot, to-call, stacks, exact action and sizing;
+- a hand-level sanity audit queue for AA preflop folds, >=10bb 72o jams, top-pair folds, trips+ folds, monster folds and deep high-card jams;
+- frozen environment profile `GGPoker_NoPT_NoNotes_V1`: GGPoker=true, other networks=false, named chair lookups=-1, log$=true, colour notes=0, PokerTracker unavailable=-1;
+- prwin/prtie explicitly excluded from the environment profile because they are substantive equity/card symbols and still require faithful implementation.
+
+Canonical engineering action remains DC0 -> DC1 -> DC2. Training may run concurrently because the external benchmark work is repository-side and does not require consuming the Ryzen trainer.
 
 
 ## ENS8 parallel matrix incident
