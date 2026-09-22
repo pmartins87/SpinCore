@@ -506,11 +506,14 @@ class OpenPPLProgram:
     @classmethod
     def from_text(cls, text: str) -> "OpenPPLProgram":
         sections = split_sections(text)
-        functions = {
-            name: compile_function(name, body)
-            for name, body in sections.items()
-            if name.lower().startswith("f$")
-        }
+        functions: dict[str, CompiledFunction] = {}
+        for name, body in sections.items():
+            if not name.lower().startswith("f$"):
+                continue
+            try:
+                functions[name] = compile_function(name, body)
+            except Exception as exc:
+                raise OpenPPLProgramError(f"{name}: {exc}") from exc
         hand_lists = {
             name: parse_hand_list(body)
             for name, body in sections.items()
