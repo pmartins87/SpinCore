@@ -27,8 +27,8 @@ _WHEN = re.compile(r"^\s*When\s+(.*?)\s*$", re.I)
 _RETURN = re.compile(r"^(.*?)\s+Return\s+(.+?)\s+Force\s*$", re.I)
 _SET = re.compile(r"^(.*?)\s+Set\s+([A-Za-z_][A-Za-z0-9_$]*)\s*$", re.I)
 _DIRECT = re.compile(
-    r"^(.*?)\\s+(Call|Fold|Check|BetMax|BetPot|BetHalfPot|BetThirdPot|"
-    r"BetTwoThirdPot|BetThreeFourthPot|BetMin|RaiseMin)\\s+Force\\s*$",
+    r"^(.*?)\s+(Call|Fold|Check|BetMax|BetPot|BetHalfPot|BetThirdPot|"
+    r"BetTwoThirdPot|BetThreeFourthPot|BetMin|RaiseMin)\s+Force\s*$",
     re.I,
 )
 _OTHERS = re.compile(r"^Others$", re.I)
