@@ -12,6 +12,10 @@ filled.
 from dataclasses import dataclass
 from typing import Mapping
 
+from spincore.deepcrusher_card_symbols import (
+    DeepCrusherCardSymbols,
+    UnknownDeepCrusherCardSymbol,
+)
 from spincore.deepcrusher_state import (
     DeepCrusherStateView,
     STREET_PREFLOP,
@@ -87,19 +91,23 @@ class DeepCrusherPrimitiveSymbols:
 
     @staticmethod
     def supported_symbols() -> frozenset[str]:
-        return frozenset(
-            {
-                "IsPreflop", "IsFlop", "IsTurn", "IsRiver", "betround",
-                "bblind", "sblind",
-                "AmountToCall", "DollarsToCall", "PotSize", "pot", "potcommon",
-                "StackSize", "balance", "currentbet", "BetSize",
-                "dealerchair", "smallblindchair", "bigblindchair", "userchair",
-                "headsupchair", "balance_headsupchair", "StackSize_headsupchair",
-                "currentbet_headsupchair",
-                "InButton", "InSmallBlind", "InBigBlind",
-                "nplayersplaying", "nopponentsallin", "OpponentIsAllin",
-            }
-        )
+        primitive = {
+            "IsPreflop", "IsFlop", "IsTurn", "IsRiver", "betround",
+            "bblind", "sblind",
+            "AmountToCall", "DollarsToCall", "PotSize", "pot", "potcommon",
+            "StackSize", "balance", "currentbet", "BetSize",
+            "dealerchair", "smallblindchair", "bigblindchair", "userchair",
+            "headsupchair", "balance_headsupchair", "StackSize_headsupchair",
+            "currentbet_headsupchair",
+            "InButton", "InSmallBlind", "InBigBlind",
+            "nplayersplaying", "nopponentsallin", "OpponentIsAllin",
+        }
+        return frozenset(primitive | set(DeepCrusherCardSymbols.fixed_symbols()))
+
+    @classmethod
+    def supports(cls, name: str) -> bool:
+        folded = {item.lower() for item in cls.supported_symbols()}
+        return name.lower() in folded or DeepCrusherCardSymbols.supports(name)
 
     def resolve(self, name: str) -> float:
         if self.environment is not None:
@@ -199,6 +207,11 @@ class DeepCrusherPrimitiveSymbols:
                     for rel in (1, 2)
                 )
             )
+
+        try:
+            return float(DeepCrusherCardSymbols(v).resolve(name))
+        except UnknownDeepCrusherCardSymbol:
+            pass
 
         raise UnknownDeepCrusherNativeSymbol(name)
 
