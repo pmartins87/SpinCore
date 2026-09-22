@@ -360,6 +360,8 @@ class ProgramContext:
             return 1.0 if self.hand_class in self.program.hand_list(name) else 0.0
         if low.startswith("f$") and self.program.has_function(name):
             return float(self.evaluate_function(name))
+        if self.program.has_library_function(name):
+            return float(self.evaluate_library_function(name))
         return self._external_value(name)
 
     def set_user(self, name: str) -> None:
@@ -451,6 +453,32 @@ class ProgramContext:
             self.cache[canonical] = value
         return value
 
+    def evaluate_library_function(self, name: str) -> float:
+        canonical = self.program.canonical_library_name(name)
+        cache_key = "library::" + canonical.lower()
+        fn = self.program.compiled_library_function(canonical)
+        cacheable = not any(node.action_kind == "set" for node in fn.whens)
+        if cacheable and cache_key in self.cache:
+            return self.cache[cache_key]
+        if cache_key in self.in_progress:
+            raise OpenPPLProgramError(
+                f"recursive library function cycle at {canonical}"
+            )
+        self.in_progress.add(cache_key)
+        try:
+            result = self.program._evaluate_compiled(fn, self)
+        finally:
+            self.in_progress.remove(cache_key)
+        if isinstance(result, DirectAction):
+            raise OpenPPLProgramError(
+                f"library::{canonical} returned direct action {result.name}; "
+                "numerical evaluation requested"
+            )
+        value = float(result.value)
+        if cacheable:
+            self.cache[cache_key] = value
+        return value
+
 
 class OpenPPLSession:
     """Stateful OpenPPL hand session.
@@ -497,15 +525,30 @@ class OpenPPLProgram:
         self,
         functions: dict[str, CompiledFunction],
         hand_lists: Mapping[str, frozenset[str]] | None = None,
+        library_sections: Mapping[str, str] | None = None,
     ):
         self.functions = dict(functions)
         self._folded = {name.lower(): name for name in self.functions}
         self.hand_lists = dict(hand_lists or {})
         self._lists_folded = {name.lower(): name for name in self.hand_lists}
+        self.library_sections = dict(library_sections or {})
+        self._library_folded = {
+            name.lower(): name for name in self.library_sections
+        }
+        self._compiled_library: dict[str, CompiledFunction] = {}
 
     @classmethod
     def from_text(cls, text: str) -> "OpenPPLProgram":
-        sections = split_sections(text)
+        return cls.from_texts(text)
+
+    @classmethod
+    def from_texts(
+        cls,
+        strategy_text: str,
+        *,
+        library_texts: tuple[str, ...] | list[str] = (),
+    ) -> "OpenPPLProgram":
+        sections = split_sections(strategy_text)
         functions: dict[str, CompiledFunction] = {}
         for name, body in sections.items():
             if not name.lower().startswith("f$"):
@@ -519,13 +562,53 @@ class OpenPPLProgram:
             for name, body in sections.items()
             if name.lower().startswith("list")
         }
-        return cls(functions, hand_lists)
+
+        library_sections: dict[str, str] = {}
+        library_folded: dict[str, str] = {}
+        for library_text in library_texts:
+            for name, body in split_sections(library_text).items():
+                low = name.lower()
+                if low == "openppl_license_text":
+                    continue
+                if low in library_folded:
+                    raise OpenPPLProgramError(
+                        f"duplicate OpenPPL library section {name!r}"
+                    )
+                library_folded[low] = name
+                library_sections[name] = body
+
+        return cls(functions, hand_lists, library_sections)
 
     def has_function(self, name: str) -> bool:
         return name in self.functions or name.lower() in self._folded
 
     def has_hand_list(self, name: str) -> bool:
         return name in self.hand_lists or name.lower() in self._lists_folded
+
+    def has_library_function(self, name: str) -> bool:
+        return name in self.library_sections or name.lower() in self._library_folded
+
+    def canonical_library_name(self, name: str) -> str:
+        if name in self.library_sections:
+            return name
+        try:
+            return self._library_folded[name.lower()]
+        except KeyError as exc:
+            raise UnknownOpenPPLSymbol(name) from exc
+
+    def compiled_library_function(self, name: str) -> CompiledFunction:
+        canonical = self.canonical_library_name(name)
+        cached = self._compiled_library.get(canonical)
+        if cached is not None:
+            return cached
+        try:
+            compiled = compile_function(canonical, self.library_sections[canonical])
+        except Exception as exc:
+            raise OpenPPLProgramError(
+                f"OpenPPL library section {canonical}: {exc}"
+            ) from exc
+        self._compiled_library[canonical] = compiled
+        return compiled
 
     def hand_list(self, name: str) -> frozenset[str]:
         if name in self.hand_lists:
