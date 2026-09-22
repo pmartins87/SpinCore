@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-22
-Status: **LT3 8200 -> 9105 PASS — POST-9105 DEVELOPMENT BATTERY READY / DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
+Status: **LT3 8200 -> 9105 PASS — POST-9105 DEVELOPMENT BATTERY MEMORY FIX READY / DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -97,9 +97,11 @@ The long training block is complete. Do **not** start more training yet.
 The post-9105 development protocol is frozen before seeing development outcomes:
 `docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md`.
 
+First post-9105 battery attempt: derived 8600 finalization PASS, then host termination at the first 8100 -> 8600 AveragePolicy cross-play. Diagnosis: orchestration regression passed multi-GB training checkpoints directly to 31 spawned workers. No cross-play result was produced. The runner is corrected to export compact policy-only inference artifacts before multiprocessing; statistical protocol is unchanged.
+
 Canonical next local action:
 
-`bash tools/run_lt3_post9105_dev_battery.sh`
+`git pull --ff-only origin main && bash tools/run_lt3_post9105_dev_battery.sh`
 
 This runner:
 - verifies the frozen 8600/9105 hashes;
