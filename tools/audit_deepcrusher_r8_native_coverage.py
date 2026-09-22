@@ -66,15 +66,14 @@ def _classify(name: str) -> str:
 def main() -> int:
     args = parse_args()
     closure = inspect_r8_source(args.deepcrusher_source)
-    supported_folded = {name.lower() for name in DeepCrusherPrimitiveSymbols.supported_symbols()}
-
     native = list(closure.native_identifiers)
     environment_profile = frozen_benchmark_environment(native)
     environment_folded = {name.lower() for name in environment_profile}
     supported = sorted(
-        (name for name in native if name.lower() in supported_folded),
+        (name for name in native if DeepCrusherPrimitiveSymbols.supports(name)),
         key=str.lower,
     )
+    supported_folded = {name.lower() for name in supported}
     environment_supported = sorted(
         (name for name in native if name.lower() in environment_folded),
         key=str.lower,
