@@ -287,6 +287,15 @@ def main() -> int:
     for path in (args.solver, args.before, args.after):
         if not path.is_file():
             raise SystemExit(f"missing input: {path}")
+    if args.workers > 1:
+        limit = 512 * 1024 * 1024
+        for path in (args.before, args.after):
+            if path.stat().st_size > limit:
+                raise SystemExit(
+                    f"multiprocess cross-play requires compact inference checkpoints; "
+                    f"refusing large training checkpoint {path} ({path.stat().st_size} bytes). "
+                    "Run tools/export_lean_inference_checkpoint.py first."
+                )
 
     sampler = LegacyScenarioSampler(seed=args.seed ^ 0x5CE0A710, config=LegacyScenarioConfig())
     tasks: list[tuple[int, Episode, int, int]] = []
