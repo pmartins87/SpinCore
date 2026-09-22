@@ -32,7 +32,7 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 8. Post-9105 development battery — **PASS / INCONCLUSIVE; SEALED HOLDOUT UNTOUCHED**. Corrected execution completed on the frozen seed/protocol. AveragePolicy 8100 -> 9105 ALL = -0.055 chips/hand, 95% CI [-2.636,+2.526]; 3H = -2.303 [-4.841,+0.235]; HU = +2.630 [-2.151,+7.411]. Current HU ENS8 direct 8100 -> 9105 = -0.804 [-7.391,+5.784]. Policy drift is measurable, especially HU, but no resolved strength improvement was demonstrated.
 9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim. **Preparation is active in parallel with LT3 training**: expression semantics, ordered WHEN/SET control flow, canonical list parsing, hand-scoped user variables, persistent me_* memory semantics and full-source compile audit tooling are now implemented; native symbol coverage, exact action sizing and runtime-trace parity remain.
 10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
-11. Additional training is **PAUSED**: the development battery did not resolve a strength gain from 8100 to 9105. Resume training only if external-strength evidence from DC1/DC2 justifies more compute.
+11. Canonical promotion training remains **UNPROVEN** by the development battery, but an explicitly separate utilization continuation 9105 -> 10105 is **READY** so the Ryzen need not sit idle while DC0 is engineered. This block is research-only, preserves 9105, saves raw 9600, adds 600,000 roots and touches no sealed holdout. Its existence must not be interpreted as evidence that more roots improve strength.
 12. Freeze the final LT3 research candidate.
 13. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
 14. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
@@ -150,3 +150,17 @@ Until those measurements exist, do not state a crossover iteration at which
 SpinCore "starts beating DeepCrusher". Once 8100 / finalized-8600 / 9105 are
 benchmarked under the same frozen seeds, the observed results may bound a
 crossover interval, but they still do not justify assuming monotonic improvement.
+
+
+## Decision-level external audit — added 2026-09-22
+
+The DeepCrusher benchmark now records enough state for hand-by-hand strategic review rather than relying only on aggregate chip EV. Each traced decision can include actor hole cards, visible board, pot, amount to call, stack/commitment geometry, exact action and exact amount.
+
+The first sanity queue intentionally surfaces:
+- pocket-aces preflop folds (critical);
+- 72o preflop jams at >=10bb effective (high review; shallow jams are not auto-flagged);
+- postflop top-pair folds (review, not automatically an error);
+- trips+ folds and full-house-or-better folds;
+- deep high-card all-ins (review because draws may justify them).
+
+These flags are diagnostics, not poker-theory verdicts. Repeated patterns plus context are evidence; isolated flagged hands still require inspection.
