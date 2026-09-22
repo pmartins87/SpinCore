@@ -297,6 +297,13 @@ def main() -> int:
         raise SystemExit(f"solver not found: {args.solver}")
     if not args.checkpoint.is_file():
         raise SystemExit(f"checkpoint not found: {args.checkpoint}")
+    if args.workers > 1 and args.checkpoint.stat().st_size > 512 * 1024 * 1024:
+        raise SystemExit(
+            f"multiprocess strategy-quality evaluation requires a compact inference checkpoint; "
+            f"refusing large training checkpoint {args.checkpoint} "
+            f"({args.checkpoint.stat().st_size} bytes). "
+            "Run tools/export_lean_inference_checkpoint.py first."
+        )
 
     sampler = LegacyScenarioSampler(seed=args.seed ^ 0x5CE0A710, config=LegacyScenarioConfig())
     tasks: list[tuple[int, Episode, int, int]] = []
