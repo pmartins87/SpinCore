@@ -10,6 +10,7 @@ on:
       - 'python/spincore/deepcrusher_r8_dc0.py'
       - 'python/spincore/deepcrusher_openppl.py'
       - 'python/spincore/deepcrusher_state.py'
+      - 'python/spincore/deepcrusher_native_symbols.py'
       - 'python/spincore/deepcrusher_benchmark.py'
       - 'python_tests/test_openppl_expr.py'
       - 'python_tests/test_openppl_program.py'
@@ -56,6 +57,7 @@ jobs:
             python/spincore/deepcrusher_r8_dc0.py \
             python/spincore/deepcrusher_openppl.py \
             python/spincore/deepcrusher_state.py \
+            python/spincore/deepcrusher_native_symbols.py \
             python/spincore/deepcrusher_benchmark.py \
             tools/audit_deepcrusher_r8_dc0_readiness.py \
             tools/audit_deepcrusher_r8_openppl_compile.py
@@ -73,7 +75,8 @@ jobs:
         run: |
           python -m pytest -q \
             python_tests/test_deepcrusher_openppl_inventory.py \
-            python_tests/test_deepcrusher_benchmark_contract.py
+            python_tests/test_deepcrusher_benchmark_contract.py \
+            python_tests/test_deepcrusher_native_symbols.py
       - name: Full frozen R8 source compile gate
         env:
           PYTHONPATH: ${{ github.workspace }}/python
