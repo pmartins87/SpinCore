@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-22
-Status: **LT3 9105 -> 10105 UTILIZATION CONTINUATION READY / POST-9105 BATTERY INCONCLUSIVE — DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
+Status: **LT3 9105 -> 10105 UTILIZATION CONTINUATION RUNNING HEALTHY / POST-9105 BATTERY INCONCLUSIVE — DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -109,7 +109,7 @@ Key development result:
 
 Interpretation: additional 8100 -> 9105 training changed behavior but did not demonstrate a statistically resolved strength gain over 8100. The battery alone did not justify a claim that more roots improve strength. However, keeping the otherwise-idle Ryzen training while DC0 is engineered is now treated as a separate **research-utilization lane**, not as a conclusion that 9105 was insufficient.
 
-A frozen continuation from finalized 9105 -> 10105 (+1000 iterations / +600,000 roots, projected ~23.2 h) is ready. It preserves source 9105 read-only, preserves raw milestone 9600, checkpoints every 50, touches no sealed holdout and cannot supersede 8100/8600/9105 from training evidence alone.
+A frozen continuation from finalized 9105 -> 10105 (+1000 iterations / +600,000 roots, projected ~23.2 h) is **RUNNING HEALTHY** in `runs/lt3_parallel_9105_10105/20260922_132104`. It preserves source 9105 read-only, preserves raw milestone 9600, checkpoints every 50, touches no sealed holdout and cannot supersede 8100/8600/9105 from training evidence alone. Preflight passed; iterations 9106 and 9107 completed at 80.12 s and 77.10 s wall respectively, with ~29 GiB available RAM and zero swap use at launch.
 
 In parallel, DC0 now also includes:
 - decision-level benchmark traces with hole cards, visible board, pot, to-call, stacks, exact action and sizing;
@@ -123,14 +123,18 @@ SpinCore package, producing `ModuleNotFoundError: No module named 'spincore'`.
 No training iteration started and the frozen 9105 artifacts were not modified.
 The runner now exports the project Python path before any Python preflight.
 
-Canonical local action now:
+Canonical local action now: **leave the running 9105 -> 10105 process untouched**. Do not pull/restart or launch another LT3 trainer. Expected final sentinel: `LT3_PARALLEL_9105_10105_TRAINING_PASS`.
 
-`bash tools/run_lt3_parallel_9105_10105.sh`
+Canonical engineering action remains DC0 -> DC1 -> DC2. Training runs concurrently because the external benchmark work is repository-side and does not consume the Ryzen trainer.
 
-Expected early sentinel: `LT3_PARALLEL_9105_10105_PREFLIGHT_PASS`.
-Expected final sentinel: `LT3_PARALLEL_9105_10105_TRAINING_PASS`.
+DC0 has advanced materially while the utilization run is active:
+- pinned OpenPPL library overlay is integrated and CI-covered; 126 direct R8 source symbols formerly classified as native are actually standard OpenPPL library sections;
+- OpenHoldem-compatible card/hand provider is integrated, including rank bits, hand/board expressions, pokerval, pcbits/npcbits, suit/straight/rank-count symbols and exact suit enrichment from the solver deal snapshot;
+- direct source-level unresolved dependencies are down to 20 after primitive + environment + library + card providers;
+- a true transitive closure audit now follows both R8 and OpenPPL-library dependencies: 336 native leaves, 201 resolved and 135 syntactically unresolved before pruning Hold'em-dead Omaha branches and freezing table/game constants;
+- DC0 workflow is PASS after the OpenHoldem straight-metric parity correction.
 
-Canonical engineering action remains DC0 -> DC1 -> DC2. Training may run concurrently because the external benchmark work is repository-side and does not require consuming the Ryzen trainer.
+Next implementation tranche: freeze Hold'em/table constants and topology, port action-history/raiser/caller semantics from the preserved OpenHoldem source, then close the remaining equity and exact-sizing/oracle gates.
 
 
 ## ENS8 parallel matrix incident
