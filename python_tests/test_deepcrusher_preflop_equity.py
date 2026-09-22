@@ -6,7 +6,8 @@ from spincore.deepcrusher_native_symbols import DeepCrusherPrimitiveSymbols
 from spincore.deepcrusher_preflop_equity import (
     SOURCE_TXT_SHA256,
     SOURCE_ZIP_SHA256,
-    hero_combo_key,
+    TABLE_TEXT_SHA256,
+    hero_class_key,
     range_equity,
 )
 from spincore.deepcrusher_state import (
@@ -44,11 +45,12 @@ def _aa_view() -> DeepCrusherStateView:
     )
 
 
-def test_compact_preflop_table_is_hash_pinned_and_covers_exact_aa_combo():
+def test_compact_preflop_class_table_is_hash_pinned_and_covers_aa():
     assert SOURCE_ZIP_SHA256 == "52a0a87174b0d7cabd5b16fe43387b0807a6abd036e5a61c1aafbc008ecf50c2"
     assert SOURCE_TXT_SHA256 == "9dd539e2720010684d0006981207489e4f753b1d628f7e0443003b2c7f3e6c9f"
+    assert TABLE_TEXT_SHA256 == "114fd17d594fb63b5f46385687dc522f894c63bb6ccbf6a2d5c3c69ac2f34892"
     view = _aa_view()
-    assert hero_combo_key(view) == (49, 50)
+    assert hero_class_key(view) == "AA"
     assert range_equity(view, 4) == pytest.approx(0.83200857, abs=1e-9)
     assert range_equity(view, 15) == pytest.approx(0.85070519, abs=1e-9)
 
@@ -72,3 +74,16 @@ def test_multiplex_projection_refuses_unrelated_range_function():
     native = DeepCrusherPrimitiveSymbols(_aa_view())
     with pytest.raises(KeyError):
         native.resolve_versus_multiplex("f$some_other_range", 4, "$prwin")
+
+
+def test_class_projection_is_invariant_to_exact_suit_realization():
+    left = _aa_view()
+    right = DeepCrusherStateView(
+        **{
+            **left.__dict__,
+            "exact_suits": (0, 3, -1, -1, -1, -1, -1),
+        }
+    )
+    assert hero_class_key(left) == hero_class_key(right) == "AA"
+    for range_id in (4, 6, 9, 12, 15):
+        assert range_equity(left, range_id) == range_equity(right, range_id)
