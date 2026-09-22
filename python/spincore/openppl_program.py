@@ -130,7 +130,7 @@ def _strip_comments(body: str) -> list[tuple[int, str]]:
 
 
 def _is_when_row(text: str) -> bool:
-    return bool(re.match(r"^when\\b", text, flags=re.I))
+    return bool(re.match(r"^when\b", text, flags=re.I))
 
 
 def _logical_rows(rows: list[tuple[int, str]]) -> list[tuple[int, str]]:
