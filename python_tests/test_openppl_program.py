@@ -96,6 +96,29 @@ a ? { b ? 10 : 20 } : 30
         self.assertEqual(p.evaluate("f$x",{"a":1,"b":0}),ReturnValue(20))
         self.assertEqual(p.evaluate("f$x",{"a":0,"b":1}),ReturnValue(30))
 
+
+    def test_multiline_when_condition_is_joined(self):
+        p=OpenPPLProgram.from_text("""
+##f$x##
+When a
+&& b
+&& c Return 11 Force
+When Others Return 4 Force
+""")
+        self.assertEqual(p.evaluate("f$x",{"a":1,"b":1,"c":1}),ReturnValue(11))
+        self.assertEqual(p.evaluate("f$x",{"a":1,"b":1,"c":0}),ReturnValue(4))
+
+    def test_direct_bet_action_preserves_name(self):
+        p=OpenPPLProgram.from_text("""
+##f$x##
+When a BetHalfPot Force
+When b BetMax Force
+When Others BetThirdPot Force
+""")
+        self.assertEqual(p.evaluate("f$x",{"a":1,"b":0}),DirectAction("BetHalfPot"))
+        self.assertEqual(p.evaluate("f$x",{"a":0,"b":1}),DirectAction("BetMax"))
+        self.assertEqual(p.evaluate("f$x",{"a":0,"b":0}),DirectAction("BetThirdPot"))
+
     def test_eof_without_action_fails_closed(self):
         p=OpenPPLProgram.from_text("""
 ##f$x##
