@@ -15,7 +15,7 @@ import ctypes as C
 import hashlib
 from pathlib import Path
 import random
-from typing import Iterable, Protocol, Sequence
+from typing import Callable, Iterable, Protocol, Sequence
 
 
 SPINCORE_POLICY_ID = "SPINCORE"
@@ -122,6 +122,38 @@ class Lineup:
 
 
 @dataclass(frozen=True)
+class DecisionTrace:
+    """One fully observable benchmark decision for later strategic sanity audit."""
+
+    scenario_index: int
+    domain: str
+    blind: str
+    lineup: tuple[str, str, str]
+    lineup_index: int
+    decision_index: int
+    actor: int
+    policy_id: str
+    street: int
+    visible_board_count: int
+    pot: int
+    current_bet: int
+    to_call: int
+    min_raise_to: int
+    max_raise_to: int
+    stacks: tuple[int, int, int]
+    street_commitments: tuple[int, int, int]
+    total_commitments: tuple[int, int, int]
+    hole_cards: tuple[int, int] | None
+    board: tuple[int, ...]
+    action_type: int
+    amount_to: int
+
+    @property
+    def action_name(self) -> str:
+        return EXACT_ACTION_NAMES[int(self.action_type)]
+
+
+@dataclass(frozen=True)
 class MatchObservation:
     scenario_index: int
     domain: str
@@ -210,6 +242,7 @@ class OfflineHeadToHeadEngine:
         deepcrusher_policy: OfflineDecisionPolicy,
         master_seed: int = 20260915,
         max_decisions: int = 200,
+        decision_sink: Callable[[DecisionTrace], None] | None = None,
     ) -> None:
         if spincore_policy.policy_id != SPINCORE_POLICY_ID:
             raise ValueError("spincore_policy has wrong policy_id")
@@ -222,6 +255,7 @@ class OfflineHeadToHeadEngine:
         }
         self.master_seed = int(master_seed)
         self.max_decisions = int(max_decisions)
+        self.decision_sink = decision_sink
         if self.max_decisions <= 0:
             raise ValueError("max_decisions must be positive")
 
@@ -254,7 +288,44 @@ class OfflineHeadToHeadEngine:
                 if policy_id == "DEAD":
                     raise RuntimeError("solver selected dead seat as actor")
                 policy = self.policies[policy_id]
+                public = state.public_snapshot() if self.decision_sink is not None else None
+                deal = None
+                if self.decision_sink is not None and state.owner.explicit_deal_available:
+                    deal = state.deal_snapshot()
                 action = policy.choose_exact(state, seat=actor, rng=rngs[actor])
+                if self.decision_sink is not None and public is not None:
+                    self.decision_sink(
+                        DecisionTrace(
+                            scenario_index=int(scenario_index),
+                            domain="TRUE_HEADS_UP" if bool(episode.game_is_hu) else "THREE_HANDED",
+                            blind=f"{int(episode.small_blind)}/{int(episode.big_blind)}",
+                            lineup=tuple(lineup.seats),
+                            lineup_index=int(lineup_index),
+                            decision_index=int(decisions),
+                            actor=int(actor),
+                            policy_id=str(policy_id),
+                            street=int(public.street),
+                            visible_board_count=int(public.visible_board_count),
+                            pot=int(public.pot),
+                            current_bet=int(public.current_bet),
+                            to_call=int(public.to_call),
+                            min_raise_to=int(public.min_raise_to),
+                            max_raise_to=int(public.max_raise_to),
+                            stacks=tuple(int(x) for x in public.stacks),
+                            street_commitments=tuple(int(x) for x in public.street_commitments),
+                            total_commitments=tuple(int(x) for x in public.total_commitments),
+                            hole_cards=(
+                                tuple(int(x) for x in deal.holes[actor])
+                                if deal is not None else None
+                            ),
+                            board=(
+                                tuple(int(x) for x in deal.board[: public.visible_board_count])
+                                if deal is not None else ()
+                            ),
+                            action_type=int(action.action_type),
+                            amount_to=int(action.amount_to),
+                        )
+                    )
                 apply_external_exact(state, action)
                 decisions += 1
                 if decisions > self.max_decisions:
