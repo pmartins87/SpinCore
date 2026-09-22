@@ -189,6 +189,23 @@ me_st_X_2 + me_inc_X + me_add_X_3 + me_sub_X_1 + me_re_X
         self.assertEqual(session.evaluate("f$ops",{}),ReturnValue(5))
         self.assertEqual(session.memory_symbols["x"],5)
 
+
+    def test_parameterized_raise_actions(self):
+        p=OpenPPLProgram.from_text("""
+##f$x##
+When a RaiseTo (AmountToCall + 4) Force
+When b RaiseBy 50% Force
+When Others Fold Force
+""")
+        self.assertEqual(
+            p.evaluate("f$x",{"a":1,"b":0,"AmountToCall":2}),
+            DirectAction("RaiseTo",6),
+        )
+        self.assertEqual(
+            p.evaluate("f$x",{"a":0,"b":1,"AmountToCall":2}),
+            DirectAction("RaiseBy",0.5),
+        )
+
     def test_eof_without_action_fails_closed(self):
         p=OpenPPLProgram.from_text("""
 ##f$x##
