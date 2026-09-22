@@ -129,6 +129,10 @@ def _strip_comments(body: str) -> list[tuple[int, str]]:
     return rows
 
 
+def _is_when_row(text: str) -> bool:
+    return bool(re.match(r"^when\\b", text, flags=re.I))
+
+
 def _logical_rows(rows: list[tuple[int, str]]) -> list[tuple[int, str]]:
     """Join OpenPPL physical-line continuations into logical statements.
 
@@ -140,14 +144,14 @@ def _logical_rows(rows: list[tuple[int, str]]) -> list[tuple[int, str]]:
     if not rows:
         return []
 
-    has_when = any(text.lower().startswith("when ") for _, text in rows)
+    has_when = any(_is_when_row(text) for _, text in rows)
     if not has_when:
         # Plain expression functions may also span lines.
         return [(rows[0][0], " ".join(text for _, text in rows))]
 
     out: list[tuple[int, str]] = []
     for line_number, text in rows:
-        if text.lower().startswith("when "):
+        if _is_when_row(text):
             out.append((line_number, text))
             continue
         if not out:
@@ -246,7 +250,7 @@ def _parse_when(line_number: int, text: str) -> WhenNode:
 
 def compile_function(name: str, body: str) -> CompiledFunction:
     rows = _logical_rows(_strip_comments(body))
-    when_rows = [(line_no, text) for line_no, text in rows if text.lower().startswith("when ")]
+    when_rows = [(line_no, text) for line_no, text in rows if _is_when_row(text)]
 
     if not when_rows:
         expression_text = " ".join(text for _, text in rows).strip()
@@ -262,7 +266,7 @@ def compile_function(name: str, body: str) -> CompiledFunction:
         offenders = [
             f"{line_no}:{text}"
             for line_no, text in rows
-            if not text.lower().startswith("when ")
+            if not _is_when_row(text)
         ]
         raise OpenPPLProgramError(
             f"{name}: mixed WHEN/non-WHEN executable lines are unsupported: "
