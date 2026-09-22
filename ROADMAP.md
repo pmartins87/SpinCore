@@ -116,7 +116,7 @@ Completed foundation work:
 - full frozen-source OpenPPL compile audit and a static-preparation runner added;
 - exact R8 v22 operational source vendored in SpinCore with SHA256 pin so CI can test the real frozen artifact;
 - full-source compile gate passes on the real 1,270,138-byte R8 source: 1,267 sections, 721 functions, 545 hand-list sections;
-- primitive native-symbol bridge started and fail-closed coverage audit added: 27/269 currently implemented, 242 still unresolved;
+- primitive native-symbol bridge started and fail-closed coverage audit added: 27/269 primitive state symbols implemented; frozen environment profile resolves another 76 source identifiers, leaving 166 substantive unresolved;
 - DC0 CI corrected to execute pytest-style contracts instead of merely importing files and is currently PASS.
 
 Post-9105 development tooling is now frozen in `docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md` and `tools/run_lt3_post9105_dev_battery.sh`.
@@ -124,7 +124,7 @@ Post-9105 development tooling is now frozen in `docs/LT3_POST9105_DEVELOPMENT_BA
 Still blocking canonical DC0:
 - complete native/OpenPPL symbol provider from SpinCore state/history;
 - exact DeepCrusher sizing/action conversion into ExternalExactAction;
-- frozen environment treatment for optional PokerTracker/network symbols;
+- frozen environment treatment for optional PokerTracker/network/chair/log symbols — **PASS** via `GGPoker_NoPT_NoNotes_V1`; `prwin/prtie` remain substantive and are not environment-filled;
 - broad parity fixtures against real OpenHoldem traces, including preflop/flop/turn/river and sizing.
 
 The historical R8 v22 OpenHoldem smoke proves the frozen artifact itself loaded and made 153 decisions, but the five original smoke logs are not stored in the DeepCrusher repository, so that audit document alone is not sufficient as an oracle parity fixture.
