@@ -114,7 +114,10 @@ Completed foundation work:
 - OpenHoldem user_* variables persist for the hand and clear on hand reset;
 - me_st/me_re/me_inc/me_add/me_sub memory semantics persist until connection reset;
 - full frozen-source OpenPPL compile audit and a static-preparation runner added;
-- DC0 CI corrected to execute pytest-style contracts instead of merely importing files.
+- exact R8 v22 operational source vendored in SpinCore with SHA256 pin so CI can test the real frozen artifact;
+- full-source compile gate passes on the real 1,270,138-byte R8 source: 1,267 sections, 721 functions, 545 hand-list sections;
+- primitive native-symbol bridge started and fail-closed coverage audit added: 27/269 currently implemented, 242 still unresolved;
+- DC0 CI corrected to execute pytest-style contracts instead of merely importing files and is currently PASS.
 
 Still blocking canonical DC0:
 - complete native/OpenPPL symbol provider from SpinCore state/history;
