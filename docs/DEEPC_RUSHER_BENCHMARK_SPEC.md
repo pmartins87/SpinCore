@@ -216,11 +216,23 @@ No later SpinCore version may overwrite an older result.  Benchmark history is c
 
 Implemented now:
 
-- frozen DeepCrusher R8 v22 source/hash contract;
+- frozen DeepCrusher R8 v22 source/hash contract and source/dependency preflight;
 - exact external BetTo/RaiseTo action application in the SpinCore solver;
 - HU same-deal seat-swap schedule;
 - fair 3H six-game AAB/ABB schedule;
 - zero-sum per-policy aggregation contract;
-- unit tests for lineup/exposure fairness;
-- source preflight support is next;
-- full DeepCrusher OpenPPL decision oracle remains the main implementation item before canonical DC2.
+- strict OpenHoldem-compatible expression evaluator;
+- ordered WHEN / RETURN / SET structural evaluator with multiline source normalization;
+- canonical parsing/evaluation of all list_* hand ranges;
+- hand-scoped user_* variable persistence and connection-scoped me_* memory semantics derived from the preserved OpenHoldem implementation;
+- full-source structural compile audit and static-preparation runner;
+- CI contracts for the portable DC0 foundation.
+
+Still required before DC0 can authorize canonical DC1/DC2:
+
+- complete native/OpenPPL symbol projection from SpinCore observable state and action history;
+- exact action/sizing translation, including the R8 f$BestBetsize and all-in-conversion paths;
+- explicit frozen treatment of optional environment/PokerTracker/network-dependent symbols;
+- broad real-OpenHoldem parity fixtures across preflop/flop/turn/river with exact bet/raise amounts.
+
+The prior R8 v22 live smoke is useful external evidence that the frozen formula itself is operational, but its original five logs are not committed as machine-readable parity fixtures.
