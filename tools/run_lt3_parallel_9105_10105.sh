@@ -16,6 +16,11 @@ SOURCE_ENSEMBLE_SHA="b9c3ffffc7139eeb77c4b4182136e10ada5cad2f023aa6e560e164e2e0a
 
 GATE_REPORT="$ROOT/runs/lt3_parallel_8200_gate/20260921_123225/end_to_end_gate.json"
 
+# Torch checkpoints pickle SpinCore classes.  The very first Python preflight
+# already torch.load()s the frozen 9105 artifacts, so the package path must be
+# available before any Python process is launched, not only before training.
+export PYTHONPATH="$ROOT/python:$ROOT/tools"
+
 SOURCE_ITERATION=9105
 TARGET_ITERATION=10105
 ADDITIONAL_ITERATIONS=1000
@@ -94,7 +99,6 @@ if [ -n "$HOST_C_KIB" ] && [ "$HOST_C_KIB" -lt $((20*1024*1024)) ]; then
   exit 12
 fi
 
-export PYTHONPATH="$ROOT/python:$ROOT/tools"
 export SPINCORE_TORCH_THREADS="$THREADS"
 export OMP_NUM_THREADS="$THREADS"
 export MKL_NUM_THREADS="$THREADS"
