@@ -21,6 +21,7 @@ from spincore.deepcrusher_table_symbols import (
     UnknownDeepCrusherTableSymbol,
 )
 from spincore.deepcrusher_history_symbols import DeepCrusherHistorySymbols
+from spincore.deepcrusher_preflop_equity import range_equity
 from spincore.deepcrusher_state import (
     DeepCrusherStateView,
     STREET_PREFLOP,
@@ -114,6 +115,15 @@ class DeepCrusherPrimitiveSymbols:
             | set(DeepCrusherHistorySymbols.fixed_symbols())
         )
 
+    @staticmethod
+    def supports_dynamic_symbol(name: str) -> bool:
+        prefix = "vs" + "$" + "multiplex" + "$"
+        base = prefix + "f$backup_opp_allin_range"
+        return str(name).lower() in {
+            (base + "$prwin").lower(),
+            (base + "$prtie").lower(),
+        }
+
     @classmethod
     def supports(cls, name: str) -> bool:
         folded = {item.lower() for item in cls.supported_symbols()}
@@ -122,6 +132,34 @@ class DeepCrusherPrimitiveSymbols:
             or DeepCrusherCardSymbols.supports(name)
             or DeepCrusherTableSymbols.supports(name)
             or DeepCrusherHistorySymbols.supports(name)
+        )
+
+    def resolve_versus_multiplex(
+        self,
+        infix_function: str,
+        list_id: int,
+        metric: str,
+    ) -> float:
+        """Resolve the only R8 dynamic versus projection behaviorally exactly.
+
+        The compact source table stores equity = prwin + 0.5*prtie rather than
+        the two components. Frozen R8 consumes these symbols only in exactly
+        that combined expression, so representing the stored equity as prwin
+        with prtie=0 preserves every R8 decision while refusing unrelated
+        multiplex functions.
+        """
+        if str(infix_function).lower() != "f$backup_opp_allin_range":
+            raise UnknownDeepCrusherNativeSymbol(
+                "unsupported versus multiplex infix: " + str(infix_function)
+            )
+        metric_low = str(metric).lower().lstrip("$")
+        equity = float(range_equity(self.view, int(list_id)))
+        if metric_low == "prwin":
+            return equity
+        if metric_low == "prtie":
+            return 0.0
+        raise UnknownDeepCrusherNativeSymbol(
+            "unsupported R8 multiplex metric: " + str(metric)
         )
 
     def resolve(self, name: str) -> float:
