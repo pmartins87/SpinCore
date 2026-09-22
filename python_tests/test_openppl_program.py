@@ -163,6 +163,32 @@ When Others Return 0 Force
         session.reset_hand()
         self.assertEqual(session.evaluate("f$read",{"trigger":0}),ReturnValue(0))
 
+
+    def test_openholdem_memory_symbols_persist_across_hands_until_connection_reset(self):
+        p=OpenPPLProgram.from_text("""
+##f$store##
+When go Set me_st_ES_stackvalue
+When Others Return 0 Force
+##f$recall##
+me_re_ES
+""")
+        session=OpenPPLSession(p)
+        self.assertEqual(session.evaluate("f$store",{"go":1,"stackvalue":7.5}),ReturnValue(0))
+        self.assertEqual(session.evaluate("f$recall",{}),ReturnValue(7.5))
+        session.reset_hand()
+        self.assertEqual(session.evaluate("f$recall",{}),ReturnValue(7.5))
+        session.reset_connection()
+        self.assertEqual(session.evaluate("f$recall",{}),ReturnValue(0))
+
+    def test_memory_store_increment_add_sub_and_expression_side_effect(self):
+        p=OpenPPLProgram.from_text("""
+##f$ops##
+me_st_X_2 + me_inc_X + me_add_X_3 + me_sub_X_1 + me_re_X
+""")
+        session=OpenPPLSession(p)
+        self.assertEqual(session.evaluate("f$ops",{}),ReturnValue(5))
+        self.assertEqual(session.memory_symbols["x"],5)
+
     def test_eof_without_action_fails_closed(self):
         p=OpenPPLProgram.from_text("""
 ##f$x##
