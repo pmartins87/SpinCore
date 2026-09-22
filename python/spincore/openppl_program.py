@@ -187,10 +187,10 @@ def _parse_when(line_number: int, text: str) -> WhenNode:
     m = _SET.match(tail)
     if m:
         name = m.group(2)
-        if not name.lower().startswith("user"):
+        low = name.lower()
+        if not (low.startswith("user") or low.startswith("me_")):
             raise OpenPPLProgramError(
-                f"line {line_number}: only OpenPPL user-variable SET is handled "
-                f"by this layer, got {name!r}"
+                f"line {line_number}: unsupported OpenPPL SET target {name!r}"
             )
         return WhenNode(
             condition=_compile_condition(m.group(1)),
@@ -292,11 +292,13 @@ class ProgramContext:
         *,
         hand_class: str | None = None,
         user_variables: set[str] | None = None,
+        memory_symbols: dict[str, float] | None = None,
     ):
         self.program = program
         self.external = external
         self.hand_class = hand_class
         self.user_variables = user_variables if user_variables is not None else set()
+        self.memory_symbols = memory_symbols if memory_symbols is not None else {}
         self.cache: dict[str, float] = {}
         self.in_progress: set[str] = set()
 
@@ -316,6 +318,8 @@ class ProgramContext:
             return 1.0
         if low.startswith("user") and not low.startswith("userchair"):
             return 1.0 if low in self.user_variables else 0.0
+        if low.startswith("me_"):
+            return self.evaluate_memory_symbol(name)
         if self.program.has_hand_list(name):
             if self.hand_class is None:
                 raise OpenPPLProgramError(
@@ -328,6 +332,65 @@ class ProgramContext:
 
     def set_user(self, name: str) -> None:
         self.user_variables.add(name.lower())
+
+    def _memory_parts(self, command: str) -> tuple[str, str | None]:
+        low = command.lower()
+        prefixes = ("me_st_", "me_add_", "me_sub_")
+        for prefix in prefixes:
+            if low.startswith(prefix):
+                tail = command[len(prefix):]
+                if "_" not in tail:
+                    raise OpenPPLProgramError(f"memory store command missing RHS: {command!r}")
+                left, rhs = tail.split("_", 1)
+                if not left or not rhs:
+                    raise OpenPPLProgramError(f"invalid memory command: {command!r}")
+                return left.lower(), rhs
+        if low.startswith("me_inc_"):
+            left = command[len("me_inc_"):]
+            if not left:
+                raise OpenPPLProgramError(f"invalid memory increment: {command!r}")
+            return left.lower(), None
+        if low.startswith("me_re_"):
+            left = command[len("me_re_"):]
+            if not left:
+                raise OpenPPLProgramError(f"invalid memory recall: {command!r}")
+            return left.lower(), None
+        raise OpenPPLProgramError(f"unsupported memory symbol: {command!r}")
+
+    def _memory_rhs_value(self, rhs: str) -> float:
+        if rhs and rhs[0].isdigit():
+            return float(rhs.replace("_", "."))
+        return float(self.resolve(rhs))
+
+    def evaluate_memory_symbol(self, command: str) -> float:
+        low = command.lower()
+        left, rhs = self._memory_parts(command)
+        if low.startswith("me_re_"):
+            return float(self.memory_symbols.get(left, 0.0))
+        if low.startswith("me_inc_"):
+            self.memory_symbols[left] = float(self.memory_symbols.get(left, 0.0)) + 1.0
+            return 0.0
+        assert rhs is not None
+        value = self._memory_rhs_value(rhs)
+        if low.startswith("me_st_"):
+            self.memory_symbols[left] = value
+        elif low.startswith("me_add_"):
+            self.memory_symbols[left] = float(self.memory_symbols.get(left, 0.0)) + value
+        elif low.startswith("me_sub_"):
+            self.memory_symbols[left] = float(self.memory_symbols.get(left, 0.0)) - value
+        else:
+            raise OpenPPLProgramError(f"unsupported memory command: {command!r}")
+        return 0.0
+
+    def set_symbol(self, name: str) -> None:
+        low = name.lower()
+        if low.startswith("user") and not low.startswith("userchair"):
+            self.set_user(name)
+            return
+        if low.startswith("me_"):
+            self.evaluate_memory_symbol(name)
+            return
+        raise OpenPPLProgramError(f"unsupported SET target: {name!r}")
 
     def evaluate_function(self, name: str) -> float:
         canonical = self.program.canonical_name(name)
@@ -368,6 +431,11 @@ class OpenPPLSession:
     def __init__(self, program: "OpenPPLProgram"):
         self.program = program
         self.user_variables: set[str] = set()
+        self.memory_symbols: dict[str, float] = {}
+
+    def reset_connection(self) -> None:
+        self.user_variables.clear()
+        self.memory_symbols.clear()
 
     def reset_hand(self) -> None:
         self.user_variables.clear()
@@ -384,6 +452,7 @@ class OpenPPLSession:
             external,
             hand_class=hand_class,
             user_variables=self.user_variables,
+            memory_symbols=self.memory_symbols,
         )
         return self.program._evaluate_compiled(
             self.program.functions[self.program.canonical_name(name)],
@@ -458,7 +527,7 @@ class OpenPPLProgram:
                     continue
                 if node.action_kind == "set":
                     assert node.action_name is not None
-                    ctx.set_user(node.action_name)
+                    ctx.set_symbol(node.action_name)
                     # OpenHoldem's EvaluateTernaryExpression explicitly falls
                     # through to the third sibling after SET.
                     index = node.else_index
