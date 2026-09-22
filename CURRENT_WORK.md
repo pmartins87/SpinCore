@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
-Date: 2026-09-21
-Status: **LT3 21H PARALLEL CONTINUATION RUNNING — 8200 -> 9105 / OPENHOLDEM PAUSED**
+Date: 2026-09-22
+Status: **LT3 8200 -> 9105 PASS — POST-9105 DEVELOPMENT BATTERY READY / DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
 
 ## Strategic baseline
 
@@ -34,9 +34,7 @@ Thus there is no evidence that the accumulated 0..8100 learning state is
 invalid.  A clean-from-zero run would be a separate research arm, not a required
 repair.
 
-The ENS8 fit bottleneck was already resolved by the exact-parity 4x8 process
-parallel implementation.  The current 8200 -> 9105 run is using that selected
-path; do not alter it while it is running.
+The ENS8 fit bottleneck was resolved by the exact-parity 4x8 process-parallel implementation. The frozen 8200 -> 9105 continuation completed successfully. Source 8200 remained unchanged, raw 8600 was preserved, final 9105 was finalized, and neither the LT2 final holdout nor an LT3 sealed holdout was touched.
 
 Operational scheduling constraint: after the performance matrix, do not default
 to a short 8200->8600 run that is likely to finish while the user is unavailable.
@@ -94,15 +92,27 @@ No deployment work is needed now.
 
 ## Immediate action
 
-The 8200 -> 9105 long block is already running.  Do not start another trainer,
-do not pull/restart merely to observe progress, and do not alter the target.
+The long training block is complete. Do **not** start more training yet.
 
-Expected success sentinel:
+The post-9105 development protocol is frozen before seeing development outcomes:
+`docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md`.
 
-`LT3_PARALLEL_8200_9105_TRAINING_PASS`
+Canonical next local action:
 
-If the run fails, preserve the run directory and inspect the existing
-training.log/report before any restart.
+`bash tools/run_lt3_post9105_dev_battery.sh`
+
+This runner:
+- verifies the frozen 8600/9105 hashes;
+- finalizes AveragePolicy only on a derived copy of raw 8600;
+- compares finalized AveragePolicy @8100/@8600/@9105 pairwise;
+- compares HU current ENS8 @8100/@8600/@9105 pairwise;
+- measures policy drift and weak-baseline context;
+- does no training and touches no sealed holdout.
+
+Expected terminal sentinel:
+`LT3_POST9105_DEV_BATTERY_COMPLETE`
+
+After that report is interpreted, continue the external-strength lane through DC0 -> DC1 -> DC2 before deciding whether additional training is justified.
 
 
 ## ENS8 parallel matrix incident
@@ -199,14 +209,11 @@ Do not change target based on intermediate results. The earlier 9250/24.35 h pla
 
 ## After 9105 PASS
 
-1. Preserve the finalized 9105 checkpoint+ENS8 sidecar and hashes.
-2. Keep the automatically preserved 8600 milestone raw and immutable.
-3. Finalize AveragePolicy on a **derived copy** of 8600 for evaluation; do not
-   mutate the raw milestone.
-4. Compare finalized 8100 / finalized-copy 8600 / finalized 9105 on the LT3
-   development battery.  Do not touch the LT3 sealed holdout.
-5. Finish the DeepCrusher DC0 faithful-oracle gate against frozen R8 v22 if it
-   is still incomplete.
+1. Preserve the finalized 9105 checkpoint+ENS8 sidecar and hashes — **PASS**.
+2. Keep the automatically preserved 8600 milestone raw and immutable — **PASS**.
+3. Freeze post-9105 development protocol and tooling before evaluation — **PASS / READY**.
+4. Run the development battery; its runner finalizes AveragePolicy only on a derived 8600 copy and compares 8100 / 8600 / 9105 without sealed-holdout access — **NEXT**.
+5. Finish the DeepCrusher DC0 faithful-oracle gate against frozen R8 v22 if it is still incomplete.
 6. Run DC1 mechanical paired smoke, then DC2 qualification.
 7. Decide whether more roots are justified only from those results.
 
