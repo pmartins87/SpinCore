@@ -27,8 +27,12 @@ _WHEN = re.compile(r"^\s*When\s+(.*?)\s*$", re.I)
 _RETURN = re.compile(r"^(.*?)\s+Return\s+(.+?)\s+Force\s*$", re.I)
 _SET = re.compile(r"^(.*?)\s+Set\s+([A-Za-z_][A-Za-z0-9_$]*)\s*$", re.I)
 _DIRECT = re.compile(
-    r"^(.*?)\s+(Call|Fold|Check|BetMax|BetPot|BetHalfPot|BetThirdPot|"
-    r"BetTwoThirdPot|BetThreeFourthPot|BetMin|RaiseMin)\s+Force\s*$",
+    r"^(.*?)\s+(Call|Fold|Check|Allin|BetMax|BetPot|BetHalfPot|BetThirdPot|"
+    r"BetTwoThirdPot|BetThreeFourthPot|BetMin|RaiseMin|RaiseMax)\s+Force\s*$",
+    re.I,
+)
+_PARAM_DIRECT = re.compile(
+    r"^(.*?)\s+(RaiseTo|RaiseBy)\s+(.+?)\s+Force\s*$",
     re.I,
 )
 _OTHERS = re.compile(r"^Others$", re.I)
@@ -47,6 +51,7 @@ class ReturnValue:
 @dataclass(frozen=True)
 class DirectAction:
     name: str
+    amount: float | None = None
 
 
 @dataclass(frozen=True)
@@ -196,6 +201,16 @@ def _parse_when(line_number: int, text: str) -> WhenNode:
             condition=_compile_condition(m.group(1)),
             action_kind="set",
             action_name=name,
+            source_line=line_number,
+        )
+
+    m = _PARAM_DIRECT.match(tail)
+    if m:
+        return WhenNode(
+            condition=_compile_condition(m.group(1)),
+            action_kind="direct",
+            action_expr=compile_expression(m.group(3).strip()),
+            action_name=m.group(2),
             source_line=line_number,
         )
 
@@ -537,7 +552,10 @@ class OpenPPLProgram:
                     return ReturnValue(float(node.action_expr.eval(ctx.resolve)))
                 if node.action_kind == "direct":
                     assert node.action_name is not None
-                    return DirectAction(node.action_name)
+                    amount = None
+                    if node.action_expr is not None:
+                        amount = float(node.action_expr.eval(ctx.resolve))
+                    return DirectAction(node.action_name, amount)
                 raise AssertionError(node.action_kind)
             index = node.else_index
 
