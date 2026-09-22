@@ -28,6 +28,13 @@ def test_state_view_decodes_current_poker_geometry_and_history():
         assert view.live_count == 3
         assert len(view.hero_hole_ranks) == 2
         assert all(2 <= rank <= 14 for rank in view.hero_hole_ranks)
+        assert len(view.hero_hand_class) in (2, 3)
+        assert view.hero_hand_class[0] in "AKQJT98765432"
+        assert view.hero_hand_class[1] in "AKQJT98765432"
+        if view.hero_hole_ranks[0] == view.hero_hole_ranks[1]:
+            assert len(view.hero_hand_class) == 2
+        else:
+            assert view.hero_hand_class[-1] == ("s" if view.hole_suited else "o")
         assert view.board_ranks == ()
         assert len(view.same_suit) == 21
         assert len(view.primitive_legal) == 6
