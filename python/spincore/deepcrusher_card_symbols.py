@@ -582,6 +582,8 @@ class DeepCrusherCardSymbols:
         return 1.0
 
     def resolve(self, name: str) -> float:
+        if not self.supports(name):
+            raise UnknownDeepCrusherCardSymbol(name)
         low = str(name).lower()
         if low.startswith(("hand$", "board$")):
             return self._card_expression(name)
