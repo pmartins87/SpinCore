@@ -75,6 +75,12 @@ class DeepCrusherStateView:
     max_raise_to_bb: float
     primitive_legal: tuple[bool, bool, bool, bool, bool, bool]
     history: tuple[PublicActionEvent, ...]
+    # OpenHoldem suit ids (hearts=0, diamonds=1, clubs=2, spades=3) for
+    # hero-hole0/1, flop0/1/2, turn, river. -1 = unrevealed.
+    # SPNNIV3 itself intentionally stores only suit equivalence; state_view()
+    # enriches this field from the solver's read-only deal snapshot when the
+    # diagnostic ABI is available.
+    exact_suits: tuple[int, int, int, int, int, int, int] | None = None
 
     @property
     def hero_hole_ranks(self) -> tuple[int, int]:
@@ -215,6 +221,16 @@ class DeepCrusherStateView:
             out.append(labels[root])
         return tuple(out)  # type: ignore[return-value]
 
+    @property
+    def openholdem_suits(self) -> tuple[int, int, int, int, int, int, int]:
+        """Best available OpenHoldem suit ids for the seven card slots."""
+        if self.exact_suits is not None:
+            return self.exact_suits
+        # Canonical labels are only a fallback for unit/static contexts. The
+        # canonical benchmark must use state_view() with the deal-snapshot ABI
+        # so suit-tie semantics (for example tsuitcommon) are exact.
+        return self.canonical_suits
+
     def voluntary_history(self, *, street: int | None = None) -> tuple[PublicActionEvent, ...]:
         return tuple(
             event
@@ -346,4 +362,30 @@ def state_view(state) -> DeepCrusherStateView:
     got = int(fn(state._p(), buf, n))
     if got != n:
         raise RuntimeError(state.owner.error() or "SPNNIV3 payload size drift")
-    return decode_spnniv3(bytes(buf))
+    view = decode_spnniv3(bytes(buf))
+
+    # The benchmark solver exposes a read-only deal snapshot. Use it to restore
+    # absolute suits without changing SpinCore's neural representation.
+    if getattr(state.owner, "explicit_deal_available", False):
+        deal = state.deal_snapshot()
+        actor = int(state.actor)
+        hero = deal.holes[actor]
+        if any(card < 0 for card in hero):
+            raise RuntimeError("live actor has missing hole cards in deal snapshot")
+
+        # SpinCore Card ids are rank-major with suit order s,h,d,c.
+        # OpenHoldem StdDeck suit ids are h=0,d=1,c=2,s=3.
+        spin_to_oh = (3, 0, 1, 2)
+        exact = [
+            spin_to_oh[int(hero[0]) % 4],
+            spin_to_oh[int(hero[1]) % 4],
+        ]
+        for index, card in enumerate(deal.board):
+            if index < int(view.visible_board):
+                exact.append(spin_to_oh[int(card) % 4])
+            else:
+                exact.append(-1)
+        view = DeepCrusherStateView(
+            **{**view.__dict__, "exact_suits": tuple(exact)}
+        )
+    return view
