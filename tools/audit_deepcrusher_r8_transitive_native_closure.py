@@ -185,16 +185,22 @@ def main() -> int:
     resolved = sorted(
         (
             name for name in native
-            if DeepCrusherPrimitiveSymbols.supports(name)
-            or name.lower() in {key.lower() for key in environment}
+            if (
+                DeepCrusherPrimitiveSymbols.supports(name)
+                or DeepCrusherPrimitiveSymbols.supports_dynamic_symbol(name)
+                or name.lower() in {key.lower() for key in environment}
+            )
         ),
         key=str.lower,
     )
     unresolved_all = sorted(
         (
             name for name in native
-            if not DeepCrusherPrimitiveSymbols.supports(name)
-            and name.lower() not in {key.lower() for key in environment}
+            if (
+                not DeepCrusherPrimitiveSymbols.supports(name)
+                and not DeepCrusherPrimitiveSymbols.supports_dynamic_symbol(name)
+                and name.lower() not in {key.lower() for key in environment}
+            )
         ),
         key=str.lower,
     )
