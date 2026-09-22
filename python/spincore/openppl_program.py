@@ -52,6 +52,7 @@ class ReturnValue:
 class DirectAction:
     name: str
     amount: float | None = None
+    amount_kind: str | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,7 @@ class WhenNode:
     action_kind: str  # "return", "direct", "set", "open"
     action_expr: Expr | None = None
     action_name: str | None = None
+    action_amount_kind: str | None = None
     then_index: int | None = None
     else_index: int | None = None
     source_line: int = 0
@@ -168,6 +170,15 @@ def parse_hand_list(body: str) -> frozenset[str]:
     return frozenset(hands)
 
 
+def _compile_action_amount(text: str) -> tuple[Expr, str]:
+    value = text.strip()
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)%", value)
+    if m:
+        # OpenPPL RaiseBy N% is a percentage-of-pot action, not N/100 BB.
+        return compile_expression(str(float(m.group(1)) / 100.0)), "pot_fraction"
+    return compile_expression(value), "bb_expression"
+
+
 def _compile_condition(text: str) -> Expr:
     if _OTHERS.fullmatch(text.strip()):
         return compile_expression("true")
@@ -206,11 +217,13 @@ def _parse_when(line_number: int, text: str) -> WhenNode:
 
     m = _PARAM_DIRECT.match(tail)
     if m:
+        action_expr, amount_kind = _compile_action_amount(m.group(3))
         return WhenNode(
             condition=_compile_condition(m.group(1)),
             action_kind="direct",
-            action_expr=compile_expression(m.group(3).strip()),
+            action_expr=action_expr,
             action_name=m.group(2),
+            action_amount_kind=amount_kind,
             source_line=line_number,
         )
 
@@ -555,7 +568,7 @@ class OpenPPLProgram:
                     amount = None
                     if node.action_expr is not None:
                         amount = float(node.action_expr.eval(ctx.resolve))
-                    return DirectAction(node.action_name, amount)
+                    return DirectAction(node.action_name, amount, node.action_amount_kind)
                 raise AssertionError(node.action_kind)
             index = node.else_index
 
