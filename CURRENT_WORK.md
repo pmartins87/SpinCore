@@ -34,9 +34,9 @@ Thus there is no evidence that the accumulated 0..8100 learning state is
 invalid.  A clean-from-zero run would be a separate research arm, not a required
 repair.
 
-Immediate engineering issue: the current ENS8 fit implementation is
-unnecessarily sequential.  Before resuming 8201+, benchmark process-parallel
-member fitting and require exact state/loss parity.
+The ENS8 fit bottleneck was already resolved by the exact-parity 4x8 process
+parallel implementation.  The current 8200 -> 9105 run is using that selected
+path; do not alter it while it is running.
 
 Operational scheduling constraint: after the performance matrix, do not default
 to a short 8200->8600 run that is likely to finish while the user is unavailable.
@@ -44,6 +44,33 @@ Use the measured optimized iteration wall time to precommit a block of
 approximately 24 hours, rounded to a checkpoint boundary.  Preserve 8600 as an
 internal snapshot for comparison, but continue automatically to the predeclared
 24-hour endpoint without looking at development outcomes mid-run.
+
+
+## Parallel work lane — DeepCrusher DC0 preparation
+
+This lane may advance while LT3 trains because it does not consume the running
+trainer or modify its checkpoint.
+
+Completed since the 8200 -> 9105 run started:
+
+- portable OpenPPL expression + ordered WHEN/SET evaluator hardened for the full R8 syntax;
+- multiline WHEN normalization and DeepCrusher direct bet-action tokens added;
+- all frozen R8 list sections parsed as canonical hand-class sets;
+- SPNNIV3 state view exposes the exact 169-class hero hand key;
+- OpenHoldem user-variable lifetime corrected to **persist for the current hand** and clear only on hand reset;
+- OpenHoldem me_* memory commands implemented with connection-scoped persistence;
+- full-source structural compile audit added;
+- static DC0 preparation runner added;
+- CI corrected so pytest-style DeepCrusher contract tests are actually executed.
+
+Evidence for the lifetime semantics comes from the preserved OpenHoldem source,
+not inference: CSymbolEngineOpenPPLUserVariables clears its map on hand reset and
+leaves it unchanged on heartbeat/new-round/my-turn; CSymbolEngineMemorySymbols
+clears its map on connection and not on hand reset.
+
+DC0 remains **BLOCKED**, correctly, on the harder semantic gates: native symbol
+provider, exact sizing/action translation, explicit environment profile and
+runtime parity fixtures.  No DC1/DC2 score is authorized before those gates pass.
 
 
 ## OpenHoldem deployment lane — PAUSED
