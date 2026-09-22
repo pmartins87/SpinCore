@@ -31,7 +31,6 @@ _ENVIRONMENT_PATTERNS = (
     re.compile(r"^network\$", re.I),
     re.compile(r"^chair\$", re.I),
     re.compile(r"^log\$", re.I),
-    re.compile(r"^(?:prwin|prtie)$", re.I),
 )
 
 # Keywords/operators/constants are not external symbol-provider dependencies.
