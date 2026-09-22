@@ -157,3 +157,75 @@ def test_pocket_pair_symbol_is_not_same_as_best_hand_pair_category():
     s = DeepCrusherCardSymbols(v)
     assert s("ispair") == 1
     assert s("isonepair") == 1
+
+
+def test_srankbitsplayer_uses_all_cards_dominant_suit_like_openholdem():
+    # Hero Ah Kd, board Qh Jh 2h: all-card dominant suit is hearts.
+    # srankbitsplayer must therefore contain only the Ah, not Kd.
+    v = _view(
+        ranks=(14, 13, 12, 11, 2, 0, 0),
+        suits=(0, 1, 0, 0, 0, -1, -1),
+    )
+    s = DeepCrusherCardSymbols(v)
+    bits = int(s("srankbitsplayer"))
+    assert bits & (1 << 14)
+    assert not (bits & (1 << 13))
+    assert s("srankhiplayer") == 14
+    assert int(s("suitbitsplayer_hearts")) & (1 << 14)
+    assert int(s("suitbitsplayer_diamonds")) & (1 << 13)
+    assert int(s("suitbitscommon_hearts")) & (1 << 12)
+
+
+def test_hi_mid_lo_pair_classification_matches_openholdem_board_comparison():
+    high = DeepCrusherCardSymbols(
+        _view(
+            ranks=(14, 8, 14, 13, 2, 0, 0),
+            suits=(0, 1, 2, 3, 0, -1, -1),
+        )
+    )
+    assert high("ishipair") == 1
+    assert high("ismidpair") == 0
+    assert high("islopair") == 0
+
+    mid = DeepCrusherCardSymbols(
+        _view(
+            ranks=(9, 8, 14, 9, 2, 0, 0),
+            suits=(0, 1, 2, 3, 0, -1, -1),
+        )
+    )
+    assert mid("ishipair") == 0
+    assert mid("ismidpair") == 1
+    assert mid("islopair") == 0
+
+    low = DeepCrusherCardSymbols(
+        _view(
+            ranks=(2, 8, 14, 13, 2, 0, 0),
+            suits=(0, 1, 2, 3, 0, -1, -1),
+        )
+    )
+    assert low("ishipair") == 0
+    assert low("ismidpair") == 0
+    assert low("islopair") == 1
+
+
+def test_ishistraight_rejects_when_board_supports_higher_straight():
+    # Hero 65 on 987 -> 98765 straight, but the board's 987 means an opponent
+    # holding TJ can make a higher J-high straight.
+    not_hi = DeepCrusherCardSymbols(
+        _view(
+            ranks=(6, 5, 9, 8, 7, 0, 0),
+            suits=(0, 1, 2, 3, 0, -1, -1),
+        )
+    )
+    assert not_hi("isstraight") == 1
+    assert not_hi("ishistraight") == 0
+
+    # Hero TJ on 987 gives J-high; no higher 5-card straight has 3 board ranks.
+    hi = DeepCrusherCardSymbols(
+        _view(
+            ranks=(11, 10, 9, 8, 7, 0, 0),
+            suits=(0, 1, 2, 3, 0, -1, -1),
+        )
+    )
+    assert hi("isstraight") == 1
+    assert hi("ishistraight") == 1
