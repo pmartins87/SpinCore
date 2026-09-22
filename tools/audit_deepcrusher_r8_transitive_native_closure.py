@@ -72,6 +72,26 @@ def _is_intrinsic(token: str) -> bool:
     )
 
 
+def _provider_or_environment_shortcut(token: str) -> bool:
+    """True when offline runtime supplies token directly.
+
+    This check happens before descending a stock OpenPPL library section.
+    Transcript-derived history symbols are intentionally direct in the offline
+    oracle because the stock implementation depends on live heartbeat memory.
+    """
+    if DeepCrusherPrimitiveSymbols.supports(token):
+        return True
+    return bool(frozen_benchmark_environment([token]))
+
+
+def _holdem_dead_syntactic_leaf(token: str) -> bool:
+    """Known library leaves unreachable with frozen isomaha=0 Hold'em profile."""
+    low = token.lower()
+    if low.startswith("omaha_"):
+        return True
+    return low in {"$pr2", "$pr3", "$ps2", "$ps3"}
+
+
 def main() -> int:
     args = parse_args()
     verify_r8_operational_source(args.deepcrusher_source)
@@ -136,7 +156,14 @@ def main() -> int:
                 pending.append(("strategy", strategy_folded[low]))
                 continue
 
-            # Any ordinary OpenPPL library symbol is a function/section.
+            # The offline oracle can deliberately provide an exact direct value
+            # for a stock OpenPPL symbol (notably transcript-derived history).
+            # Runtime resolution uses the same external-before-library order.
+            if _provider_or_environment_shortcut(token):
+                native_leaves.add(token)
+                continue
+
+            # Any remaining ordinary OpenPPL library symbol is a function/section.
             if low in library_folded:
                 pending.append(("library", library_folded[low]))
                 continue
@@ -160,12 +187,20 @@ def main() -> int:
         ),
         key=str.lower,
     )
-    unresolved = sorted(
+    unresolved_all = sorted(
         (
             name for name in native
             if not DeepCrusherPrimitiveSymbols.supports(name)
             and name.lower() not in {key.lower() for key in environment}
         ),
+        key=str.lower,
+    )
+    holdem_dead = sorted(
+        (name for name in unresolved_all if _holdem_dead_syntactic_leaf(name)),
+        key=str.lower,
+    )
+    unresolved = sorted(
+        (name for name in unresolved_all if not _holdem_dead_syntactic_leaf(name)),
         key=str.lower,
     )
 
@@ -177,9 +212,12 @@ def main() -> int:
         "native_leaves": native,
         "provider_or_environment_resolved_count": len(resolved),
         "provider_or_environment_resolved": resolved,
+        "holdem_dead_syntactic_leaves_count": len(holdem_dead),
+        "holdem_dead_syntactic_leaves": holdem_dead,
         "unresolved_native_leaves_count": len(unresolved),
         "unresolved_native_leaves": unresolved,
         "strict_unknown_policy": "ERROR_NEVER_ZERO_FILL",
+        "holdem_profile": "isomaha=0; Omaha-only branches are classified dead, never zero-filled",
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -189,7 +227,9 @@ def main() -> int:
     print(f"library_sections_reached={len(seen_library)}")
     print(f"native_leaves_total={len(native)}")
     print(f"resolved_native_leaves={len(resolved)}")
+    print(f"holdem_dead_syntactic_leaves={len(holdem_dead)}")
     print(f"unresolved_native_leaves={len(unresolved)}")
+    print("holdem_dead=" + ",".join(holdem_dead))
     print("unresolved=" + ",".join(unresolved))
     print(f"report={args.report.resolve()}")
     print("DEEPC_RUSHER_R8_TRANSITIVE_NATIVE_CLOSURE_AUDIT_PASS")
