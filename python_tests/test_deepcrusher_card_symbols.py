@@ -229,3 +229,17 @@ def test_ishistraight_rejects_when_board_supports_higher_straight():
     )
     assert hi("isstraight") == 1
     assert hi("ishistraight") == 1
+
+
+def test_nhandshi_matches_openholdem_two_card_enumeration_on_locked_board():
+    # Royal flush entirely on the board: every legal opponent holding ties now.
+    v = _view(
+        ranks=(2, 3, 14, 13, 12, 11, 10),
+        suits=(2, 1, 0, 0, 0, 0, 0),
+        street=STREET_RIVER,
+    )
+    s = DeepCrusherCardSymbols(v)
+    assert s("nhandshi") == 0
+    assert s("nhandslo") == 0
+    assert s("nhandsti") == 990  # C(45 unseen cards, 2)
+    assert s("nhands") == 990
