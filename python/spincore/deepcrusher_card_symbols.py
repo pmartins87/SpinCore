@@ -16,6 +16,7 @@ from the pinned pmartins87/myoh_private OpenHoldem tree.
 
 from dataclasses import dataclass
 from itertools import combinations
+from functools import cached_property
 import re
 from typing import Iterable
 
@@ -378,6 +379,7 @@ class DeepCrusherCardSymbols:
             "ncommoncardsknown",
             "pokerval", "pokervalplayer", "pokervalcommon",
             "pcbits", "npcbits",
+            "nhands", "nhandshi", "nhandslo", "nhandsti",
             "ishicard", "isonepair", "istwopair", "isthreeofakind",
             "isstraight", "isflush", "isfullhouse", "isfourofakind",
             "isstraightflush", "isroyalflush",
@@ -425,6 +427,35 @@ class DeepCrusherCardSymbols:
 
     def _common_value(self) -> HandValue:
         return evaluate_cards(self._board())
+
+    @cached_property
+    def _nhands_counts(self) -> tuple[int, int, int]:
+        """Return (higher, lower, tie) opponent two-card hand counts.
+
+        This is a direct port of CSymbolEnginePrwin::CalculateNhands: enumerate
+        every legal unseen two-card opponent holding, compare current pokerval
+        on the already-visible board, and do not roll future board cards.
+        """
+        hole = self._hole()
+        board = self._board()
+        known = set(hole + board)
+        deck = tuple(
+            (rank, suit)
+            for rank in range(2, 15)
+            for suit in range(4)
+            if (rank, suit) not in known
+        )
+        hero_pv = pokerval(evaluate_cards(hole + board))
+        higher = lower = tie = 0
+        for left, right in combinations(deck, 2):
+            opponent_pv = pokerval(evaluate_cards((left, right) + board))
+            if opponent_pv > hero_pv:
+                higher += 1
+            elif opponent_pv < hero_pv:
+                lower += 1
+            else:
+                tie += 1
+        return higher, lower, tie
 
     def _pcbits(self) -> int:
         value = self._value()
@@ -737,6 +768,15 @@ class DeepCrusherCardSymbols:
             return float(self._pcbits())
         if low == "npcbits":
             return float(self._pcbits().bit_count())
+        if low in ("nhands", "nhandshi", "nhandslo", "nhandsti"):
+            higher, lower, tie = self._nhands_counts
+            if low == "nhandshi":
+                return float(higher)
+            if low == "nhandslo":
+                return float(lower)
+            if low == "nhandsti":
+                return float(tie)
+            return float(higher + lower + tie)
 
         category_symbols = {
             "ishicard": CATEGORY_HIGH,
