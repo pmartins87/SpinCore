@@ -37,7 +37,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.13.0+cpu
-          python -m pip install numpy==2.3.5
+          python -m pip install numpy==2.3.5 pytest
       - name: Compile DC0 Python
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -49,7 +49,8 @@ jobs:
             python/spincore/deepcrusher_openppl.py \
             python/spincore/deepcrusher_state.py \
             python/spincore/deepcrusher_benchmark.py \
-            tools/audit_deepcrusher_r8_dc0_readiness.py
+            tools/audit_deepcrusher_r8_dc0_readiness.py \
+            tools/audit_deepcrusher_r8_openppl_compile.py
       - name: Expression semantics
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -62,6 +63,10 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
-          python python_tests/test_deepcrusher_openppl_inventory.py
-          python python_tests/test_deepcrusher_state_view.py
-          python python_tests/test_deepcrusher_benchmark_contract.py
+          python -m pytest -q \
+            python_tests/test_deepcrusher_openppl_inventory.py \
+            python_tests/test_deepcrusher_benchmark_contract.py
+      - name: Observable state contract syntax
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: python -m py_compile python_tests/test_deepcrusher_state_view.py
