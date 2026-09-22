@@ -125,8 +125,8 @@ do
   "$PY" tools/evaluate_lt3_hu_ens8_pairwise.py     --solver "$SOLVER"     --before-ensemble "$EA"     --after-ensemble "$EB"     --scenarios "$SCENARIOS"     --workers "$WORKERS"     --seed "$SEED"     --report "$DIR/ens8_${A}_${B}.json"
 done
 
-# AveragePolicy movement diagnostics.
-for spec in   "8100 8600 $P8100 $P8600"   "8600 9105 $P8600 $P9105"   "8100 9105 $P8100 $P9105"
+# AveragePolicy movement diagnostics. Use the same compact policy-only artifacts.
+for spec in   "8100 8600 $P8100_INF $P8600_INF"   "8600 9105 $P8600_INF $P9105_INF"   "8100 9105 $P8100_INF $P9105_INF"
 do
   set -- $spec
   A="$1"; B="$2"; PA="$3"; PB="$4"
