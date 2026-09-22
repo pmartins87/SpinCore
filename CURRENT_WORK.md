@@ -92,7 +92,7 @@ No deployment work is needed now.
 
 ## Immediate action
 
-The long training block is complete. Do **not** start more training yet.
+The post-9105 evaluation is complete. A separate research-utilization continuation is now authorized while DC0 engineering proceeds.
 
 The post-9105 development protocol is frozen before seeing development outcomes:
 `docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md`.
@@ -116,6 +116,13 @@ In parallel, DC0 now also includes:
 - a hand-level sanity audit queue for AA preflop folds, >=10bb 72o jams, top-pair folds, trips+ folds, monster folds and deep high-card jams;
 - frozen environment profile `GGPoker_NoPT_NoNotes_V1`: GGPoker=true, other networks=false, named chair lookups=-1, log$=true, colour notes=0, PokerTracker unavailable=-1;
 - prwin/prtie explicitly excluded from the environment profile because they are substantive equity/card symbols and still require faithful implementation.
+
+Canonical local action now:
+
+`bash tools/run_lt3_parallel_9105_10105.sh`
+
+Expected early sentinel: `LT3_PARALLEL_9105_10105_PREFLIGHT_PASS`.
+Expected final sentinel: `LT3_PARALLEL_9105_10105_TRAINING_PASS`.
 
 Canonical engineering action remains DC0 -> DC1 -> DC2. Training may run concurrently because the external benchmark work is repository-side and does not require consuming the Ryzen trainer.
 
