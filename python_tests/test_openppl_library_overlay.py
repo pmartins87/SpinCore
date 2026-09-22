@@ -77,3 +77,35 @@ When Others Return HaveTopPair Force
     )
     with pytest.raises(Exception):
         p.evaluate("f$probe", {"rankhicommon": 14.0})
+
+
+def test_explicit_external_value_overrides_stock_library_section():
+    p = _program(
+        """
+##f$probe##
+When Others Return Calls Force
+"""
+    )
+    # Offline DeepCrusher history is reconstructed from the authoritative
+    # transcript and must override the stock library's heartbeat-memory Calls.
+    assert p.evaluate("f$probe", {"Calls": 3.0}).value == 3.0
+
+
+def test_unrecognized_external_symbol_falls_back_to_stock_library():
+    p = _program(
+        """
+##f$probe##
+When Others Return HaveTopPair Force
+"""
+    )
+
+    def external(name: str) -> float:
+        values = {
+            "rankbitsplayer": float(1 << 14),
+            "rankhicommon": 14.0,
+        }
+        if name in values:
+            return values[name]
+        raise KeyError(name)
+
+    assert p.evaluate("f$probe", external).value == 1.0
