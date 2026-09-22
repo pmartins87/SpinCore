@@ -1,4 +1,4 @@
-# SpinCore Roadmap — active state 2026-09-21
+# SpinCore Roadmap — active state 2026-09-22
 
 ## Primary objective now
 
@@ -27,9 +27,9 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 3. Durable continuation checkpoint+sidecar @8200 — **PRESERVED**.
 4. ENS8 exact-parity throughput matrix — **PASS; 4x8 SELECTED**.
 5. 8200 end-to-end semantic + whole-iteration throughput gate — **PASS EXACT; WHOLE-ITERATION 1.530x**.
-6. Resume from 8200 with 4x8 to **9105** (+905 iterations, projected 20.998 h) — **RUNNING**.
-7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint while the same precommitted run continues to 9105.
-8. After PASS, create a derived finalized evaluation copy of raw 8600, then compare 8100 / 8600 / 9105 on the LT3 development battery without touching the LT3 sealed holdout.
+6. Resume from 8200 with 4x8 to **9105** (+905 iterations) — **PASS**. Completed in 20.303 h with source 8200 unchanged, raw 8600 preserved, final 9105 AveragePolicy finalized, and no holdout access.
+7. Preserve iteration 8600 automatically as an internal raw comparison checkpoint — **PASS / IMMUTABLE**.
+8. Post-9105 development battery protocol frozen before evaluation. Tooling now finalizes AveragePolicy only on a derived 8600 copy, then compares 8100 / 8600 / 9105 with pairwise AveragePolicy cross-play, HU ENS8 current-behavior cross-play, policy drift and transparent weak baselines. **READY TO RUN; SEALED HOLDOUT UNTOUCHED**.
 9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim. **Preparation is active in parallel with LT3 training**: expression semantics, ordered WHEN/SET control flow, canonical list parsing, hand-scoped user variables, persistent me_* memory semantics and full-source compile audit tooling are now implemented; native symbol coverage, exact action sizing and runtime-trace parity remain.
 10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
 11. Continue training only if the development battery and external-strength evidence justify more compute.
@@ -96,7 +96,7 @@ Current LT3 status:
 - parallel median over 8201..8203: **81.108 s**;
 - checkpoint-amortized planning time: **83.130 s/iteration**;
 - precommitted ~21-hour endpoint: **9105** (+905 iterations), projected **20.998 h**;
-- long continuation 8200 -> 9105: **RUNNING (started 2026-09-21 13:11 local)**.
+- long continuation 8200 -> 9105: **PASS**; elapsed 20.303 h; endpoint checkpoint SHA256 `21945e27c43c7e6c1cdb77018cd66dc90b3fab72c29a9034bb4a9f97cc0e6c68`; endpoint ENS8 sidecar SHA256 `b9c3ffffc7139eeb77c4b4182136e10ada5cad2f023aa6e560e164e2e0ac9256`.
 
 
 ### DeepCrusher DC0 preparation while LT3 trains
@@ -118,6 +118,8 @@ Completed foundation work:
 - full-source compile gate passes on the real 1,270,138-byte R8 source: 1,267 sections, 721 functions, 545 hand-list sections;
 - primitive native-symbol bridge started and fail-closed coverage audit added: 27/269 currently implemented, 242 still unresolved;
 - DC0 CI corrected to execute pytest-style contracts instead of merely importing files and is currently PASS.
+
+Post-9105 development tooling is now frozen in `docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md` and `tools/run_lt3_post9105_dev_battery.sh`.
 
 Still blocking canonical DC0:
 - complete native/OpenPPL symbol provider from SpinCore state/history;
