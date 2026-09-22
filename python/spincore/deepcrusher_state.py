@@ -31,6 +31,8 @@ ACTION_BET_TO = 3
 ACTION_RAISE_TO = 4
 ACTION_ALL_IN = 5
 
+RANK_CHAR = {2: "2", 3: "3", 4: "4", 5: "5", 6: "6", 7: "7", 8: "8", 9: "9", 10: "T", 11: "J", 12: "Q", 13: "K", 14: "A"}
+
 
 @dataclass(frozen=True)
 class PublicActionEvent:
@@ -81,6 +83,19 @@ class DeepCrusherStateView:
     @property
     def board_ranks(self) -> tuple[int, ...]:
         return tuple(rank for rank in self.ranks[2:] if rank > 0)
+
+    @property
+    def hero_hand_class(self) -> str:
+        """Canonical 169-class name used by OpenPPL list_* ranges."""
+        left, right = self.hero_hole_ranks
+        if left not in RANK_CHAR or right not in RANK_CHAR:
+            raise ValueError(f"invalid hero hole ranks: {(left, right)}")
+        hi, lo = max(left, right), min(left, right)
+        if hi == lo:
+            return RANK_CHAR[hi] + RANK_CHAR[lo]
+        suffix = "s" if self.hole_suited else "o"
+        return RANK_CHAR[hi] + RANK_CHAR[lo] + suffix
+
 
     @property
     def is_true_hu(self) -> bool:
