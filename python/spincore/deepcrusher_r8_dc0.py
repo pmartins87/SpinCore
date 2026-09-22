@@ -43,6 +43,11 @@ _LANGUAGE_WORDS = {
     "preflop", "flop", "turn", "river",
     "first", "middle", "last", "none",
     "call", "check", "fold", "bet", "raises",
+    "allin", "betmin", "betfourthpot", "betthirdpot", "bethalfpot",
+    "bettwothirdpot", "betthreefourthpot", "betpot", "betmax",
+    "raisemin", "raiseto", "raiseby", "raisefourthpot", "raisethirdpot",
+    "raisehalfpot", "raisetwothirdpot", "raisethreefourthpot", "raisepot",
+    "raisemax",
 }
 
 _IDENTIFIER = re.compile(r"(?<![A-Za-z0-9_$])([A-Za-z_][A-Za-z0-9_$]*)(?![A-Za-z0-9_$])")
