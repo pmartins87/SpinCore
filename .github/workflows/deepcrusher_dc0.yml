@@ -14,6 +14,7 @@ on:
       - 'python/spincore/deepcrusher_native_symbols.py'
       - 'python/spincore/deepcrusher_card_symbols.py'
       - 'python/spincore/deepcrusher_table_symbols.py'
+      - 'python/spincore/deepcrusher_history_symbols.py'
       - 'python/spincore/deepcrusher_benchmark.py'
       - 'python/spincore/decision_sanity.py'
       - 'python_tests/test_openppl_expr.py'
@@ -60,6 +61,7 @@ jobs:
             python/spincore/deepcrusher_native_symbols.py \
             python/spincore/deepcrusher_card_symbols.py \
             python/spincore/deepcrusher_table_symbols.py \
+            python/spincore/deepcrusher_history_symbols.py \
             python/spincore/deepcrusher_benchmark.py \
             python/spincore/decision_sanity.py \
             tools/audit_deepcrusher_r8_dc0_readiness.py \
@@ -88,6 +90,7 @@ jobs:
             python_tests/test_deepcrusher_native_symbols.py \
             python_tests/test_deepcrusher_card_symbols.py \
             python_tests/test_deepcrusher_table_symbols.py \
+            python_tests/test_deepcrusher_history_symbols.py \
             python_tests/test_decision_sanity.py
       - name: Full frozen R8 source compile gate
         env:
