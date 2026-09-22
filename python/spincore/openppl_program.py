@@ -32,6 +32,7 @@ _DIRECT = re.compile(
     re.I,
 )
 _OTHERS = re.compile(r"^Others$", re.I)
+_HAND_CLASS = re.compile(r"^(?:[AKQJT98765432]{2}|[AKQJT98765432]{2}[so])$")
 
 
 class OpenPPLProgramError(ValueError):
@@ -149,6 +150,17 @@ def _logical_rows(rows: list[tuple[int, str]]) -> list[tuple[int, str]]:
         prev_line, prev_text = out[-1]
         out[-1] = (prev_line, prev_text + " " + text)
     return out
+
+
+def parse_hand_list(body: str) -> frozenset[str]:
+    """Parse one OpenPPL list section into canonical 169 hand classes."""
+    hands: set[str] = set()
+    for _, row in _strip_comments(body):
+        for token in row.split():
+            if not _HAND_CLASS.fullmatch(token):
+                raise OpenPPLProgramError(f"unsupported hand-list token: {token!r}")
+            hands.add(token)
+    return frozenset(hands)
 
 
 def _compile_condition(text: str) -> Expr:
@@ -276,9 +288,12 @@ class ProgramContext:
         self,
         program: "OpenPPLProgram",
         external: Mapping[str, float] | Callable[[str], float],
+        *,
+        hand_class: str | None = None,
     ):
         self.program = program
         self.external = external
+        self.hand_class = hand_class
         self.user_variables: set[str] = set()
         self.cache: dict[str, float] = {}
         self.in_progress: set[str] = set()
@@ -299,6 +314,12 @@ class ProgramContext:
             return 1.0
         if low.startswith("user") and not low.startswith("userchair"):
             return 1.0 if low in self.user_variables else 0.0
+        if self.program.has_hand_list(name):
+            if self.hand_class is None:
+                raise OpenPPLProgramError(
+                    f"hand class required to evaluate OpenPPL list {name!r}"
+                )
+            return 1.0 if self.hand_class in self.program.hand_list(name) else 0.0
         if low.startswith("f$") and self.program.has_function(name):
             return float(self.evaluate_function(name))
         return self._external_value(name)
@@ -335,9 +356,15 @@ class ProgramContext:
 
 
 class OpenPPLProgram:
-    def __init__(self, functions: dict[str, CompiledFunction]):
+    def __init__(
+        self,
+        functions: dict[str, CompiledFunction],
+        hand_lists: Mapping[str, frozenset[str]] | None = None,
+    ):
         self.functions = dict(functions)
         self._folded = {name.lower(): name for name in self.functions}
+        self.hand_lists = dict(hand_lists or {})
+        self._lists_folded = {name.lower(): name for name in self.hand_lists}
 
     @classmethod
     def from_text(cls, text: str) -> "OpenPPLProgram":
@@ -347,10 +374,26 @@ class OpenPPLProgram:
             for name, body in sections.items()
             if name.lower().startswith("f$")
         }
-        return cls(functions)
+        hand_lists = {
+            name: parse_hand_list(body)
+            for name, body in sections.items()
+            if name.lower().startswith("list")
+        }
+        return cls(functions, hand_lists)
 
     def has_function(self, name: str) -> bool:
         return name in self.functions or name.lower() in self._folded
+
+    def has_hand_list(self, name: str) -> bool:
+        return name in self.hand_lists or name.lower() in self._lists_folded
+
+    def hand_list(self, name: str) -> frozenset[str]:
+        if name in self.hand_lists:
+            return self.hand_lists[name]
+        try:
+            return self.hand_lists[self._lists_folded[name.lower()]]
+        except KeyError as exc:
+            raise UnknownOpenPPLSymbol(name) from exc
 
     def canonical_name(self, name: str) -> str:
         if name in self.functions:
@@ -402,6 +445,8 @@ class OpenPPLProgram:
         self,
         name: str,
         external: Mapping[str, float] | Callable[[str], float],
+        *,
+        hand_class: str | None = None,
     ) -> ReturnValue | DirectAction:
-        ctx = ProgramContext(self, external)
+        ctx = ProgramContext(self, external, hand_class=hand_class)
         return self._evaluate_compiled(self.functions[self.canonical_name(name)], ctx)
