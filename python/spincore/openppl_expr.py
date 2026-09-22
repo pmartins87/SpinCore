@@ -130,6 +130,13 @@ def tokenize(expression: str) -> tuple[Token, ...]:
                     i += 1
                 if i == hex_start:
                     raise OpenPPLExpressionError(f"bad hex literal at {start}")
+            elif expression.startswith(("0b", "0B"), i):
+                i += 2
+                binary_start = i
+                while i < n and expression[i] in "01":
+                    i += 1
+                if i == binary_start:
+                    raise OpenPPLExpressionError(f"bad binary literal at {start}")
             else:
                 saw_dot = False
                 while i < n and (
@@ -392,6 +399,8 @@ class Parser:
         if token.kind == "NUMBER":
             if token.text.lower().startswith("0x"):
                 return Number(float(int(token.text, 16)))
+            if token.text.lower().startswith("0b"):
+                return Number(float(int(token.text, 2)))
             return Number(float(token.text))
         if token.kind == "IDENT":
             return Identifier(token.text)
