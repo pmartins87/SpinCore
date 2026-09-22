@@ -360,9 +360,20 @@ class ProgramContext:
             return 1.0 if self.hand_class in self.program.hand_list(name) else 0.0
         if low.startswith("f$") and self.program.has_function(name):
             return float(self.evaluate_function(name))
+
+        # The offline benchmark may provide an exact transcript-derived value
+        # for standard OpenPPL symbols whose stock library implementation
+        # depends on live heartbeat/autoplayer memory. Prefer such an explicit
+        # provider; if it does not recognize the symbol, fall back to the
+        # pinned OpenPPL library.
+        try:
+            return self._external_value(name)
+        except (UnknownOpenPPLSymbol, KeyError, LookupError):
+            pass
+
         if self.program.has_library_function(name):
             return float(self.evaluate_library_function(name))
-        return self._external_value(name)
+        raise UnknownOpenPPLSymbol(name)
 
     def set_user(self, name: str) -> None:
         self.user_variables.add(name.lower())
