@@ -280,8 +280,9 @@ def compile_function(name: str, body: str) -> CompiledFunction:
 class ProgramContext:
     """One OpenPPL decision-heartbeat context.
 
-    user_* variables default false and are local to the heartbeat. External
-    native symbols and persistent me_* memory are supplied by the caller.
+    user_* variables default false and, like OpenHoldem, may be shared across
+    all decision heartbeats of one hand. External native symbols and persistent
+    me_* memory are supplied by the caller.
     """
 
     def __init__(
@@ -290,11 +291,12 @@ class ProgramContext:
         external: Mapping[str, float] | Callable[[str], float],
         *,
         hand_class: str | None = None,
+        user_variables: set[str] | None = None,
     ):
         self.program = program
         self.external = external
         self.hand_class = hand_class
-        self.user_variables: set[str] = set()
+        self.user_variables = user_variables if user_variables is not None else set()
         self.cache: dict[str, float] = {}
         self.in_progress: set[str] = set()
 
@@ -353,6 +355,40 @@ class ProgramContext:
         if cacheable:
             self.cache[canonical] = value
         return value
+
+
+class OpenPPLSession:
+    """Stateful OpenPPL hand session.
+
+    OpenHoldem keeps user_* variables until the next hand reset.  A session
+    therefore owns that set and reuses it across decision heartbeats; reset_hand
+    is the exact lifecycle boundary for these variables.
+    """
+
+    def __init__(self, program: "OpenPPLProgram"):
+        self.program = program
+        self.user_variables: set[str] = set()
+
+    def reset_hand(self) -> None:
+        self.user_variables.clear()
+
+    def evaluate(
+        self,
+        name: str,
+        external: Mapping[str, float] | Callable[[str], float],
+        *,
+        hand_class: str | None = None,
+    ) -> ReturnValue | DirectAction:
+        ctx = ProgramContext(
+            self.program,
+            external,
+            hand_class=hand_class,
+            user_variables=self.user_variables,
+        )
+        return self.program._evaluate_compiled(
+            self.program.functions[self.program.canonical_name(name)],
+            ctx,
+        )
 
 
 class OpenPPLProgram:
