@@ -15,6 +15,7 @@ on:
       - 'python/spincore/deepcrusher_card_symbols.py'
       - 'python/spincore/deepcrusher_table_symbols.py'
       - 'python/spincore/deepcrusher_history_symbols.py'
+      - 'python/spincore/deepcrusher_preflop_equity.py'
       - 'python/spincore/deepcrusher_benchmark.py'
       - 'python/spincore/decision_sanity.py'
       - 'python_tests/test_openppl_expr.py'
@@ -28,6 +29,7 @@ on:
       - 'tools/audit_deepcrusher_r8_transitive_native_closure.py'
       - 'tools/audit_benchmark_decisions.py'
       - 'fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt'
+      - 'fixtures/deepcrusher_r8_v22/preflop_range_equity_v1.tsv.gz'
   workflow_dispatch:
 
 permissions:
@@ -62,6 +64,7 @@ jobs:
             python/spincore/deepcrusher_card_symbols.py \
             python/spincore/deepcrusher_table_symbols.py \
             python/spincore/deepcrusher_history_symbols.py \
+            python/spincore/deepcrusher_preflop_equity.py \
             python/spincore/deepcrusher_benchmark.py \
             python/spincore/decision_sanity.py \
             tools/audit_deepcrusher_r8_dc0_readiness.py \
@@ -91,6 +94,7 @@ jobs:
             python_tests/test_deepcrusher_card_symbols.py \
             python_tests/test_deepcrusher_table_symbols.py \
             python_tests/test_deepcrusher_history_symbols.py \
+            python_tests/test_deepcrusher_preflop_equity.py \
             python_tests/test_decision_sanity.py
       - name: Full frozen R8 source compile gate
         env:
