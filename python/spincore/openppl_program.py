@@ -360,6 +360,8 @@ class ProgramContext:
             return 1.0 if self.hand_class in self.program.hand_list(name) else 0.0
         if low.startswith("f$") and self.program.has_function(name):
             return float(self.evaluate_function(name))
+        if low.startswith("vs$multiplex$"):
+            return float(self.evaluate_versus_multiplex(name))
 
         # The offline benchmark may provide an exact transcript-derived value
         # for standard OpenPPL symbols whose stock library implementation
@@ -462,6 +464,40 @@ class ProgramContext:
         value = float(result.value)
         if cacheable:
             self.cache[canonical] = value
+        return value
+
+    def evaluate_versus_multiplex(self, name: str) -> float:
+        low = str(name).lower()
+        prefix = "vs$multiplex$"
+        postfix = None
+        for candidate in ("$prwin", "$prtie", "$prlos"):
+            if low.endswith(candidate):
+                postfix = candidate
+                break
+        if postfix is None or not low.startswith(prefix):
+            raise UnknownOpenPPLSymbol(name)
+
+        infix = str(name)[len(prefix): len(str(name)) - len(postfix)]
+        if not infix:
+            raise UnknownOpenPPLSymbol(name)
+
+        resolver = getattr(self.external, "resolve_versus_multiplex", None)
+        if resolver is None:
+            raise UnknownOpenPPLSymbol(name)
+
+        cache_key = "versus::" + low
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+
+        if infix.lower().startswith("f$") and self.program.has_function(infix):
+            list_value = float(self.evaluate_function(infix))
+        elif self.program.has_library_function(infix):
+            list_value = float(self.evaluate_library_function(infix))
+        else:
+            list_value = float(self._external_value(infix))
+        list_id = int(list_value + 0.5)
+        value = float(resolver(infix, list_id, postfix))
+        self.cache[cache_key] = value
         return value
 
     def evaluate_library_function(self, name: str) -> float:
