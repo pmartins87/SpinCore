@@ -236,3 +236,32 @@ Still required before DC0 can authorize canonical DC1/DC2:
 - broad real-OpenHoldem parity fixtures across preflop/flop/turn/river with exact bet/raise amounts.
 
 The prior R8 v22 live smoke is useful external evidence that the frozen formula itself is operational, but its original five logs are not committed as machine-readable parity fixtures.
+
+
+## Frozen offline environment profile
+
+Canonical synthetic matches use `GGPoker_NoPT_NoNotes_V1` unless a later
+profile is explicitly preregistered.
+
+The profile is intended to remove non-strategic live-table identity/history
+dependencies without silently zero-filling unknown strategy symbols:
+
+- `network$ggpoker = 1`; other network$ symbols = 0;
+- named `chair$...` lookups = OpenHoldem kUndefined (-1), representing no
+  matching named player at the synthetic table;
+- `log$...` = 1, matching OpenHoldem's expression semantics;
+- colour-note symbols = 0 for synthetic unlabelled opponents;
+- PokerTracker symbols = OpenHoldem kUndefined (-1), representing no PT
+  connection/data.
+
+`prwin` and `prtie` are NOT environment inputs. They are strategic equity
+symbols and remain DC0 implementation dependencies.
+
+## Decision trace and sanity-review contract
+
+DC1/DC2 must retain machine-readable decision traces for SpinCore and
+DeepCrusher. Aggregate EV is necessary but not sufficient for diagnosis.
+SpinCore traces are additionally screened for obvious/high-value review cases
+such as AA folds, non-trivially deep 72o jams, top-pair folds, trips+ folds and
+deep high-card jams. Flags create a review queue and are not automatically
+classified as strategy errors.
