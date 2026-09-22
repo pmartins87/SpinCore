@@ -89,7 +89,7 @@ def _holdem_dead_syntactic_leaf(token: str) -> bool:
     low = token.lower()
     if low.startswith("omaha_"):
         return True
-    return low in {"$pr2", "$pr3", "$ps2", "$ps3"}
+    return low in {("$" * 2) + "pr2", ("$" * 2) + "pr3", ("$" * 2) + "ps2", ("$" * 2) + "ps3"}
 
 
 def main() -> int:
