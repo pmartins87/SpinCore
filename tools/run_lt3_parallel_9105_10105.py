@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-"""LT3 exact-parity 4x8 continuation from durable iteration 8200 to 9105.
+"""LT3 exact-parity 4x8 research continuation from finalized 9105 to 10105.
 
-This is the long research block authorized by the 8200 end-to-end gate.
-It preserves the source checkpoint+sidecar read-only, uses the exact-parity
-4x8 HU ENS8 fitter, persists checkpoints every 50 iterations, preserves an
-internal raw milestone at 8600, and finalizes AveragePolicy only at the final
-9105 endpoint.
+This block keeps the frozen 9105 checkpoint+ENS8 sidecar read-only, continues
+the already validated learning process for exactly 1000 additional iterations,
+preserves a raw 9600 milestone, checkpoints every 50 iterations, and finalizes
+AveragePolicy only at the final 10105 endpoint. It is research-only and touches
+no sealed holdout.
 """
 
 import argparse
@@ -152,6 +152,8 @@ def main()->int:
         source_checkpoint,solver=solver
     )
     _validate_source(source_config,completed)
+    if not bool(source_finalized):
+        raise RuntimeError("expected finalized source checkpoint at iteration 9105")
 
     config=replace(
         source_config,
