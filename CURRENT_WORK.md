@@ -117,6 +117,12 @@ In parallel, DC0 now also includes:
 - frozen environment profile `GGPoker_NoPT_NoNotes_V1`: GGPoker=true, other networks=false, named chair lookups=-1, log$=true, colour notes=0, PokerTracker unavailable=-1;
 - prwin/prtie explicitly excluded from the environment profile because they are substantive equity/card symbols and still require faithful implementation.
 
+First 9105 -> 10105 launch attempt aborted before training because the earliest
+checkpoint preflight called `torch.load()` before `PYTHONPATH` exposed the
+SpinCore package, producing `ModuleNotFoundError: No module named 'spincore'`.
+No training iteration started and the frozen 9105 artifacts were not modified.
+The runner now exports the project Python path before any Python preflight.
+
 Canonical local action now:
 
 `bash tools/run_lt3_parallel_9105_10105.sh`
