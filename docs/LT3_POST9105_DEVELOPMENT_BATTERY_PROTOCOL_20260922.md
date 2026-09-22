@@ -119,3 +119,28 @@ sanity/context diagnostic, not a GTO or exploitability proof.
 Expected terminal sentinel:
 
 `LT3_POST9105_DEV_BATTERY_COMPLETE`
+
+
+## Execution incident and memory-safe correction — 2026-09-22
+
+The first execution reached the frozen 8600 derived-finalization PASS and then
+was terminated by the host at the first AveragePolicy 8100 -> 8600 cross-play,
+before any development result was emitted.
+
+Root cause: the orchestration script passed full multi-GB training checkpoints
+directly to a 31-process evaluator. Each spawned worker independently called
+`torch.load` on both full checkpoints, multiplying reservoir/optimizer memory
+use. This violated the already established evaluation pattern used by
+`run_lt2_checkpoint_crossplay.sh`, which exports compact inference-only
+AveragePolicy artifacts before multiprocessing.
+
+Correction: export compact policy-only checkpoints for 8100, derived 8600 and
+9105 once in the parent process, validate that each contains only finalized
+AveragePolicy weights, and use those compact artifacts for AveragePolicy
+cross-play, policy drift and weak-baseline quality evaluation.
+
+This is an execution/memory correction only. It changes no development seed,
+scenario count, pairing, policy weights, metric, confidence interval,
+classification rule or stopping rule. The first terminated attempt produced no
+cross-play outcome, so no statistical criterion was adapted after observing a
+result.
