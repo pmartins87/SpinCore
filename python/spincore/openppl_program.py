@@ -27,7 +27,8 @@ _WHEN = re.compile(r"^\s*When\s+(.*?)\s*$", re.I)
 _RETURN = re.compile(r"^(.*?)\s+Return\s+(.+?)\s+Force\s*$", re.I)
 _SET = re.compile(r"^(.*?)\s+Set\s+([A-Za-z_][A-Za-z0-9_$]*)\s*$", re.I)
 _DIRECT = re.compile(
-    r"^(.*?)\s+(Call|Fold|Check)\s+Force\s*$",
+    r"^(.*?)\\s+(Call|Fold|Check|BetMax|BetPot|BetHalfPot|BetThirdPot|"
+    r"BetTwoThirdPot|BetThreeFourthPot|BetMin|RaiseMin)\\s+Force\\s*$",
     re.I,
 )
 _OTHERS = re.compile(r"^Others$", re.I)
@@ -120,6 +121,36 @@ def _strip_comments(body: str) -> list[tuple[int, str]]:
     return rows
 
 
+def _logical_rows(rows: list[tuple[int, str]]) -> list[tuple[int, str]]:
+    """Join OpenPPL physical-line continuations into logical statements.
+
+    R8 v22 contains a small number of WHEN conditions split over multiple
+    physical lines (usually a leading WHEN followed by lines beginning with
+    &&).  OpenHoldem parses those as one expression.  Preserve the source line
+    of the first physical row for diagnostics.
+    """
+    if not rows:
+        return []
+
+    has_when = any(text.lower().startswith("when ") for _, text in rows)
+    if not has_when:
+        # Plain expression functions may also span lines.
+        return [(rows[0][0], " ".join(text for _, text in rows))]
+
+    out: list[tuple[int, str]] = []
+    for line_number, text in rows:
+        if text.lower().startswith("when "):
+            out.append((line_number, text))
+            continue
+        if not out:
+            raise OpenPPLProgramError(
+                f"line {line_number}: continuation before first WHEN: {text!r}"
+            )
+        prev_line, prev_text = out[-1]
+        out[-1] = (prev_line, prev_text + " " + text)
+    return out
+
+
 def _compile_condition(text: str) -> Expr:
     if _OTHERS.fullmatch(text.strip()):
         return compile_expression("true")
@@ -174,7 +205,7 @@ def _parse_when(line_number: int, text: str) -> WhenNode:
 
 
 def compile_function(name: str, body: str) -> CompiledFunction:
-    rows = _strip_comments(body)
+    rows = _logical_rows(_strip_comments(body))
     when_rows = [(line_no, text) for line_no, text in rows if text.lower().startswith("when ")]
 
     if not when_rows:
