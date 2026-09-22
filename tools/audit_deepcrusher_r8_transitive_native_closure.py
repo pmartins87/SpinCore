@@ -79,7 +79,10 @@ def _provider_or_environment_shortcut(token: str) -> bool:
     Transcript-derived history symbols are intentionally direct in the offline
     oracle because the stock implementation depends on live heartbeat memory.
     """
-    if DeepCrusherPrimitiveSymbols.supports(token):
+    if (
+        DeepCrusherPrimitiveSymbols.supports(token)
+        or DeepCrusherPrimitiveSymbols.supports_dynamic_symbol(token)
+    ):
         return True
     return bool(frozen_benchmark_environment([token]))
 
