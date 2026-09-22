@@ -90,5 +90,10 @@ class OpenPPLExpressionTests(unittest.TestCase):
             evaluate_expression("1 / 0", {})
 
 
+    def test_binary_integer_literals(self):
+        self.assertEqual(evaluate_expression("0b11110", {}), 30.0)
+        self.assertEqual(evaluate_expression("myturnbits = 0b00100", {"myturnbits": 4}), 1.0)
+
+
 if __name__ == "__main__":
     unittest.main()
