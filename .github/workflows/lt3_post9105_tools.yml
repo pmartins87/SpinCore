@@ -1,0 +1,25 @@
+name: LT3 post-9105 tool syntax
+
+on:
+  push:
+    paths:
+      - "tools/finalize_lt3_raw_milestone.py"
+      - "tools/evaluate_lt3_hu_ens8_pairwise.py"
+      - "tools/summarize_lt3_post9105_dev_battery.py"
+      - "tools/run_lt3_post9105_dev_battery.sh"
+      - ".github/workflows/lt3_post9105_tools.yml"
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax
+        run: |
+          python -m py_compile \
+            tools/finalize_lt3_raw_milestone.py \
+            tools/evaluate_lt3_hu_ens8_pairwise.py \
+            tools/summarize_lt3_post9105_dev_battery.py
+      - name: Shell syntax
+        run: bash -n tools/run_lt3_post9105_dev_battery.sh
