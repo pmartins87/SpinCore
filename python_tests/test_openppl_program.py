@@ -5,6 +5,7 @@ import unittest
 from spincore.openppl_program import (
     DirectAction,
     OpenPPLProgram,
+    OpenPPLSession,
     OpenPPLProgramError,
     ProgramContext,
     ReturnValue,
@@ -144,6 +145,23 @@ When Others Return 0 Force
 """)
         with self.assertRaises(OpenPPLProgramError):
             p.evaluate("f$x",{})
+
+
+    def test_user_variables_persist_for_hand_session_and_clear_on_reset(self):
+        p=OpenPPLProgram.from_text("""
+##f$mark##
+When trigger Set user_seen
+When Others Return 0 Force
+##f$read##
+When user_seen Return 1 Force
+When Others Return 0 Force
+""")
+        session=OpenPPLSession(p)
+        self.assertEqual(session.evaluate("f$read",{"trigger":0}),ReturnValue(0))
+        self.assertEqual(session.evaluate("f$mark",{"trigger":1}),ReturnValue(0))
+        self.assertEqual(session.evaluate("f$read",{"trigger":0}),ReturnValue(1))
+        session.reset_hand()
+        self.assertEqual(session.evaluate("f$read",{"trigger":0}),ReturnValue(0))
 
     def test_eof_without_action_fails_closed(self):
         p=OpenPPLProgram.from_text("""
