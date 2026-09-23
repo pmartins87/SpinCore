@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import unittest
 
+import pytest
+
 from spincore.openppl_program import (
     DirectAction,
     OpenPPLProgram,
@@ -226,3 +228,7 @@ When a Return 1 Force
 
 if __name__=="__main__":
     unittest.main()
+
+
+def test_reserved_initialization_callback_may_fall_off_end_after_set():
+    p=OpenPPLProgram.from_text(\"\"\"\n##f$ini_function_on_my_turn##\nWhen trigger Set me_st_X_7\n\"\"\")\n    session=OpenPPLSession(p)\n    assert session.run_initialization(\n        \"f$ini_function_on_my_turn\",\n        {\"trigger\":1},\n    ) == 0\n    assert session.memory_symbols[\"x\"] == 7\n\n\ndef test_normal_strategy_callback_still_fails_closed_at_eof():\n    p=OpenPPLProgram.from_text(\"\"\"\n##f$main##\nWhen trigger Set user_seen\n\"\"\")\n    session=OpenPPLSession(p)\n    with pytest.raises(OpenPPLProgramError):\n        session.evaluate(\"f$main\", {\"trigger\":1})\n
