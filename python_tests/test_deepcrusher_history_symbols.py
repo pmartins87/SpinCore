@@ -149,3 +149,36 @@ def test_unknown_history_symbol_fails_closed():
         pass
     else:
         raise AssertionError("unknown history symbol must fail closed")
+
+
+def test_exact_action_origins_restore_didrais_didbetsize_and_prevaction():
+    history = (
+        ev(0, STREET_PREFLOP, ACTION_RAISE_TO, paid=2, commit=2),
+        ev(1, STREET_PREFLOP, ACTION_CALL, paid=2, commit=2),
+        ev(0, STREET_FLOP, ACTION_BET_TO, paid=3, commit=3),
+    )
+    s = DeepCrusherHistorySymbols(
+        view(street=STREET_FLOP, history=history),
+        hero_action_origins=("raise", "betsize"),
+    )
+    assert s("didraisround_preflop") == 1
+    assert s("didbetsizeround_preflop") == 0
+    assert s("didraisround_flop") == 0
+    assert s("didbetsizeround_flop") == 1
+    assert s("prevaction") == 3
+    assert s("BotRaisedBeforeFlop") == 1
+    assert s("BotRaisedOnFlop") == 1
+
+
+def test_exact_action_origin_length_mismatch_fails_closed():
+    history = (ev(0, STREET_PREFLOP, ACTION_RAISE_TO, paid=2, commit=2),)
+    s = DeepCrusherHistorySymbols(
+        view(street=STREET_PREFLOP, history=history),
+        hero_action_origins=(),
+    )
+    try:
+        s("didrais")
+    except RuntimeError as exc:
+        assert "length mismatch" in str(exc)
+    else:
+        raise AssertionError("origin/history mismatch must fail closed")
