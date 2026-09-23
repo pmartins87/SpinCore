@@ -76,5 +76,24 @@ with zipfile.ZipFile(out,"w",compression=zipfile.ZIP_DEFLATED) as z:
 print(f"bundle={out}")
 PY
 
+ZIP="${RUN}/SpinCore_DC1_10105_smoke_bundle.zip"
+EXPLORER_RUN_DIR="$(wslpath -w "${RUN}" 2>/dev/null || printf '%s' "${RUN}")"
+EXPLORER_BUNDLE="$(wslpath -w "${ZIP}" 2>/dev/null || printf '%s' "${ZIP}")"
+echo "explorer_run_dir=${EXPLORER_RUN_DIR}"
+echo "explorer_bundle=${EXPLORER_BUNDLE}"
+
+# Convenience copy for the user: resolve the real Windows Desktop (including
+# OneDrive-redirection when configured) instead of assuming C:\\Users\\<name>.
+if command -v powershell.exe >/dev/null 2>&1; then
+  DESKTOP_WIN="$(powershell.exe -NoProfile -Command '[Environment]::GetFolderPath("Desktop")' 2>/dev/null | tr -d '\r' | tail -n 1)"
+  if [[ -n "${DESKTOP_WIN}" ]]; then
+    DESKTOP_WSL="$(wslpath -u "${DESKTOP_WIN}" 2>/dev/null || true)"
+    if [[ -n "${DESKTOP_WSL}" && -d "${DESKTOP_WSL}" ]]; then
+      cp -f "${ZIP}" "${DESKTOP_WSL}/SpinCore_DC1_10105_smoke_bundle.zip"
+      echo "desktop_bundle=${DESKTOP_WIN}\\SpinCore_DC1_10105_smoke_bundle.zip"
+    fi
+  fi
+fi
+
 echo "DEEPC_RUSHER_DC1_10105_SMOKE_COMPLETE"
 echo "STOP HERE. Send SpinCore_DC1_10105_smoke_bundle.zip to ChatGPT."
