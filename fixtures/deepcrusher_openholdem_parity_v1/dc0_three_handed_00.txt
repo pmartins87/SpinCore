@@ -1,0 +1,24 @@
+; generated parity case dc0_three_handed_00
+[table]
+sblind = 10
+bblind = 20
+gtype = NL
+network = ggpoker
+tournament = true
+balances = Bot 500,P1 500,P2 500
+
+[preflop]
+Hand = 2s, 4h
+Actions = P1 S,P2 B,Bot can FCRA do F,P1 C,P2 K
+
+[flop]
+Cards = Kc, 2d, 5h
+Actions = P1 K,P2 K
+
+[turn]
+Card = Kh
+Actions = P1 K,P2 K
+
+[river]
+Card = Tc
+Actions = P1 K,P2 K
