@@ -166,3 +166,19 @@ The first sanity queue intentionally surfaces:
 - deep high-card all-ins (review because draws may justify them).
 
 These flags are diagnostics, not poker-theory verdicts. Repeated patterns plus context are evidence; isolated flagged hands still require inspection.
+
+
+### DC0 executable runtime checkpoint — 2026-09-23
+
+- [x] Frozen R8 source + OpenPPL library compile/closure.
+- [x] Native/transitive Hold'em symbols fail-closed with zero unresolved leaves.
+- [x] OpenHoldem lifecycle callbacks and persistent memory.
+- [x] Exact OpenPPL action/sizing translator.
+- [x] Executable `DeepCrusherR8Policy.choose_exact()`.
+- [x] Exact solver application and decision provenance.
+- [x] Real-solver end-to-end runtime smoke over 3H/HU and all four streets.
+- [x] Paired DC1 development runner + decision JSONL output.
+- [ ] Real OpenHoldem parity fixtures covering preflop/flop/turn/river and representative sizing families.
+- [ ] Freeze DC0 canonical PASS only after parity.
+- [ ] DC1 1k–5k development smoke against the compact SpinCore policy.
+- [ ] DC2 >=100k paired benchmark after DC1 mechanics and parity are clean.
