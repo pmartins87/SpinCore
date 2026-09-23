@@ -179,6 +179,56 @@ def _fixed_action(name: str, public, actor: int) -> ExternalExactAction:
     raise DeepCrusherActionTranslationError(f"unsupported fixed OpenPPL action: {name!r}")
 
 
+def openppl_history_origin(
+    decision: ReturnValue | DirectAction,
+    action: ExternalExactAction,
+) -> str:
+    """Classify the *executed* OpenHoldem autoplayer action for history symbols.
+
+    OpenHoldem distinguishes a minimum Raise button (prevaction=2 / didrais)
+    from f$betsize and technical pot-size buttons (prevaction=3 / didbetsize).
+    Poker-equivalent exact simulator actions alone cannot recover that
+    distinction, so the oracle records it at translation time.
+    """
+    actual = int(action.action_type)
+    if actual == ACTION_FOLD:
+        return "fold"
+    if actual == ACTION_CHECK:
+        return "check"
+    if actual == ACTION_CALL:
+        return "call"
+    if actual == ACTION_ALL_IN:
+        return "allin"
+    if actual not in (ACTION_BET_TO, ACTION_RAISE_TO):
+        raise DeepCrusherActionTranslationError(
+            f"unsupported executed action type for history: {actual}"
+        )
+
+    if isinstance(decision, DirectAction):
+        low = str(decision.name).lower()
+        if low in {"raise", "raisemin", "bet", "betmin"}:
+            return "raise"
+        # RaiseTo / RaiseBy and all technical pot-size actions are implemented
+        # through f$betsize in OpenHoldem.
+        return "betsize"
+
+    if not isinstance(decision, ReturnValue):
+        raise DeepCrusherActionTranslationError(
+            f"unexpected OpenPPL decision type for history: {type(decision).__name__}"
+        )
+    value = float(decision.value)
+    if value < -1000.0:
+        rounded = int(round(value))
+        if rounded == -1000012:
+            return "raise"
+        # RaiseMax would normally execute ALL_IN; if the simulator had to use an
+        # aggressive backup, OpenPPL's first aggressive backup is a technical
+        # pot-size/betsize action.
+        return "betsize"
+    # Positive and percent-pot numerical decisions are f$betsize.
+    return "betsize"
+
+
 def translate_openppl_decision(
     decision: ReturnValue | DirectAction,
     *,
