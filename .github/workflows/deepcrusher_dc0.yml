@@ -172,3 +172,8 @@ jobs:
             --max-search 250
           cat /tmp/deepcrusher_openholdem_parity/manifest.json
           cat /tmp/deepcrusher_openholdem_parity/deepcrusher_dc0_parity.tc
+          for f in /tmp/deepcrusher_openholdem_parity/dc0_*.txt; do
+            echo "=== PARITY_CASE_BEGIN:$(basename "$f") ==="
+            cat "$f"
+            echo "=== PARITY_CASE_END:$(basename "$f") ==="
+          done
