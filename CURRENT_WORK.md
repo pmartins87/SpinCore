@@ -134,7 +134,14 @@ DC0 has advanced materially while the utilization run is active:
 - a true transitive closure audit now follows both R8 and OpenPPL-library dependencies: 336 native leaves, 201 resolved and 135 syntactically unresolved before pruning Hold'em-dead Omaha branches and freezing table/game constants;
 - DC0 workflow is PASS after the OpenHoldem straight-metric parity correction.
 
-Next implementation tranche: freeze Hold'em/table constants and topology, port action-history/raiser/caller semantics from the preserved OpenHoldem source, then close the remaining equity and exact-sizing/oracle gates.
+DC0 closure milestone reached after that tranche:
+- transcript-derived OpenHoldem history/raiser/caller symbols are wired into the offline oracle;
+- exact current-board `nhandshi/nhandslo/nhandsti` enumeration is ported from OpenHoldem;
+- R8 dynamic `vs$multiplex$f$backup_opp_allin_range$prwin/prtie` uses a canonical suit-collapsed 169-class exact preflop equity fixture;
+- the transitive Hold'em native closure is now **0 unresolved leaves** (290 resolved, 47 statically Hold'em-dead Omaha/extra-card leaves);
+- the dedicated **SpinCore DeepCrusher DC0** workflow is PASS at commit `460eeed27b1651266df7eb145e95f5909d4fc194`.
+
+Remaining DC0 work is no longer symbol closure. The next gates are exact action-origin/sizing translation, full oracle callback integration, and real OpenHoldem parity fixtures across streets before DC1.
 
 
 ## ENS8 parallel matrix incident
