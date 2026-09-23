@@ -32,6 +32,7 @@ on:
       - 'tools/audit_benchmark_decisions.py'
       - 'tools/evaluate_deepcrusher_dc1.py'
       - 'tools/smoke_deepcrusher_oracle_solver.py'
+      - 'tools/generate_deepcrusher_openholdem_testsuite.py'
       - 'include/spincore/solver_c_api.h'
       - 'src/solver_c_api.cpp'
       - 'CMakeLists.txt'
@@ -83,7 +84,8 @@ jobs:
             tools/audit_deepcrusher_r8_transitive_native_closure.py \
             tools/audit_benchmark_decisions.py \
             tools/evaluate_deepcrusher_dc1.py \
-            tools/smoke_deepcrusher_oracle_solver.py
+            tools/smoke_deepcrusher_oracle_solver.py \
+            tools/generate_deepcrusher_openholdem_testsuite.py
       - name: Expression semantics
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -158,3 +160,15 @@ jobs:
             --solver build/libspincore_solver_c.so \
             --report /tmp/deepcrusher_oracle_runtime_smoke.json
           cat /tmp/deepcrusher_oracle_runtime_smoke.json
+
+      - name: Generate OpenHoldem parity pack smoke
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          python tools/generate_deepcrusher_openholdem_testsuite.py \
+            --solver build/libspincore_solver_c.so \
+            --output-dir /tmp/deepcrusher_openholdem_parity \
+            --cases-per-domain 1 \
+            --max-search 250
+          cat /tmp/deepcrusher_openholdem_parity/manifest.json
+          cat /tmp/deepcrusher_openholdem_parity/deepcrusher_dc0_parity.tc
