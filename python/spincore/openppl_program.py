@@ -566,6 +566,42 @@ class OpenPPLSession:
             ctx,
         )
 
+    def run_initialization(
+        self,
+        name: str,
+        external: Mapping[str, float] | Callable[[str], float],
+        *,
+        hand_class: str | None = None,
+    ) -> float:
+        """Execute one reserved OpenHoldem f$ini_function_* callback.
+
+        These callbacks are allowed to contain only memory/user-variable side
+        effects and to fall off the end of the function, which OpenHoldem
+        evaluates as zero.
+        """
+        canonical = self.program.canonical_name(name)
+        if not canonical.lower().startswith("f$ini_function_"):
+            raise OpenPPLProgramError(
+                f"run_initialization requires reserved ini callback, got {name!r}"
+            )
+        ctx = ProgramContext(
+            self.program,
+            external,
+            hand_class=hand_class,
+            user_variables=self.user_variables,
+            memory_symbols=self.memory_symbols,
+        )
+        result = self.program._evaluate_compiled(
+            self.program.functions[canonical],
+            ctx,
+            eof_zero=True,
+        )
+        if isinstance(result, DirectAction):
+            raise OpenPPLProgramError(
+                f"initialization callback {canonical} returned poker action {result.name}"
+            )
+        return float(result.value)
+
 
 class OpenPPLProgram:
     def __init__(
@@ -677,6 +713,8 @@ class OpenPPLProgram:
         self,
         fn: CompiledFunction,
         ctx: ProgramContext,
+        *,
+        eof_zero: bool = False,
     ) -> ReturnValue | DirectAction:
         if not fn.is_when_function:
             assert fn.expression is not None
@@ -709,9 +747,13 @@ class OpenPPLProgram:
                 raise AssertionError(node.action_kind)
             index = node.else_index
 
-        # CParseTreeTerminalNodeEndOfFunction yields the standard empty-formula
-        # value. For DC0 we fail closed instead of guessing its context-specific
-        # Fold/zero interpretation.
+        # CParseTreeTerminalNodeEndOfFunction evaluates to zero in OpenHoldem.
+        # Strategy decision callbacks stay fail-closed by default because zero
+        # there means the context-sensitive check/fold action. Reserved
+        # initialization callbacks opt in explicitly so SET-only functions can
+        # execute their side effects and terminate normally.
+        if eof_zero:
+            return ReturnValue(0.0)
         raise OpenPPLProgramError(f"{fn.name}: reached end of function without action")
 
     def evaluate(
