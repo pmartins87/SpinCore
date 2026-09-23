@@ -243,3 +243,20 @@ def test_nhandshi_matches_openholdem_two_card_enumeration_on_locked_board():
     assert s("nhandslo") == 0
     assert s("nhandsti") == 990  # C(45 unseen cards, 2)
     assert s("nhands") == 990
+
+
+def test_holdem_unused_third_fourth_hole_card_symbols_are_openholdem_undefined():
+    v = _view(
+        ranks=(14, 13, 0, 0, 0, 0, 0),
+        suits=(3, 0, -1, -1, -1, -1, -1),
+        street=STREET_PREFLOP,
+    )
+    s = DeepCrusherCardSymbols(v)
+    assert s("$$pr0") == 14
+    assert s("$$ps0") == 3
+    assert s("$$pr1") == 13
+    assert s("$$ps1") == 0
+    assert s("$$pr2") == -1
+    assert s("$$ps2") == -1
+    assert s("$$pr3") == -1
+    assert s("$$ps3") == -1
