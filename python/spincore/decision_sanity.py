@@ -167,7 +167,34 @@ def _base_context(trace: DecisionTrace) -> dict[str, object]:
     }
     if trace.pot > 0:
         out["to_call_over_pot"] = trace.to_call / float(trace.pot)
+    if trace.policy_detail is not None:
+        out["policy_detail"] = dict(trace.policy_detail)
     return out
+
+
+def immediate_straight_flush_draw_outs(
+    hole: tuple[int, int],
+    board: tuple[int, ...],
+) -> tuple[int, int]:
+    """Count unseen next-street cards that immediately make straight/flush+.
+
+    This is intentionally narrow diagnostic context. It does not attempt to
+    score overcards, pair outs, backdoors or bluff quality.
+    """
+    if len(board) >= 5:
+        return (0, 0)
+    used = set(hole) | set(board)
+    straight_outs = 0
+    flush_outs = 0
+    for card in range(52):
+        if card in used:
+            continue
+        category, _ = evaluate_visible_hand(hole, tuple(board) + (card,))
+        if category == 4:
+            straight_outs += 1
+        elif category >= 5:
+            flush_outs += 1
+    return (straight_outs, flush_outs)
 
 
 def sanity_flags(trace: DecisionTrace) -> tuple[SanityFlag, ...]:
@@ -249,10 +276,23 @@ def sanity_flags(trace: DecisionTrace) -> tuple[SanityFlag, ...]:
         and category == 0
         and effective_stack_bb(trace) >= 10.0
     ):
+        straight_outs, flush_outs = immediate_straight_flush_draw_outs(
+            hole, trace.board
+        )
+        ctx = dict(ctx)
+        ctx["immediate_straight_outs"] = int(straight_outs)
+        ctx["immediate_flush_or_better_outs"] = int(flush_outs)
+        ctx["has_immediate_straight_or_flush_draw"] = bool(
+            straight_outs or flush_outs
+        )
         flags.append(SanityFlag(
             "POSTFLOP_DEEP_HIGH_CARD_JAM",
             "REVIEW",
-            "SpinCore jammed with only high-card showdown value at at least 10bb effective; draws are not yet excluded.",
+            (
+                "SpinCore jammed with only high-card showdown value at at least "
+                "10bb effective; immediate straight/flush draw outs are recorded "
+                "for review but do not by themselves decide whether the action is sound."
+            ),
             ctx,
         ))
 
