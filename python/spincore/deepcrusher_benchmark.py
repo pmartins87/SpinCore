@@ -275,6 +275,26 @@ class OfflineHeadToHeadEngine:
             if seat not in live and lineup.seats[seat] != "DEAD":
                 raise ValueError("dead episode seat must have DEAD lineup policy")
 
+        # Optional per-hand lifecycle hook. DeepCrusher uses this to create
+        # isolated OpenPPL sessions for every seat in the paired replay; the
+        # SpinCore checkpoint adapter is stateless and therefore has no hook.
+        seen_policy_ids: set[str] = set()
+        for seat in sorted(live):
+            policy_id = lineup.seats[seat]
+            if policy_id in seen_policy_ids:
+                continue
+            seen_policy_ids.add(policy_id)
+            policy = self.policies[policy_id]
+            begin_hand = getattr(policy, "begin_hand", None)
+            if begin_hand is not None:
+                begin_hand(
+                    episode=episode,
+                    lineup=lineup,
+                    scenario_index=int(scenario_index),
+                    lineup_index=int(lineup_index),
+                    deal_seed=int(deal_seed),
+                )
+
         state = self.solver.create(episode, int(deal_seed))
         rngs = {
             seat: random.Random(_mix64(self.master_seed, scenario_index, lineup_index, seat, 0xDCC0))
