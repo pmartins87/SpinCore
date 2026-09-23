@@ -392,7 +392,7 @@ class DeepCrusherCardSymbols:
             low in {x.lower() for x in cls.fixed_symbols()}
             or low.startswith("hand$")
             or low.startswith("board$")
-            or re.fullmatch(r"\$\$(?:pr|ps)[01]", low) is not None
+            or re.fullmatch(r"\$\$(?:pr|ps)[0-3]", low) is not None
             or re.fullmatch(r"\$\$(?:cr|cs)[0-4]", low) is not None
         )
 
@@ -799,9 +799,15 @@ class DeepCrusherCardSymbols:
             )
 
         # Technical card symbols used by the pinned OpenPPL library.
-        match = re.fullmatch(r"\$\$(pr|ps)([01])", low)
+        match = re.fullmatch(r"\$\$(pr|ps)([0-3])", low)
         if match:
             index = int(match.group(2))
+            # OpenHoldem allocates four Card slots per player even in Hold'em.
+            # CPlayer::Reset clears the unused 3rd/4th slots and Card::
+            # GetOpenHoldemRank()/GetSuit() both return kUndefined (-1) for a
+            # no-card/undefined slot.
+            if index >= 2:
+                return -1.0
             return float(hole[index][0] if match.group(1) == "pr" else hole[index][1])
         match = re.fullmatch(r"\$\$(cr|cs)([0-4])", low)
         if match:
