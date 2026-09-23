@@ -27,6 +27,8 @@ from spincore_nn.action_models import (
 )
 
 DEPLOYMENT_SCHEMA="SPINCORE_LT2_HYBRID_DEPLOYMENT_V1"
+GENERIC_INFERENCE_SCHEMA="SPINCORE_HYBRID_INFERENCE_V1"
+ALLOWED_BUNDLE_SCHEMAS={DEPLOYMENT_SCHEMA,GENERIC_INFERENCE_SCHEMA}
 REPRESENTATION="C0_V1_FROZEN_CONTROL"
 DOMAIN_BY_ID={0:"THREE_HANDED",1:"TRUE_HEADS_UP"}
 MODE_AVERAGE_POLICY="AVERAGE_POLICY"
@@ -73,8 +75,8 @@ class LeanHybridDeploymentAgent:
         seed:int=0,
     )->"LeanHybridDeploymentAgent":
         payload=torch.load(Path(path),map_location=device,weights_only=False)
-        if payload.get("schema")!=DEPLOYMENT_SCHEMA:
-            raise ValueError("wrong hybrid deployment schema")
+        if payload.get("schema") not in ALLOWED_BUNDLE_SCHEMAS:
+            raise ValueError("wrong hybrid inference/deployment schema")
         if payload.get("representation")!=REPRESENTATION:
             raise ValueError("hybrid deployment representation drift")
         if payload.get("action_candidate")!=FIRST_RELEASE_ACTION_SPEC.candidate_id:
