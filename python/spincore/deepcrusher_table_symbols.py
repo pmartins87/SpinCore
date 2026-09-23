@@ -145,6 +145,7 @@ class DeepCrusherTableSymbols:
     def fixed_symbols() -> frozenset[str]:
         names = {
             "isnl", "isfl", "ispl", "isomaha", "istournament",
+            "preflop", "flop", "turn", "river",
             "ismyturn", "isfinaltable", "sitename$openholdem",
             "buttonchair", "cutoffchair", "mp1chair", "mp2chair", "mp3chair",
             "ep1chair", "ep2chair", "ep3chair", "utgchair",
@@ -191,6 +192,10 @@ class DeepCrusherTableSymbols:
             "ismyturn": 1.0,
             "isfinaltable": 1.0,
             "sitename$openholdem": 1.0,
+            "preflop": 1.0,
+            "flop": 2.0,
+            "turn": 3.0,
+            "river": 4.0,
         }
         if low in frozen:
             return frozen[low]
