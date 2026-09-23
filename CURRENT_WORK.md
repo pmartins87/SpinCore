@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-22
-Status: **LT3 9105 -> 10105 UTILIZATION CONTINUATION RUNNING HEALTHY / POST-9105 BATTERY INCONCLUSIVE — DEEPCRUSHER DC0 ACTIVE / OPENHOLDEM PAUSED**
+Status: **LT3 9105 -> 10105 UTILIZATION CONTINUATION PASS / POST-9105 BATTERY INCONCLUSIVE — DEEPCRUSHER DC0 EXECUTABLE / REAL-OPENHOLDEM PARITY PENDING**
 
 ## Strategic baseline
 
@@ -109,7 +109,7 @@ Key development result:
 
 Interpretation: additional 8100 -> 9105 training changed behavior but did not demonstrate a statistically resolved strength gain over 8100. The battery alone did not justify a claim that more roots improve strength. However, keeping the otherwise-idle Ryzen training while DC0 is engineered is now treated as a separate **research-utilization lane**, not as a conclusion that 9105 was insufficient.
 
-A frozen continuation from finalized 9105 -> 10105 (+1000 iterations / +600,000 roots, projected ~23.2 h) is **RUNNING HEALTHY** in `runs/lt3_parallel_9105_10105/20260922_132104`. It preserves source 9105 read-only, preserves raw milestone 9600, checkpoints every 50, touches no sealed holdout and cannot supersede 8100/8600/9105 from training evidence alone. Preflight passed; iterations 9106 and 9107 completed at 80.12 s and 77.10 s wall respectively, with ~29 GiB available RAM and zero swap use at launch.
+The frozen utilization continuation from finalized 9105 -> 10105 is now **PASS**. It completed exactly 1000 additional iterations / 600,000 roots in 22.564 h, source 9105 remained unchanged, raw milestone 9600 was preserved, postvalidation passed, and no sealed holdout was touched. Final checkpoint SHA256: `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0`; matched HU ENS8 sidecar SHA256: `8d11cb6bce172e24e903ced650c7a7d82aeb2b251c71c3cfc28e37d873ddb62d`. 10105 remains **RESEARCH_ONLY_NOT_PROMOTED**; training completion alone is not a strength result.
 
 In parallel, DC0 now also includes:
 - decision-level benchmark traces with hole cards, visible board, pot, to-call, stacks, exact action and sizing;
@@ -276,3 +276,14 @@ Real OpenHoldem parity fixtures remain required for action/sizing equality befor
 DC1 results may support any strength claim. The paired DC1 development runner is
 already implemented and deliberately labels its output DEVELOPMENT_ONLY while
 that gate is pending.
+
+
+## 10105 handoff — 2026-09-23
+
+The Ryzen utilization block has ended cleanly and the machine is free for external-strength work.
+
+Before the first DC1 run, the benchmark SpinCore side is now being corrected to use the actual hybrid research behavior: **THREE_HANDED finalized AveragePolicy + TRUE_HEADS_UP matched current ENS8 sidecar**. A compact generic hybrid inference exporter was added so multiprocess DC1 workers do not fan out the ~2.8 GB training checkpoint.
+
+DeepCrusher action-history fidelity was also tightened: the oracle now preserves whether an executed aggression came from OpenHoldem's minimum Raise button (`didrais/prevaction=2`) or from f$betsize / technical pot-size action (`didbetsize/prevaction=3`). This provenance is carried per DeepCrusher seat across the synthetic hand and fails closed on transcript mismatch.
+
+Next local gate after CI is green: export the compact 10105 hybrid bundle, then run a small **DC1 DEVELOPMENT_ONLY** mechanical smoke with decision traces. Do not interpret that smoke as a canonical strength result until real OpenHoldem parity fixtures pass.
