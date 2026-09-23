@@ -54,7 +54,7 @@ _POT_FRACTION_BY_NAME = {
     "raisefourthpot": 0.25,
     "betthirdpot": 1.0 / 3.0,
     "raisethirdpot": 1.0 / 3.0,
-    "b​​ethalfpot": 0.50,
+    "bethalfpot": 0.50,
     "raisehalfpot": 0.50,
     "bettwothirdpot": 2.0 / 3.0,
     "raisetwothirdpot": 2.0 / 3.0,
@@ -63,9 +63,6 @@ _POT_FRACTION_BY_NAME = {
     "betpot": 1.0,
     "raisepot": 1.0,
 }
-# Avoid a visually confusable character ever entering runtime lookup.
-_POT_FRACTION_BY_NAME["bethalfpot"] = _POT_FRACTION_BY_NAME.pop("b​​ethalfpot")
-
 
 class DeepCrusherActionTranslationError(RuntimeError):
     pass
