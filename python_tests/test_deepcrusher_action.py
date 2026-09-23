@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from spincore.deepcrusher_action import translate_openppl_decision
+from spincore.deepcrusher_action import openppl_history_origin, translate_openppl_decision
 from spincore.openppl_program import DirectAction, ReturnValue
 
 
@@ -141,3 +141,40 @@ def test_literal_fold_on_free_action_degrades_to_check():
         big_blind_chips=20,
     )
     assert (action.action_type, action.amount_to) == (1, 0)
+
+
+def test_history_origin_distinguishes_raise_button_from_betsize():
+    raise_min_decision = DirectAction("RaiseMin")
+    raise_min_action = translate_openppl_decision(
+        raise_min_decision,
+        public=snap(),
+        actor=0,
+        big_blind_chips=20,
+    )
+    assert openppl_history_origin(raise_min_decision, raise_min_action) == "raise"
+
+    sized_decision = ReturnValue(5.0)
+    sized_action = translate_openppl_decision(
+        sized_decision,
+        public=snap(),
+        actor=0,
+        big_blind_chips=20,
+    )
+    assert openppl_history_origin(sized_decision, sized_action) == "betsize"
+
+
+def test_history_origin_tracks_executed_passive_backup():
+    decision = DirectAction("RaiseMin")
+    action = translate_openppl_decision(
+        decision,
+        public=snap(
+            legal_raise=False,
+            legal_bet=False,
+            legal_all_in=False,
+            legal_call=True,
+        ),
+        actor=0,
+        big_blind_chips=20,
+    )
+    assert action.action_type == 2
+    assert openppl_history_origin(decision, action) == "call"
