@@ -32,7 +32,7 @@ LT2 artifacts remain read-only while LT3 research proceeds.
 8. Post-9105 development battery — **PASS / INCONCLUSIVE; SEALED HOLDOUT UNTOUCHED**. Corrected execution completed on the frozen seed/protocol. AveragePolicy 8100 -> 9105 ALL = -0.055 chips/hand, 95% CI [-2.636,+2.526]; 3H = -2.303 [-4.841,+0.235]; HU = +2.630 [-2.151,+7.411]. Current HU ENS8 direct 8100 -> 9105 = -0.804 [-7.391,+5.784]. Policy drift is measurable, especially HU, but no resolved strength improvement was demonstrated.
 9. External-strength lane: finish DeepCrusher DC0 oracle/source-runtime fidelity against frozen R8 v22 before making any canonical "beats DeepCrusher" claim. **Native/OpenPPL transitive Hold'em closure is now PASS with 0 unresolved leaves** (290 resolved; 47 syntactically dead Omaha/extra-card leaves). Transcript-derived history/raiser/caller symbols, exact current-board nhandshi enumeration and canonical 169-class R8 preflop multiplex equity are implemented. Remaining DC0 gates: exact action-origin/sizing translation, full oracle callback integration and real OpenHoldem parity fixtures.
 10. Run DC1 mechanical paired smoke (1k–5k sampled states), then DC2 qualification (>=100k paired sampled states, extend only if precision requires it).
-11. Canonical promotion training remains **UNPROVEN** by the development battery, but the separate utilization continuation 9105 -> 10105 is **RUNNING HEALTHY** so the Ryzen is not idle while DC0 is engineered. Run directory: `runs/lt3_parallel_9105_10105/20260922_132104`. Preflight PASS; 9106/9107 completed at 80.12/77.10 s. This block is research-only, preserves 9105, saves raw 9600, adds 600,000 roots and touches no sealed holdout. Its existence must not be interpreted as evidence that more roots improve strength.
+11. Canonical promotion training remains **UNPROVEN** by the development battery. The separate utilization continuation 9105 -> 10105 is **PASS**: +1000 iterations / +600,000 roots, 22.564 h, source 9105 unchanged, raw 9600 preserved, postvalidation PASS, no sealed holdout touched. Endpoint checkpoint SHA256 `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0`; HU ENS8 sidecar SHA256 `8d11cb6bce172e24e903ced650c7a7d82aeb2b251c71c3cfc28e37d873ddb62d`. It remains research-only and is not evidence that more roots improve strength.
 12. Freeze the final LT3 research candidate.
 13. LT3 sealed holdout — **ONLY AFTER ALL RESEARCH CHOICES ARE FROZEN**.
 14. Deployment promotion — **ONLY AFTER SEALED HOLDOUT PASS**.
@@ -175,7 +175,8 @@ These flags are diagnostics, not poker-theory verdicts. Repeated patterns plus c
 - [x] OpenHoldem lifecycle callbacks and persistent memory.
 - [x] Exact OpenPPL action/sizing translator.
 - [x] Executable `DeepCrusherR8Policy.choose_exact()`.
-- [x] Exact solver application and decision provenance.
+- [x] Exact solver application and decision provenance, including OpenHoldem `didrais` vs `didbetsize` action-origin preservation.
+- [x] Compact benchmark bundle preserving the intended SpinCore hybrid semantics: 3H AveragePolicy + HU current ENS8.
 - [x] Real-solver end-to-end runtime smoke over 3H/HU and all four streets.
 - [x] Paired DC1 development runner + decision JSONL output.
 - [ ] Real OpenHoldem parity fixtures covering preflop/flop/turn/river and representative sizing families.
