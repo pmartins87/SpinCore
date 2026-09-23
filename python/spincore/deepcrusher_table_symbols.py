@@ -161,6 +161,7 @@ class DeepCrusherTableSymbols:
             "nplayersallin", "nopponentsallin",
             "ncurrentbets", "ncallbets",
             "balance_bigstackchair", "currentbet_bigstackchair",
+            "currentbet_bigblindchair",
             *SUIT_CONSTANTS.keys(),
             *POKERVAL_CONSTANTS.keys(),
         }
@@ -266,6 +267,10 @@ class DeepCrusherTableSymbols:
         if match:
             chair = int(match.group(1))
             return float(v.stacks_bb[chair]) if chair < 3 else 0.0
+
+        if low == "currentbet_bigblindchair":
+            chair = int(v.big_blind_rel)
+            return float(v.street_commitments_bb[chair])
 
         if low in ("balance_bigstackchair", "currentbet_bigstackchair"):
             chair = self._bigstackchair()
