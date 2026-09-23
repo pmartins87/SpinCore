@@ -87,6 +87,7 @@ class DeepCrusherR8Policy:
         self._startup_done: set[int] = set()
         self._handreset_done: set[int] = set()
         self._last_street: dict[int, int | None] = {}
+        self._last_metadata: dict[int, dict[str, object]] = {}
         self._big_blind_chips: int | None = None
         self._hand_serial = 0
 
@@ -143,6 +144,7 @@ class DeepCrusherR8Policy:
         self._startup_done.clear()
         self._handreset_done.clear()
         self._last_street = {seat: None for seat in seats}
+        self._last_metadata = {}
 
     def _session(self, seat: int) -> OpenPPLSession:
         try:
@@ -238,9 +240,41 @@ class DeepCrusherR8Policy:
             hand_class=hand_class,
         )
         public = state.public_snapshot()
-        return translate_openppl_decision(
+        action = translate_openppl_decision(
             decision,
             public=public,
             actor=int(seat),
             big_blind_chips=int(self._big_blind_chips),
         )
+
+        detail: dict[str, object] = {
+            "oracle": "DeepCrusherR8Policy",
+            "openppl_main": main,
+            "hand_class": hand_class,
+            "translated_action_type": int(action.action_type),
+            "translated_amount_to": int(action.amount_to),
+        }
+        if hasattr(decision, "name"):
+            detail.update(
+                {
+                    "openppl_result_kind": "DirectAction",
+                    "openppl_action_name": str(decision.name),
+                    "openppl_action_amount": (
+                        None if decision.amount is None else float(decision.amount)
+                    ),
+                    "openppl_action_amount_kind": decision.amount_kind,
+                }
+            )
+        else:
+            detail.update(
+                {
+                    "openppl_result_kind": "ReturnValue",
+                    "openppl_return_value": float(decision.value),
+                }
+            )
+        self._last_metadata[int(seat)] = detail
+        return action
+
+    def decision_metadata(self, *, seat: int) -> dict[str, object] | None:
+        value = self._last_metadata.get(int(seat))
+        return None if value is None else dict(value)
