@@ -31,6 +31,10 @@ on:
       - 'tools/audit_deepcrusher_r8_transitive_native_closure.py'
       - 'tools/audit_benchmark_decisions.py'
       - 'tools/evaluate_deepcrusher_dc1.py'
+      - 'tools/smoke_deepcrusher_oracle_solver.py'
+      - 'include/spincore/solver_c_api.h'
+      - 'src/solver_c_api.cpp'
+      - 'CMakeLists.txt'
       - 'fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt'
       - 'fixtures/deepcrusher_r8_v22/preflop_range_equity_class_v1.tsv'
   workflow_dispatch:
@@ -78,7 +82,8 @@ jobs:
             tools/audit_deepcrusher_r8_library_overlay.py \
             tools/audit_deepcrusher_r8_transitive_native_closure.py \
             tools/audit_benchmark_decisions.py \
-            tools/evaluate_deepcrusher_dc1.py
+            tools/evaluate_deepcrusher_dc1.py \
+            tools/smoke_deepcrusher_oracle_solver.py
       - name: Expression semantics
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -139,3 +144,17 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/python
         run: python -m py_compile python_tests/test_deepcrusher_state_view.py
+
+      - name: Build exact-action solver for oracle smoke
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j2 --target spincore_solver_c
+
+      - name: End-to-end DeepCrusher oracle runtime smoke
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          python tools/smoke_deepcrusher_oracle_solver.py \
+            --solver build/libspincore_solver_c.so \
+            --report /tmp/deepcrusher_oracle_runtime_smoke.json
+          cat /tmp/deepcrusher_oracle_runtime_smoke.json
