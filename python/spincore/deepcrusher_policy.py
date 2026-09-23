@@ -6,7 +6,10 @@ from pathlib import Path
 import random
 import re
 
-from spincore.deepcrusher_action import translate_openppl_decision
+from spincore.deepcrusher_action import (
+    openppl_history_origin,
+    translate_openppl_decision,
+)
 from spincore.deepcrusher_benchmark import (
     DEEPC_RUSHER_POLICY_ID,
     DEEPC_RUSHER_OPERATIONAL_SOURCE,
@@ -88,6 +91,7 @@ class DeepCrusherR8Policy:
         self._handreset_done: set[int] = set()
         self._last_street: dict[int, int | None] = {}
         self._last_metadata: dict[int, dict[str, object]] = {}
+        self._action_origins: dict[int, list[str]] = {}
         self._big_blind_chips: int | None = None
         self._hand_serial = 0
 
@@ -145,6 +149,7 @@ class DeepCrusherR8Policy:
         self._handreset_done.clear()
         self._last_street = {seat: None for seat in seats}
         self._last_metadata = {}
+        self._action_origins = {seat: [] for seat in seats}
 
     def _session(self, seat: int) -> OpenPPLSession:
         try:
@@ -217,6 +222,7 @@ class DeepCrusherR8Policy:
         provider = DeepCrusherPrimitiveSymbols(
             view,
             environment=self.environment,
+            hero_action_origins=tuple(self._action_origins.get(int(seat), ())),
         )
         hand_class = view.hero_hand_class
         session = self._session(seat)
@@ -246,6 +252,8 @@ class DeepCrusherR8Policy:
             actor=int(seat),
             big_blind_chips=int(self._big_blind_chips),
         )
+        history_origin = openppl_history_origin(decision, action)
+        self._action_origins.setdefault(int(seat), []).append(history_origin)
 
         detail: dict[str, object] = {
             "oracle": "DeepCrusherR8Policy",
@@ -253,6 +261,7 @@ class DeepCrusherR8Policy:
             "hand_class": hand_class,
             "translated_action_type": int(action.action_type),
             "translated_amount_to": int(action.amount_to),
+            "openholdem_history_origin": history_origin,
         }
         if hasattr(decision, "name"):
             detail.update(
