@@ -249,6 +249,25 @@ When trigger Set user_seen
             session.evaluate("f$main", {"trigger":1})
 
 
+    def test_nested_sizing_helper_returns_numeric_openppl_decision(self):
+        p=OpenPPLProgram.from_text("""
+##f$size##
+When mode = 1 RaiseTo 6 Force
+When mode = 2 RaiseBy 2.5 Force
+When mode = 3 RaiseBy 50% Force
+When mode = 4 BetHalfPot Force
+When Others BetMax Force
+##f$main##
+When Others Return f$size Force
+""")
+        base={"bblind":1,"currentbet":1,"AmountToCall":2,"PotSize":9}
+        self.assertEqual(p.evaluate("f$main",{**base,"mode":1}),ReturnValue(6))
+        self.assertEqual(p.evaluate("f$main",{**base,"mode":2}),ReturnValue(5.5))
+        self.assertEqual(p.evaluate("f$main",{**base,"mode":3}),ReturnValue(8.5))
+        self.assertEqual(p.evaluate("f$main",{**base,"mode":4}),ReturnValue(-1000005))
+        self.assertEqual(p.evaluate("f$main",{**base,"mode":5}),ReturnValue(-1000009))
+
+
 if __name__=="__main__":
     unittest.main()
 
