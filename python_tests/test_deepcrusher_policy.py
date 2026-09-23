@@ -64,6 +64,8 @@ When Others Fold Force
     p._startup_done = set()
     p._handreset_done = set()
     p._last_street = {}
+    p._last_metadata = {}
+    p._action_origins = {}
     p._big_blind_chips = None
     p._hand_serial = 0
     return p
@@ -112,6 +114,8 @@ def test_policy_replays_startup_newround_myturn_before_primary_callback():
     # decision on the same street must not run new-round again.
     assert p._sessions[0].memory_symbols["x"] == 2
     assert "user_seen" in p._sessions[0].user_variables
+    assert p._action_origins[0] == ["betsize", "betsize"]
+    assert p.decision_metadata(seat=0)["openholdem_history_origin"] == "betsize"
 
 
 def test_begin_hand_isolates_openppl_memory_between_paired_replays():
