@@ -177,3 +177,10 @@ jobs:
             cat "$f"
             echo "=== PARITY_CASE_END:$(basename "$f") ==="
           done
+          for f in fixtures/deepcrusher_openholdem_parity_v1/dc0_*.txt; do
+            diff -u "$f" "/tmp/deepcrusher_openholdem_parity/$(basename "$f")"
+          done
+          diff -u \
+            fixtures/deepcrusher_openholdem_parity_v1/deepcrusher_dc0_parity.tc \
+            /tmp/deepcrusher_openholdem_parity/deepcrusher_dc0_parity.tc
+          echo "DEEPC_RUSHER_OPENHOLDEM_PARITY_FIXTURES_FROZEN_PASS"
