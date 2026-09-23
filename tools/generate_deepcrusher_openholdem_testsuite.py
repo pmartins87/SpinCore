@@ -304,17 +304,35 @@ def main() -> int:
         "cases": [],
     }
 
+    required_actions = {"F", "C", "K", "R", "A"}
+    covered_actions: set[str] = set()
+    covered_streets = {
+        "THREE_HANDED": set(),
+        "TRUE_HEADS_UP": set(),
+    }
+    full_street_counts = {
+        "THREE_HANDED": 0,
+        "TRUE_HEADS_UP": 0,
+    }
+    case_serial = {
+        "THREE_HANDED": 0,
+        "TRUE_HEADS_UP": 0,
+    }
+
     for domain in ("THREE_HANDED", "TRUE_HEADS_UP"):
-        accepted = 0
         for attempt in range(int(args.max_search)):
-            if accepted >= int(args.cases_per_domain):
-                break
             dealer = attempt % (3 if domain == "THREE_HANDED" else 2)
             episode = make_episode(domain, dealer)
             live = [seat for seat, stack in enumerate(episode.stacks) if stack > 0]
             # Cycle the DeepCrusher seat so position is not accidentally fixed.
-            hero_seat = live[(attempt // (3 if domain == "THREE_HANDED" else 2)) % len(live)]
-            deal_seed = int(args.seed + 100000 * (0 if domain == "THREE_HANDED" else 1) + attempt)
+            hero_seat = live[
+                (attempt // (3 if domain == "THREE_HANDED" else 2)) % len(live)
+            ]
+            deal_seed = int(
+                args.seed
+                + 100000 * (0 if domain == "THREE_HANDED" else 1)
+                + attempt
+            )
 
             deal, actions, hero_streets = play_candidate(
                 solver,
@@ -324,12 +342,24 @@ def main() -> int:
                 deal_seed=deal_seed,
                 case_index=attempt,
             )
-            # For the first parity pack, demand at least one DeepCrusher action
-            # on every street. This makes each accepted case independently useful.
-            if hero_streets != {0, 1, 2, 3}:
+            hero_rows = [a for a in actions if a.hero]
+            hero_action_letters = {
+                ACTION_TEXT[int(a.action_type)] for a in hero_rows
+            }
+            is_full_street = hero_streets == {0, 1, 2, 3}
+
+            adds_action = bool(hero_action_letters - covered_actions)
+            adds_street = bool(hero_streets - covered_streets[domain])
+            needs_full_street = (
+                is_full_street
+                and full_street_counts[domain] < int(args.cases_per_domain)
+            )
+            if not (adds_action or adds_street or needs_full_street):
                 continue
 
-            case_id = f"dc0_{domain.lower()}_{accepted:02d}"
+            serial = case_serial[domain]
+            case_serial[domain] += 1
+            case_id = f"dc0_{domain.lower()}_{serial:02d}"
             text = render_case(
                 case_id=case_id,
                 episode=episode,
@@ -346,7 +376,7 @@ def main() -> int:
                     "amount_to": int(a.amount_to),
                     "legal_buttons": a.legal_buttons,
                 }
-                for a in actions if a.hero
+                for a in hero_rows
             ]
             manifest["cases"].append(
                 {
@@ -356,16 +386,57 @@ def main() -> int:
                     "dealer": int(episode.dealer_id),
                     "hero_seat": int(hero_seat),
                     "deal_seed": int(deal_seed),
+                    "full_street_case": bool(is_full_street),
                     "hero_actions": hero_actions,
                 }
             )
-            accepted += 1
+            covered_actions.update(hero_action_letters)
+            covered_streets[domain].update(hero_streets)
+            if needs_full_street:
+                full_street_counts[domain] += 1
 
-        if accepted < int(args.cases_per_domain):
-            raise RuntimeError(
-                f"only found {accepted}/{args.cases_per_domain} full-street {domain} cases "
-                f"within {args.max_search} attempts"
-            )
+            if (
+                full_street_counts[domain] >= int(args.cases_per_domain)
+                and covered_streets[domain] == {0, 1, 2, 3}
+                and (
+                    domain != "TRUE_HEADS_UP"
+                    or covered_actions >= required_actions
+                )
+            ):
+                break
+
+    missing_actions = sorted(required_actions - covered_actions)
+    missing_streets = {
+        domain: sorted({0, 1, 2, 3} - values)
+        for domain, values in covered_streets.items()
+        if values != {0, 1, 2, 3}
+    }
+    missing_full = {
+        domain: int(args.cases_per_domain) - count
+        for domain, count in full_street_counts.items()
+        if count < int(args.cases_per_domain)
+    }
+    if missing_actions or missing_streets or missing_full:
+        raise RuntimeError(
+            "parity pack search incomplete: "
+            f"missing_actions={missing_actions} "
+            f"missing_streets={missing_streets} "
+            f"missing_full_street_cases={missing_full}"
+        )
+
+    manifest["coverage"] = {
+        "required_action_buttons": sorted(required_actions),
+        "covered_action_buttons": sorted(covered_actions),
+        "street_ids_by_domain": {
+            domain: sorted(values)
+            for domain, values in covered_streets.items()
+        },
+        "full_street_cases_by_domain": dict(full_street_counts),
+        "note": (
+            "R means exact NL raise/betsize is also checked by TestSuite2; "
+            "F/C/K/A cover fold/call/check/all-in buttons."
+        ),
+    }
 
     manifest_path = args.output_dir / "manifest.json"
     manifest_path.write_text(
