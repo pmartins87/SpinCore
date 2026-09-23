@@ -63,6 +63,37 @@ class SetUserVariable:
 Action = ReturnValue | DirectAction | SetUserVariable
 
 
+# Numeric encodings from the pinned OpenPPL library. Helper functions that
+# return actions are legal numerical subexpressions in OpenHoldem (for example
+# f$preflop -> RETURN f$BestBetsize, where f$BestBetsize ultimately returns
+# BetHalfPot or RaiseBy 50%). The primary callback still exposes DirectAction
+# structurally when the action is written directly in that callback.
+_OPENPPL_FIXED_ACTION_VALUE = {
+    "fold": -1000001.0,
+    "betfourthpot": -1000003.0,
+    "raisefourthpot": -1000003.0,
+    "betthirdpot": -1000004.0,
+    "raisethirdpot": -1000004.0,
+    "bethalfpot": -1000005.0,
+    "raisehalfpot": -1000005.0,
+    "bettwothirdpot": -1000006.0,
+    "raisetwothirdpot": -1000006.0,
+    "betthreefourthpot": -1000007.0,
+    "raisethreefourthpot": -1000007.0,
+    "betpot": -1000008.0,
+    "raisepot": -1000008.0,
+    "betmax": -1000009.0,
+    "raisemax": -1000009.0,
+    "allin": -1000009.0,
+    "call": -1000010.0,
+    "bet": -1000012.0,
+    "raise": -1000012.0,
+    "betmin": -1000012.0,
+    "raisemin": -1000012.0,
+    "check": 0.0,
+}
+
+
 @dataclass
 class WhenNode:
     condition: Expr
@@ -439,6 +470,48 @@ class ProgramContext:
             return
         raise OpenPPLProgramError(f"unsupported SET target: {name!r}")
 
+    def direct_action_numeric(self, action: DirectAction) -> float:
+        """Evaluate an OpenPPL action node as its numeric decision value.
+
+        This mirrors CParseTreeTerminalNodeBetsizeAction and the pinned action
+        constants so action-returning sizing helpers can be nested inside
+        RETURN expressions exactly as in real OpenHoldem.
+        """
+        low = str(action.name).lower()
+        if low in _OPENPPL_FIXED_ACTION_VALUE:
+            return float(_OPENPPL_FIXED_ACTION_VALUE[low])
+
+        if low == "raiseto":
+            if action.amount is None or action.amount_kind != "bb_expression":
+                raise OpenPPLProgramError("RaiseTo requires BB expression")
+            return float(action.amount)
+
+        if low == "raiseby":
+            if action.amount is None:
+                raise OpenPPLProgramError("RaiseBy requires amount")
+            bblind = float(self.resolve("bblind"))
+            if bblind <= 0:
+                raise OpenPPLProgramError("RaiseBy requires positive bblind")
+            ncallbets = (
+                float(self.resolve("currentbet")) / bblind
+                + float(self.resolve("AmountToCall"))
+            )
+            if action.amount_kind == "bb_expression":
+                return ncallbets + float(action.amount)
+            if action.amount_kind == "pot_fraction":
+                pot_after_call_bb = (
+                    float(self.resolve("PotSize")) / bblind
+                    + float(self.resolve("AmountToCall"))
+                )
+                return ncallbets + float(action.amount) * pot_after_call_bb
+            raise OpenPPLProgramError(
+                f"unsupported RaiseBy amount kind: {action.amount_kind!r}"
+            )
+
+        raise OpenPPLProgramError(
+            f"no numeric OpenPPL encoding for direct action {action.name!r}"
+        )
+
     def evaluate_function(self, name: str) -> float:
         canonical = self.program.canonical_name(name)
         # OpenHoldem formula values are cached within a heartbeat. Preserve that
@@ -457,11 +530,9 @@ class ProgramContext:
         finally:
             self.in_progress.remove(canonical)
         if isinstance(result, DirectAction):
-            raise OpenPPLProgramError(
-                f"{canonical} returned direct action {result.name}; numerical "
-                "evaluation requested"
-            )
-        value = float(result.value)
+            value = self.direct_action_numeric(result)
+        else:
+            value = float(result.value)
         if cacheable:
             self.cache[canonical] = value
         return value
@@ -517,11 +588,9 @@ class ProgramContext:
         finally:
             self.in_progress.remove(cache_key)
         if isinstance(result, DirectAction):
-            raise OpenPPLProgramError(
-                f"library::{canonical} returned direct action {result.name}; "
-                "numerical evaluation requested"
-            )
-        value = float(result.value)
+            value = self.direct_action_numeric(result)
+        else:
+            value = float(result.value)
         if cacheable:
             self.cache[cache_key] = value
         return value
