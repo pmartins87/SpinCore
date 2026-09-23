@@ -215,13 +215,12 @@ When Others Return false Force
         self.assertEqual(p.evaluate("f$x",{"myturnbits":4}),ReturnValue(1))
         self.assertEqual(p.evaluate("f$x",{"myturnbits":2}),ReturnValue(0))
 
-    def test_eof_without_action_fails_closed(self):
+    def test_eof_without_action_matches_openholdem_zero_terminal(self):
         p=OpenPPLProgram.from_text("""
 ##f$x##
 When a Return 1 Force
 """)
-        with self.assertRaises(OpenPPLProgramError):
-            p.evaluate("f$x",{"a":0})
+        self.assertEqual(p.evaluate("f$x",{"a":0}),ReturnValue(0))
 
 
     def test_reserved_initialization_callback_may_fall_off_end_after_set(self):
@@ -239,14 +238,17 @@ When trigger Set me_st_X_7
         )
         self.assertEqual(session.memory_symbols["x"], 7)
 
-    def test_normal_strategy_callback_still_fails_closed_at_eof(self):
+    def test_normal_strategy_callback_uses_openholdem_zero_at_eof(self):
         p=OpenPPLProgram.from_text("""
 ##f$main##
 When trigger Set user_seen
 """)
         session=OpenPPLSession(p)
-        with self.assertRaises(OpenPPLProgramError):
-            session.evaluate("f$main", {"trigger":1})
+        self.assertEqual(
+            session.evaluate("f$main", {"trigger":1}),
+            ReturnValue(0),
+        )
+        self.assertIn("user_seen", session.user_variables)
 
 
     def test_nested_sizing_helper_returns_numeric_openppl_decision(self):
