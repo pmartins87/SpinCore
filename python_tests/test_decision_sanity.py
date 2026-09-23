@@ -1,12 +1,12 @@
 from spincore.deepcrusher_benchmark import DecisionTrace
-from spincore.decision_sanity import evaluate_visible_hand, preflop_class, sanity_flags
+from spincore.decision_sanity import (\n    evaluate_visible_hand,\n    immediate_straight_flush_draw_outs,\n    preflop_class,\n    sanity_flags,\n)
 
 
 def cid(rank: int, suit: int) -> int:
     return (rank - 2) * 4 + suit
 
 
-def trace(*, hole, board=(), action_type=0, blind="10/20", stacks=(400,400,0), actor=0):
+def trace(*, hole, board=(), action_type=0, blind="10/20", stacks=(400,400,0), actor=0, policy_detail=None):
     return DecisionTrace(
         scenario_index=1,
         domain="TRUE_HEADS_UP",
@@ -71,3 +71,31 @@ def test_trips_and_full_house_fold_escalation():
     flags=sanity_flags(trace(hole=fh_hole,board=fh_board,action_type=0))
     assert [x.code for x in flags]==["POSTFLOP_MONSTER_FOLD"]
     assert flags[0].severity=="CRITICAL"
+
+
+def test_high_card_jam_records_immediate_draw_and_policy_context():
+    hole=(cid(8,1),cid(6,1))
+    board=(cid(14,3),cid(11,1),cid(9,1))
+    assert immediate_straight_flush_draw_outs(hole,board)==(0,9)
+    detail={"selected_slot":9,"selected_slot_name":"ALL_IN","selected_probability":0.42}
+    flags=sanity_flags(trace(
+        hole=hole,
+        board=board,
+        action_type=5,
+        stacks=(400,400,0),
+        policy_detail=detail,
+    ))
+    assert [x.code for x in flags]==["POSTFLOP_DEEP_HIGH_CARD_JAM"]
+    ctx=flags[0].context
+    assert ctx["has_immediate_straight_or_flush_draw"] is True
+    assert ctx["immediate_flush_or_better_outs"]==9
+    assert ctx["policy_detail"]==detail
+
+
+def test_high_card_jam_without_immediate_straight_or_flush_draw_is_explicit():
+    hole=(cid(10,0),cid(9,1))
+    board=(cid(13,2),cid(5,3),cid(4,1))
+    assert immediate_straight_flush_draw_outs(hole,board)==(0,0)
+    flags=sanity_flags(trace(hole=hole,board=board,action_type=5,stacks=(400,400,0)))
+    assert [x.code for x in flags]==["POSTFLOP_DEEP_HIGH_CARD_JAM"]
+    assert flags[0].context["has_immediate_straight_or_flush_draw"] is False
