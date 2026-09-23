@@ -183,3 +183,47 @@ These flags are diagnostics, not poker-theory verdicts. Repeated patterns plus c
 - [ ] Freeze DC0 canonical PASS only after parity.
 - [ ] DC1 1k–5k development smoke against the compact SpinCore policy.
 - [ ] DC2 >=100k paired benchmark after DC1 mechanics and parity are clean.
+
+## DC1 10105 first diagnostic smoke — 2026-09-23
+
+The guarded 200-scenario DC1 DEVELOPMENT_ONLY smoke completed at source commit
+`c8c3d64684814aa4ccdb1f824f2990ed787dbbd2` with 115 THREE_HANDED and 85
+TRUE_HEADS_UP scenario clusters, 860 balanced games and 3,506 traced decisions.
+
+Mechanical result:
+- overall paired SpinCore-minus-DeepCrusher: **-19.993 chips/policy-seat-hand**,
+  95% CI **[-55.266,+15.279]**;
+- THREE_HANDED: **-28.562**, CI **[-56.770,-0.354]**;
+- TRUE_HEADS_UP: **-8.400**, CI **[-82.315,+65.515]**.
+
+These numbers remain non-canonical and do not authorize a strength claim: the
+sample is intentionally small and the real-OpenHoldem DC0 parity fixture gate is
+still pending.
+
+The external sanity queue produced 29 review events: 28 deep postflop high-card
+all-ins and one trips+ fold. Hand-level review split the 28 high-card jams into
+9 with an immediate straight/flush draw and 19 without an immediate
+straight/flush draw. The trips flag is Qs8d on 8s8c4c, facing 60 into a 120-chip
+pot at about 7.13bb effective. This does not prove a policy defect by itself,
+because SpinCore is stochastic and exact ALL_IN can also be the resolved result
+of a pot-size action near commitment.
+
+**Gate decision:** do not scale DC1 yet. First make SpinCore traces expose the
+sampled universal action slot, its probability, the full legal probability
+vector, the RNG draw and the resolved exact action. This distinguishes a genuine
+ALL_IN policy choice from a POT_33/POT_50/POT_75/POT_100 slot that collapses to
+all-in under the legacy 60% near-commitment resolver, and distinguishes a
+meaningful trips-fold probability from a tiny sampled tail.
+
+Instrumentation is now on main:
+- `e867b6679b98cfc35a7255030d4a1b5f2f26938c` — sampled SpinCore
+  slot/probability metadata;
+- `399b1a635d18dfb172cd71303fdf3e9a2be347b0` — sanity examples now include
+  policy metadata and immediate straight/flush draw outs;
+- `9974b3c9d39cb6995632209708dd978b1c5a8eb0` and
+  `b0ce0704eb156990b899139ab6bd5d45bc0cf11f` — regression coverage.
+
+Next local gate: rerun the exact same guarded 200-scenario smoke on the new main
+and inspect the same 29 decisions with their selected probabilities before
+authorizing any 1k-5k DC1 scale-up.
+
