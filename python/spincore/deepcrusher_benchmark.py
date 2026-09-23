@@ -147,6 +147,8 @@ class DecisionTrace:
     board: tuple[int, ...]
     action_type: int
     amount_to: int
+    dealer_seat: int | None = None
+    policy_detail: dict[str, object] | None = None
 
     @property
     def action_name(self) -> str:
@@ -313,6 +315,12 @@ class OfflineHeadToHeadEngine:
                 if self.decision_sink is not None and state.owner.explicit_deal_available:
                     deal = state.deal_snapshot()
                 action = policy.choose_exact(state, seat=actor, rng=rngs[actor])
+                policy_detail = None
+                detail_fn = getattr(policy, "decision_metadata", None)
+                if detail_fn is not None:
+                    raw_detail = detail_fn(seat=actor)
+                    if raw_detail is not None:
+                        policy_detail = dict(raw_detail)
                 if self.decision_sink is not None and public is not None:
                     self.decision_sink(
                         DecisionTrace(
@@ -344,6 +352,8 @@ class OfflineHeadToHeadEngine:
                             ),
                             action_type=int(action.action_type),
                             amount_to=int(action.amount_to),
+                            dealer_seat=int(episode.dealer_id),
+                            policy_detail=policy_detail,
                         )
                     )
                 apply_external_exact(state, action)
