@@ -228,14 +228,17 @@ Implemented now:
 - full-source structural compile audit and static-preparation runner;
 - CI contracts for the portable DC0 foundation.
 
-Still required before DC0 can authorize canonical DC1/DC2:
+Current DC0 implementation state:
 
-- complete native/OpenPPL symbol projection from SpinCore observable state and action history;
-- exact action/sizing translation, including the R8 f$BestBetsize and all-in-conversion paths;
-- explicit frozen treatment of optional environment/PokerTracker/network-dependent symbols;
-- broad real-OpenHoldem parity fixtures across preflop/flop/turn/river with exact bet/raise amounts.
+- transitive Hold'em native/OpenPPL closure: **PASS, 0 unresolved leaves**;
+- frozen optional environment/PokerTracker/network profile: **PASS**;
+- exact action/sizing translation into simulator exact actions: **PASS mechanically**;
+- executable `DeepCrusherR8Policy` over complete simulated hands: **PASS mechanically**;
+- OpenHoldem action-origin provenance (`didrais` vs `didbetsize`, including prevaction 2 vs 3): **implemented and CI-covered**;
+- SpinCore benchmark candidate semantics: compact hybrid bundle using **3H finalized AveragePolicy + HU matched current ENS8 sidecar**;
+- broad real-OpenHoldem parity fixtures across preflop/flop/turn/river with exact bet/raise amounts: **still required for canonical DC0 parity**.
 
-The prior R8 v22 live smoke is useful external evidence that the frozen formula itself is operational, but its original five logs are not committed as machine-readable parity fixtures.
+Therefore DC1 may run now as a DEVELOPMENT_ONLY mechanical/strategic-diagnostic smoke, but no pre-parity result is a canonical strength claim. The prior R8 v22 live smoke remains useful evidence that the frozen formula itself is operational; its original five logs are not committed as machine-readable parity fixtures.
 
 
 ## Frozen offline environment profile
