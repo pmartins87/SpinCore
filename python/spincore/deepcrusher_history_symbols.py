@@ -76,6 +76,7 @@ class _AnnotatedEvent:
 @dataclass(frozen=True)
 class DeepCrusherHistorySymbols:
     view: DeepCrusherStateView
+    hero_action_origins: tuple[str, ...] | None = None
 
     @staticmethod
     def fixed_symbols() -> frozenset[str]:
@@ -191,18 +192,53 @@ class DeepCrusherHistorySymbols:
             if int(event.actor_rel) == 0
         )
 
+    def _hero_origin_pairs(
+        self,
+        street: int | None = None,
+    ) -> tuple[tuple[PublicActionEvent, str | None], ...]:
+        all_hero = tuple(
+            event for event in self._voluntary()
+            if int(event.actor_rel) == 0
+        )
+        origins = self.hero_action_origins
+        if origins is not None and len(origins) != len(all_hero):
+            raise RuntimeError(
+                "DeepCrusher action-origin/history length mismatch: "
+                f"origins={len(origins)} hero_events={len(all_hero)}"
+            )
+        pairs = tuple(
+            (event, None if origins is None else str(origins[index]).lower())
+            for index, event in enumerate(all_hero)
+        )
+        if street is None:
+            return pairs
+        return tuple(
+            (event, origin)
+            for event, origin in pairs
+            if int(event.street) == int(street)
+        )
+
     def _hero_count(self, kind: str, street: int | None) -> int:
         if street is None:
             return 0
         events = self._hero_events(street)
+        if self.hero_action_origins is not None:
+            pairs = self._hero_origin_pairs(street)
+            wanted = {
+                "chec": "check",
+                "call": "call",
+                "rais": "raise",
+                "betsize": "betsize",
+            }[kind]
+            return sum(origin == wanted for _event, origin in pairs)
+
         if kind == "chec":
             return sum(int(event.action_type) == ACTION_CHECK for event in events)
         if kind == "call":
             return sum(int(event.action_type) == ACTION_CALL for event in events)
         if kind == "rais":
-            # Frozen-R8 equivalence: see module docstring. Sized aggressions are
-            # represented through didbetsize; didrais remains zero until action
-            # origin is transported explicitly.
+            # Without action-origin metadata, exact poker actions cannot
+            # distinguish the OpenHoldem minimum-raise button from f$betsize.
             return 0
         if kind == "betsize":
             annotated = self._annotated(street)
@@ -298,6 +334,24 @@ class DeepCrusherHistorySymbols:
         event = self._last_hero_action()
         if event is None:
             return -2
+
+        if self.hero_action_origins is not None:
+            pairs = self._hero_origin_pairs()
+            if not pairs:
+                return -2
+            origin = pairs[-1][1]
+            values = {
+                "fold": -1,
+                "check": 0,
+                "call": 1,
+                "raise": 2,
+                "betsize": 3,
+                "allin": 4,
+            }
+            if origin not in values:
+                raise RuntimeError(f"unknown DeepCrusher action origin: {origin!r}")
+            return values[origin]
+
         action = int(event.action_type)
         if action == ACTION_FOLD:
             return -1
@@ -336,7 +390,10 @@ class DeepCrusherHistorySymbols:
         if action == "checked":
             return self._hero_count("chec", street) > 0
         if action == "raised":
-            return self._hero_count("betsize", street) > 0
+            return (
+                self._hero_count("rais", street)
+                + self._hero_count("betsize", street)
+            ) > 0
         raise AssertionError(action)
 
     def resolve(self, name: str) -> float:
