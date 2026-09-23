@@ -74,6 +74,7 @@ def frozen_benchmark_environment(native_identifiers) -> dict[str, float]:
 class DeepCrusherPrimitiveSymbols:
     view: DeepCrusherStateView
     environment: Mapping[str, float] | None = None
+    hero_action_origins: tuple[str, ...] | None = None
 
     def _is_absent(self, rel: int) -> bool:
         return bool(
@@ -273,7 +274,12 @@ class DeepCrusherPrimitiveSymbols:
 
         if DeepCrusherHistorySymbols.supports(name):
             try:
-                return float(DeepCrusherHistorySymbols(v).resolve(name))
+                return float(
+                    DeepCrusherHistorySymbols(
+                        v,
+                        hero_action_origins=self.hero_action_origins,
+                    ).resolve(name)
+                )
             except KeyError:
                 pass
 
