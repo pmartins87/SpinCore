@@ -783,7 +783,7 @@ class OpenPPLProgram:
         fn: CompiledFunction,
         ctx: ProgramContext,
         *,
-        eof_zero: bool = False,
+        eof_zero: bool = True,
     ) -> ReturnValue | DirectAction:
         if not fn.is_when_function:
             assert fn.expression is not None
@@ -816,11 +816,10 @@ class OpenPPLProgram:
                 raise AssertionError(node.action_kind)
             index = node.else_index
 
-        # CParseTreeTerminalNodeEndOfFunction evaluates to zero in OpenHoldem.
-        # Strategy decision callbacks stay fail-closed by default because zero
-        # there means the context-sensitive check/fold action. Reserved
-        # initialization callbacks opt in explicitly so SET-only functions can
-        # execute their side effects and terminate normally.
+        # OpenHoldem evaluates the explicit
+        # empty_expression__false__zero__when_others_fold_force terminal at the
+        # end of every function. Its numeric value is zero (false/fold); main
+        # callbacks later translate zero through normal check/fold semantics.
         if eof_zero:
             return ReturnValue(0.0)
         raise OpenPPLProgramError(f"{fn.name}: reached end of function without action")
