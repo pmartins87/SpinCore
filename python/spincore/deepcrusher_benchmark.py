@@ -74,12 +74,18 @@ class OfflineDecisionPolicy(Protocol):
 
 
 class SpinCoreCheckpointPolicy:
-    """Expose a trained AveragePolicy through the exact-action benchmark API."""
+    """Expose a trained SpinCore policy through the exact-action benchmark API.
+
+    The benchmark samples the policy exactly as deployment would, but also keeps
+    decision-local metadata so diagnostic traces can distinguish a deliberate
+    ALL_IN slot from a pot-size slot that resolves to all-in near commitment.
+    """
 
     policy_id = SPINCORE_POLICY_ID
 
     def __init__(self, agent) -> None:
         self.agent = agent
+        self._last_metadata: dict[int, dict[str, object]] = {}
 
     def choose_exact(
         self,
@@ -88,8 +94,8 @@ class SpinCoreCheckpointPolicy:
         seat: int,
         rng: random.Random,
     ) -> ExternalExactAction:
-        del seat  # Agent observation is already actor-relative.
         from spincore.lean_solver_actions import resolve_lean_exact
+        from spincore.r7_5_action_contract import NAME_BY_SLOT
 
         active_mask, legal, probs = self.agent.distribution(state)
         x = rng.random()
@@ -101,7 +107,35 @@ class SpinCoreCheckpointPolicy:
                 slot = int(candidate)
                 break
         action_type, amount_to = resolve_lean_exact(state, active_mask, slot)
+
+        domain_fn = getattr(self.agent, "domain_for_state", None)
+        domain = None if domain_fn is None else str(domain_fn(state))
+        legal_rows = [
+            {
+                "slot": int(candidate),
+                "name": str(NAME_BY_SLOT.get(int(candidate), f"SLOT_{int(candidate)}")),
+                "probability": float(probs[candidate]),
+            }
+            for candidate in legal
+        ]
+        self._last_metadata[int(seat)] = {
+            "oracle": "SpinCoreCheckpointPolicy",
+            "selection": "SAMPLED_POLICY",
+            "domain": domain,
+            "active_mask": int(active_mask),
+            "sample_u": float(x),
+            "legal_actions": legal_rows,
+            "selected_slot": int(slot),
+            "selected_slot_name": str(NAME_BY_SLOT.get(int(slot), f"SLOT_{int(slot)}")),
+            "selected_probability": float(probs[slot]),
+            "resolved_action_type": int(action_type),
+            "resolved_amount_to": int(amount_to),
+        }
         return ExternalExactAction(int(action_type), int(amount_to))
+
+    def decision_metadata(self, *, seat: int) -> dict[str, object] | None:
+        value = self._last_metadata.get(int(seat))
+        return None if value is None else dict(value)
 
 
 @dataclass(frozen=True)
