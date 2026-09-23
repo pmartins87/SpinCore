@@ -19,6 +19,7 @@ on:
       - 'python/spincore/deepcrusher_benchmark.py'
       - 'python/spincore/deepcrusher_action.py'
       - 'python/spincore/deepcrusher_policy.py'
+      - 'python/spincore/lean_hybrid_deployment_agent.py'
       - 'python/spincore/decision_sanity.py'
       - 'python_tests/test_openppl_expr.py'
       - 'python_tests/test_openppl_program.py'
@@ -31,6 +32,7 @@ on:
       - 'tools/audit_deepcrusher_r8_transitive_native_closure.py'
       - 'tools/audit_benchmark_decisions.py'
       - 'tools/evaluate_deepcrusher_dc1.py'
+      - 'tools/export_spincore_hybrid_inference.py'
       - 'tools/smoke_deepcrusher_oracle_solver.py'
       - 'tools/generate_deepcrusher_openholdem_testsuite.py'
       - 'include/spincore/solver_c_api.h'
@@ -76,6 +78,7 @@ jobs:
             python/spincore/deepcrusher_benchmark.py \
             python/spincore/deepcrusher_action.py \
             python/spincore/deepcrusher_policy.py \
+            python/spincore/lean_hybrid_deployment_agent.py \
             python/spincore/decision_sanity.py \
             tools/audit_deepcrusher_r8_dc0_readiness.py \
             tools/audit_deepcrusher_r8_openppl_compile.py \
@@ -84,6 +87,7 @@ jobs:
             tools/audit_deepcrusher_r8_transitive_native_closure.py \
             tools/audit_benchmark_decisions.py \
             tools/evaluate_deepcrusher_dc1.py \
+            tools/export_spincore_hybrid_inference.py \
             tools/smoke_deepcrusher_oracle_solver.py \
             tools/generate_deepcrusher_openholdem_testsuite.py
       - name: Expression semantics
