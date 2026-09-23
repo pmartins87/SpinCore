@@ -265,3 +265,32 @@ SpinCore traces are additionally screened for obvious/high-value review cases
 such as AA folds, non-trivially deep 72o jams, top-pair folds, trips+ folds and
 deep high-card jams. Flags create a review queue and are not automatically
 classified as strategy errors.
+
+
+## Executable oracle runtime gate
+
+A dedicated Linux CI smoke builds the actual SpinCore solver C ABI and executes
+the frozen DeepCrusher R8 policy through the full offline path. This is stronger
+than static symbol coverage: it evaluates lifecycle callbacks, stock OpenPPL
+library helpers, R8 functions, action translation and exact state transitions
+on complete hands.
+
+Current runtime gate: **PASS** at
+`ffb329dd6863be9197ec0d47efdc457fdbc5eebd`.
+
+The runtime gate is intentionally distinct from the final parity gate. It proves
+the offline oracle is executable and internally coherent; it does not prove that
+every returned action and chip amount is identical to OpenHoldem. The latter
+requires real OpenHoldem fixtures on the same deterministic states.
+
+## DC1 development-only rule
+
+`tools/evaluate_deepcrusher_dc1.py` may be used before final parity only for
+mechanical smoke/testing. Its report must retain:
+
+- `canonical_quality_claim_authorized=false`;
+- `oracle_parity_status=REAL_OPENHOLDEM_FIXTURES_PENDING`;
+- an explicit DEVELOPMENT_ONLY warning.
+
+No pre-parity DC1 result may be interpreted as evidence that SpinCore is stronger
+or weaker than DeepCrusher.
