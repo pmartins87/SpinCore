@@ -53,7 +53,8 @@ DC_SOURCE = (
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--solver", type=Path, default=ROOT / "build" / "libspincore_solver_c.so")
-    p.add_argument("--checkpoint", type=Path, required=True)
+    p.add_argument("--spin-bundle", type=Path, required=True,
+                   help="compact AveragePolicy-3H + current-ENS8-HU inference bundle")
     p.add_argument("--scenarios", type=int, default=1000)
     p.add_argument("--workers", type=int, default=1)
     p.add_argument("--seed", type=int, default=20260923)
@@ -98,7 +99,7 @@ def _mix64(*values: int) -> int:
 
 def _init_worker(
     solver_path: str,
-    checkpoint_path: str,
+    bundle_path: str,
     root_path: str,
     seed: int,
 ) -> None:
@@ -120,7 +121,7 @@ def _init_worker(
 
     from spincore.deepcrusher_benchmark import SpinCoreCheckpointPolicy
     from spincore.deepcrusher_policy import DeepCrusherR8Policy
-    from spincore.lean_functional_agent import LeanFunctionalAgent
+    from spincore.lean_hybrid_deployment_agent import LeanHybridDeploymentAgent
     from spincore.solver import SolverLibrary
 
     _SOLVER = SolverLibrary(solver_path)
@@ -128,7 +129,7 @@ def _init_worker(
         raise RuntimeError(
             "DC1 requires solver explicit-deal snapshot ABI for exact suit semantics"
         )
-    agent = LeanFunctionalAgent.from_checkpoint(checkpoint_path, seed=0)
+    agent = LeanHybridDeploymentAgent.from_bundle(bundle_path, seed=0)
     _SPIN_POLICY = SpinCoreCheckpointPolicy(agent)
     _DC_POLICY = DeepCrusherR8Policy.from_repository(root_path)
     _ENGINE_SEED = int(seed)
@@ -276,16 +277,16 @@ def main() -> int:
     if args.max_decisions <= 0:
         raise SystemExit("--max-decisions must be positive")
 
-    required = (args.solver, args.checkpoint, DC_SOURCE, LIB1, LIB2)
+    required = (args.solver, args.spin_bundle, DC_SOURCE, LIB1, LIB2)
     for path in required:
         if not path.is_file():
             raise SystemExit(f"missing input: {path}")
 
-    # Multiprocessing workers must never fan out a multi-GB training checkpoint.
-    if args.workers > 1 and args.checkpoint.stat().st_size > 512 * 1024 * 1024:
+    # Multiprocessing workers must never fan out a multi-GB training artifact.
+    if args.spin_bundle.stat().st_size > 512 * 1024 * 1024:
         raise SystemExit(
-            "multiprocess DC1 requires a compact inference checkpoint; "
-            f"refusing {args.checkpoint} ({args.checkpoint.stat().st_size} bytes)"
+            "DC1 requires a compact hybrid inference bundle; "
+            f"refusing {args.spin_bundle} ({args.spin_bundle.stat().st_size} bytes)"
         )
 
     sampler = LegacyScenarioSampler(
@@ -332,7 +333,7 @@ def main() -> int:
             initializer=_init_worker,
             initargs=(
                 str(args.solver.resolve()),
-                str(args.checkpoint.resolve()),
+                str(args.spin_bundle.resolve()),
                 str(ROOT.resolve()),
                 int(args.seed),
             ),
@@ -353,7 +354,7 @@ def main() -> int:
 
     by_domain, by_blind = _summaries(rows)
 
-    checkpoint_sha = _sha256(args.checkpoint)
+    bundle_sha = _sha256(args.spin_bundle)
     report = {
         "schema": "SPINCORE_DEEPCRUSHER_DC1_DEVELOPMENT_V1",
         "status": "PASS",
@@ -366,8 +367,9 @@ def main() -> int:
             "parity fixtures pass across all streets."
         ),
         "spin_core": {
-            "checkpoint": str(args.checkpoint.resolve()),
-            "checkpoint_sha256": checkpoint_sha,
+            "hybrid_bundle": str(args.spin_bundle.resolve()),
+            "hybrid_bundle_sha256": bundle_sha,
+            "semantics": "THREE_HANDED AveragePolicy + TRUE_HEADS_UP current ENS8",
         },
         "deepcrusher": {
             "source": str(DC_SOURCE.resolve()),
