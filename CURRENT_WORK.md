@@ -287,3 +287,8 @@ Before the first DC1 run, the benchmark SpinCore side is now being corrected to 
 DeepCrusher action-history fidelity was also tightened: the oracle now preserves whether an executed aggression came from OpenHoldem's minimum Raise button (`didrais/prevaction=2`) or from f$betsize / technical pot-size action (`didbetsize/prevaction=3`). This provenance is carried per DeepCrusher seat across the synthetic hand and fails closed on transcript mismatch.
 
 Next local gate after CI is green: export the compact 10105 hybrid bundle, then run a small **DC1 DEVELOPMENT_ONLY** mechanical smoke with decision traces. Do not interpret that smoke as a canonical strength result until real OpenHoldem parity fixtures pass.
+
+
+### Ready local gate
+
+`tools/run_deepcrusher_dc1_10105_smoke.sh` is the guarded first local DC1 handoff. It verifies the exact 10105 checkpoint + ENS8 hashes, rebuilds the exact-action solver, exports the compact hybrid bundle, runs 200 balanced DEVELOPMENT_ONLY scenarios with 8 workers, audits SpinCore decision traces for obvious strategic red flags, and packages report + sanity audit + traces + terminal log into one ZIP. This is intentionally a short mechanical/diagnostic smoke before the 1k–5k DC1 scale-up.
