@@ -249,3 +249,30 @@ Do not change target based on intermediate results. The earlier 9250/24.35 h pla
 There is currently no defensible iteration-number forecast for when SpinCore
 will beat DeepCrusher.  Earlier training evidence did not establish monotonic
 strength growth with iteration count.
+
+
+## DeepCrusher executable-oracle milestone — 2026-09-23
+
+The DC0 offline oracle is now mechanically executable end-to-end on the real
+SpinCore solver. Dedicated CI at commit
+`ffb329dd6863be9197ec0d47efdc457fdbc5eebd` reached:
+
+- `DEEPC_RUSHER_ORACLE_RUNTIME_SMOKE_PASS`;
+- 22 balanced games / 201 total decisions;
+- 77 DeepCrusher decisions across both THREE_HANDED and TRUE_HEADS_UP;
+- all four streets exercised (31 preflop, 16 flop, 15 turn, 15 river);
+- all exact action families observed in the smoke: FOLD, CHECK, CALL, BET_TO,
+  RAISE_TO and ALL_IN;
+- every DeepCrusher decision carried raw OpenPPL provenance;
+- every terminal row remained zero-sum.
+
+Runtime smoke work also closed several semantics that static closure alone could
+not expose: `currentbet_bigblindchair`, OpenHoldem's zero-at-end function
+terminal, verbose betround constants, nested action-returning sizing helpers and
+Hold'em's absent third/fourth technical hole-card slots (`$$pr2/$$ps2/$$pr3/$$ps3 = -1`).
+
+This is a **mechanical runtime PASS, not yet the canonical DC0 parity PASS**.
+Real OpenHoldem parity fixtures remain required for action/sizing equality before
+DC1 results may support any strength claim. The paired DC1 development runner is
+already implemented and deliberately labels its output DEVELOPMENT_ONLY while
+that gate is pending.
