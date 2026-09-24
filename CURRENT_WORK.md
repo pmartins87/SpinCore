@@ -476,3 +476,32 @@ and finally Q8/884 rank morphology) and breaks strategy fold targets into
 an old AveragePolicy residue, a locally persistent target, or a sparse-neighbor
 generalization effect.
 
+## Correction to first local-geometry audit — 2026-09-24
+
+The first V1 local-geometry report is **invalid from subset B onward** because
+the diagnostic script interpreted SPNNIV1 categorical `live_count` as the
+number of players still contesting the current pot.  That is not the frozen V1
+semantic: `live_count` is the topology seat count for the hand and remains 3
+after a player folds.  Fold state is carried separately in the actor-relative
+`statuses` vector.
+
+The uploaded V1 report therefore produced:
+- valid subset A (flop paired-board trips facing action);
+- artificial zero counts for B..H due to the incorrect `live_count==2` filter.
+
+This is a diagnostic-script bug only.  It is **not evidence of missing training
+coverage** and does not affect the frozen checkpoint or benchmark.
+
+The exact benchmark hand had THREE_HANDED topology `live_count=3`, with actor-
+relative statuses `(0,1,0)`: hero active, dealer folded preflop, remaining
+opponent active.  The local audit has been corrected to V2 at commit
+`1e5b918539d6f331fc507da5f32eddae8e2f5bd9`.
+
+The valid V1 subset-A result remains useful: 2,152 retained strategy samples of
+flop paired-board trips facing action, with fold-target mean 9.13%.  Recent
+9106..10105 samples did **not** show the fold mass disappearing: 185 retained
+samples, mean fold target 9.45%, compared with 9.28% for <=8100 and 7.72% for
+8101..9105.  This argues against a simple "old AveragePolicy residue only"
+explanation at the broad flop-paired-trips level, but the corrected V2 narrow
+geometry audit is still required.
+
