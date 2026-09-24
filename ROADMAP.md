@@ -250,3 +250,68 @@ bundle to the Windows Desktop:
 Next gate remains unchanged: inspect the new bundle's per-decision
 `policy_detail` for the 29 flagged actions before any 1k-5k DC1 scale-up.
 
+## DC1 instrumented 29-case audit — 2026-09-24
+
+The uploaded instrumented bundle was inspected decision by decision.
+
+### Trips fold
+
+The sole trips fold was not a translation artifact and not the policy's modal
+choice.  At Qs8d on 8s-8c-4c, facing 60 into 120 at ~7.13bb effective, the 3H
+AveragePolicy distribution was:
+- FOLD **7.3276%**;
+- CHECK_CALL **60.0245%**;
+- ALL_IN **32.6479%**.
+
+The sampled RNG draw was 0.052933, so the 7.33% fold tail happened to be
+selected.  Thus the policy continued **92.67%** of the time in that exact state;
+the evidence does not support the hypothesis that the model globally regards
+trips as a losing hand.
+
+Across all 17 exact-TRIPS SpinCore postflop decision states in this 200-scenario
+smoke, the sum of current fold probabilities was 0.4058 expected folds and one
+fold was observed.  Under those heterogeneous current probabilities, the chance
+of at least one trips fold in the 17 observed states is ~34.46% (exactly one
+~28.86%).  The single observed fold is therefore unsurprising conditional on
+the current policy, although the existence of a 7.33% fold tail may still be a
+coverage/generalization leak.
+
+### High-card all-ins
+
+All **28/28** flagged high-card all-ins came from the literal SpinCore
+`ALL_IN` universal slot.  None was a POT_33/POT_50/POT_75/POT_100 sizing that
+collapsed to all-in through the 60% near-commitment resolver.
+
+Among all 141 SpinCore postflop HIGH_CARD decision opportunities at >=10bb
+effective in this smoke:
+- observed ALL_INs: **28**;
+- sum of the policy's ALL_IN probabilities: **29.3663** expected sampled all-ins.
+
+For the 99 such states with no immediate straight/flush draw:
+- observed ALL_INs: **19**;
+- expected from policy probabilities: **21.0772**;
+- mean ALL_IN probability: **21.29%**.
+
+Therefore the count of high-card jams is not an unlucky RNG realization.  It is
+a real feature of the current policy.  That still does not make the jams
+automatically wrong: bluff jams can be strategically correct and require
+counterfactual EV/range context.  Some individual states are strong review
+targets, including HU J5o on 3c-8c-Qs-Ks facing a turn raise where the current HU
+ENS8 assigns ALL_IN probability 1.0.
+
+### Gate decision
+
+Do **not** patch strategy or restart training from these flags.  Also do not
+scale directly to 5k DC1 yet.  The user's low-frequency/coverage hypothesis is
+now the next falsifiable gate.
+
+A guarded 10105 reservoir audit has been added:
+- `tools/audit_lt3_10105_trip_coverage.py`;
+- `tools/run_lt3_10105_trip_coverage_audit.sh`.
+
+It reads the frozen 3H Algorithm-R strategy and advantage reservoirs, counts
+TRIPS and the specific paired-board/one-hole-card trips morphology, estimates
+their prevalence in the complete seen sample streams with Wilson intervals, and
+measures historical strategy-target fold mass in those trip states.  This is a
+cheap diagnostic and does not train or alter the checkpoint.
+
