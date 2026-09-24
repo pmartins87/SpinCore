@@ -455,3 +455,66 @@ reproduces the known AveragePolicy fold probability and sampled FOLD action.
 It evaluates current 3H Advantage on the same observation without consuming RNG
 or changing the hand trajectory.  Current Advantage remains diagnostic only.
 
+## Exact Q8/884 AveragePolicy vs current Advantage — 2026-09-24
+
+The guarded replay reproduced the original DC1 trips-fold state exactly and
+separated the deployed 3H AveragePolicy from the iteration-10105 current
+Advantage policy on the very same observation.
+
+Exact state:
+- Qs8d on 8s-8c-4c;
+- blind 15/30;
+- pot 120, to-call 60;
+- hero stack 214;
+- sampled AveragePolicy RNG draw 0.0529332285 reproduced the original FOLD.
+
+3H AveragePolicy (actual DC1 behavior):
+- FOLD **7.3276%**;
+- CHECK_CALL **60.0245%**;
+- ALL_IN **32.6479%**;
+- argmax CHECK_CALL.
+
+Current 3H Advantage @10105 on the identical observation:
+- FOLD **0.0000%**;
+- CHECK_CALL **41.7595%**;
+- ALL_IN **58.2405%**;
+- argmax ALL_IN;
+- raw outputs: FOLD -0.009634, CHECK_CALL +0.018504, ALL_IN +0.025807.
+
+Total-variation distance between AveragePolicy and current Advantage on this
+state is **0.255926**.
+
+Interpretation:
+- the latest 3H Advantage signal does **not** consider fold a positive-regret
+  action in the exact trips state; regret matching removes FOLD completely;
+- therefore the observed 7.33% fold tail is not evidence that the current
+  iteration-10105 Advantage learner itself currently prefers or even mixes fold
+  there;
+- combined with the V2 local-coverage audit (only 2 retained strategy samples
+  near the target geometry, both old and target-fold 0; zero retained Q-kicker
+  neighbors), the fold tail is now most consistent with the historical
+  AveragePolicy / strategy-memory generalization layer under sparse local
+  coverage;
+- this is **not yet authorization to deploy current Advantage instead of
+  AveragePolicy**. Deep CFR intentionally distinguishes current behavior from
+  its time-averaged strategy, and the current 3H Advantage is a single fresh
+  estimator rather than a validated ensemble.
+
+The next gate is therefore not more roots and not a trips hardcode.  Audit the
+finalized 3H AveragePolicy against its own strategy-memory targets to determine
+whether the issue is:
+1. an underfit/distillation problem in the AveragePolicy network;
+2. faithful fitting of a historical average that genuinely contains fold mass;
+3. a broader policy-vs-current drift pattern.
+
+Added guarded diagnostics:
+- `tools/audit_lt3_10105_average_policy_fit.py`;
+- `tools/run_lt3_10105_average_policy_fit_audit.sh`.
+
+The audit reports the actual checkpoint `policy_steps`,
+`policy_optimizer_steps`, strategy-reservoir size/seen count, and compares
+stored strategy targets vs final AveragePolicy on a fixed 50k uniform reservoir
+sample plus the progressively narrowed trips subsets.  It also reports
+AveragePolicy-vs-current-Advantage drift on the same states.  It performs no
+training and does not modify the checkpoint.
+
