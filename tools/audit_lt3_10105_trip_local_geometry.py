@@ -104,7 +104,8 @@ def features(sample):
         "current_bet_bb":n[2],
         "hero_stack_bb":n[3],
         "dealer_rel":c[2],
-        "live_count":c[3],
+        "topology_live_count":c[3],
+        "statuses":tuple(c[4:7]),
         "fold_legal":bool(sample.legal[0]),
         "fold_target":float(sample.target[0]) if len(sample.target)>0 else None,
         "iteration":int(sample.iteration),
@@ -165,15 +166,18 @@ def summarize(rows,reservoir_n,full_seen,*,strategy):
 def build_subsets(items):
     rows=[f for s in items if (f:=features(s)) is not None and f["fold_legal"]]
     def sel(pred):return [r for r in rows if pred(r)]
+    target_status=(0,1,0)  # actor active; dealer folded preflop; other opponent active
+    def target_topology(r):
+        return r["topology_live_count"]==3 and r["statuses"]==target_status
     return {
         "A_flop_paired_board_trips_facing_action":rows,
-        "B_live_count_2":sel(lambda r:r["live_count"]==2),
-        "C_halfpot_price":sel(lambda r:r["live_count"]==2 and r["to_call_over_pot"] is not None and 0.45<=r["to_call_over_pot"]<=0.55),
-        "D_halfpot_stack_5_10bb":sel(lambda r:r["live_count"]==2 and r["to_call_over_pot"] is not None and 0.45<=r["to_call_over_pot"]<=0.55 and 5.0<=r["hero_stack_bb"]<=10.0),
-        "E_near_target_pot_geometry":sel(lambda r:r["live_count"]==2 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
-        "F_target_dealer_rel":sel(lambda r:r["live_count"]==2 and r["dealer_rel"]==1 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
-        "G_target_geometry_Q_kicker":sel(lambda r:r["live_count"]==2 and r["dealer_rel"]==1 and r["kicker"]==12 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
-        "H_Q8_on_884_rank_pattern":sel(lambda r:r["live_count"]==2 and r["dealer_rel"]==1 and r["trip_rank"]==8 and r["kicker"]==12 and r["singleton_board_rank"]==4 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
+        "B_three_seat_topology_one_opponent_folded":sel(target_topology),
+        "C_halfpot_price":sel(lambda r:target_topology(r) and r["to_call_over_pot"] is not None and 0.45<=r["to_call_over_pot"]<=0.55),
+        "D_halfpot_stack_5_10bb":sel(lambda r:target_topology(r) and r["to_call_over_pot"] is not None and 0.45<=r["to_call_over_pot"]<=0.55 and 5.0<=r["hero_stack_bb"]<=10.0),
+        "E_near_target_pot_geometry":sel(lambda r:target_topology(r) and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
+        "F_target_dealer_rel":sel(lambda r:target_topology(r) and r["dealer_rel"]==1 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
+        "G_target_geometry_Q_kicker":sel(lambda r:target_topology(r) and r["dealer_rel"]==1 and r["kicker"]==12 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
+        "H_Q8_on_884_rank_pattern":sel(lambda r:target_topology(r) and r["dealer_rel"]==1 and r["trip_rank"]==8 and r["kicker"]==12 and r["singleton_board_rank"]==4 and 5.0<=r["hero_stack_bb"]<=10.0 and 3.5<=r["pot_bb"]<=4.5 and 1.75<=r["to_call_bb"]<=2.25 and 1.75<=r["current_bet_bb"]<=2.25),
     }
 
 
@@ -191,7 +195,7 @@ def main():
         raise SystemExit("expected iteration 10105")
     d=(payload.get("domains") or {}).get(DOMAIN) or {}
     result={
-        "schema":"SPINCORE_LT3_10105_TRIP_LOCAL_GEOMETRY_AUDIT_V1",
+        "schema":"SPINCORE_LT3_10105_TRIP_LOCAL_GEOMETRY_AUDIT_V2",
         "checkpoint_sha256":actual,
         "target_state":{
             "cards":"Qs8d / 8s8c4c",
@@ -200,12 +204,17 @@ def main():
             "current_bet_bb":2.0,
             "hero_stack_bb":7.133333333333334,
             "dealer_rel":1,
-            "live_count":2,
+            "topology_live_count":3,
+            "statuses":[0,1,0],
             "observed_current_policy_fold_probability":0.07327636331319809,
         },
         "strategy":{},
         "advantage":{},
-        "note":"Counts are decision samples, not unique poker hands. Full-stream counts are Algorithm-R prevalence estimates.",
+        "note":(
+            "Counts are decision samples, not unique poker hands. Full-stream counts are Algorithm-R prevalence estimates. "
+            "V2 corrects V1's misuse of categorical live_count: in SPNNIV1 live_count is the hand topology seat count and "
+            "does not drop when a player folds. The target is THREE_HANDED topology live_count=3 with statuses=(0,1,0)."
+        ),
     }
     for kind,key,strategy in (("strategy","pol_mem",True),("advantage","adv_mem",False)):
         mem=d.get(key) or {}
