@@ -396,3 +396,62 @@ samples, mean fold target 9.45%, compared with 9.28% for <=8100 and 7.72% for
 explanation at the broad flop-paired-trips level, but the corrected V2 narrow
 geometry audit is still required.
 
+## Corrected V2 local trips geometry audit — 2026-09-24
+
+The corrected V2 audit confirms that the broad trips class is well represented
+but the actual benchmark neighborhood is extremely sparse.
+
+Strategy Algorithm-R reservoir (2,000,000 retained / 7,482,676 seen):
+- A: flop paired-board trips facing action: 2,152 retained, ~8,051 full-stream;
+- B: same, 3-seat topology with one opponent already folded: 370 retained,
+  ~1,384 full-stream, mean fold target 7.03%;
+- C: plus ~half-pot price: 89 retained, ~333 full-stream, mean fold target 9.68%;
+- D: plus 5-10bb hero stack: **2 retained**, ~7.48 full-stream
+  (Wilson95 ~2.05..27.29);
+- E: plus near-target pot/call/current-bet geometry: **2 retained**, ~7.48
+  full-stream, both <=8100 and both fold target 0;
+- F: plus target dealer-relative position: **1 retained**, ~3.74 full-stream,
+  <=8100 and fold target 0;
+- G: plus Q kicker: **0 retained** (95% upper full-stream estimate ~14.37);
+- H: exact Q8/884 rank pattern: **0 retained** (same upper bound).
+
+Advantage Algorithm-R reservoir (2,000,000 retained / 102,908,714 seen):
+- A: 4,224 retained, ~217k full-stream;
+- B: 488 retained, ~25.1k;
+- C: 79 retained, ~4,065;
+- D/E: only **2 retained**, ~103 full-stream each;
+- F: **1 retained**, ~51;
+- G/H: **0 retained** (95% upper full-stream estimate ~198).
+
+Interpretation:
+- the user's original hypothesis is wrong only in its broad form: trips itself
+  is not rare in training;
+- it is directionally correct for the *specific decision neighborhood*.
+  The final 3H AveragePolicy has almost no direct recent strategy-target
+  coverage near Q8o/884 at ~7bb facing ~half pot;
+- the two near-target strategy samples both predate iteration 8100 and carry
+  fold target 0, while broader recent half-pot neighbors can carry substantial
+  fold mass.  The observed 7.3276% fold tail is therefore more consistent with
+  neural generalization/interpolation under sparse local coverage than with a
+  directly learned local fold target;
+- simply adding another 1000 iterations under the same sampling distribution is
+  unlikely to fix this neighborhood efficiently.  At the observed strategy-
+  sample prevalence, it would add on the order of <1 near-target strategy
+  sample in expectation; this is an extrapolation, not a training guarantee.
+
+Do not patch trips or restart long training yet.  The next discriminating gate
+is whether the *current iteration-10105 3H Advantage network* already assigns
+near-zero fold at the exact benchmark state while the finalized AveragePolicy
+still assigns 7.33%.  If so, the bottleneck is primarily AveragePolicy
+distillation/generalization.  If current Advantage also carries fold mass, the
+problem lies deeper in advantage coverage/representation/generalization.
+
+Guarded exact-state replay added:
+- `tools/audit_dc1_trip_policy_vs_current_advantage.py`;
+- `tools/run_dc1_trip_policy_vs_current_advantage.sh`.
+
+The replay is pinned to DC1 scenario 86 / lineup 2 and fails unless it exactly
+reproduces the known AveragePolicy fold probability and sampled FOLD action.
+It evaluates current 3H Advantage on the same observation without consuming RNG
+or changing the hand trajectory.  Current Advantage remains diagnostic only.
+
