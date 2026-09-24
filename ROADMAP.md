@@ -227,3 +227,26 @@ Next local gate: rerun the exact same guarded 200-scenario smoke on the new main
 and inspect the same 29 decisions with their selected probabilities before
 authorizing any 1k-5k DC1 scale-up.
 
+## DC1 10105 instrumented reproducibility rerun — 2026-09-24
+
+The instrumented rerun of the exact same 200-scenario DC1 smoke completed at
+git head `01e42844ecb877e9a4e845c9049954b2cbe6a006` using the same frozen 10105
+checkpoint, matched HU ENS8 sidecar and seed 20260923.
+
+Reproducibility gate: **PASS EXACT at aggregate/sanity level**.
+- traces: 3,506;
+- SpinCore decisions: 1,803;
+- overall paired SpinCore-minus-DeepCrusher: **-19.993** chips/policy-seat-hand,
+  CI95 **[-55.266,+15.279]**;
+- sanity queue: **28 POSTFLOP_DEEP_HIGH_CARD_JAM + 1 POSTFLOP_TRIPS_PLUS_FOLD**.
+
+These values exactly match the pre-instrumentation smoke, so the added decision
+metadata did not alter the benchmark trajectory or RNG behavior.
+
+The runner also successfully printed an Explorer-ready UNC path and copied the
+bundle to the Windows Desktop:
+`C:\Users\Rz9\Desktop\SpinCore_DC1_10105_smoke_bundle.zip`.
+
+Next gate remains unchanged: inspect the new bundle's per-decision
+`policy_detail` for the 29 flagged actions before any 1k-5k DC1 scale-up.
+
