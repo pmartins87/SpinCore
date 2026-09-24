@@ -424,3 +424,55 @@ their prevalence in the complete seen sample streams with Wilson intervals, and
 measures historical strategy-target fold mass in those trip states.  This is a
 cheap diagnostic and does not train or alter the checkpoint.
 
+## LT3 10105 trips coverage audit — 2026-09-24
+
+The frozen 10105 3H reservoirs were audited directly.  The low-frequency
+hypothesis is **not supported at the broad trips-class level**.
+
+Strategy reservoir:
+- 2,000,000 retained Algorithm-R samples from 7,482,676 total seen;
+- TRIPS: 11,166 retained, implying ~41,776 strategy decision samples in the
+  full stream (Wilson95 ~41,010..42,556);
+- paired-board + one-hole-card trips: 6,702 retained, implying ~25,074 full-
+  stream decision samples (Wilson95 ~24,482..25,681).
+
+Advantage reservoir:
+- 2,000,000 retained samples from 102,908,714 total seen;
+- TRIPS: 59,004 retained, implying ~3.036 million advantage decision samples;
+- paired-board + one-hole-card trips: 34,431 retained, implying ~1.772 million
+  advantage decision samples.
+
+These are **decision samples, not unique poker hands**.  They nevertheless rule
+out explanations like "the learner only saw roughly ten trips states" for the
+class as a whole.
+
+Historical strategy targets also show that fold mass is not unique to the
+benchmark hand.  Among 3,422 retained paired-board-trip samples where fold was
+legal:
+- mean fold target: 8.393%;
+- iteration-weighted mean: 8.246%;
+- median: 0%;
+- 709 (20.72%) had fold target >=5%;
+- 693 (20.25%) had fold target >=10%.
+
+The observed Q8o/884 current-policy fold probability of 7.328% is therefore
+close to the historical class-level mean, not an obvious isolated RNG artifact.
+However the broad class mixes flop/turn/river, prices, stack depths and histories,
+so this does **not** yet prove that the 7.33% tail is justified in the exact
+flop geometry.
+
+Gate decision: no strategy patch and no retraining yet.  A narrower local-
+geometry audit is now required before judging the fold tail.
+
+Added guarded diagnostics:
+- `tools/audit_lt3_10105_trip_local_geometry.py`;
+- `tools/run_lt3_10105_trip_local_geometry_audit.sh`.
+
+The local audit progressively narrows the 3H Algorithm-R reservoirs around the
+actual benchmark state (flop paired-board trips, live_count=2, half-pot price,
+5-10bb hero stack, ~4bb pot/~2bb call/current-bet, dealer_rel=1, then Q kicker
+and finally Q8/884 rank morphology) and breaks strategy fold targets into
+<=8100, 8101-9105 and 9106-10105 cohorts.  This tests whether the fold mass is
+an old AveragePolicy residue, a locally persistent target, or a sparse-neighbor
+generalization effect.
+
