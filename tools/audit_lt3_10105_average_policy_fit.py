@@ -160,7 +160,6 @@ def main()->int:
 
     # Reuse the corrected V2 morphology function. Only fold-legal flop paired-board
     # trips are included, matching the previous local-geometry audit.
-    morph=[]
     subsets={name:[] for name in (
         "A_flop_paired_board_trips_facing_action",
         "B_three_seat_topology_one_opponent_folded",
@@ -172,13 +171,8 @@ def main()->int:
         "H_Q8_on_884_rank_pattern",
     )}
 
-    # local.build_subsets expects a sample list and performs the same corrected
-    # target topology semantics. Scan once and then collect sample identities.
-    local_sets=local.build_subsets(items)
-    for name in subsets:
-        # build_subsets returns feature dicts, not samples. Reconstruct membership
-        # deterministically by applying the equivalent predicates below.
-        pass
+    # Scan once and keep only the matching sample objects. Do not materialize
+    # feature dictionaries for the full two-million-item reservoir.
 
     def feat(sample):
         f=local.features(sample)
