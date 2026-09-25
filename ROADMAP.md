@@ -772,3 +772,117 @@ Added:
 This is a diagnostic uncertainty experiment only.  It does not promote a 3H
 ensemble or alter DC1/DC2 qualification semantics.
 
+## DC1 3H ENS8 uncertainty audit — 2026-09-25
+
+The fixed 200-scenario / 860-balanced-game DC1 trajectory was replayed again
+with unchanged played semantics. Eight independent THREE_HANDED AdvantageNets
+were freshly fit from the exact same frozen 10105 Advantage reservoir using the
+historical 100-step 3H budget. The original current 10105 Advantage, raw-
+Advantage ENS8 and every independent member were observational only.
+
+### Global result
+
+Independent-fit uncertainty is large rather than incidental:
+- 1,557 SpinCore 3H decisions;
+- current-single vs raw-ENS8 mean TV: **0.53790**;
+- median TV: **0.55070**;
+- p95 TV: **1.0**;
+- current-single vs raw-ENS8 argmax disagreement: **63.39%**.
+
+AveragePolicy is also far from both:
+- AveragePolicy vs current: mean TV **0.46166**, argmax disagreement **67.89%**;
+- AveragePolicy vs raw-ENS8: mean TV **0.43151**, argmax disagreement **49.84%**.
+
+This is direct evidence that fresh100 does not extract one stable 3H current
+policy from the frozen mature reservoir.
+
+### Trips fold
+
+The Q8/884 fold remains specifically an AveragePolicy tail:
+- AveragePolicy FOLD: **7.3276%**;
+- original current Advantage FOLD: **0%**;
+- raw-ENS8 FOLD: **0%**.
+
+The raw-ENS8 policy on that state is ~75.59% CHECK_CALL / 24.41% ALL_IN.
+Some individual fresh100 members fall into the repaired all-nonpositive fallback
+and therefore show approximately one-third Fold, but their raw average still
+makes Fold negative and removes it.  The observed benchmark Fold should not be
+used as evidence that the current learner believes trips should fold.
+
+### High-card jams
+
+Raw-Advantage ENS8 does **not** eliminate the broad aggression:
+- 23 3H flagged high-card jams;
+- AveragePolicy mean ALL_IN: **29.66%**;
+- original current Advantage: **39.85%**;
+- raw-ENS8: **52.07%**, median **53.89%**;
+- raw-ENS8 ALL_IN argmax: 13/23.
+
+For the 17 flags with no immediate straight/flush draw:
+- AveragePolicy mean ALL_IN: **30.11%**;
+- original current: **36.64%**;
+- raw-ENS8: **56.55%**, median **66.40%**;
+- raw-ENS8 ALL_IN argmax: 10/17.
+
+However this does **not** represent strong eight-model consensus:
+- no flagged state had ALL_IN as argmax for all eight members;
+- mean across-state member ALL_IN-probability standard deviation is ~**0.300**;
+- direct postprocessing of the stored eight member policies gives only 8/23
+  states with a >=5/8 ALL_IN argmax majority (7/17 in the no-immediate-draw
+  subset);
+- averaging member **policies** instead of raw Advantages gives mean ALL_IN
+  ~**39.54%** over all 23 and ~**40.81%** over the 17 no-draw flags, much lower
+  than the raw-ensemble 52.07% / 56.55%;
+- raw-ensemble vs policy-mixture mean TV over the 23 flagged states is
+  ~**0.3546**.
+
+A key nonlinear example is 83o on K-7-4: raw-Advantage averaging produces
+100% ALL_IN even though only one of the eight member policies has ALL_IN as its
+argmax and the member-policy mixture assigns only ~13.8% ALL_IN.  This occurs
+because averaging raw values can leave ALL_IN as the sole slightly-positive
+action and the unchanged regret-matching map then converts that sign pattern
+into 100% action mass.
+
+Interpretation:
+- the original final single 3H Advantage is demonstrably high-variance;
+- the shared frozen reservoir still contains a broad aggressive signal, because
+  the average of independent member policies retains substantial ALL_IN mass;
+- but the extreme raw-ENS8 action probabilities are partly a nonlinear
+  sign-threshold amplification and must not be read as eight-model confidence;
+- therefore neither "AveragePolicy alone is broken" nor "all eight learners
+  agree on the jams" is supported.
+
+This is closely analogous to the previously diagnosed HU fresh100 failure, for
+which a larger fit budget materially stabilized the mature-reservoir learner.
+The 3H lane has never passed the equivalent budget-stability gate.
+
+### Next gate — 3H Advantage budget stability
+
+Before changing strategy, representation or benchmark scale, test whether the
+historical **fresh100** 3H fit budget is itself insufficient.
+
+Added:
+- `tools/build_3h_advantage_budget_probe_10105.py`;
+- `tools/evaluate_3h_advantage_budget_stability_10105.py`;
+- `tools/run_3h_advantage_budget_stability_10105.sh`.
+
+The gate fits the same eight deterministic replicas cumulatively to
+**100 -> 200 -> 400 steps** on the exact same frozen 10105 3H Advantage
+reservoir and snapshots each budget. It generates zero CFR roots and mutates no
+source artifact. The exact same DC1 trajectory is then replayed and each budget
+is compared on:
+- global member pairwise TV and argmax disagreement;
+- unanimous/majority argmax stability;
+- raw-Advantage ensemble vs average-of-member-policies divergence;
+- all high-card jams and the no-immediate-draw subset;
+- the Q8/884 trips fold;
+- per-action raw-sign agreement across members.
+
+Decision rule:
+- if instability falls materially by 200/400, 3H fresh100 is underfitting the
+  mature reservoir and the next research intervention should target fit budget
+  / ensemble mechanics;
+- if instability remains high at 400, more optimizer steps alone are not the
+  main repair and attention returns to representation / target ambiguity /
+  training-game coverage.
+
