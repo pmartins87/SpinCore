@@ -685,3 +685,56 @@ The shadow audit trains only a copied model/optimizer at extra-step milestones
 0/500/1000/2000/4000.  It never mutates the checkpoint and does not authorize
 deployment of the shadow model.
 
+## 10105 AveragePolicy shadow-refit result — 2026-09-25
+
+The fixed-holdout strategy-only shadow refit rejects the simple hypothesis that
+the finalized THREE_HANDED AveragePolicy merely needed more of the same fitting.
+
+Starting from the exact frozen 10105 policy/Adam state and excluding both a
+fixed 50k holdout and all 2,152 trips-local samples from shadow training:
+- baseline weighted holdout cross-entropy: **1.0839426**;
+- +500 steps: **1.0847677**;
+- +1000: **1.0854933**;
+- +2000: **1.0864551**;
+- +4000: **1.0884514**.
+
+Thus +4000 extra strategy-only steps worsened the fixed holdout weighted CE by
+**+0.0045088**.  Holdout TV changed only 0.426801 -> 0.427156 and argmax
+mismatch worsened 48.616% -> 48.954%.
+
+The exact Q8/884 fold probability also did not converge toward the local
+historical/current-Advantage target of zero:
+- 0 extra: 7.3276%;
+- +500: 7.2878%;
+- +1000: 10.6315%;
+- +2000: 10.5706%;
+- +4000: 8.2991%.
+
+Therefore:
+- "just increase policy_steps" is **not supported** as a repair;
+- the original final policy is at least as good as this continuation under the
+  current objective/optimizer on a fixed held-out reservoir sample;
+- the large per-sample target-vs-policy distances are now more likely to contain
+  substantial irreducible historical target conflict and/or representation/
+  capacity/generalization effects rather than simple optimizer underfitting.
+
+This still does not prove that AveragePolicy is strategically correct.  It only
+localizes the failure mode.
+
+Next gate: quantify how much target disagreement exists for identical frozen V1
+observations, then repeat after canonicalizing only absolute suit labels.  This
+separates historical/nonstationary conflict from policy approximation error and
+tests whether SPNNIV1 wastes coverage/capacity on physically equivalent suit
+labels.
+
+Added:
+- `tools/audit_lt3_10105_strategy_target_conflict.py`;
+- `tools/run_lt3_10105_strategy_target_conflict.sh`.
+
+The audit scans the full retained 3H strategy reservoir, reports exact-V1 and
+suit-canonical duplicate prevalence, samples up to 20k repeated-state groups,
+compares each group's iteration-weighted empirical conditional target mean to
+the final AveragePolicy, measures within-group historical target disagreement,
+and measures V1 policy variation across suit-equivalent representatives.
+No training or checkpoint mutation occurs.
+
