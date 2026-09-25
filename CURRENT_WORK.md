@@ -627,3 +627,61 @@ sample plus the progressively narrowed trips subsets.  It also reports
 AveragePolicy-vs-current-Advantage drift on the same states.  It performs no
 training and does not modify the checkpoint.
 
+## 10105 AveragePolicy fit audit — 2026-09-24
+
+The finalized THREE_HANDED AveragePolicy was audited directly against a fixed
+uniform sample of its own 2,000,000-item strategy reservoir.
+
+Checkpoint/training facts:
+- policy_steps per finalization config: 4,000;
+- batch size: 1,024;
+- cumulative policy_optimizer_steps recorded in checkpoint: 32,000;
+- strategy reservoir: 2,000,000 retained / 7,482,676 seen.
+
+Global 50k reservoir sample:
+- target fold mean: 23.575%;
+- AveragePolicy fold mean: 23.928% (good marginal calibration);
+- target-vs-AveragePolicy TV mean: **0.4277**;
+- weighted TV mean: **0.4272**;
+- median TV: 0.4303;
+- p95 TV: 0.7712;
+- argmax mismatch: **48.72%**;
+- fold MAE: 0.2319.
+
+AveragePolicy vs current 3H Advantage is also far apart globally:
+- mean TV 0.4435;
+- median 0.4488;
+- p95 0.7815.
+
+Trips subsets retain the same pattern: broad marginal fold rates can be close
+while statewise target-vs-policy TV remains large (A: TV 0.3733, argmax mismatch
+40.20%; B: TV 0.4709, mismatch 56.49%; C: TV 0.4566, mismatch 53.93%).
+
+Near the exact Q8/884 geometry, the only retained E/F sample has historical
+target Fold 0, final AveragePolicy Fold 7.287%, and current Advantage Fold 0.
+This is directionally consistent with the exact benchmark state where final
+AveragePolicy Fold is 7.3276% and current Advantage Fold is 0.
+
+Important interpretation constraint:
+these per-sample target-vs-policy distances do **not by themselves prove
+undertraining**.  Strategy-memory targets are nonstationary historical behavior
+targets; identical or nearby observations can legitimately carry conflicting
+targets across iterations.  A deterministic AveragePolicy must approximate the
+weighted conditional average, so some per-sample TV is irreducible.
+
+The next discriminating gate is a shadow strategy-only refit of a copy of the
+final 10105 AveragePolicy on the current frozen strategy reservoir with a fixed
+50k holdout and all trips-local samples excluded from training.  If additional
+policy-only optimizer steps materially improve holdout cross-entropy/TV and the
+exact Q8/884 fold probability, the final AveragePolicy is underfit.  If not, the
+remaining mismatch is more consistent with historical-target conflict, model
+capacity or representation/generalization.
+
+Added:
+- `tools/audit_lt3_10105_average_policy_shadow_refit.py`;
+- `tools/run_lt3_10105_average_policy_shadow_refit.sh`.
+
+The shadow audit trains only a copied model/optimizer at extra-step milestones
+0/500/1000/2000/4000.  It never mutates the checkpoint and does not authorize
+deployment of the shadow model.
+
