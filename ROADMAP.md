@@ -699,3 +699,76 @@ The replay keeps the actual hybrid played policy unchanged
 (3H AveragePolicy + HU ENS8), consumes the exact same benchmark RNG for played
 actions, and records current 3H Advantage only as observational metadata.
 
+## DC1 3H AveragePolicy vs current Advantage — 2026-09-25
+
+The fixed 200-scenario / 860-balanced-game DC1 trajectory was replayed with
+unchanged played semantics (3H finalized AveragePolicy + HU validated ENS8).
+The iteration-10105 current 3H Advantage model was evaluated only as
+counterfactual metadata on every SpinCore 3H decision.
+
+Global 3H disagreement is very large:
+- 1,557 SpinCore 3H decisions;
+- AveragePolicy vs current-Advantage mean TV: **0.46166**;
+- median TV: **0.47057**;
+- p95 TV: **0.77767**;
+- argmax disagreement: **67.89%**.
+
+Therefore the Q8/884 anomaly is not occurring in an otherwise nearly identical
+current-vs-average policy pair.  The two 3H policy objects encode materially
+different behavior over the actual DC1 trajectory.
+
+Trips anomaly:
+- AveragePolicy Fold probability on Q8 / 8s8c4c: **7.3276%**;
+- current 3H Advantage Fold probability: **0%**;
+- current policy: **41.76% CHECK_CALL / 58.24% ALL_IN**.
+This specific fold is therefore localized to AveragePolicy
+time-averaging/distillation/generalization rather than the final current
+Advantage signal.
+
+High-card jam anomaly does **not** localize to AveragePolicy:
+- 23 3H high-card-jam flags;
+- AveragePolicy mean ALL_IN probability: **29.66%**;
+- current Advantage mean ALL_IN probability: **39.85%**;
+- current median ALL_IN probability: **32.84%**;
+- current Advantage assigns a lower ALL_IN probability than AveragePolicy in
+  only 6/23 flags;
+- current Advantage assigns exactly zero ALL_IN in only 4/23;
+- ALL_IN is current-Advantage argmax in 9/23.
+
+A direct parse of the flag rows shows 17/23 have no immediate straight/flush
+draw.  Even in that no-immediate-draw subset, current Advantage mean ALL_IN is
+~36.64% versus ~30.11% for AveragePolicy, with ALL_IN argmax in 7/17.  Thus the
+broad weak/high-card aggression cannot be repaired merely by replacing the
+AveragePolicy with the final single 3H Advantage model.
+
+Several extreme current policies are produced by the lean regret-matching map
+when only one predicted legal Advantage is positive.  Examples include:
+- 73o on 9c2h5d: current ALL_IN = 100% from raw ALL_IN advantage ~+0.004997
+  while the other legal outputs are negative;
+- 96o on 3cKdQd: current ALL_IN = 100% from raw ~+0.006632;
+- J8o on Qc4s9d: current ALL_IN = 100% from raw ~+0.013253.
+
+The raw magnitude alone is not a confidence interval and cannot establish that
+these decisions are wrong.  It does, however, make independent-fit uncertainty
+the correct next diagnostic: a small sign change around zero can radically
+change regret-matched action mass.
+
+Next gate:
+- fit eight independent fresh 3H Advantage models from the exact same frozen
+  10105 3H Advantage reservoir using the checkpoint's own step/batch/lr
+  contract;
+- generate zero new CFR roots and mutate no source artifact;
+- replay the exact same DC1 trajectory;
+- compare AveragePolicy, actual final current single Advantage, and raw-Advantage
+  ENS8;
+- separately report all high-card jams, the no-immediate-draw subset, and the
+  trips fold, including across-member action-probability dispersion.
+
+Added:
+- `tools/build_3h_ens8_diagnostic_probe_10105.py`;
+- `tools/evaluate_dc1_3h_ens8_uncertainty.py`;
+- `tools/run_dc1_3h_ens8_uncertainty.sh`.
+
+This is a diagnostic uncertainty experiment only.  It does not promote a 3H
+ensemble or alter DC1/DC2 qualification semantics.
+
