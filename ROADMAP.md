@@ -629,3 +629,73 @@ the final AveragePolicy, measures within-group historical target disagreement,
 and measures V1 policy variation across suit-equivalent representatives.
 No training or checkpoint mutation occurs.
 
+## 10105 strategy-target conflict / suit-canonical audit — 2026-09-25
+
+The full retained THREE_HANDED strategy reservoir was grouped by frozen V1
+observation identity and then by the same observation after canonicalizing only
+physical suit labels.
+
+EXACT_V1:
+- 2,000,000 retained items;
+- 1,996,682 unique hashed keys;
+- only 2,754 duplicate groups / 6,072 repeated items (**0.3036%** of reservoir);
+- max multiplicity 6;
+- within-group sample-target -> iteration-weighted conditional-mean TV:
+  **0.31974**;
+- historical sample argmax disagreement within group: **34.08%**;
+- conditional-mean target -> final AveragePolicy TV: **0.36430**;
+- conditional-mean argmax mismatch vs AveragePolicy: **53.23%**;
+- mean iteration span inside repeated groups: ~3,730 iterations.
+
+SUIT_CANONICAL_V1:
+- 11,872 duplicate groups / 29,264 repeated items (**1.4632%**), a 4.82x
+  increase in repeated-item coverage;
+- max multiplicity 28;
+- within-group target conflict TV: **0.32804**;
+- conditional-mean target -> AveragePolicy TV: **0.35642**;
+- AveragePolicy prediction variation across suit-equivalent representatives:
+  only **0.00752 TV**.
+
+Interpretation:
+- historical strategy-target conflict is real and large.  This is expected to be
+  dominated by temporal current-policy drift: sampled strategy targets are
+  produced directly from the iteration's current V1 behavior on the same V1
+  observation/legal set, so identical V1 observations can acquire different
+  targets as the current Advantage policy changes across thousands of
+  iterations;
+- the audit does **not** show that absolute suit labels are the main source of
+  the weird actions. Canonicalizing suits improves repeated-state coverage
+  materially, but the learned V1 policy is already almost suit-invariant on
+  those groups (mean prediction variation TV ~0.0075);
+- the reservoir is overwhelmingly sparse at exact-state level even after suit
+  canonicalization, so the final policy necessarily depends heavily on neural
+  generalization;
+- final AveragePolicy remains materially separated from the empirical
+  conditional target mean on the repeated groups, but most exact groups have
+  only 2-4 retained samples.  Therefore this metric alone cannot be interpreted
+  as a clean capacity failure;
+- combined with the shadow-refit result, "more of the same policy optimizer
+  steps" remains rejected as the next repair.
+
+Historical repository evidence already documents material SPNNIV1 limitations
+(lossy public history, padding-sensitive GRU, absolute suit/order redundancy)
+and an existing SPNNIV3/H2/H3 research path.  However richer representations
+previously failed to demonstrate a robust production improvement, so this audit
+does not by itself authorize reopening a broad representation migration.
+
+The next practical gate returns to the actual weird-action surface: replay the
+same 200-scenario DC1 trajectory and compare 3H AveragePolicy to the current
+iteration-10105 Advantage on **all** SpinCore 3H decisions, especially the
+high-card jams and trips fold.  This determines whether the latest current
+learner already removes a broad class of suspicious AveragePolicy actions or
+whether the high-card aggression is present in both.
+
+Added:
+- `tools/export_3h_current_advantage_probe.py`;
+- `tools/evaluate_dc1_3h_average_vs_current_advantage.py`;
+- `tools/run_dc1_3h_average_vs_current_advantage.sh`.
+
+The replay keeps the actual hybrid played policy unchanged
+(3H AveragePolicy + HU ENS8), consumes the exact same benchmark RNG for played
+actions, and records current 3H Advantage only as observational metadata.
+
