@@ -886,3 +886,75 @@ Decision rule:
   main repair and attention returns to representation / target ambiguity /
   training-game coverage.
 
+## 3H Advantage budget stability 100 -> 200 -> 400 — 2026-09-25
+
+The matched eight-replica diagnostic was completed on the frozen 10105
+THREE_HANDED Advantage reservoir.  Each replica used one fixed initialization
+and one fixed minibatch stream, with cumulative snapshots at 100, 200 and 400
+optimizer steps.
+
+Global independent-fit stability improves only modestly:
+- pairwise member TV mean: **0.57691 -> 0.55927 -> 0.53238**;
+- pairwise argmax disagreement: **64.94% -> 61.72% -> 58.88%**;
+- mean max-argmax vote share: **52.40% -> 55.76% -> 58.42%**;
+- unanimous argmax rate: **4.24% -> 4.24% -> 5.46%**.
+
+Thus 400 steps are somewhat more stable than fresh100, but the mature 3H
+Advantage fit is still highly seed/minibatch-sensitive.  The 100->400 relative
+reduction is only ~7.7% in pairwise TV and ~9.3% in argmax disagreement.
+
+The suspicious high-card aggression does not disappear with more fitting.
+Across the same 23 flagged 3H high-card jams:
+- mean ALL_IN probability of the **member-policy mixture** rises
+  **39.54% -> 48.39% -> 51.02%**;
+- raw-Advantage ensemble ALL_IN rises
+  **52.07% -> 79.78% -> 75.28%**;
+- >=5/8 member argmax majority for ALL_IN rises 8 -> 10 -> 11 of 23;
+- mean number of members with positive raw ALL_IN advantage remains high:
+  5.57 -> 5.48 -> 6.04 of 8.
+
+For the 17 no-immediate-draw flags:
+- member-policy-mixture ALL_IN: **40.81% -> 49.83% -> 50.84%**;
+- raw-ensemble ALL_IN: **56.55% -> 78.08% -> 74.30%**;
+- >=5/8 ALL_IN argmax majority: 7 -> 8 -> 8 of 17.
+
+Therefore:
+- fresh100 is indeed noisy/under-resolved, because more steps modestly improve
+  independent-fit agreement;
+- but **fit budget alone is not a repair for the weird high-card aggression**:
+  the shared signal becomes at least as aggressive, not less, by 400 steps;
+- 400 is also not demonstrably converged, because independent fits still
+  disagree strongly.
+
+The trips result remains distinct.  Raw-ensemble Fold stays 0% at all three
+budgets.  The member-policy-mixture Fold moves 16.59% -> 27.38% -> 4.71%, with
+no majority Fold argmax at any budget.  The exact benchmark Fold therefore
+remains an AveragePolicy/local-generalization issue rather than a stable
+current-Advantage recommendation.
+
+### Next discriminating gate
+
+Before spending more compute on 800/1600-step fits or blaming representation,
+measure whether the existing 100/200/400 snapshots are still improving the
+**actual Advantage regression objective on completely unseen reservoir items**.
+
+A clean holdout audit has been added:
+- `tools/audit_3h_advantage_budget_clean_holdout_10105.py`;
+- `tools/run_3h_advantage_clean_holdout_10105.sh`.
+
+It reuses the already-created 100/200/400 probe artifact.  Using each member's
+saved minibatch seed, it reconstructs the exact Python-random sample-index stream
+through 400 steps, marks the union of every reservoir item touched by any of the
+eight replicas, and draws a fixed 50k holdout only from indices untouched by
+**all** replicas.  It then reports the exact weighted legal-action MSE used by
+Advantage training for each member and for the raw-output ensemble.
+
+Decision rule:
+- materially falling clean-holdout MSE through 400 => larger fit budgets still
+  improve unseen target regression; then test 800/1600 before changing
+  architecture;
+- flat/worsening clean-holdout MSE => additional optimizer steps are not the
+  main bottleneck; move to target/local-neighborhood/representation diagnosis.
+
+No training or checkpoint mutation occurs in this gate.
+
