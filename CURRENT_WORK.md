@@ -1718,3 +1718,103 @@ The fixed DC1 trajectory additionally reports, but does not optimize against:
 PASS means the semantic attribution survives end-to-end neural refitting under a
 matched budget.  It still does not promote the candidate to production.
 
+## 3H V1 + general-semantic Advantage shadow PASS — 2026-09-26
+
+The matched eight-member 1600-step neural shadow completed on the exact frozen
+10105 THREE_HANDED Advantage reservoir.  The candidate kept the complete V1
+observation/model path and added only 30 general poker-semantic features derived
+from card information already present in SPNNIV1.  It did **not** receive an
+explicit `high_card_no_draw` flag.
+
+The precommitted shadow gate passes every criterion.
+
+Untouched 50k Advantage holdout:
+- global legal-action weighted MSE:
+  **0.03061927 V1 -> 0.02721929 semantic** (~**11.10%** improvement);
+- global ALL_IN weighted MSE:
+  **0.01156286 -> 0.01127429** (~**2.50%** improvement);
+- HIGH_CARD/no-immediate-draw ALL_IN bias:
+  **+0.01400084 -> -0.00167877**, an ~**88.0%** reduction in absolute bias;
+- subgroup ALL_IN weighted MSE:
+  **0.00867195 -> 0.00825819** (~**4.77%** improvement).
+
+Fixed DC1 development trajectory remains identical:
+- 200 scenarios;
+- 860 balanced games;
+- 3,506 decision traces;
+- 1,557 SpinCore 3H decisions.
+
+Independent-member stability improves rather than regresses:
+- pairwise policy TV:
+  **0.40470 -> 0.39778** (~1.7% improvement);
+- pairwise argmax disagreement:
+  **43.33% -> 40.75%** (~5.95% relative improvement).
+
+The suspicious high-card surface changes materially:
+- all 23 high-card jam flags, member-policy ALL_IN mean:
+  **50.63% -> 27.84%**;
+- all 23 raw-ensemble ALL_IN:
+  **57.12% -> 33.28%**;
+- majority-member ALL_IN argmax:
+  **12/23 -> 6/23**;
+- 17 no-immediate-draw flags, member-policy ALL_IN mean:
+  **54.37% -> 22.64%**;
+- 17 no-draw raw-ensemble ALL_IN:
+  **58.78% -> 24.05%**;
+- majority-member ALL_IN argmax:
+  **10/17 -> 3/17**.
+
+The Q8/884 trips Fold remains 0% in both matched Advantage ensembles, so the
+semantic candidate does not reintroduce that failure.
+
+This is stronger than the linear sidecar attribution:
+- semantics improve the actual neural Advantage fit, not only posthoc
+  calibration;
+- the gain is global, not purchased by degrading the overall heldout objective;
+- independent-fit stability improves;
+- the previously suspicious DC1 high-card action mass drops sharply.
+
+The result is still **development evidence only**.  The frozen 10105 reservoir
+was generated historically under the V1 learner and the actual 3H deployment
+continues to use the finalized AveragePolicy.  Therefore this PASS does not
+authorize replacing the production representation or resuming DC2.
+
+### Next gate — AveragePolicy semantic bridge
+
+Before any online/CFR semantic continuation, test whether the same general
+semantics also improve the second Deep-CFR learner: the THREE_HANDED
+AveragePolicy.
+
+Added:
+- `tools/audit_3h_average_policy_semantic_continuation_10105.py`;
+- `tools/run_3h_average_policy_semantic_continuation_10105.sh`.
+
+The gate creates two paired strategy-only continuation arms from the exact
+finalized 10105 AveragePolicy:
+1. V1 control;
+2. V1 + the same 30 general semantic features.
+
+The semantic model is **functionally identical at step 0**:
+- every existing V1 weight is copied;
+- added semantic input weights are initialized to zero;
+- existing Adam moments are copied exactly;
+- new semantic-column moments start at zero.
+
+Both arms then receive the exact same strategy-reservoir train split and exact
+same minibatch stream for 4000 extra optimizer steps.  The untouched original
+production AveragePolicy is preserved separately as a DC1 reference.
+
+Precommitted gate criteria:
+- semantic weighted strategy cross-entropy <= paired V1 control;
+- semantic weighted target-policy TV <= paired V1 control;
+- >=50% reduction in absolute HIGH_CARD/no-draw ALL_IN target bias on the fixed
+  strategy holdout.
+
+DC1 high-card jams and the Q8/884 Fold are descriptive diagnostics only and do
+not move the gate.
+
+PASS would show that the representation benefit reaches both Deep-CFR neural
+learners and would justify designing one controlled online semantic-CFR
+continuation.  FAIL would mean the Advantage improvement alone is insufficient
+to bridge the current AveragePolicy deployment path.
+
