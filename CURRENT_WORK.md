@@ -1818,3 +1818,24 @@ learners and would justify designing one controlled online semantic-CFR
 continuation.  FAIL would mean the Advantage improvement alone is insufficient
 to bridge the current AveragePolicy deployment path.
 
+## AveragePolicy semantic continuation runtime fix — 2026-09-26
+
+The first run stopped before any optimizer step at the step-0 identity gate:
+max absolute logit difference was **1.1920928955078125e-06** against a
+hard-coded 1e-6 tolerance.
+
+Inspection showed this is a float32 GEMM-shape effect, not a model-state
+mismatch: the semantic model has a wider first linear layer, so BLAS may use a
+slightly different accumulation order even though all appended semantic columns
+are exactly zero.
+
+The gate was strengthened rather than simply relaxed:
+- every pre-existing V1 parameter must match bit-for-bit;
+- the copied prefix of the widened first-layer weight must match bit-for-bit;
+- every newly-added semantic column must be exactly zero;
+- numerical step-0 logits must agree within 2e-6;
+- masked action probabilities must agree within 5e-7.
+
+No training occurred in the failed run, so there is no partial state to reuse.
+The run should be restarted from the frozen 10105 checkpoint.
+
