@@ -1730,3 +1730,63 @@ The gate was strengthened rather than simply relaxed:
 No training occurred in the failed run, so there is no partial state to reuse.
 The run should be restarted from the frozen 10105 checkpoint.
 
+## 3H AveragePolicy semantic continuation FAIL — 2026-09-26
+
+The paired 4000-step strategy-only continuation completed on the frozen 10105
+THREE_HANDED strategy reservoir.
+
+The gate **FAILS** its precommitted criteria:
+- semantic high-card/no-draw ALL_IN absolute-bias reduction >=50%: **FAIL**;
+- semantic weighted strategy cross-entropy <= V1 control: **FAIL**;
+- semantic weighted target-policy TV <= V1 control: **PASS**.
+
+At 4000 extra steps:
+- V1 weighted CE: **1.08594394**;
+- semantic weighted CE: **1.08594871** (numerically almost identical, but
+  slightly worse);
+- V1 weighted TV: **0.42812876**;
+- semantic weighted TV: **0.42811827** (slightly better);
+- high-card/no-draw target ALL_IN mean: **0.26614217**;
+- V1 prediction: **0.26893334**, abs bias **0.00279118**;
+- semantic prediction: **0.27013153**, abs bias **0.00398936**.
+
+No milestone satisfies the full gate.  At 1000 steps semantics temporarily
+reduce high-card bias versus the matched V1 continuation
+(0.002824 vs 0.004865), but CE and TV are both slightly worse and the reduction
+does not reach the precommitted 50% rule.  By 4000 the bias ordering reverses.
+
+Both continuation arms also degrade the fixed strategy holdout relative to
+step 0:
+- step-0 weighted CE ~**1.08157735**;
+- 4000-step V1 ~**1.08594394**;
+- 4000-step semantic ~**1.08594871**.
+
+This reproduces the earlier conclusion that simply continuing to optimize the
+finalized AveragePolicy on the same historical strategy reservoir does not
+improve its generalization.  The reservoir contains time-varying historical
+strategy targets.
+
+The fixed DC1 weird-action diagnostics do not show a semantic repair in
+AveragePolicy:
+- 17 no-draw high-card flags: production reference **30.11%** ALL_IN, 4000-step
+  V1 control **29.67%**, semantic **31.50%**;
+- Q8/884 Fold: production **7.33%**, V1 control **5.70%**, semantic **6.67%**.
+
+### Interpretation boundary
+
+This FAIL does **not** invalidate the semantic Advantage result.  In canonical
+Deep-CFR collection, each strategy-memory target is the contemporaneous
+behavior policy `sigma` produced by the current Advantage learner.  The frozen
+10105 strategy reservoir was generated historically under the V1 behavior
+sequence.  Adding semantic inputs to an AveragePolicy while keeping those old
+targets fixed cannot retroactively turn them into the corrected semantic
+behavior policy.
+
+Therefore the next question is not "can semantics refit the old strategy
+reservoir?" — the answer is no.  The next causal bridge must let the already
+validated semantic Advantage candidate generate **fresh strategy targets**, and
+then test whether those targets can be distilled into an AveragePolicy.
+
+No production promotion, DC2 scale-up, or full online semantic-CFR continuation
+is authorized yet.
+
