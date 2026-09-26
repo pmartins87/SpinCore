@@ -1280,3 +1280,90 @@ intended to distinguish:
 No strategy patch, dead-zone, representation migration, or additional long
 training is authorized before this result.
 
+## 3H exact high-card model-target gap @1600 — 2026-09-26
+
+The exact 17 no-immediate-draw DC1 high-card jam states were joined to the
+corrected V2 local Advantage-target neighborhoods and evaluated with the
+controlled-split eight-member 1600-step 3H Advantage probe.
+
+### Aggregate result
+
+Local target surface (subset E):
+- E coverage: **23 .. 1,048** retained samples; median **342**;
+- unweighted ALL_IN target mean negative in **13/17** states;
+- iteration-weighted ALL_IN target mean negative in **12/17**;
+- recent 9106-10105 mean negative in **14/17**;
+- among the 9 states with >=30 recent E samples, **8/9** have a negative recent
+  ALL_IN target mean.
+
+Exact 1600-step model:
+- raw-ensemble ALL_IN Advantage is positive in **14/17** states;
+- negative in only **3/17**;
+- mean post-regret-matching raw-ensemble ALL_IN probability is **58.78%**;
+- mean member-policy-mixture ALL_IN is **54.37%**.
+
+Model/local-target sign mismatch:
+- **9/17** exact states have positive raw model ALL_IN Advantage while the
+  iteration-weighted E target mean is negative;
+- **7/17** simultaneously have negative weighted E targets and >=50%
+  raw-ensemble ALL_IN policy;
+- across these selected flagged states, raw model ALL_IN Advantage is weakly
+  *negatively* correlated with E target means (Pearson ~**-0.22**). This
+  correlation is descriptive only because the 17 states were selected by the
+  weird-action flag.
+
+The positive raw ALL_IN values are numerically small: among the 14 positive
+exact states they range roughly **0.00268 .. 0.02053**, median **0.00776**.
+Nevertheless lean regret matching can turn them into very large action mass
+when competing legal predictions are <=0 or much smaller.
+
+Clear examples:
+- scenario 51 river, J8 on Q-4-9-5-7: E weighted target **-0.03042** with
+  613 samples and recent mean **-0.03292** over 66 samples; raw ensemble predicts
+  ALL_IN **+0.00565** while CHECK_CALL/POT_33 are negative, therefore regret
+  matching returns **100% ALL_IN**;
+- scenario 125 flop, 96 on 3-K-Q checked to: E weighted target **-0.01281**;
+  exact raw ALL_IN is only **+0.00334**, the other two legal raw outputs are
+  negative, therefore regret matching again returns **100% ALL_IN**;
+- scenario 39 flop, AT on 5-8-K facing action: E weighted target **-0.02040**;
+  exact raw ALL_IN **+0.02053** vs CHECK_CALL +0.00648, producing **76.0%**
+  ALL_IN;
+- scenario 107 flop, 73 on 9-2-5 facing action: E weighted target **-0.01273**;
+  exact raw ALL_IN **+0.01125** vs CHECK_CALL +0.00350, producing **76.3%**
+  ALL_IN.
+
+This establishes that **both** mechanisms are present on the flagged surface:
+1. a model/generalization sign mismatch relative to reasonably local stored
+   target aggregates in a material subset of states;
+2. nonlinear regret-matching amplification of small positive raw outputs.
+
+It still does not prove the exact poker-optimal action is non-jam because subset
+E is an approximate neighborhood and same-hole-rank subset F remains sparse.
+The next gate must determine whether small positive ALL_IN predictions are
+actually calibrated on a genuinely untouched holdout, especially within
+postflop high-card/no-draw states.
+
+Next diagnostic:
+- reconstruct the same fixed 50k holdout excluded from every controlled-split
+  replica;
+- evaluate the 1600-step raw ensemble on every held-out sample;
+- report ALL_IN-head prediction/target calibration globally and specifically
+  for postflop high-card/no-immediate-draw states;
+- use fixed raw-prediction bins around the exact anomaly range
+  (0, .0025, .005, .01, .02);
+- report weighted target mean, target-positive rate, residual bias and MSE in
+  each bin and by street/facing class;
+- attach each of the 17 flagged states to its corresponding holdout calibration
+  bin.
+
+Decision rule:
+- if positive bins around +0.003..+0.020 have positive held-out conditional
+  target means, the regression head is broadly calibrated and the remaining
+  problem is state/hand-specific representation + local coverage plus
+  regret-matching sensitivity;
+- if those bins have zero/negative held-out conditional target means, the
+  ALL_IN head itself is sign-miscalibrated and model/loss calibration becomes
+  the primary repair target;
+- in either case, no production dead-zone or strategy patch is authorized by
+  the diagnostic alone.
+
