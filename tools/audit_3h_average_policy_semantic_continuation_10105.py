@@ -325,30 +325,41 @@ def replay_dc1(solver,bundle_path,scenarios):
     return traces,games
 
 
-def exact_policy(v1,sem,obs,legal):
+def exact_policy(original,v1,sem,obs,legal):
     b=collate_action_observations(
         REPRESENTATION,[obs],[legal_mask(tuple(legal))],device="cpu"
     )
     sb=dict(b)
     sb["semantic"]=torch.tensor([semantic_vector_from_obs(obs)],dtype=torch.float32)
     with torch.no_grad():
+        po=original.probabilities(b)[0].cpu().tolist()
         pv=v1.probabilities(b)[0].cpu().tolist()
         ps=sem.probabilities(sb)[0].cpu().tolist()
-    return named_probs(pv,legal),named_probs(ps,legal)
+    return named_probs(po,legal),named_probs(pv,legal),named_probs(ps,legal)
 
 
 def summarize_flag(rows,action):
     if not rows:return {"count":0}
     return {
         "count":len(rows),
-        "v1_action_probability_mean":statistics.fmean(
+        "production_reference_action_probability_mean":statistics.fmean(
+            r["production_reference"].get(action,0.0) for r in rows
+        ),
+        "v1_control_action_probability_mean":statistics.fmean(
             r["v1"].get(action,0.0) for r in rows
         ),
         "semantic_action_probability_mean":statistics.fmean(
             r["semantic"].get(action,0.0) for r in rows
         ),
-        "v1_argmax_action_count":sum(max(r["v1"],key=r["v1"].get)==action for r in rows),
-        "semantic_argmax_action_count":sum(max(r["semantic"],key=r["semantic"].get)==action for r in rows),
+        "production_reference_argmax_action_count":sum(
+            max(r["production_reference"],key=r["production_reference"].get)==action for r in rows
+        ),
+        "v1_control_argmax_action_count":sum(
+            max(r["v1"],key=r["v1"].get)==action for r in rows
+        ),
+        "semantic_argmax_action_count":sum(
+            max(r["semantic"],key=r["semantic"].get)==action for r in rows
+        ),
     }
 
 
@@ -376,6 +387,10 @@ def main()->int:
     items=list(mem.get("items") or [])
     if len(items)!=int(mem.get("capacity",len(items))):
         raise SystemExit("strategy reservoir must be saturated")
+
+    _,original=make_policy_action_model(REPRESENTATION,device="cpu",seed=0)
+    original.load_state_dict(d3["policy"])
+    original.eval()
 
     _,v1=make_policy_action_model(REPRESENTATION,device="cpu",seed=0)
     v1.load_state_dict(d3["policy"])
@@ -473,9 +488,14 @@ def main()->int:
         d=dict(tr.policy_detail or {})
         obs_hex=d.get("observation_hex");legal=tuple(int(x) for x in d.get("legal_slots") or ())
         if not obs_hex or not legal:raise RuntimeError("missing captured 3H state")
-        vp,sp=exact_policy(v1,sem,bytes.fromhex(obs_hex),legal)
+        op,vp,sp=exact_policy(original,v1,sem,bytes.fromhex(obs_hex),legal)
         for flag in sanity_flags(tr):
-            row={"v1":vp,"semantic":sp,"context":flag.context}
+            row={
+                "production_reference":op,
+                "v1":vp,
+                "semantic":sp,
+                "context":flag.context,
+            }
             if flag.code=="POSTFLOP_DEEP_HIGH_CARD_JAM":high.append(row)
             elif flag.code=="POSTFLOP_TRIPS_PLUS_FOLD":trips.append(row)
     nodraw=[r for r in high if not bool((r["context"] or {}).get("has_immediate_straight_or_flush_draw"))]
@@ -535,7 +555,9 @@ def main()->int:
             "Because both arms start functionally identical and share the same optimizer "
             "history, train split and minibatch stream, a semantic advantage on strategy "
             "holdout CE/TV isolates representational benefit for AveragePolicy distillation. "
-            "The DC1 weird-action rows are descriptive development diagnostics, not gate "
+            "DC1 reports the untouched finalized production-reference AveragePolicy in "
+            "addition to the paired 4000-step V1 control and semantic continuation. "
+            "The weird-action rows are descriptive development diagnostics, not gate "
             "optimization targets. PASS still does not authorize deployment because the "
             "strategy reservoir was generated historically under the V1 learner."
         ),
