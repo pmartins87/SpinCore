@@ -1067,3 +1067,73 @@ Decision rule:
 
 No training or checkpoint mutation occurs in this gate.
 
+## 3H Advantage clean-holdout result — 2026-09-26
+
+A fixed 50k holdout was drawn only from 3H Advantage-reservoir indices never
+sampled by any of the eight diagnostic replicas through 400 steps.  The union
+of all training indices touched through 400 covered 1,611,491 / 2,000,000
+retained items (80.57%), leaving 388,509 completely untouched candidates.
+
+Clean-holdout regression improves monotonically with budget, but only modestly.
+
+Mean per-member weighted legal-action MSE:
+- 100 steps: **0.0320905**;
+- 200 steps: **0.0319440**;
+- 400 steps: **0.0316713**.
+
+The 100 -> 400 improvement is ~**1.31%**.  Six of eight matched replicas improve
+their own holdout MSE from 100 to 400; two worsen.  Between-member MSE dispersion
+falls slightly at 200 then rises at 400
+(0.0002369 -> 0.0002120 -> 0.0004351).
+
+Raw-output ensemble weighted MSE also improves monotonically:
+- 100: **0.0314557**;
+- 200: **0.0313765**;
+- 400: **0.0311292**,
+an improvement of ~**1.04%** from 100 to 400.
+
+Interpretation:
+- fresh100 is not at the regression optimum of the mature frozen 3H reservoir;
+- larger budgets still extract some generalizable signal on genuinely unseen
+  stored Advantage targets;
+- the gain through 400 is small, while policy-level independent-fit
+  disagreement remains very large and suspicious high-card aggression becomes
+  at least as strong;
+- therefore 400 is neither clearly converged nor evidence that simply
+  increasing optimizer steps will repair strategy behavior.
+
+The previous common-untouched-holdout construction cannot be extended cleanly
+to 1600 steps because the union of eight historical-style minibatch streams
+would cover almost the entire 2M reservoir.  The next gate therefore uses a
+**controlled fixed split**: remove one common 50k validation set before fitting
+any model, then train all eight replicas only on the remaining 1.95M items.
+
+Added:
+- `tools/build_3h_advantage_controlled_split_probe_10105.py`;
+- `tools/evaluate_3h_advantage_controlled_budget_curve_10105.py`;
+- `tools/run_3h_advantage_controlled_budget_curve_10105.sh`.
+
+The controlled curve snapshots each matched replica at
+**100 / 200 / 400 / 800 / 1600** steps, evaluates the same untouched 50k
+validation set at every budget, and then evaluates all budgets on the unchanged
+200-scenario DC1 trajectory.  It reports:
+- validation weighted Advantage MSE;
+- member pairwise policy TV / argmax disagreement;
+- raw-ensemble vs member-policy-mixture divergence;
+- high-card jams (all and no-immediate-draw);
+- Q8/884 trips Fold.
+
+A runtime preflight is built into the first replica: after 400 fit steps it
+projects the full 8x1600 fit wall.  If projected fit time exceeds 55 minutes,
+the run aborts before becoming a long compute block so the fitter can be
+parallelized/optimized first.
+
+Decision rule:
+- validation MSE continues materially down at 800/1600 and policy stability also
+  improves => fit budget remains a meaningful bottleneck;
+- validation MSE improves but policy instability / weird actions remain =>
+  regression fit alone is not the strategic repair; inspect target geometry and
+  regret-matching sensitivity;
+- validation MSE plateaus/worsens => stop increasing fit budget and move to
+  representation/target/coverage diagnosis.
+
