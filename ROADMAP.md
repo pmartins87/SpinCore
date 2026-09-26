@@ -1374,3 +1374,102 @@ Added:
 The calibration reuses the existing 1600-step probe and therefore performs no
 new fitting.
 
+## 3H ALL_IN untouched-holdout calibration — 2026-09-26
+
+The controlled-split 1600-step raw-Advantage ensemble was evaluated on the
+original untouched 50k validation split.
+
+### Global ALL_IN head
+
+Across 38,246 holdout samples with ALL_IN legal, the raw ALL_IN head is broadly
+calibrated in aggregate:
+- weighted prediction mean: **+0.006295**;
+- weighted target mean: **+0.005406**;
+- weighted residual bias: **+0.000889**.
+
+The positive raw-prediction bins are also mostly directionally correct globally:
+- +0.0025..0.005 -> weighted target **+0.00517**;
+- +0.005..0.010 -> **+0.00736**;
+- +0.010..0.020 -> **+0.01147**;
+- >=0.020 -> **+0.03421**.
+Only the tiny +0..0.0025 bin has a negative weighted target mean
+(**-0.00189**).
+
+Therefore a global positive-Advantage dead-zone or blanket regret-matching
+threshold would suppress many genuinely positive held-out ALL_IN signals.
+
+### Postflop HIGH_CARD / no-immediate-draw subgroup
+
+The exact same model is strongly upward-biased inside the diagnostic hand class:
+- 6,639 untouched holdout samples;
+- weighted prediction mean: **+0.006184**;
+- weighted target mean: **-0.007817**;
+- weighted residual bias: **+0.014001**.
+
+Every positive prediction bin below +0.020 has a **negative** weighted target:
+- +0..0.0025: target **-0.01558**, bias +0.01696;
+- +0.0025..0.005: **-0.00560**, bias +0.00946;
+- +0.005..0.010: **-0.00703**, bias +0.01455;
+- +0.010..0.020: **-0.00342**, bias +0.01596.
+The >=+0.020 bin turns positive (+0.00909) but contains only 14 samples.
+
+Consequently **16/17** exact flagged DC1 states fall into a high-card holdout
+prediction bin whose weighted target mean is negative.  Conditioning further by
+street/facing class still leaves **10/17** in negative bins.
+
+The street split is heterogeneous:
+- river checked-to and river facing-action are strongly negative across the
+  small-positive ranges;
+- flop facing-action is near zero at +0.005..0.010 and positive at
+  +0.010..0.020;
+- flop checked-to has some positive small-prediction ranges but is not
+  monotonic;
+- turn buckets are mixed.
+
+### Gate decision
+
+This result materially narrows the repair target.
+
+It rejects a **global regret-matching dead-zone** as the primary repair because
+the ALL_IN head is broadly calibrated outside the problematic subgroup.
+Instead, the failure is **state/hand-conditional**: the V1 learner systematically
+overpredicts ALL_IN Advantage for postflop high-card/no-immediate-draw states.
+
+This is consistent with a representation/generalization limitation.  SPNNIV1
+carries exact card ids but no explicit made-hand, draw or board semantic fields.
+The historical SPNNIV2 lane contains explicit made category, pair relation,
+overcards, flush/straight-draw and board-texture semantics, but the old full-V2
+paired ablation selected C0/V1 because all V2 candidates were globally worse
+on the then-frozen corpus.  Therefore reopening full V2 directly is not yet
+authorized.
+
+### Next gate — lightweight semantic attribution
+
+Added:
+- `tools/audit_3h_semantic_sidecar_attribution_10105.py`;
+- `tools/run_3h_semantic_sidecar_attribution_10105.sh`.
+
+The gate performs **no CFR training and no base-network fitting**.  It reuses the
+existing 1600-step raw ensemble, draws a deterministic 250k calibration subset
+from the existing 1.95M training side, and fits three tiny weighted-ridge
+diagnostic calibrators:
+
+A. RAW_AFFINE — raw ALL_IN prediction only;
+B. CONTEXT — raw + street/facing/pot geometry;
+C. SEMANTIC_SIDECAR — CONTEXT plus semantics derived only from the existing V1
+card tokens (made category, pair relation, overcards, draws, board texture and
+high-card/no-draw identity).
+
+All three are evaluated on the untouched 50k holdout.
+
+Precommitted attribution PASS requires:
+- >=50% reduction in absolute high-card/no-draw residual bias;
+- no >2% degradation in global ALL_IN MSE;
+- no degradation in high-card/no-draw MSE.
+
+PASS would justify a proper matched V1+semantic shadow-network experiment.
+FAIL would move the diagnosis away from simple semantic conditioning and toward
+richer history/sequence representation or target/objective structure.
+
+The ridge outputs are diagnostic only and are not deployable poker policy.
+
