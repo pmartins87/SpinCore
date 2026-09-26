@@ -375,6 +375,13 @@ def main():
 
     mout={k:v.out() for k,v in metrics.items()}
     hout={k:v.out() for k,v in hc.items()}
+    if int(hout["BASE_RAW"]["count"]) != 6639:
+        raise RuntimeError(
+            "high-card/no-draw population drift: expected 6639 rows from the frozen "
+            "untouched-holdout calibration contract, got "
+            + str(hout["BASE_RAW"]["count"])
+        )
+
     base_bias=abs(hout["BASE_RAW"]["weighted_bias_prediction_minus_target"])
     sem_bias=abs(hout["SEMANTIC_SIDECAR"]["weighted_bias_prediction_minus_target"])
     base_mse=mout["BASE_RAW"]["weighted_mse"]
