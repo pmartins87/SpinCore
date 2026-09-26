@@ -1028,3 +1028,98 @@ Decision rule:
 - validation MSE plateaus/worsens => stop increasing fit budget and move to
   representation/target/coverage diagnosis.
 
+## 3H controlled Advantage budget curve 100 -> 1600 — 2026-09-26
+
+A fixed 50k validation split was removed before any diagnostic fitting. Eight
+matched fresh THREE_HANDED Advantage replicas were trained only on the remaining
+1.95M retained reservoir items and snapshotted at 100/200/400/800/1600 steps.
+The same frozen DC1 200-scenario trajectory was then evaluated at every budget.
+
+### Validation regression
+
+Mean per-member weighted holdout MSE decreases monotonically:
+- 100: **0.0317269**;
+- 200: **0.0315792**;
+- 400: **0.0313879**;
+- 800: **0.0311076**;
+- 1600: **0.0308359**.
+
+100 -> 1600 improves the held-out regression objective by ~**2.81%**.
+Raw-output ensemble weighted MSE also improves monotonically:
+**0.0312551 -> 0.0306193** (~**2.03%**).
+
+Thus fresh100 is definitively under-resolved on the mature 3H reservoir and
+larger fit budgets continue to extract generalizable target signal through 1600.
+
+### Policy stability
+
+Independent-fit policy stability improves substantially by 1600:
+- pairwise member TV mean: **0.59018 -> 0.40470** (~31.4% relative reduction);
+- pairwise argmax disagreement: **64.35% -> 43.33%** (~32.7% reduction);
+- mean max-argmax vote share: **52.80% -> 70.45%**;
+- unanimous argmax rate: **5.78% -> 18.88%**;
+- raw-ensemble vs member-policy-mixture TV mean:
+  **0.37531 -> 0.19986**.
+
+The curve is therefore not plateaued at 400. Fit budget is a real 3H stability
+bottleneck.
+
+### Weird-action surface
+
+Greater target fit does **not** remove the high-card aggression.
+
+For all 23 flagged 3H high-card jams:
+- member-policy-mixture ALL_IN: **35.14% @100 -> 50.63% @1600**;
+- >=5/8 member ALL_IN-argmax majority: **6 -> 12 of 23**;
+- raw ensemble ALL_IN: **55.52% -> 57.12%**.
+
+For the 17 flags with no immediate straight/flush draw:
+- member-policy-mixture ALL_IN: **33.43% -> 54.37%**;
+- >=5/8 member ALL_IN-argmax majority: **4 -> 10 of 17**;
+- raw ensemble ALL_IN: **53.97% -> 58.78%**.
+
+This is the key result: as the eight independent learners fit the frozen
+Advantage target problem better and become more stable, the suspicious
+high-card ALL_IN signal becomes **more**, not less, shared across members.
+Therefore underfitting/noisy fresh100 explains much of the policy instability
+but does not explain away the broad high-card aggression.
+
+The Q8/884 trips Fold remains separate:
+- raw-ensemble Fold = 0 at 100, 200, 800 and 1600;
+- member-policy mixture Fold = 0 at 200 and 1600;
+- no budget has majority-member Fold argmax.
+The benchmark Fold remains an AveragePolicy/local-generalization tail.
+
+### Gate decision
+
+Do not extend immediately to 3200/6400 merely because holdout MSE still trends
+down. The primary unresolved strategic question is now upstream of neural fit:
+**do the stored 3H Advantage targets themselves favor these high-card jams in
+local neighborhoods, or is the 1600 learner extrapolating from sparse/noisy
+targets?**
+
+Added:
+- `tools/audit_3h_high_card_advantage_targets_10105.py`;
+- `tools/run_3h_high_card_advantage_targets_10105.sh`.
+
+The audit replays the same fixed DC1 trajectory to recover all 23 3H high-card
+jam states and focuses on the 17 with no immediate straight/flush draw. It scans
+the complete frozen 2M 3H Advantage reservoir once and reports progressively
+narrower target neighborhoods:
+A) all deep no-draw high-card states with ALL_IN legal;
+B) same street/facing class;
+C) same dealer-relative position, statuses and exact universal legal mask;
+D) similar effective stack/pot/call/current-bet geometry;
+E) same last two frozen V1 history tokens;
+F) same hole-card ranks ignoring suits.
+
+For every subset it reports stored ALL_IN target mean, iteration-weighted mean,
+positive fraction, argmax fraction, sole-positive-action fraction and
+<=8100 / 8101-9105 / 9106-10105 cohorts.
+
+Positive ALL_IN Advantage target mass in recent tight neighborhoods would show
+that the aggressive signal is already in the training targets. Sparse or
+contradictory tight neighborhoods would instead implicate generalization and/or
+external-sampling variance. The audit does not by itself declare any jam
+strategically correct.
+
