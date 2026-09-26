@@ -410,10 +410,37 @@ def main()->int:
     sb["semantic"]=torch.tensor(
         np.asarray([semantic_vector_from_obs(s.observation) for s in ident_samples],dtype=np.float32)
     )
+    # Structural identity must be exact: every pre-existing V1 parameter is
+    # copied bit-for-bit and every newly-added semantic input weight is zero.
+    old_named=dict(v1.named_parameters())
+    new_named=dict(sem.named_parameters())
+    for name,old_p in old_named.items():
+        new_p=new_named[name]
+        if name=="body.0.weight":
+            old_width=old_p.shape[1]
+            if not torch.equal(new_p[:,:old_width],old_p):
+                raise RuntimeError("step0 structural drift in body.0 V1 columns")
+            if not torch.count_nonzero(new_p[:,old_width:]).item()==0:
+                raise RuntimeError("step0 semantic columns are not exactly zero")
+        elif not torch.equal(new_p,old_p):
+            raise RuntimeError(f"step0 structural parameter drift: {name}")
+
+    # A wider GEMM can change float32 accumulation order even when the appended
+    # semantic columns are exactly zero.  Accept only the tiny numerical drift
+    # expected from that kernel-shape change, while the structural checks above
+    # remain exact.
     with torch.no_grad():
-        diff=(v1(b)-sem(sb)).abs().max().item()
-    if diff>1e-6:
-        raise RuntimeError(f"step0 semantic identity drift: {diff}")
+        v1_logits=v1(b)
+        sem_logits=sem(sb)
+        diff=(v1_logits-sem_logits).abs().max().item()
+        prob_diff=(
+            torch.softmax(v1_logits.masked_fill(~b["legal"],-1e9),dim=-1)
+            - torch.softmax(sem_logits.masked_fill(~b["legal"],-1e9),dim=-1)
+        ).abs().max().item()
+    if diff>2e-6 or prob_diff>5e-7:
+        raise RuntimeError(
+            f"step0 numerical identity drift: logits={diff} probs={prob_diff}"
+        )
 
     split_rng=random.Random(SHADOW_SEED)
     holdout_idx=set(split_rng.sample(range(len(items)),min(int(args.holdout_size),len(items))))
@@ -537,6 +564,8 @@ def main()->int:
         "learning_rate":float(cfg["learning_rate"]),
         "semantic_dim":SEM_DIM,
         "step0_max_abs_logit_diff":float(diff),
+        "step0_max_abs_probability_diff":float(prob_diff),
+        "step0_structural_identity_exact":True,
         "semantic_precompute_seconds":precompute_seconds,
         "milestones":milestones,
         "final_holdout":final,
