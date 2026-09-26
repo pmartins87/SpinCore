@@ -1473,3 +1473,53 @@ richer history/sequence representation or target/objective structure.
 
 The ridge outputs are diagnostic only and are not deployable poker policy.
 
+## Semantic sidecar attribution V1 correction — 2026-09-26
+
+The first semantic-sidecar run reported a formal PASS, but the high-card/no-draw
+population did **not** match the immediately preceding untouched-holdout
+calibration population:
+- calibration gate: **6,639** high-card/no-draw ALL_IN-legal holdout samples;
+- semantic sidecar V1: **4,802** samples.
+
+The discrepancy was traced to river handling.  The prior calibration correctly
+treated river HIGH_CARD as "no immediate draw" after excluding already-made
+straight/flush/pair categories, because no future community card remains.
+Semantic-sidecar V1 instead also excluded river states with four cards to a
+flush or four ranks in a straight window.  That silently removed 1,837 states,
+including part of the river regime where the strongest positive ALL_IN bias had
+been observed.
+
+Therefore:
+- V1 global ALL_IN metrics remain mechanically valid for all 38,246
+  ALL_IN-legal holdout samples;
+- V1 high-card/no-draw attribution metrics and its precommitted PASS are
+  **provisional / not decision-valid**, because they were evaluated on the wrong
+  subgroup.
+
+The provisional V1 numbers were directionally encouraging:
+- global MSE: **0.0115629 -> 0.0113720** with the semantic sidecar (~1.65%
+  improvement);
+- on the narrower 4,802-sample subgroup, absolute residual bias fell from
+  **0.006939 -> 0.002029** (~70.8% reduction) and subgroup MSE also improved
+  slightly.
+
+But these numbers cannot authorize a representation experiment until population
+parity is restored.
+
+Correction:
+- `tools/audit_3h_semantic_sidecar_attribution_10105.py` now emits
+  `SPINCORE_3H_SEMANTIC_SIDECAR_ATTRIBUTION_V2`;
+- flop/turn retain the one-card draw exclusion;
+- river keeps HIGH_CARD states regardless of four-suit / four-rank texture,
+  matching `audit_3h_allin_holdout_calibration_10105.py`;
+- a hard guard requires exactly **6,639** frozen holdout high-card/no-draw rows,
+  so this population drift cannot silently recur.
+
+The same precommitted attribution criteria remain unchanged:
+- >=50% reduction in absolute high-card/no-draw residual bias;
+- global ALL_IN MSE not worse than BASE_RAW by >2%;
+- high-card/no-draw MSE not worse than BASE_RAW.
+
+A V2 rerun is required before moving to any V1+semantic shadow-network
+experiment.
+
