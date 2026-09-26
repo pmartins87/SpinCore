@@ -1287,3 +1287,105 @@ V2 correction (commit `38707d3b9a7f58d3f40c35ff636846bdb094a049`):
 The V2 rerun is required before any C-F/local-target conclusion or strategy
 change.
 
+## Corrected V2 high-card Advantage-target audit — 2026-09-26
+
+The V2 rerun fixes the V1 legal-mask/slot comparison error and removes the
+inconsistent secondary >=10bb reservoir cutoff.  All 17 no-immediate-draw
+flagged states now have nonzero C-E local coverage.
+
+### Broad target surface
+
+Across 267,649 retained 3H postflop HIGH_CARD / no-immediate-draw samples with
+ALL_IN legal:
+- ALL_IN target mean: **-0.0088908**;
+- iteration-weighted mean: **-0.0088748**;
+- ALL_IN target positive fraction: **15.409%**;
+- ALL_IN target argmax fraction: **10.147%**;
+- ALL_IN sole-positive-legal fraction: **4.840%**.
+
+The recent 9106-10105 cohort is nearly unchanged:
+- mean **-0.0090655**;
+- positive fraction **15.536%**;
+- 27,028 retained samples.
+
+Thus the stored target population does **not** contain a generic high-card jam
+rule.
+
+### Local neighborhoods around the 17 DC1 no-draw jams
+
+At subset E (same street/facing class, dealer-relative structure, exact legal
+slot set, near stack/pot/price geometry, and same last two V1 history tokens):
+- coverage range: **23 .. 1,048** retained samples;
+- median coverage: **342**;
+- unweighted ALL_IN target mean is negative in **13/17** states;
+- iteration-weighted ALL_IN target mean is negative in **12/17**;
+- the recent 9106-10105 cohort mean is negative in **14/17**.
+
+Nine E neighborhoods have both >=100 total retained samples and >=30 recent
+samples.  Of those nine, **8/9** have a negative recent ALL_IN target mean; the
+only clearly positive recent neighborhood is scenario 140.
+
+Therefore the broad 1600-step learner's high-card aggression cannot be
+explained simply by saying that the local stored targets generally teach
+ALL_IN.  For most flagged states, reasonably local target aggregates point the
+other way.
+
+However subset F (E + exact two hole-card ranks ignoring suits) is very sparse:
+- median retained count: **3**;
+- range: **0 .. 22**;
+- 4/17 states have zero F samples;
+- 12/17 have zero recent F samples;
+- maximum recent F count is only 4.
+
+That prevents treating the E mean as the exact conditional target for the
+specific hand.  The evidence instead points to a coverage/generalization
+problem boundary: public/geometry neighborhoods are often well populated, while
+specific hole-rank conditioning is extremely sparse.
+
+Representative contrasts:
+- scenario 30 (83o checked to on K-7-4): E has 1,048 samples and recent mean
+  ~-0.00791; exact-hole-rank F has 22 samples with mean ~-0.03664;
+- scenario 140 (A6o facing action): E is genuinely positive, including recent
+  mean ~+0.02139 over 61 samples, but exact-hole-rank F has only 6 samples and a
+  negative mean ~-0.01206;
+- several river/facing-action neighborhoods remain strongly negative even
+  before exact-hole filtering.
+
+### Interpretation
+
+This result rejects two overly simple explanations:
+1. **"fresh100 noise alone"** — already rejected by the controlled 1600 fit;
+2. **"the CFR target reservoir broadly teaches these jams"** — V2 shows that
+   most local E target means are negative, including most well-covered recent
+   neighborhoods.
+
+What remains unresolved is the exact model-target gap at the flagged states.
+Because F coverage is sparse, the network must generalize across hole-card
+combinations.  Separately, lean regret matching can convert a small positive raw
+ALL_IN prediction into a very large action probability when competing outputs
+are nonpositive.
+
+Next discriminating gate:
+- reuse the already-built controlled 1600-step eight-model probe;
+- replay the exact same 17 no-draw flagged states;
+- record the exact raw ALL_IN Advantage from the 1600 raw ensemble, the
+  member-policy mixture and the post-regret-matching raw-ensemble policy;
+- join each exact prediction to its V2 E/F target-neighborhood statistics;
+- count model-positive / local-weighted-target-negative sign mismatches;
+- measure whether >=50% ALL_IN policies are mostly produced by small positive
+  raw margins against locally negative targets.
+
+Added:
+- `tools/audit_3h_high_card_model_target_gap_10105.py`;
+- `tools/run_3h_high_card_model_target_gap_10105.sh`.
+
+This gate performs no training and generates no CFR roots.  It is specifically
+intended to distinguish:
+- model/generalization sign error;
+- nonlinear regret-matching amplification near zero;
+- or genuinely positive hand-specific target evidence where enough F coverage
+  exists.
+
+No strategy patch, dead-zone, representation migration, or additional long
+training is authorized before this result.
+
