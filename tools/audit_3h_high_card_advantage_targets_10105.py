@@ -239,7 +239,8 @@ def replay_targets(solver,bundle_path,scenarios):
             "to_call_bb":float(n[1]),
             "current_bet_bb":float(n[2]),
             "hero_stack_bb":float(n[3]),
-            "effective_stack_bb":effective_stack(n,c),
+            "sanity_effective_stack_bb":float(flags[0].context.get("effective_stack_bb")),
+            "contesting_effective_stack_bb":effective_stack(n,c),
             "to_call_over_pot":ratio(n[1],n[0]),
             "current_bet_over_pot":ratio(n[2],n[0]),
             "dealer_rel":int(c[2]),
@@ -298,15 +299,14 @@ def candidate_features(sample):
     if int(c[0])!=0 or int(c[1])==0 or int(c[3])!=3:
         return None
     eff=effective_stack(n,c)
-    if eff<10.0:
-        return None
     if not high_card_no_immediate_draw(hole,board):
         return None
     return {
         "hole":hole,"board":board,"numeric":n,"cat":c,"hist":hist,
         "street":int(c[1]),"dealer_rel":int(c[2]),"live_count":int(c[3]),
         "statuses":tuple(int(x) for x in c[4:7]),
-        "legal":tuple(int(x) for x in sample.legal),
+        "legal_mask":tuple(int(x) for x in sample.legal),
+        "legal_slots":tuple(i for i,v in enumerate(sample.legal) if bool(v)),
         "pot_bb":float(n[0]),"to_call_bb":float(n[1]),"current_bet_bb":float(n[2]),
         "hero_stack_bb":float(n[3]),"effective_stack_bb":eff,
         "to_call_over_pot":ratio(n[1],n[0]),
@@ -326,13 +326,13 @@ def match_stage(f,t,stage):
     if (
         f["dealer_rel"]!=t["dealer_rel"]
         or list(f["statuses"])!=list(t["statuses"])
-        or list(f["legal"])!=list(t["legal"])
+        or list(f["legal_slots"])!=list(t["legal"])
     ):
         return False
     if stage=="C_same_public_structure":
         return True
     if not (
-        near_scale(f["effective_stack_bb"],t["effective_stack_bb"])
+        near_scale(f["effective_stack_bb"],t["contesting_effective_stack_bb"])
         and near_scale(f["pot_bb"],t["pot_bb"])
         and near_ratio(f["to_call_over_pot"],t["to_call_over_pot"])
         and near_ratio(f["current_bet_over_pot"],t["current_bet_over_pot"])
@@ -413,7 +413,7 @@ def main()->int:
         })
 
     result={
-        "schema":"SPINCORE_3H_HIGH_CARD_ADVANTAGE_TARGET_AUDIT_V1",
+        "schema":"SPINCORE_3H_HIGH_CARD_ADVANTAGE_TARGET_AUDIT_V2",
         "scope":"DIAGNOSTIC_ONLY_NO_TRAINING",
         "checkpoint_sha256":actual,
         "scenarios":int(args.scenarios),
@@ -424,16 +424,20 @@ def main()->int:
         "advantage_reservoir_seen":int(mem.get("seen",0)),
         "base_no_draw_deep_high_card_allin_legal":broad.out(),
         "subset_contract":{
-            "A":"all 3H postflop HIGH_CARD, no immediate straight/flush draw, effective >=10bb, ALL_IN legal",
+            "A":"all 3H postflop HIGH_CARD, no immediate straight/flush draw, ALL_IN legal; no stack cutoff so the fixed DC1 flags are not reclassified by a different effective-stack definition",
             "B":"A + same street + same facing-action/check-to class as target",
-            "C":"B + same dealer_rel + actor-relative statuses + exact universal legal mask",
-            "D":"C + effective stack and pot within x0.70..x1.43 + call/pot and current-bet/pot within +/-0.15",
+            "C":"B + same dealer_rel + actor-relative statuses + exact universal legal-slot set",
+            "D":"C + contesting-opponent effective stack and pot within x0.70..x1.43 + call/pot and current-bet/pot within +/-0.15",
             "E":"D + exact last two frozen V1 public-history tokens (when target history nonempty)",
             "F":"E + same two hole-card ranks ignoring suits",
         },
         "targets":per_target,
         "interpretation":(
-            "Advantage targets are signed sampled counterfactual regrets: positive ALL_IN means "
+            "V2 fixes V1's mask-vs-slot comparison bug at subset C and removes V1's inconsistent "
+            "secondary >=10bb cutoff. The original sanity flag's effective_stack_bb uses all non-DEAD "
+            "lineup opponents because DecisionTrace does not carry folded status; V2 separately records "
+            "that provenance value and uses actor-relative folded statuses to compute contesting-opponent "
+            "effective stack for neighborhood geometry. Advantage targets are signed sampled counterfactual regrets: positive ALL_IN means "
             "the traversal estimated ALL_IN above the node value for that stored sample. "
             "Persistent positive/argmax ALL_IN target mass in recent tight neighborhoods means "
             "the aggressive signal is already present in the training targets, not created only "
