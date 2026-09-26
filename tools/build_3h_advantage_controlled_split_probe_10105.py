@@ -112,6 +112,7 @@ def main()->int:
     ap.add_argument("--out",type=Path,required=True)
     ap.add_argument("--holdout-size",type=int,default=50000)
     ap.add_argument("--threads",type=int,default=8)
+    ap.add_argument("--max-projected-minutes",type=float,default=55.0)
     args=ap.parse_args()
 
     cp=args.checkpoint.resolve(strict=True)
@@ -152,6 +153,7 @@ def main()->int:
         rng=random.Random(batch_seed)
         completed=0
         row={"replica":rep,"init_seed":init_seed,"batch_seed":batch_seed,"segments":{}}
+        cumulative_fit_seconds=0.0
         for budget in BUDGETS:
             started=time.perf_counter()
             losses=[]
@@ -162,6 +164,7 @@ def main()->int:
                 losses.append(train_step(model,opt,batch,target,weights,"advantage"))
                 completed+=1
             elapsed=time.perf_counter()-started
+            cumulative_fit_seconds+=float(elapsed)
             snapshots[str(budget)].append(clone_state(model))
             row["segments"][str(budget)]={
                 "cumulative_steps":int(budget),
@@ -174,6 +177,19 @@ def main()->int:
                 f"seconds={elapsed:.3f}",
                 flush=True,
             )
+            if rep==0 and int(budget)==400:
+                sec_per_step=cumulative_fit_seconds/400.0
+                projected_fit_minutes=sec_per_step*(REPLICAS*max(BUDGETS))/60.0
+                print(
+                    f"CONTROLLED_PERF_GATE projected_fit_minutes={projected_fit_minutes:.3f} "
+                    f"limit={float(args.max_projected_minutes):.3f}",
+                    flush=True,
+                )
+                if projected_fit_minutes>float(args.max_projected_minutes):
+                    raise RuntimeError(
+                        "projected controlled-fit wall exceeds performance gate; "
+                        "optimize/parallelize before a long run"
+                    )
         member_meta.append(row)
 
     validation={}
