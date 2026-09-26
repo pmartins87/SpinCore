@@ -21,6 +21,7 @@ PROBE_RUN="$(find "${ROOT}/runs/3h_advantage_controlled_budget_curve" -mindepth 
 TARGET_REPORT="${TARGET_RUN}/3h_high_card_advantage_targets.json"
 PROBE="${PROBE_RUN}/3h_advantage_controlled_split_probe.pt"
 [[ -f "${TARGET_REPORT}" && -f "${PROBE}" ]] || { echo "ERROR: prerequisite artifact missing" >&2; exit 4; }
+export TARGET_REPORT
 
 "${PY}" - <<'PY'
 import json, os
@@ -32,7 +33,6 @@ PY
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j 8 --target spincore_solver_c
 export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
-export TARGET_REPORT
 "${PY}" -m py_compile tools/audit_3h_high_card_model_target_gap_10105.py
 
 STAMP="$(date +%Y%m%d_%H%M%S)"
