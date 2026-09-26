@@ -1367,3 +1367,10 @@ Decision rule:
 - in either case, no production dead-zone or strategy patch is authorized by
   the diagnostic alone.
 
+Added:
+- `tools/audit_3h_allin_holdout_calibration_10105.py`;
+- `tools/run_3h_allin_holdout_calibration_10105.sh`.
+
+The calibration reuses the existing 1600-step probe and therefore performs no
+new fitting.
+
