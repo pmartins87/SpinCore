@@ -171,7 +171,16 @@ def private_semantics(hole,board):
             ):
                 backdoor_straight=1;break
 
-    hcdn=int(visible>=3 and made==0 and not flush_draw and not straight_draw)
+    # Match the frozen high-card/no-immediate-draw audit population exactly:
+    # no made pair+ category, no four-card suit, and no 4/5 straight window.
+    max_combined_suit=max(combined_suits.values()) if combined_suits else 0
+    immediate_straight_draw=any(len(window & ranks)>=4 for window in STRAIGHTS)
+    hcdn=int(
+        visible>=3
+        and made==0
+        and max_combined_suit<4
+        and not immediate_straight_draw
+    )
     return {
         "made":made,"pair_relation":pair_rel,"pocket_pair":pocket,
         "overcards":over,"flush_draw":flush_draw,"straight_draw":straight_draw,
@@ -345,6 +354,7 @@ def main():
         ridge_fit(((r[i],r[3],r[4]) for r in cal_rows),dims[i],args.ridge)
         for i in range(3)
     ]
+    cal_allin_legal_rows=len(cal_rows)
     del cal_rows
 
     hold_rows=predictions(holdout)
@@ -394,7 +404,7 @@ def main():
         "holdout_size":holdout_n,
         "calibration_seed":CAL_SEED,
         "calibration_requested":int(args.calibration_size),
-        "calibration_allin_legal_rows":None,
+        "calibration_allin_legal_rows":cal_allin_legal_rows,
         "feature_dimensions":{
             "RAW_AFFINE":dims[0],"CONTEXT":dims[1],"SEMANTIC_SIDECAR":dims[2]
         },
