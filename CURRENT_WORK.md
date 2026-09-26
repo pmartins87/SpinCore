@@ -1232,3 +1232,58 @@ contradictory tight neighborhoods would instead implicate generalization and/or
 external-sampling variance. The audit does not by itself declare any jam
 strategically correct.
 
+## High-card Advantage-target audit V1 correction — 2026-09-26
+
+The first high-card target audit completed mechanically but its narrow subsets
+C-F are **invalid** because of a diagnostic representation bug:
+- each retained `ActionAdvantageSample.legal` is the 10-slot 0/1 legal mask;
+- each replay target stored `legal` as the list of legal slot indices;
+- V1 subset C compared the mask tuple directly to the slot-index tuple.
+
+That comparison can never match ordinary states.  Accordingly all 17 no-draw
+targets reported C=0 and therefore D/E/F=0.  Those zeros are artificial and
+must not be interpreted as evidence of zero local reservoir coverage.
+
+V1 subsets A and B do not use that comparison and remain valid.
+
+Valid V1 broad A result:
+- 133,373 retained 3H postflop high-card/no-immediate-draw samples with ALL_IN
+  legal under the V1 candidate filter;
+- ALL_IN target mean **-0.0128170**;
+- iteration-weighted mean **-0.0127007**;
+- ALL_IN target positive in **19.736%**;
+- ALL_IN target argmax in **12.356%**;
+- ALL_IN was the sole positive legal target in **4.979%**.
+The recent 9106-10105 cohort is similar: mean **-0.0126578**, positive
+**19.896%**.  Broadly, therefore, the stored targets do not support a generic
+"jam high card" rule.
+
+Valid V1 subset B also shows heterogeneous street/facing regimes:
+- flop facing action: mean ALL_IN target ~**-0.00198**, positive ~19.90%;
+- flop checked-to: mean ~**+0.00122**, positive ~29.16%;
+- river facing action: mean ~**-0.04470**, positive ~15.58%;
+- river checked-to: mean ~**-0.03508**, positive ~16.10%.
+These are still broad buckets and cannot decide any flagged jam.
+
+A second diagnostic inconsistency was also exposed.  The original
+`decision_sanity.effective_stack_bb` derives its heuristic from every non-DEAD
+lineup seat because `DecisionTrace` does not carry folded/all-in status.
+For four of the 17 no-draw flagged states, actor-relative SPNNIV1 statuses imply
+a smaller stack against the opponent still contesting the pot (<10bb) even
+though the original sanity heuristic classified the decision as >=10bb.  This
+does not change the played action; it means the "deep" flag is a review heuristic
+rather than an authoritative effective-stack calculation.
+
+V2 correction (commit `38707d3b9a7f58d3f40c35ff636846bdb094a049`):
+- convert each reservoir legal mask to its legal-slot index tuple before subset
+  C comparison;
+- record both the original sanity effective-stack provenance and a
+  contesting-opponent effective stack derived from actor-relative folded status;
+- remove the inconsistent secondary >=10bb cutoff from the reservoir base
+  filter so the fixed flagged states are not silently reclassified;
+- use contesting-opponent effective stack only for local geometry D;
+- schema becomes `SPINCORE_3H_HIGH_CARD_ADVANTAGE_TARGET_AUDIT_V2`.
+
+The V2 rerun is required before any C-F/local-target conclusion or strategy
+change.
+
