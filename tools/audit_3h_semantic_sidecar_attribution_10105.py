@@ -171,16 +171,17 @@ def private_semantics(hole,board):
             ):
                 backdoor_straight=1;break
 
-    # Match the frozen high-card/no-immediate-draw audit population exactly:
-    # no made pair+ category, no four-card suit, and no 4/5 straight window.
+    # Match audit_3h_allin_holdout_calibration_10105.py exactly.
+    # On flop/turn, reject one-card-to-flush / one-card-to-straight states.
+    # On river there is no future card, so a four-suit or four-rank texture is
+    # still "no immediate draw" as long as the made category remains HIGH_CARD.
     max_combined_suit=max(combined_suits.values()) if combined_suits else 0
     immediate_straight_draw=any(len(window & ranks)>=4 for window in STRAIGHTS)
-    hcdn=int(
-        visible>=3
-        and made==0
-        and max_combined_suit<4
-        and not immediate_straight_draw
-    )
+    if visible>=5:
+        no_immediate_draw=True
+    else:
+        no_immediate_draw=(max_combined_suit<4 and not immediate_straight_draw)
+    hcdn=int(visible>=3 and made==0 and no_immediate_draw)
     return {
         "made":made,"pair_relation":pair_rel,"pocket_pair":pocket,
         "overcards":over,"flush_draw":flush_draw,"straight_draw":straight_draw,
@@ -395,7 +396,7 @@ def main():
     passed=all(criteria.values())
 
     out={
-        "schema":"SPINCORE_3H_SEMANTIC_SIDECAR_ATTRIBUTION_V1",
+        "schema":"SPINCORE_3H_SEMANTIC_SIDECAR_ATTRIBUTION_V2",
         "scope":"DIAGNOSTIC_ONLY_POSTHOC_LINEAR_CALIBRATION",
         "checkpoint_sha256":EXPECTED_SHA,
         "probe_schema":PROBE_SCHEMA,
@@ -418,8 +419,14 @@ def main():
         },
         "precommitted_diagnostic_criteria":criteria,
         "semantic_sidecar_attribution_pass":passed,
+        "population_contract":(
+            "High-card/no-immediate-draw population matches "
+            "audit_3h_allin_holdout_calibration_10105.py: made HIGH_CARD; on flop/turn "
+            "exclude four-suit and four-of-five straight-window states; on river do not "
+            "exclude four-suit/four-rank textures because no future draw remains."
+        ),
         "interpretation":(
-            "This gate asks whether state/hand semantics explain the high-card/no-draw "
+            "V2 fixes V1's river population mismatch. This gate asks whether state/hand semantics explain the high-card/no-draw "
             "ALL_IN bias on an untouched holdout beyond a raw affine or generic context "
             "calibration. PASS supports a targeted V1+semantic representation experiment; "
             "FAIL means explicit semantics in this lightweight form are insufficient and "
