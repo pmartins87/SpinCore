@@ -1632,3 +1632,89 @@ The same precommitted attribution criteria remain unchanged:
 A V2 rerun is required before moving to any V1+semantic shadow-network
 experiment.
 
+## Semantic sidecar attribution V2 PASS — 2026-09-26
+
+The corrected V2 rerun restores exact population parity with the prior untouched
+holdout calibration:
+- all ALL_IN-legal holdout rows: **38,246**;
+- postflop HIGH_CARD / no-immediate-draw rows: **6,639**;
+- fixed holdout size: **50,000**.
+
+The precommitted attribution gate passes all three criteria.
+
+Global ALL_IN regression:
+- BASE_RAW weighted MSE: **0.01156286**;
+- SEMANTIC_SIDECAR weighted MSE: **0.01136353**;
+- relative improvement: ~**1.72%**;
+- global weighted target mean remains **+0.005406**.
+
+HIGH_CARD / no-immediate-draw subgroup:
+- BASE_RAW prediction mean: **+0.006184** vs target **-0.007817**;
+- BASE_RAW residual bias: **+0.014001**;
+- SEMANTIC_SIDECAR prediction mean: **-0.008073** vs the same target
+  **-0.007817**;
+- SEMANTIC_SIDECAR residual bias: **-0.000257**;
+- absolute subgroup bias reduction: ~**98.17%**;
+- subgroup weighted MSE: **0.00867195 -> 0.00834577**
+  (~**3.76%** improvement).
+
+Generic context alone does not solve the failure:
+- CONTEXT subgroup bias remains **+0.013841**;
+- RAW_AFFINE remains **+0.013683**.
+The correction appears only when hand/board semantic features are available.
+
+Interpretation:
+- the previously measured high-card ALL_IN error is not explained by a global
+  ALL_IN calibration defect;
+- street/facing/pot context alone is insufficient;
+- semantics derivable from information already contained in SPNNIV1 almost
+  eliminate the subgroup bias while also improving global MSE;
+- this is strong attribution evidence for a **representation/generalization**
+  bottleneck in the frozen V1 learner.
+
+This does not authorize deploying the ridge sidecar.  It authorizes the next
+matched shadow experiment: keep the entire V1 observation/model path and add
+only general poker-semantic features to the neural representation.
+
+Added:
+- `tools/run_3h_v1_semantic_shadow_10105.py`;
+- `tools/run_3h_v1_semantic_shadow_10105.sh`.
+
+### V1 + semantic shadow contract
+
+The shadow candidate deliberately does **not** receive an explicit
+`high_card_no_draw` flag.  It receives general semantics only:
+- made-hand category;
+- pair relation;
+- overcard count;
+- pocket-pair / flush-draw / straight-draw / backdoor flags;
+- board pairedness, suit density, straight-window occupancy and broadway density.
+
+Those features are derived deterministically from the same card tokens already
+present in SPNNIV1.  No new game-state information is introduced.
+
+The candidate is fit against the frozen 10105 3H Advantage reservoir with:
+- the exact existing fixed 50k holdout;
+- the exact same train split as the controlled V1 1600 probe;
+- the same eight init seeds;
+- the same eight minibatch RNG streams;
+- the same 1600-step budget, batch size and learning rate.
+
+Baseline is the already-built eight-member V1 1600 probe.
+
+Precommitted shadow PASS requires:
+1. global legal-action weighted MSE not >2% worse than V1;
+2. global ALL_IN weighted MSE not >2% worse;
+3. >=50% reduction in absolute high-card/no-draw ALL_IN bias;
+4. no worsening of high-card/no-draw ALL_IN MSE;
+5. DC1 member-pairwise policy TV not >10% worse.
+
+The fixed DC1 trajectory additionally reports, but does not optimize against:
+- all 23 high-card jam flags;
+- the 17 no-immediate-draw flags;
+- trips-plus-fold;
+- raw-ensemble vs member-policy-mixture action mass and majority argmax counts.
+
+PASS means the semantic attribution survives end-to-end neural refitting under a
+matched budget.  It still does not promote the candidate to production.
+
