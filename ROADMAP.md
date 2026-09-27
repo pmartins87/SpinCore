@@ -2349,3 +2349,61 @@ Interpretation:
 Only after this attribution should DC1 scale to 5k or the policy learner be
 repaired.
 
+## Strong-hand Fold attribution: AveragePolicy tail, not semantic Advantage — 2026-09-27
+
+The exact 1,000-scenario semantic replay reproduced the six sampled
+POSTFLOP_TRIPS_PLUS_FOLD events (five unique states) and decisively localizes
+the regression.
+
+Across **all 12** 3H postflop trips-or-better states where Fold was legal:
+- semantic Advantage ENS8@10115 Fold probability: **0.0 on all 12**;
+- finalized 10105 V1 AveragePolicy Fold mean: **8.13%**, max **21.00%**;
+- semantic 10115 tail AveragePolicy Fold mean: **49.03%**, max **99.75%**;
+- semantic tail expected folds across the 12 states: **5.88**;
+- six folds were actually sampled.
+
+By category:
+- FLUSH (3 states): Advantage Fold 0%; semantic tail mean **74.34%**;
+- STRAIGHT (2): Advantage Fold 0%; semantic tail mean **80.33%**;
+- TRIPS (7): Advantage Fold 0%; semantic tail mean **29.24%**.
+
+By street:
+- flop (5): tail Fold mean **13.28%**;
+- turn (3): **45.44%**;
+- river (4): **96.41%**;
+while Advantage Fold remains 0 throughout.
+
+The five unique problem states include tail Fold ~75.3%, 99.75%, 60.9%,
+93.45% and 96.21%; Advantage Fold is exactly 0 in every one.
+
+### Conclusion
+
+The online semantic CFR/Advantage lane is **not** the source of this regression.
+The failure is introduced downstream by the fresh-target semantic AveragePolicy
+distillation/generalization step.  Do not modify regret matching or the
+semantic Advantage learner in response to these folds.
+
+Before designing a repair, quantify the exact final 10115 strategy-training
+coverage.  The next audit regenerates:
+- the exact 8,000-episode / 22,746-sample final fresh train stream used for the
+  500-step tail policy;
+- a new 10,000-episode independent target stream.
+
+It measures, specifically for postflop trips-or-better states where Fold is
+legal:
+- target Fold mass from semantic Advantage;
+- V1 and semantic-tail Fold predictions;
+- category/street breakdown;
+- exact number of times each strong-hand train sample was selected by the
+  frozen 500-step uniform minibatch stream.
+
+Decision logic is frozen:
+- material target Fold => revisit Advantage targets;
+- low targets + high tail prediction on the train distribution =>
+  class-imbalance/objective-allocation underfit;
+- train fit good but new-stream fit bad => target-data diversity/generalization;
+- unseen strong samples in the 500-step minibatch stream => exposure gap;
+- broad fresh streams clean but DC1 bad => narrow distribution shift.
+
+No 5k DC1 scale-up until this coverage diagnosis selects the repair mechanism.
+
