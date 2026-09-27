@@ -2567,3 +2567,73 @@ Only after the canonical replay completes should the 10115 strong-hand coverage
 audit be repeated against the canonical 10115 ensemble/tail policy.  DC1 5k
 remains blocked.
 
+## Canonical semantic 10105→10115 replay PASS — 2026-09-27
+
+The isolated replay under the corrected functional behavior contract completed
+successfully.
+
+Contract/integrity:
+- `behavior_contract = CANONICAL_LEAN_REGRET_MATCHING_SOFTMAX_FALLBACK`;
+- `canonical_replay = true`;
+- completed iteration **10115**;
+- source 10105 checkpoint remained byte-identical;
+- HU was not trained;
+- all eight previously frozen continuation/tail-policy gates passed.
+
+The canonical path diverges from the old admitted historical-uniform path as
+expected.  At 10107 the old bounded-pilot summary is no longer reproduced
+exactly, and is therefore retained only as descriptive historical comparison.
+
+Final canonical Advantage/DC1:
+- pairwise TV: **0.39778 initial -> 0.40108 final**;
+- argmax disagreement: **0.40751 -> 0.40545**;
+- all 23 high-card raw-ensemble ALL_IN:
+  **0.33280 -> 0.26605**;
+- 17 no-draw raw-ensemble ALL_IN:
+  **0.24049 -> 0.17550**;
+- 17 no-draw member-mixture ALL_IN:
+  **0.22639 -> 0.20060**;
+- strong-hand Fold at the tracked trips state remains **0** in both raw
+  ensemble and member mixture.
+
+Final canonical fresh-target tail-policy bridge:
+- 8,000 episodes / **28,427** decisions;
+- train: **22,726** samples;
+- discarded holdout: **5,701** samples;
+- independent eval: 2,000 episodes / **7,087** decisions;
+- high-card/no-draw subgroup: 272.
+
+At frozen 500 steps:
+- CE: **0.59538 V1 -> 0.44687 semantic** (~24.94% lower);
+- TV: **0.17205 -> 0.10672** (~37.97% lower);
+- high-card/no-draw target ALL_IN: **0.04002**;
+- V1 prediction: **0.17244**, abs bias **0.13242**;
+- semantic prediction: **0.06129**, abs bias **0.02127**
+  (~83.94% lower than V1).
+
+Thus the semantic representation/online-feedback lane remains healthy under the
+correct canonical lean fallback.
+
+### Next gate: canonical strong-hand coverage
+
+The historical strong-hand generalization diagnosis must now be repeated on the
+canonical 10115 artifacts before designing any tail-policy repair.
+
+Added:
+- `tools/run_3h_semantic_tail_strong_hand_coverage_canonical_10115.sh`.
+
+The canonical final train stream has a different deterministic size
+(22,726/5,701 rather than 22,746/5,672), so the existing coverage audit was
+parameterized with explicit expected train/holdout counts while preserving the
+historical defaults.
+
+The canonical audit preserves the same:
+- exact 8,000-episode train-stream reconstruction;
+- 30,000-episode independent evaluation;
+- >=100 independent strong-hand-state gate;
+- minibatch exposure reconstruction;
+- frozen diagnosis logic.
+
+DC1 5k and any AveragePolicy repair remain blocked until this canonical
+coverage result is known.
+
