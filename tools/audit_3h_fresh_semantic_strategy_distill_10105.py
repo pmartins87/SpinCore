@@ -274,7 +274,7 @@ def main():
     ap.add_argument("--spin-bundle",type=Path,required=True)
     ap.add_argument("--report",type=Path,required=True)
     ap.add_argument("--out-model",type=Path,required=True)
-    ap.add_argument("--episodes",type=int,default=4000)
+    ap.add_argument("--episodes",type=int,default=8000)
     ap.add_argument("--threads",type=int,default=8)
     ap.add_argument("--max-projected-minutes",type=float,default=60.0)
     args=ap.parse_args();torch.set_num_threads(int(args.threads))
@@ -291,7 +291,15 @@ def main():
 
     solver=SolverLibrary(args.solver.resolve(strict=True))
     train,hold,collection=collect_fresh(solver,adv_models,args.episodes)
-    if len(hold)<5000:raise RuntimeError(f"fresh holdout too small: {len(hold)}")
+    print(
+        "FRESH_STRATEGY_COLLECTION_SUMMARY "
+        + json.dumps(collection,sort_keys=True),
+        flush=True,
+    )
+    if len(hold)<5000:
+        raise RuntimeError(
+            f"fresh holdout too small: {len(hold)} from {args.episodes} episodes"
+        )
 
     _,v1=make_policy_action_model(REPRESENTATION,device="cpu",seed=0);v1.load_state_dict(d3["policy"])
     v1opt=torch.optim.Adam(v1.parameters(),lr=float(cfg["learning_rate"]));v1opt.load_state_dict(copy.deepcopy(d3["pol_opt"]))
