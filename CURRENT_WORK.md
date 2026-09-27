@@ -2142,3 +2142,84 @@ Precommitted post-online AveragePolicy rules reuse the independent confirmation:
 PASS authorizes a longer **research-only** semantic continuation.  It does not
 authorize production, sealed-strength claims, or DC2.
 
+## Bounded 3H semantic online CFR pilot PASS — 2026-09-27
+
+The first real online-feedback gate passed all precommitted criteria.
+
+Pilot contract/result:
+- source checkpoint: read-only iteration **10105**;
+- completed iteration: **10107**;
+- 3H only; HU training was not performed;
+- 2 online iterations;
+- 64 roots/iteration;
+- 8 semantic Advantage members x 1600 steps after each root block;
+- fixed 50k controlled-split positions remained excluded from Advantage
+  minibatch fitting;
+- source checkpoint hash remained unchanged.
+
+Online root additions:
+- 10106: 985 Advantage samples, 6,354 nodes;
+- 10107: 1,131 Advantage samples, 7,125 nodes.
+
+### Advantage/DC1 after online feedback
+
+The semantic ensemble remains stable enough under real feedback:
+- pairwise policy TV: **0.39778 -> 0.41561** (+4.48%, inside +10% gate);
+- pairwise argmax disagreement: **0.40751 -> 0.42254** (+3.69%, inside
+  +10% gate).
+
+The previously suspicious high-card surface improves further:
+- all 23 high-card states, member-policy ALL_IN:
+  **27.84% -> 24.54%**;
+- all 23 raw-ensemble ALL_IN:
+  **33.28% -> 28.64%**;
+- 17 no-immediate-draw states, member-policy ALL_IN:
+  **22.64% -> 18.71%**;
+- 17 no-draw raw-ensemble ALL_IN:
+  **24.05% -> 18.70%**;
+- no-draw majority-member ALL_IN argmax:
+  **3/17 -> 2/17**;
+- Q8/884 trips Fold remains **0%**.
+
+Thus the semantic repair did not wash out when its own policy entered the CFR
+feedback loop.
+
+### Post-online fresh strategy distillation
+
+The final online ensemble generated a new fresh strategy stream:
+- 8,000 episodes / 29,062 decisions;
+- train: 6,400 episodes / 23,174 samples;
+- discarded selection holdout: 5,888 samples.
+
+The already independently confirmed 500-step AveragePolicy budget was reused,
+then evaluated on another independent post-online stream:
+- 2,000 episodes / 7,293 decisions;
+- high-card/no-draw subgroup: 305 samples.
+
+Post-online independent evaluation:
+- weighted CE: **0.65699 V1 -> 0.51286 semantic** (~21.94% lower);
+- weighted TV: **0.18136 -> 0.11620** (~35.92% lower);
+- high-card/no-draw ALL_IN target: **0.06540**;
+- V1 prediction: **0.18723**, abs bias **0.12182**;
+- semantic prediction: **0.07860**, abs bias **0.01320** (~89.17% lower).
+
+All eight precommitted pilot criteria passed.
+
+### Decision
+
+The representation-diagnosis and bounded-online-admission phases are now
+complete.  The V1+general-semantic lane is admitted to a **longer
+research-only continuation**, but still not to production and not to DC2.
+
+The next continuation must be resumable and preserve intermediate artifacts.
+Because the first online pilot did not persist the mutated 3H reservoir itself,
+the longer lane restarts deterministically from the frozen 10105 source and
+replays 10106/10107 before advancing further.  Those first two iterations are
+expected to reproduce the admitted pilot contract.
+
+The research lane is frozen at **10 online 3H iterations total (10106..10115)**,
+64 roots/iteration, eight semantic Advantage members x1600 steps/iteration,
+with checkpoints at 10107, 10110 and 10115.  The source 10105 checkpoint and
+HU sidecar remain read-only.  This is long enough to expose feedback drift
+without committing to another 1000-iteration-scale run.
+
