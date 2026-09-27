@@ -1846,3 +1846,20 @@ Fix (commit `103fab5e94735fecba88d880197e6f2e81cb634b`):
 The failed run generated no policy-training state and mutated no frozen
 checkpoint. Restart the gate from the 10105 source artifacts.
 
+## Fresh semantic strategy bridge holdout sizing fix — 2026-09-26
+
+The corrected lean-action run completed all 4,000 fresh 3H episodes and collected
+14,888 strategy decisions, but the whole-episode 80/20 split produced only
+3,078 holdout decisions.  The gate had intentionally required at least 5,000
+holdout decisions before any AveragePolicy training, so it stopped before the
+first optimizer step.
+
+This is a sample-size/preflight issue, not a strategy failure.  The 5,000-row
+minimum is preserved.  Rather than weakening the holdout requirement after
+seeing the sample count, the collection horizon is increased to **8,000 whole
+episodes**, still with the same deterministic 80/20 episode split and the same
+frozen semantic-Advantage generator.
+
+The prior 4,000-episode run performed no AveragePolicy fitting and mutated no
+source checkpoint.  Restart from the frozen 10105 source artifacts.
+
