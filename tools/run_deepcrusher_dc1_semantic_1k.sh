@@ -25,7 +25,11 @@ export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
-"${PY}" -m py_compile tools/evaluate_deepcrusher_dc1_semantic_candidate.py
+"${PY}" -m py_compile \
+  tools/evaluate_deepcrusher_dc1_semantic_candidate.py \
+  tools/test_deepcrusher_nouts_native_collision.py
+
+"${PY}" tools/test_deepcrusher_nouts_native_collision.py
 
 STAMP="$(date +%Y%m%d_%H%M%S)"
 RUN="${ROOT}/runs/deepcrusher_dc1_semantic_1k/${STAMP}"
