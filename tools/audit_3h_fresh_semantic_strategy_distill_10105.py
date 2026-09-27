@@ -39,6 +39,7 @@ from spincore.deepcrusher_policy import DeepCrusherR8Policy
 from spincore.decision_sanity import sanity_flags
 from spincore.legacy_scenario import LegacyScenarioConfig, LegacyScenarioSampler
 from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
+from spincore.lean_action_policy import lean_regret_matching_policy
 from spincore.lean_solver_actions import LeanSolverState, apply_lean, resolve_lean_exact
 from spincore.r7_5_action_cfr import ActionStrategySample, legal_mask, sample_action
 from spincore.r7_5_action_contract import NAME_BY_SLOT
@@ -101,13 +102,10 @@ def semantic_sigma(models,obs,legal):
     )
     with torch.no_grad():
         raw=torch.stack([m(sb)[0] for m in models],dim=0).mean(dim=0).cpu().tolist()
-    positive=sum(max(0.0,float(raw[a])) for a in legal)
-    out=[0.0]*10
-    if positive<=0:
-        for a in legal:out[a]=1.0/len(legal)
-    else:
-        for a in legal:out[a]=max(0.0,float(raw[a]))/positive
-    return tuple(out)
+    # Use the exact functional/deployment regret-matching contract.
+    # In particular, when every legal raw Advantage is non-positive the lean
+    # path uses a softmax fallback, not the historical R7.5 uniform fallback.
+    return lean_regret_matching_policy(raw,tuple(int(a) for a in legal))
 
 
 def collect_fresh(solver,models,episodes):
