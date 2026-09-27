@@ -2618,3 +2618,61 @@ Frozen materiality rule:
 
 This contract audit now blocks the strong-hand diversity repair and DC1 5k.
 
+## Semantic fallback-contract audit: material lane mismatch, canonical replay required — 2026-09-27
+
+The historical semantic helper mismatch is **material under the precommitted
+contract**.
+
+Across audited trajectories, the historical all-nonpositive fallback appears in
+roughly 6–7% of decisions:
+- initial semantic shadow: 7.223%;
+- semantic 10107: 6.207%;
+- semantic 10110: 6.567%;
+- exact historical 10115 tail-target stream: 6.886% (1,957 / 28,418).
+
+The resulting policy-distance per fallback state is numerically small
+(mean TV ~0.16–0.19% on fallback-only states), and even on the exact 10115
+8,000-episode stream only 9 / 28,418 sampled actions differ when the same
+uniform random draw is reused (~0.0317%).  However the frozen materiality rule
+was OR-based:
+- fallback fraction must be <=0.1%; and
+- same-u action-difference fraction must be <=0.05%.
+
+The first condition fails by a very large margin, therefore the canonical replay
+is mandatory before any promotion or AveragePolicy repair.
+
+Important localization:
+- **strong-hand states are not affected by this fallback mismatch** in the
+  audited trajectories;
+- strong-hand fallback count is 0 at initial, 10107, 10110 and 10115;
+- therefore the previously diagnosed strong-hand AveragePolicy
+  diversity/generalization defect remains independently supported and is not
+  explained away by the fallback issue.
+
+The shared semantic helper has already been corrected to call the canonical
+`lean_regret_matching_policy()`, including its softmax fallback.
+
+### Canonical 10105→10115 replay
+
+Added:
+- `tools/run_3h_semantic_research_canonical_10105_10115.sh`.
+
+The existing research driver now accepts `--canonical-replay`, which:
+- starts from the same frozen 10105 checkpoint and the same initial semantic
+  Advantage shadow;
+- uses the corrected canonical lean behavior contract throughout all ten online
+  iterations;
+- writes to an isolated run directory
+  `runs/3h_semantic_research_canonical_10105_10115`;
+- does **not** reuse the historical 10115 resume artifact;
+- treats the old 10107 exact-reproduction numbers as descriptive only, because
+  changing the behavior mapping is the intervention being tested;
+- preserves the same 64 roots/iteration, eight members x1600 steps, protected
+  50k split, milestone schedule and final 500-step tail-policy budget;
+- preserves the same final non-regression gates and independent fresh-target
+  evaluation.
+
+Only after the canonical replay completes should the 10115 strong-hand coverage
+audit be repeated against the canonical 10115 ensemble/tail policy.  DC1 5k
+remains blocked.
+
