@@ -26,7 +26,7 @@ BUNDLE="${RUN}/spincore_hybrid_10105.pt"; MODEL="${RUN}/fresh_semantic_strategy_
 "${PY}" tools/audit_3h_fresh_semantic_strategy_distill_10105.py \
   --checkpoint "${CHECKPOINT}" --semantic-advantage-models "${ADV_MODELS}" \
   --solver build/libspincore_solver_c.so --spin-bundle "${BUNDLE}" \
-  --report "${REPORT}" --out-model "${MODEL}" --episodes 4000 --threads 8 --max-projected-minutes 60
+  --report "${REPORT}" --out-model "${MODEL}" --episodes 8000 --threads 8 --max-projected-minutes 60
 
 if command -v powershell.exe >/dev/null 2>&1; then
   DWIN="$(powershell.exe -NoProfile -Command '[Environment]::GetFolderPath("Desktop")' 2>/dev/null | tr -d '\r' | tail -n1)"
