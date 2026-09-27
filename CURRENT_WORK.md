@@ -2219,7 +2219,40 @@ expected to reproduce the admitted pilot contract.
 
 The research lane is frozen at **10 online 3H iterations total (10106..10115)**,
 64 roots/iteration, eight semantic Advantage members x1600 steps/iteration,
-with checkpoints at 10107, 10110 and 10115.  The source 10105 checkpoint and
-HU sidecar remain read-only.  This is long enough to expose feedback drift
+with a rolling resume state saved after every completed iteration and compact
+semantic-ensemble milestone snapshots at 10107, 10110 and 10115.  The source
+10105 checkpoint and HU sidecar remain read-only.  This is long enough to expose feedback drift
 without committing to another 1000-iteration-scale run.
+
+### Resumable 10105→10115 semantic research runner
+
+Added:
+- `tools/run_3h_semantic_research_10105_10115.py`;
+- `tools/run_3h_semantic_research_10105_10115.sh`.
+
+The runner:
+- restarts deterministically from frozen 10105 because the two-iteration pilot
+  intentionally did not persist its mutated reservoir;
+- requires the replayed 10107 DC1 summary to reproduce the admitted bounded
+  pilot within 1e-6 before continuing;
+- saves a rolling 3H Advantage-reservoir + sampler + semantic-ensemble resume
+  artifact after every iteration;
+- saves compact ensemble snapshots at 10107, 10110 and 10115;
+- evaluates the final 10115 ensemble on the same fixed DC1 development states;
+- generates a brand-new final semantic strategy stream and applies the already
+  frozen 500-step AveragePolicy distillation;
+- evaluates that policy on another independent 2,000-episode stream.
+
+Precommitted final non-regression gates:
+- pairwise policy TV and argmax disagreement no more than 15% above the initial
+  admitted semantic ensemble;
+- no-draw raw-ensemble and member-mixture ALL_IN mass no more than +10
+  percentage points above initial;
+- final tail semantic AveragePolicy CE >=10% better than V1;
+- final tail semantic TV >=15% better than V1;
+- final high-card/no-draw ALL_IN absolute bias >=50% better than V1;
+- final semantic CE >=10% better than its own step-0 value.
+
+A PASS advances to a larger development benchmark.  It still does not authorize
+production or DC2.
 
