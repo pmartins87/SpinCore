@@ -2147,3 +2147,100 @@ Precommitted final non-regression gates:
 A PASS advances to a larger development benchmark.  It still does not authorize
 production or DC2.
 
+## 3H semantic research continuation 10105→10115 PASS — 2026-09-27
+
+The resumable 10-iteration research lane completed successfully:
+- source 10105 checkpoint remained byte-identical;
+- completed iteration: **10115**;
+- 3H only; HU training not performed;
+- 64 roots/iteration;
+- eight semantic Advantage members x1600 steps/iteration;
+- the fixed controlled-split 50k positions remained excluded from Advantage
+  minibatches;
+- all eight precommitted final criteria passed.
+
+The deterministic replay guard also reproduced the admitted 10107 bounded pilot
+**exactly** (all four checked summary values had absolute difference 0).
+
+### Online Advantage/DC1 trajectory
+
+Initial admitted semantic ensemble:
+- pairwise TV **0.39778**;
+- argmax disagreement **0.40751**;
+- 17 no-draw high-card raw-ensemble ALL_IN **0.24049**;
+- 17 no-draw member-mixture ALL_IN **0.22639**.
+
+Final 10115:
+- pairwise TV **0.41851** (+5.21%);
+- argmax disagreement **0.42401** (+4.05%);
+- no-draw raw-ensemble ALL_IN **0.20992** (-3.06 p.p.);
+- no-draw member-mixture ALL_IN **0.23217** (+0.58 p.p.);
+- no-draw majority-member ALL_IN argmax remains **3/17**;
+- Q8/884 trips Fold remains **0%**.
+
+The lane is noisy iteration-to-iteration rather than monotonic. 10110 is the
+cleanest milestone on several diagnostics (TV ~0.40265, no-draw raw ALL_IN
+~0.15856), while 10115 drifts back upward, but the final state remains inside
+all frozen non-regression bounds.  Therefore no post-hoc milestone promotion is
+made; 10115 is retained as the precommitted final research endpoint.
+
+### Final fresh-target AveragePolicy bridge
+
+Final 10115 semantic behavior generated:
+- 8,000 fresh 3H episodes / **28,418** strategy decisions;
+- train: 6,400 episodes / **22,746** samples;
+- discarded selection holdout: 5,672 samples.
+
+A new independent evaluation used:
+- 2,000 episodes / **7,081** decisions;
+- high-card/no-draw subgroup: **233** samples.
+
+At the frozen 500-step policy budget:
+- weighted CE: **0.61136 V1 -> 0.47476 semantic** (~22.34% lower);
+- weighted TV: **0.16719 -> 0.10942** (~34.55% lower);
+- high-card/no-draw target ALL_IN: **0.07251**;
+- V1 prediction **0.20543**, abs bias **0.13292**;
+- semantic prediction **0.07887**, abs bias **0.00636**
+  (~95.21% lower);
+- semantic CE improves ~56.48% versus its own step-0 value.
+
+DC1 descriptive tail-policy diagnostics also remain directionally favorable:
+- 17 no-draw high-card states: ALL_IN **49.88% V1 -> 29.52% semantic**;
+- all 23 high-card states: **48.06% -> 31.72%**;
+- Q8/884 Fold **47.24% V1 -> 0.55% semantic**.
+
+### Decision and next gate
+
+The representation diagnosis, independent fresh-target confirmation, bounded
+online pilot and 10-iteration online research continuation have all passed.
+The next step is therefore a **larger DC1 development benchmark**, not more
+representation diagnostics.
+
+DC0 real-OpenHoldem parity is still pending, so this benchmark remains
+mechanical/development-only and cannot create a canonical strength claim.
+
+Added:
+- `tools/evaluate_deepcrusher_dc1_semantic_candidate.py`;
+- `tools/run_deepcrusher_dc1_semantic_1k.sh`.
+
+The next gate runs **1,000 identical empirical scenarios** twice:
+1. unchanged 10105 baseline (3H finalized V1 AveragePolicy + HU ENS8);
+2. 10115 semantic candidate (3H semantic tail AveragePolicy + the exact same HU
+   ENS8).
+
+Both arms use the same scenario/deal seed sequence and the same DeepCrusher
+translation.  The comparison reports:
+- baseline and semantic absolute development EV vs DeepCrusher;
+- scenario-cluster paired **semantic-minus-baseline** delta, especially 3H;
+- exact HU margin parity as an implementation guard;
+- decision-sanity flag counts/rates for both arms.
+
+Interpretation rule:
+- positive 3H delta with lower CI bound >0 is strong development evidence and
+  supports scaling DC1 further;
+- positive mean with CI crossing 0 supports a larger 5k development sample;
+- negative mean or new anomaly regression triggers diagnosis before scale-up.
+
+No outcome of this 1k gate authorizes production or DC2 while DC0 canonical
+parity remains incomplete.
+
