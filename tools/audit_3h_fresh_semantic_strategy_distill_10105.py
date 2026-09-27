@@ -95,7 +95,10 @@ def semantic_sigma(models,obs,legal):
     class S: pass
     s=S();s.observation=obs
     sv=semantic_vector(s)
-    sb=dict(b);sb["semantic"]=torch.tensor([sv],dtype=torch.float32)
+    sb=dict(b);sb["semantic"]=torch.tensor(
+        np.asarray([sv],dtype=np.float32),
+        dtype=torch.float32,
+    )
     with torch.no_grad():
         raw=torch.stack([m(sb)[0] for m in models],dim=0).mean(dim=0).cpu().tolist()
     positive=sum(max(0.0,float(raw[a])) for a in legal)
@@ -123,7 +126,10 @@ def collect_fresh(solver,models,episodes):
             while not state.terminal:
                 street=int(state.inner.neural_bytes_v2()[112])
                 active=FIRST_RELEASE_ACTION_SPEC.active_mask(street)
-                legal=tuple(int(x) for x in state.inner.universal_legal_actions(active))
+                # Use the lean legacy-action resolver, not the generic
+                # universal-action legal set.  Generic universals can expose a
+                # state-local alias that apply_lean correctly rejects.
+                legal=tuple(int(x) for x in state.universal_legal_actions(active))
                 obs=state.neural_bytes()
                 sigma=semantic_sigma(models,obs,legal)
                 dst.append(ActionStrategySample(
@@ -135,6 +141,8 @@ def collect_fresh(solver,models,episodes):
                 ))
                 stats["decisions"]+=1
                 action=sample_action(sigma,legal,action_rng)
+                # Resolve/apply through the same lean contract that produced
+                # the legal set above.
                 apply_lean(state.inner,active,action)
         finally:
             state.close()
