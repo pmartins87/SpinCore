@@ -2277,3 +2277,75 @@ Fixes:
 The failed run produced no valid 1k comparison and must be rerun from scratch
 after pulling the fix.
 
+## Paired DC1 semantic-vs-baseline 1k: positive mean, inconclusive CI; strong-hand fold regression blocks scale-up — 2026-09-27
+
+The paired 1,000-scenario development benchmark completed after the native
+nouts/NOuts oracle fix.
+
+Population:
+- 1,000 identical scenario/deal seeds in both arms;
+- 538 THREE_HANDED scenarios;
+- 462 TRUE_HEADS_UP scenarios;
+- HU scenario margins are exactly identical between baseline and semantic arms.
+
+Absolute development EV vs frozen DeepCrusher R8:
+- baseline 10105 3H: **-21.276 chips/policy-seat-hand**,
+  95% CI **[-33.520, -9.032]**;
+- semantic 10115 3H: **-13.460**,
+  95% CI **[-22.920, -4.000]**.
+
+Paired semantic-minus-baseline delta:
+- THREE_HANDED: **+7.816**, 95% CI **[-2.410, +18.043]**, n=538;
+- ALL: **+4.205**, 95% CI **[-1.300, +9.710]**, n=1000.
+
+Thus the mean moves in the desired direction, but the precommitted lower-CI>0
+rule does not pass.  This is not yet evidence of a reliable strength gain.
+The paired 3H median delta is **-8.889** chips, with 221 positive, 298 negative
+and 19 zero scenario deltas; a Wilcoxon signed-rank diagnostic is also neutral.
+The positive mean is therefore not a broad scenario-by-scenario uplift and must
+not be overinterpreted.
+
+Most sanity surfaces improve substantially:
+- deep high-card jam: **149 -> 63** total flags;
+- top-pair fold: **3 -> 0**;
+- preflop AA fold: **6 -> 0**;
+- deep 72o jam: **8 -> 1**.
+
+However POSTFLOP_TRIPS_PLUS_FOLD regresses **1 -> 6** sampled folds
+(5 unique scenario/state patterns because one state repeats across paired
+lineups).  The semantic examples are not merely tiny-probability tails:
+- turn trips 73o on 7-8-J-7: Fold ~**75.3%**;
+- river 65o making an 8-high straight: Fold ~**99.75%**;
+- turn Q9 on 2-T-8-J making a Q-high straight: Fold ~**60.9%**;
+- river 83o trips on 8-9-K-5-8: Fold ~**93.45%**;
+- river 65o on four-spade board making a low-spade flush: Fold ~**96.21%**
+  (same state sampled twice in paired lineups).
+
+The Q9 turn-straight state is especially suspicious strategically and shows
+that this is not adequately explained as one stochastic low-probability Fold.
+
+### Decision
+
+Do **not** scale directly to DC1 5k yet.  The original rule would otherwise
+send a positive-mean / CI-crossing-zero result to 5k, but the new strong-hand
+fold surface is a material anomaly and must be attributed first.
+
+Added:
+- `tools/audit_dc1_semantic_strong_hand_surface.py`;
+- `tools/run_dc1_semantic_strong_hand_attribution.sh`.
+
+The audit replays only the semantic 1k arm and, on every 3H postflop
+trips-or-better state where Fold is legal, compares on the exact same state:
+1. finalized 10105 V1 AveragePolicy Fold probability;
+2. semantic 10115 tail AveragePolicy Fold probability;
+3. semantic 10115 Advantage ENS8 regret-matched Fold probability.
+
+It hard-checks that the replay reproduces the six sampled strong-hand folds.
+Interpretation:
+- Advantage low + tail high => AveragePolicy distillation/generalization bug;
+- Advantage high + tail high => online CFR/Advantage target problem;
+- both low => sampled-fold count mostly stochastic.
+
+Only after this attribution should DC1 scale to 5k or the policy learner be
+repaired.
+
