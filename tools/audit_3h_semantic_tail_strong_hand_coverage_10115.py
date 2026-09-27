@@ -56,7 +56,7 @@ REPRESENTATION="C0_V1_FROZEN_CONTROL"
 DOMAIN="THREE_HANDED"
 FINAL_ITERATION=10115
 TRAIN_EPISODES=8000
-EVAL_EPISODES=10000
+EVAL_EPISODES=30000
 TRAIN_SEED=20260927 ^ 0x10115A
 INDEPENDENT_SEED=20260927 ^ 0x57A0C0
 FOLD=0
@@ -298,13 +298,27 @@ def main()->int:
     eval_rows=predict_rows(v1,sem,evaluation)
     eval_strong=strong_rows(eval_rows)
 
-    if len(eval_strong)<100:
-        raise RuntimeError(
-            f"independent strong-hand sample too small: {len(eval_strong)}"
-        )
-
     train_summary=subset_summary(train_strong)
     eval_summary=subset_summary(eval_strong)
+    print(
+        "STRONG_HAND_COVERAGE_COUNTS "
+        + json.dumps(
+            {
+                "train_strong":len(train_strong),
+                "independent_strong":len(eval_strong),
+                "independent_episodes":EVAL_EPISODES,
+            },
+            sort_keys=True,
+        ),
+        flush=True,
+    )
+
+    if len(eval_strong)<100:
+        raise RuntimeError(
+            f"independent strong-hand sample too small: {len(eval_strong)} "
+            f"from {EVAL_EPISODES} episodes"
+        )
+
     diagnosis_code=diagnosis(train_summary,eval_summary,exposure)
 
     report={
