@@ -1919,3 +1919,34 @@ fresh-target episode stream that was not used for milestone selection.
 
 No production promotion or DC2 scale-up is authorized by the first holdout.
 
+### Independent confirmation of the 500-step fresh semantic distill
+
+Because the first fresh-target holdout revealed 500 steps as the best observed
+milestone, that exact budget is now frozen **before** a new evaluation stream is
+generated.
+
+Added:
+- `tools/audit_3h_fresh_semantic_strategy_independent500_10105.py`;
+- `tools/run_3h_fresh_semantic_strategy_independent500_10105.sh`.
+
+Contract:
+- regenerate the exact original 8,000-episode fresh-target stream;
+- use only its original 6,400-episode / 23,862-sample train side;
+- ignore the previously inspected 1,600-episode selection holdout;
+- train exactly 500 paired V1 and V1+semantic AveragePolicy steps;
+- generate a completely new 2,000-episode fresh-target evaluation stream from
+  the same frozen semantic Advantage ensemble under a different deterministic
+  chance/episode seed;
+- perform no model selection on that new stream.
+
+Precommitted independent PASS:
+1. semantic weighted CE at least 10% below paired V1;
+2. semantic weighted TV at least 15% below paired V1;
+3. semantic high-card/no-draw ALL_IN absolute bias at least 50% below paired
+   V1;
+4. semantic weighted CE at least 10% below its own step-0 value.
+
+A PASS would remove the post-hoc milestone-selection concern and authorize the
+design of one bounded online semantic-CFR pilot.  It would still not authorize
+production.
+
