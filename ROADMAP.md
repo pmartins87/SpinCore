@@ -2244,3 +2244,36 @@ Interpretation rule:
 No outcome of this 1k gate authorizes production or DC2 while DC0 canonical
 parity remains incomplete.
 
+## DC1 semantic 1k pre-benchmark blocker: native nouts/NOuts collision — 2026-09-27
+
+The first 1,000-scenario paired DC1 attempt stopped in the **unchanged 10105
+baseline arm**, before the semantic-candidate arm started.  The DeepCrusher
+offline OpenPPL oracle reached stock library helper `NOuts`; inside
+`NOutsFlop`, the stock library references lowercase native OpenHoldem symbol
+`nouts`.  The offline provider had not implemented native `nouts`, so the
+case-insensitive library fallback resolved lowercase `nouts` back to library
+`NOuts`, producing a recursive-library cycle.
+
+This is a DeepCrusher-oracle coverage/parity bug exposed by the larger sample,
+not evidence about semantic-10115 strength.
+
+OpenHoldem reference:
+`CSymbolEngineCards::CalculateNumberOfOuts` enumerates every unseen card and
+increments native `nouts` only when the added card strictly improves the
+hero hand type, improves pokerval, and leaves the resulting hero hand type
+strictly above the board-only hand type.  River returns zero through the
+BETROUND < river guard.
+
+Fixes:
+- `DeepCrusherCardSymbols.native_nouts()` ports that OpenHoldem algorithm;
+- `DeepCrusherPrimitiveSymbols` preserves the source-level distinction:
+  exact lowercase `nouts` resolves natively while `NOuts` remains available
+  to the pinned OpenPPL library;
+- added `tools/test_deepcrusher_nouts_native_collision.py` with an
+  AhKh/QhJh2c parity case (native nouts=18) and an end-to-end NOuts->NOutsFlop
+  collision regression;
+- the 1k runner now executes this guard before launching either benchmark arm.
+
+The failed run produced no valid 1k comparison and must be rerun from scratch
+after pulling the fix.
+
