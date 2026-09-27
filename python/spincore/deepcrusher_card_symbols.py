@@ -428,6 +428,44 @@ class DeepCrusherCardSymbols:
     def _common_value(self) -> HandValue:
         return evaluate_cards(self._board())
 
+    def native_nouts(self) -> int:
+        """Port OpenHoldem CSymbolEngineCards::CalculateNumberOfOuts.
+
+        This is the native lowercase nouts symbol, distinct from the stock
+        OpenPPL-library helper NOuts. OpenHoldem iterates every unseen card
+        and counts it only when the resulting hero hand type strictly
+        improves, its pokerval strictly improves, and the resulting hero
+        hand type is strictly above the board-only hand type after the same
+        card is added.
+
+        On the river OpenHoldem returns zero because BETROUND < river fails.
+        """
+        hole = self._hole()
+        board = self._board()
+        if len(board) >= 5:
+            return 0
+
+        known = set(hole + board)
+        current = evaluate_cards(hole + board)
+        current_pokerval = pokerval(current)
+        count = 0
+
+        for candidate in (
+            (rank, suit)
+            for rank in range(2, 15)
+            for suit in range(4)
+            if (rank, suit) not in known
+        ):
+            hero_plus = evaluate_cards(hole + board + (candidate,))
+            common_plus = evaluate_cards(board + (candidate,))
+            if (
+                hero_plus.category > current.category
+                and pokerval(hero_plus) > current_pokerval
+                and hero_plus.category > common_plus.category
+            ):
+                count += 1
+        return int(count)
+
     @cached_property
     def _nhands_counts(self) -> tuple[int, int, int]:
         """Return (higher, lower, tie) opponent two-card hand counts.
