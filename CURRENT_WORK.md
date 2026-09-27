@@ -2746,3 +2746,88 @@ The canonical audit preserves the same:
 DC1 5k and any AveragePolicy repair remain blocked until this canonical
 coverage result is known.
 
+## Canonical 10115 strong-hand coverage: diversity/generalization failure reconfirmed — 2026-09-27
+
+The strong-hand coverage audit was repeated on the fully canonical
+softmax-fallback 10115 lane and reaches the same diagnosis.
+
+Canonical ordinary final train stream:
+- 22,726 strategy samples;
+- only **44** postflop trips-or-better / Fold-legal states;
+- every one was actually seen repeatedly by the frozen 500-step optimizer:
+  min 15, median 23, mean 23.34, max 32 draws;
+- zero strong samples were missed by minibatch sampling.
+
+On those 44 train states:
+- teacher Fold weighted mean **7.35%**;
+- semantic tail Fold weighted mean **10.00%**;
+- V1 Fold weighted mean **19.90%**.
+
+Thus the tail policy fits its sparse strong-hand training support reasonably
+well.
+
+A completely independent 30,000-episode stream contained 162 strong Fold-legal
+states:
+- teacher Fold weighted mean **3.04%**;
+- semantic tail Fold weighted mean **24.73%**;
+- V1 Fold weighted mean **14.71%**;
+- semantic-tail absolute Fold bias **21.69 p.p.**.
+
+Category/street failures remain broad:
+- flushes: teacher **0%**, semantic tail **42.57%**;
+- straights: teacher **0%**, semantic tail **25.91%**;
+- river strong hands: teacher **6.90%**, semantic tail **56.98%**.
+
+Therefore the frozen diagnosis again is:
+`TAIL_FITS_TRAIN_BUT_GENERALIZES_POORLY_TO_NEW_STRONG_HAND_STATES`.
+
+The canonical fallback repair improved the magnitude of the failure versus the
+historical lane, but did not remove it.  The AveragePolicy tail remains the
+blocker; the semantic Advantage lane remains the teacher.
+
+### Controlled diversity-repair gate
+
+Added:
+- `tools/audit_3h_semantic_strong_diversity_repair_10115.py`;
+- `tools/run_3h_semantic_strong_diversity_repair_10115.sh`.
+
+The experiment is designed to separate unique-state diversity from simple
+strong-hand reweighting.
+
+All arms:
+- start from the exact finalized 10105 AveragePolicy + optimizer state;
+- use the same semantic architecture;
+- train for exactly 500 steps;
+- preserve the canonical 10115 Advantage ENS8 teacher.
+
+Arms:
+1. BASELINE: exact canonical 22,726-sample ordinary train stream;
+2. REPEAT_CONTROL: BASELINE + 256 extra slots made by repeating the existing
+   44 strong-hand train states;
+3. DIVERSE_STRONG: BASELINE + 256 genuinely new strong-hand states drawn from
+   an independent 60,000-episode teacher stream.
+
+REPEAT_CONTROL and DIVERSE_STRONG have equal dataset length, equal strong-class
+weight, equal optimizer budget and the same minibatch-index sequence.  Their
+only intended difference is whether the 256 extra strong slots contain repeated
+known states or new strong-state diversity.
+
+The candidate is evaluated on a **new** 30,000-episode seed that was not used
+for the prior diagnosis or augmentation collection.
+
+Frozen PASS requirements:
+- >=150 new independent strong states;
+- strong-hand Fold absolute bias >=30% better than canonical baseline;
+- strong-hand Fold bias >=15% better than equal-weight repeat control;
+- straight/flush strong bias >=30% better than canonical baseline;
+- river strong bias >=30% better than canonical baseline;
+- global CE and TV no more than 2% worse than canonical baseline;
+- high-card/no-draw ALL_IN absolute bias no more than +1 percentage point worse
+  than canonical baseline.
+
+The exact canonical 500-step tail model must also be reproduced to <=2e-6
+max parameter drift before the intervention arms are trained.
+
+PASS authorizes an exact DC1 1k replay of the diversity candidate.  It still
+does not authorize production, DC2 or a 5k benchmark.
+
