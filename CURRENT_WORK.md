@@ -2059,3 +2059,86 @@ A PASS would remove the post-hoc milestone-selection concern and authorize the
 design of one bounded online semantic-CFR pilot.  It would still not authorize
 production.
 
+## Independent 500-step fresh semantic distillation PASS — 2026-09-26
+
+The post-hoc milestone concern is now closed.  The 500-step budget was frozen
+before a completely new fresh-target evaluation stream was generated.
+
+Independent evaluation:
+- **2,000** new 3H episodes;
+- **7,453** fresh strategy decisions;
+- independent seed **1876407691**;
+- the previously inspected 6,095-sample selection holdout was discarded and
+  did not participate in this confirmation.
+
+At step 0, both AveragePolicy arms remain functionally identical:
+- weighted CE ~**1.10881428**;
+- weighted TV ~**0.48558553**;
+- high-card/no-draw ALL_IN prediction **0.162329** vs target **0.073662**.
+
+At the precommitted 500 steps:
+- weighted CE: **0.619981 V1 -> 0.466885 semantic** (~**24.7%** lower);
+- weighted TV: **0.177349 -> 0.112830** (~**36.4%** lower);
+- high-card/no-draw ALL_IN target: **0.073662**;
+- V1 prediction: **0.243481**, abs bias **0.169818**;
+- semantic prediction: **0.079953**, abs bias **0.006291**
+  (~**96.3%** lower).
+
+All four independent precommitted criteria pass:
+- semantic CE >=10% better than V1;
+- semantic TV >=15% better than V1;
+- semantic high-card/no-draw ALL_IN bias >=50% better than V1;
+- semantic CE >=10% better than its own step-0 value.
+
+Fixed DC1 remains directionally favorable versus the paired V1 fresh-target
+distill:
+- 17 no-draw high-card states: ALL_IN mean
+  **51.45% V1 -> 33.95% semantic**;
+- all 23 high-card states: **54.29% -> 33.81%**;
+- Q8/884 Fold: **48.42% V1 -> 0.031% semantic**.
+
+This independently confirms the complete representation-capacity bridge:
+semantic features improve Advantage fitting, semantic Advantage creates a
+different/fresher strategy target distribution, and a semantic AveragePolicy
+distills that distribution substantially better than V1 on unseen episodes.
+
+The representation-diagnosis phase is therefore closed.  The next gate is
+online feedback, not another post-hoc representation test.
+
+### Bounded online semantic-CFR pilot
+
+Added:
+- `tools/run_3h_semantic_online_pilot_10105.py`;
+- `tools/run_3h_semantic_online_pilot_10105.sh`.
+
+Frozen pilot contract:
+- source: read-only 10105 checkpoint;
+- domain: THREE_HANDED only; HU is not trained;
+- initial behavior: the passed eight-member semantic Advantage shadow;
+- **2 online iterations**, **64 roots/iteration**;
+- exact canonical lean root recursion/action resolver;
+- after each root block: eight fresh **1600-step** semantic Advantage fits,
+  reusing the exact validated member init/batch seed contract;
+- the fixed controlled-split 50k positions remain excluded from Advantage
+  minibatch sampling, matching the validated shadow-fit contract;
+- no historical AveragePolicy reservoir is reused for the tail-policy bridge;
+- after online feedback, the final ensemble generates a new 8,000-episode
+  fresh strategy stream;
+- AveragePolicy budget is frozen at the independently confirmed **500 steps**;
+- final policy is evaluated on a separate 2,000-episode fresh-target stream.
+
+Precommitted Advantage/DC1 non-regression rules:
+- member-pairwise TV no more than 10% above initial semantic ensemble;
+- member argmax disagreement no more than 10% above initial;
+- no-draw raw-ensemble ALL_IN mass may not rise by >10 percentage points;
+- no-draw member-mixture ALL_IN mass may not rise by >10 percentage points.
+
+Precommitted post-online AveragePolicy rules reuse the independent confirmation:
+- semantic CE >=10% better than paired V1;
+- semantic TV >=15% better than paired V1;
+- high-card/no-draw ALL_IN absolute bias >=50% better;
+- semantic CE >=10% better than its own step-0 value.
+
+PASS authorizes a longer **research-only** semantic continuation.  It does not
+authorize production, sealed-strength claims, or DC2.
+
