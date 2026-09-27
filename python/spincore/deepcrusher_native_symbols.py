@@ -171,8 +171,18 @@ class DeepCrusherPrimitiveSymbols:
             if name.lower() in folded_env:
                 return float(folded_env[name.lower()])
 
-        key = name.lower()
+        # OpenHoldem has two intentionally distinct identifiers here:
+        # lowercase native symbol nouts from CSymbolEngineCards, and the
+        # stock OpenPPL-library helper NOuts. Preserve that source-level
+        # distinction so NOutsFlop's internal lowercase nouts does not fall
+        # back into the NOuts library section and recurse.
         v = self.view
+        if name == "nouts":
+            return float(DeepCrusherCardSymbols(v).native_nouts())
+        if name.lower() == "nouts":
+            raise UnknownDeepCrusherNativeSymbol(name)
+
+        key = name.lower()
         street_map = {
             STREET_PREFLOP: 1,
             STREET_FLOP: 2,
