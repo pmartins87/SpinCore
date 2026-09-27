@@ -2536,3 +2536,85 @@ The script now also prints train/eval strong-hand counts before the guard so a
 future stop is directly diagnosable.  No model, checkpoint, or strategy was
 modified by the failed audit.
 
+## 10115 strong-hand coverage audit: diversity/generalization failure confirmed — 2026-09-27
+
+The 30,000-episode independent coverage audit completed and confirms the exact
+failure mode of the semantic 10115 tail AveragePolicy.
+
+Training stream:
+- 22,746 ordinary fresh strategy samples;
+- only **32** postflop trips-or-better / Fold-legal samples;
+- every one of those 32 samples was actually seen by the frozen 500-step
+  minibatch stream: min **14**, median **24**, mean **23.625**, max **31** draws;
+- therefore this is not a minibatch-exposure gap.
+
+On those 32 training strong-hand samples:
+- teacher target Fold weighted mean **2.68%**;
+- semantic tail Fold weighted mean **5.30%**;
+- V1 Fold weighted mean **11.62%**.
+
+Thus the semantic tail fits its sparse strong-hand training support reasonably
+well.
+
+Independent stream:
+- 30,000 episodes / 107,228 strategy decisions;
+- **148** trips-or-better / Fold-legal states.
+
+On those 148 unseen strong-hand states:
+- teacher target Fold weighted mean **2.16%**;
+- semantic tail Fold weighted mean **37.36%**;
+- V1 Fold weighted mean **15.37%**;
+- semantic-tail strong-hand Fold absolute bias **35.21 p.p.**;
+- expected semantic-tail folds **55.30** vs teacher **3.20**.
+
+The failure is especially severe for:
+- straights: teacher 0%, semantic tail **55.24%**;
+- flushes: teacher 0%, semantic tail **56.69%**;
+- river strong hands: teacher **6.64%**, semantic tail **83.60%**.
+
+The audit's frozen diagnosis is therefore:
+`TAIL_FITS_TRAIN_BUT_GENERALIZES_POORLY_TO_NEW_STRONG_HAND_STATES`.
+
+The likely repair direction is **fresh-target diversity for rare strong-made
+hands**, not more replay of the same 32 examples and not an Advantage/CFR
+change.
+
+### Semantic fallback contract issue discovered before repair
+
+While preparing that repair, the shared diagnostic helper
+`semantic_sigma()` was re-audited against the canonical functional deployment
+contract.  A mismatch was found:
+
+- the historical semantic research helper used a **uniform** distribution when
+  all legal averaged raw Advantages were non-positive;
+- canonical `lean_regret_matching_policy()` uses a **softmax over legal raw
+  values** in that case.
+
+This helper was used not only for fresh-target generation but also as the
+behavior policy during the semantic online feedback lane.  Therefore no further
+tail-policy repair or DC1 scale-up should proceed until the materiality of this
+mapping mismatch is quantified.
+
+The helper is now corrected to call the canonical
+`lean_regret_matching_policy()` exactly.
+
+Added:
+- `tools/audit_3h_semantic_fallback_contract.py`;
+- `tools/run_3h_semantic_fallback_contract.sh`.
+
+The audit replays the historical (old-uniform) trajectory semantics and compares
+them state-by-state with the canonical lean softmax fallback for:
+- the initial semantic shadow;
+- semantic milestones 10107 and 10110;
+- the exact historical 10115 8,000-episode final tail-target stream, which must
+  reproduce 28,418 decisions.
+
+Frozen materiality rule:
+- if every audited all-nonpositive fallback fraction <=0.1% and same-random-u
+  sampled-action difference <=0.05%, treat the mismatch as immaterial to this
+  lane;
+- otherwise replay the semantic online lane from frozen 10105 under canonical
+  lean semantics before making any repair/promotion decision.
+
+This contract audit now blocks the strong-hand diversity repair and DC1 5k.
+
