@@ -2407,3 +2407,23 @@ Decision logic is frozen:
 
 No 5k DC1 scale-up until this coverage diagnosis selects the repair mechanism.
 
+## 10115 strong-hand coverage audit: independent sample-size guard — 2026-09-27
+
+The first coverage audit completed the exact 8,000-episode training-stream
+reconstruction and a new 10,000-episode independent stream, but found only
+**44** postflop trips-or-better / Fold-legal independent states.
+
+The audit had precommitted to at least **100** independent strong-hand states
+before interpreting train-vs-generalization behavior, so it correctly stopped
+without producing a diagnosis.
+
+Do not lower the 100-state requirement after observing 44.  The strong-hand
+surface is sparse: 44 qualifying states appeared in 10,000 independent
+episodes (35,648 decisions).  The independent horizon is therefore increased
+to **30,000 episodes**, which should yield roughly 132 qualifying states if the
+observed rate remains similar, while preserving the same >=100 gate.
+
+The script now also prints train/eval strong-hand counts before the guard so a
+future stop is directly diagnosable.  No model, checkpoint, or strategy was
+modified by the failed audit.
+
