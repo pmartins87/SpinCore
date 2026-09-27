@@ -174,6 +174,7 @@ def main()->int:
     ap.add_argument("--spin-bundle",type=Path,required=True)
     ap.add_argument("--run-dir",type=Path,required=True)
     ap.add_argument("--threads",type=int,default=8)
+    ap.add_argument("--canonical-replay",action="store_true")
     args=ap.parse_args()
 
     torch.set_num_threads(int(args.threads))
@@ -272,7 +273,12 @@ def main()->int:
         if completed==10107:
             reproduction=pilot_reproduction_check(summary)
             row["bounded_pilot_reproduction"]=reproduction
-            if not reproduction["pass"]:
+            row["bounded_pilot_reproduction_role"]=(
+                "DESCRIPTIVE_HISTORICAL_COMPARISON_ONLY"
+                if args.canonical_replay
+                else "HARD_REPRODUCTION_GUARD"
+            )
+            if (not args.canonical_replay) and (not reproduction["pass"]):
                 save_resume(
                     resume_path,sampler=sampler,memory=r3.bundle.adv_mem,
                     states=states,member_meta=member_meta,
@@ -415,6 +421,12 @@ def main()->int:
         "source_checkpoint_mutated":False,
         "source_checkpoint_sha_after":source_sha_after,
         "hu_training_performed":False,
+        "behavior_contract":(
+            "CANONICAL_LEAN_REGRET_MATCHING_SOFTMAX_FALLBACK"
+            if args.canonical_replay
+            else "HISTORICAL_ADMITTED_SEMANTIC_SIGMA_CONTRACT"
+        ),
+        "canonical_replay":bool(args.canonical_replay),
         "online_iterations":TARGET_ITERATION-SOURCE_ITERATION,
         "roots_per_iteration":pilot.ROOTS_PER_ITERATION,
         "ensemble_size":8,
