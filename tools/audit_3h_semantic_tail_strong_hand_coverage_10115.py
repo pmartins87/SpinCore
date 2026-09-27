@@ -257,6 +257,8 @@ def main()->int:
     ap.add_argument("--solver",type=Path,required=True)
     ap.add_argument("--report",type=Path,required=True)
     ap.add_argument("--threads",type=int,default=8)
+    ap.add_argument("--expected-train-samples",type=int,default=22746)
+    ap.add_argument("--expected-holdout-samples",type=int,default=5672)
     args=ap.parse_args()
     torch.set_num_threads(int(args.threads))
 
@@ -281,9 +283,15 @@ def main()->int:
     train,discarded,train_collection=distill.collect_fresh(
         solver,models,TRAIN_EPISODES
     )
-    if len(train)!=22746 or len(discarded)!=5672:
+    if (
+        len(train)!=int(args.expected_train_samples)
+        or len(discarded)!=int(args.expected_holdout_samples)
+    ):
         raise RuntimeError(
-            f"10115 training-stream identity drift train={len(train)} holdout={len(discarded)}"
+            "10115 training-stream identity drift "
+            f"train={len(train)} holdout={len(discarded)} "
+            f"expected_train={args.expected_train_samples} "
+            f"expected_holdout={args.expected_holdout_samples}"
         )
 
     train_rows=predict_rows(v1,sem,train)
