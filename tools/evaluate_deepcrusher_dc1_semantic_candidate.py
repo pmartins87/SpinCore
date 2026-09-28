@@ -54,6 +54,7 @@ SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_DIV
 SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
 SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_SPECIALIST_MOE_V1"
 SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_V1"
+SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_SPECIALIST_MOE_V1"
 SEMANTIC_COMPLETED_ITERATION=10115
 REPRESENTATION="C0_V1_FROZEN_CONTROL"
 
@@ -146,6 +147,8 @@ class SemanticHybridBenchmarkPolicy:
             return "UNCHANGED_HU_ENS8_10105"
         if getattr(self.semantic_policy,"_spincore_confidence_gated_moe",False):
             return "V1_GENERAL_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_10115"
+        if getattr(self.semantic_policy,"_spincore_stratified_specialist_moe",False):
+            return "V1_GENERAL_SEMANTIC_STRATIFIED_STRONG_SPECIALIST_MOE_10115"
         if getattr(self.semantic_policy,"_spincore_strong_specialist_moe",False):
             return "V1_GENERAL_SEMANTIC_STRONG_SPECIALIST_MOE_10115"
         if getattr(self.semantic_policy,"_spincore_fullpool_diversity_candidate",False):
@@ -253,6 +256,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
         SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA,
         SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
         SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
+        SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA,
     ):
         raise RuntimeError(f"wrong semantic tail-policy schema: {schema!r}")
     if payload.get("source_checkpoint_sha256")!=EXPECTED_SOURCE_SHA:
@@ -269,8 +273,9 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     if schema in (
         SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
         SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
+        SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA,
     ):
-        if selected_steps not in (10,25,50,100):
+        if selected_steps not in (10,25,50,100,200):
             raise RuntimeError("semantic specialist step-budget mismatch")
     elif selected_steps!=500:
         raise RuntimeError("semantic tail-policy step-budget mismatch")
@@ -293,6 +298,8 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
             model=StrongSpecialistMoEPolicyNet(
                 base_model,specialist_model
             ).eval()
+            if schema==SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA:
+                model._spincore_stratified_specialist_moe=True
     else:
         model=V1SemanticPolicyNet()
         model.load_state_dict(payload["model_state"])
