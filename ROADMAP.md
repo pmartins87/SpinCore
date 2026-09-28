@@ -3345,3 +3345,89 @@ Final validation:
 Only PASS automatically launches the exact fixed-seed DC1 1k. DC1 5k remains
 blocked until that final gate passes.
 
+## Fold-logit calibrated specialist: close but FAIL; unchanged specialist merits clean multi-seed confirmation — 2026-09-28
+
+The two-parameter Fold-logit calibration completed its independent 200k
+validation and failed two frozen criteria.
+
+Calibration:
+- fresh 200,000-episode calibration stream;
+- 1,133 unique strong/Fold-legal states;
+- 143 fixed (scale,bias) grid candidates;
+- 3 calibration-feasible candidates;
+- selected transform:
+  - Fold-logit scale **1.25**;
+  - Fold-logit bias **+0.75**.
+
+Independent validation:
+- fresh 200,000 episodes / 712,021 decisions;
+- **1,207** unique strong/Fold-legal states;
+- 59 legitimate high-target-Fold states.
+
+Full-pool -> calibrated specialist:
+- weighted CE: **0.70074 -> 0.63773**
+  (ratio **0.91007**, ~8.99% better);
+- weighted TV: **0.15968 -> 0.12497**
+  (ratio **0.78261**);
+- overall Fold abs bias: **4.50 p.p. -> 2.17 p.p.**;
+- low-target Fold mean: **5.80% -> 3.13%**;
+- low-target Fold p95: **42.49% -> 16.77%**;
+- straight/flush Fold bias: **6.75 p.p. -> 3.27 p.p.**;
+- river Fold bias: **7.20 p.p. -> 4.47 p.p.**;
+- legitimate high-target Fold bias improves materially:
+  **18.84 p.p. -> 12.21 p.p.**.
+
+The two frozen failures are narrow but real:
+1. CE needed >=10% improvement; achieved ~8.99%;
+2. river bias needed >=40% improvement; achieved ~37.95%.
+
+Therefore the calibrated candidate is not admitted and DC1 remains blocked.
+
+### Important post-hoc observation
+
+On this same fully independent 200k evaluation, the **unchanged
+target-stratified specialist** (before Fold-logit calibration) now shows:
+- CE **0.61550**, ratio ~0.878 vs full-pool;
+- TV **0.12216**, ratio ~0.765;
+- overall Fold bias **1.25 p.p.**;
+- low-target mean **2.60%**;
+- low-target p95 **13.22%**;
+- straight/flush bias **2.70 p.p.**;
+- river bias **3.12 p.p.**;
+- high-target Fold bias **19.06 p.p.**, only ~0.22 p.p. worse than full-pool.
+
+Those values would satisfy the substantive specialist thresholds that failed on
+the earlier 150k validation, where the high-target subset contained only 39
+states and showed a +3.37 p.p. regression.
+
+This later observation is **post-hoc for the unchanged specialist**, so it
+cannot retroactively promote that model.  It does, however, create a cleaner
+hypothesis: the one failed high-target criterion may have been unstable because
+that subset is extremely sparse, rather than evidence that another architecture
+change is necessary.
+
+### Next gate: unchanged specialist, four completely new seeds
+
+Added:
+- `tools/audit_3h_semantic_stratified_specialist_multiseed_10115.py`;
+- `tools/run_3h_semantic_stratified_specialist_multiseed_and_dc1_10115.sh`.
+
+No model parameter changes.
+
+The exact frozen target-stratified specialist is evaluated on four new
+deterministic streams of 120,000 episodes each (480,000 episodes total).  The
+evidence is reported per seed and pooled.
+
+Frozen confirmation requirements include:
+- each seed >=600 unique strong states and >=20 high-target states;
+- pooled >=2,400 strong states and >=100 high-target states;
+- pooled CE/TV >=10% better than full-pool;
+- pooled overall Fold, low-target mean/p95, straight/flush and river bias each
+  >=30% better;
+- pooled legitimate high-target bias no more than +1 p.p. worse than full-pool;
+- no single seed high-target-bias regression >5 p.p.;
+- no single-seed CE regression.
+
+Only PASS automatically launches one exact fixed-seed DC1 1k replay of the
+unchanged specialist.  DC1 5k remains blocked.
+
