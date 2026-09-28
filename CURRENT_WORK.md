@@ -3405,3 +3405,82 @@ Frozen final criteria:
 Only PASS automatically launches the exact fixed-seed DC1 1k. 5k remains
 blocked.
 
+## Target-stratified specialist: 9/10 offline criteria PASS; residual issue is Fold under-confidence — 2026-09-28
+
+The target-stratified strong-hand specialist completed its independent offline
+validation and stopped before DC1 because one frozen criterion still failed.
+
+Training/selection:
+- 300,000 fresh teacher episodes;
+- 1,583 unique strong/Fold-legal states:
+  - 1,482 low-target Fold;
+  - 22 mid-target Fold;
+  - 79 high-target Fold;
+- stratified 80/20 split preserved all three strata;
+- selected candidate: **STRATIFIED, 25 steps**.
+
+Independent validation:
+- 150,000 fresh teacher episodes / 533,759 decisions;
+- **841** unique strong/Fold-legal states:
+  - 795 low;
+  - 7 mid;
+  - 39 high.
+
+Full-pool -> stratified specialist:
+- strong CE: **0.68558 -> 0.60876** (~11.2% better);
+- strong TV: **0.16327 -> 0.13359** (~18.2% better);
+- overall strong Fold abs bias: **4.74 p.p. -> 1.81 p.p.**;
+- low-target Fold mean: **6.18% -> 3.33%**;
+- low-target Fold p95: **48.20% -> 14.36%**;
+- straight/flush Fold bias: **6.64 p.p. -> 3.04 p.p.**;
+- river Fold bias: **6.85 p.p. -> 2.17 p.p.**.
+
+Thus nine of ten frozen criteria pass.
+
+The only failure is legitimate high-target Fold calibration:
+- full-pool high-target abs bias: **23.87 p.p.**;
+- stratified specialist: **27.24 p.p.**;
+- delta: **+3.37 p.p.**, exceeding the +1 p.p. guard.
+
+This remaining error has a useful structure:
+- on low-target states the specialist still predicts too much Fold;
+- on high-target states it predicts too little Fold;
+- therefore the learned Fold probability remains compressed toward the middle.
+
+The specialist itself is now broadly useful; replacing it or adding more
+ordinary strong samples is unlikely to be the most efficient next move.
+
+### Next gate: two-parameter Fold-logit calibration
+
+Added:
+- `tools/audit_3h_semantic_fold_logit_calibrated_specialist_10115.py`;
+- evaluator support for
+  `SPINCORE_3H_SEMANTIC_FOLD_LOGIT_CALIBRATED_STRONG_SPECIALIST_MOE_V1`;
+- `tools/run_3h_semantic_fold_logit_calibrated_specialist_and_dc1_10115.sh`.
+
+The intervention does not retrain poker strategy or alter teacher targets.
+Only the specialist Fold log-odds are calibrated:
+- `z = logit(P(Fold))`;
+- `z' = scale*z + bias`;
+- `P'(Fold)=sigmoid(z')`;
+- remaining non-Fold mass is redistributed between Call and All-in in the
+  specialist's original learned ratio.
+
+Calibration:
+- new 200k-episode teacher stream;
+- fixed grid over scale and bias;
+- candidate must already beat full-pool on CE/TV, overall Fold bias and
+  low-target mean/p95 while being no worse on legitimate high-target bias;
+- select lowest CE among feasible candidates.
+
+Final validation:
+- separate new 200k-episode stream;
+- require >=900 unique strong states and >=40 high-target states;
+- CE/TV >=10% better than full-pool;
+- overall Fold, low-target mean/p95, straight/flush and river biases >=40%
+  better than full-pool;
+- legitimate high-target Fold bias must be **no worse than full-pool**.
+
+Only PASS automatically launches the exact fixed-seed DC1 1k. DC1 5k remains
+blocked until that final gate passes.
+
