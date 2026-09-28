@@ -52,6 +52,7 @@ SEMANTIC_POLICY_SCHEMA="SPINCORE_3H_SEMANTIC_RESEARCH_TAIL_POLICY_V1"
 SEMANTIC_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
 SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
 SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
+SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_SPECIALIST_MOE_V1"
 SEMANTIC_COMPLETED_ITERATION=10115
 REPRESENTATION="C0_V1_FROZEN_CONTROL"
 
@@ -83,6 +84,23 @@ def street_from_state(state):
     if street not in (0,1,2,3):
         raise RuntimeError(f"invalid street id {street}")
     return street
+
+
+class StrongSpecialistMoEPolicyNet(torch.nn.Module):
+    def __init__(self,base_model,specialist_model):
+        super().__init__()
+        self.base_model=base_model.eval()
+        self.specialist_model=specialist_model.eval()
+        self._spincore_strong_specialist_moe=True
+
+    def probabilities(self,batch):
+        base=self.base_model.probabilities(batch)
+        specialist=self.specialist_model.probabilities(batch)
+        semantic=batch["semantic"]
+        made_ge_trips=semantic[:,3:9].sum(dim=1)>0.5
+        fold_legal=batch["legal"][:,0]
+        route=(made_ge_trips & fold_legal).unsqueeze(1)
+        return torch.where(route,specialist,base)
 
 
 class SemanticHybridBenchmarkPolicy:
@@ -156,13 +174,20 @@ class SemanticHybridBenchmarkPolicy:
             "resolved_amount_to":int(amount_to),
             "three_handed_mode":(
                 (
-                    "V1_GENERAL_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+                    "V1_GENERAL_SEMANTIC_STRONG_SPECIALIST_MOE_10115"
                     if getattr(
                         self.semantic_policy,
-                        "_spincore_fullpool_diversity_candidate",
+                        "_spincore_strong_specialist_moe",
                         False,
                     )
                     else (
+                        "V1_GENERAL_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+                        if getattr(
+                            self.semantic_policy,
+                            "_spincore_fullpool_diversity_candidate",
+                            False,
+                        )
+                        else (
                         "V1_GENERAL_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
                         if getattr(
                             self.semantic_policy,
@@ -178,6 +203,7 @@ class SemanticHybridBenchmarkPolicy:
                         )
                         else "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
                         )
+                    )
                     )
                 )
                 if domain=="THREE_HANDED"
@@ -219,6 +245,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
         SEMANTIC_DIVERSITY_SCHEMA,
         SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA,
         SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA,
+        SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
     ):
         raise RuntimeError(f"wrong semantic tail-policy schema: {schema!r}")
     if payload.get("source_checkpoint_sha256")!=EXPECTED_SOURCE_SHA:
@@ -234,16 +261,23 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     if int(payload.get("selected_steps",-1))!=500:
         raise RuntimeError("semantic tail-policy step-budget mismatch")
 
-    model=V1SemanticPolicyNet()
-    model.load_state_dict(payload["model_state"])
-    model.eval()
-    model._spincore_diversity_candidate=(schema==SEMANTIC_DIVERSITY_SCHEMA)
-    model._spincore_stratified_diversity_candidate=(
-        schema==SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA
-    )
-    model._spincore_fullpool_diversity_candidate=(
-        schema==SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA
-    )
+    if schema==SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA:
+        base_model=V1SemanticPolicyNet()
+        base_model.load_state_dict(payload["base_model_state"])
+        specialist_model=V1SemanticPolicyNet()
+        specialist_model.load_state_dict(payload["specialist_model_state"])
+        model=StrongSpecialistMoEPolicyNet(base_model,specialist_model).eval()
+    else:
+        model=V1SemanticPolicyNet()
+        model.load_state_dict(payload["model_state"])
+        model.eval()
+        model._spincore_diversity_candidate=(schema==SEMANTIC_DIVERSITY_SCHEMA)
+        model._spincore_stratified_diversity_candidate=(
+            schema==SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA
+        )
+        model._spincore_fullpool_diversity_candidate=(
+            schema==SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA
+        )
 
     _SPIN=SemanticHybridBenchmarkPolicy(agent,model)
     _DC=DeepCrusherR8Policy.from_repository(root_path)
