@@ -141,6 +141,21 @@ class SemanticHybridBenchmarkPolicy:
     def domain_for_state(self,state):
         return self.base_agent.domain_for_state(state)
 
+    def three_handed_mode_label(self,domain):
+        if domain!="THREE_HANDED":
+            return "UNCHANGED_HU_ENS8_10105"
+        if getattr(self.semantic_policy,"_spincore_confidence_gated_moe",False):
+            return "V1_GENERAL_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_10115"
+        if getattr(self.semantic_policy,"_spincore_strong_specialist_moe",False):
+            return "V1_GENERAL_SEMANTIC_STRONG_SPECIALIST_MOE_10115"
+        if getattr(self.semantic_policy,"_spincore_fullpool_diversity_candidate",False):
+            return "V1_GENERAL_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+        if getattr(self.semantic_policy,"_spincore_stratified_diversity_candidate",False):
+            return "V1_GENERAL_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+        if getattr(self.semantic_policy,"_spincore_diversity_candidate",False):
+            return "V1_GENERAL_SEMANTIC_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+        return "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
+
     def distribution(self,state):
         domain=self.domain_for_state(state)
         if domain=="TRUE_HEADS_UP":
@@ -199,51 +214,7 @@ class SemanticHybridBenchmarkPolicy:
             "selected_probability":float(probs[slot]),
             "resolved_action_type":int(action_type),
             "resolved_amount_to":int(amount_to),
-            "three_handed_mode":(
-                (
-                    "V1_GENERAL_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_10115"
-                    if getattr(
-                        self.semantic_policy,
-                        "_spincore_confidence_gated_moe",
-                        False,
-                    )
-                    else (
-                        "V1_GENERAL_SEMANTIC_STRONG_SPECIALIST_MOE_10115"
-                        if getattr(
-                            self.semantic_policy,
-                            "_spincore_strong_specialist_moe",
-                            False,
-                        )
-                        else (
-                        "V1_GENERAL_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
-                        if getattr(
-                            self.semantic_policy,
-                            "_spincore_fullpool_diversity_candidate",
-                            False,
-                        )
-                        else (
-                        "V1_GENERAL_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
-                        if getattr(
-                            self.semantic_policy,
-                            "_spincore_stratified_diversity_candidate",
-                            False,
-                        )
-                        else (
-                        "V1_GENERAL_SEMANTIC_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
-                        if getattr(
-                            self.semantic_policy,
-                            "_spincore_diversity_candidate",
-                            False,
-                        )
-                        else "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
-                        )
-                    )
-                    )
-                    )
-                )
-                if domain=="THREE_HANDED"
-                else "UNCHANGED_HU_ENS8_10105"
-            ),
+            "three_handed_mode":self.three_handed_mode_label(domain),
         }
         return ExternalExactAction(int(action_type),int(amount_to))
 
@@ -294,7 +265,14 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     )
     if completed_iteration!=SEMANTIC_COMPLETED_ITERATION:
         raise RuntimeError("semantic tail-policy iteration mismatch")
-    if int(payload.get("selected_steps",-1))!=500:
+    selected_steps=int(payload.get("selected_steps",-1))
+    if schema in (
+        SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
+        SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
+    ):
+        if selected_steps not in (10,25,50,100):
+            raise RuntimeError("semantic specialist step-budget mismatch")
+    elif selected_steps!=500:
         raise RuntimeError("semantic tail-policy step-budget mismatch")
 
     if schema in (
