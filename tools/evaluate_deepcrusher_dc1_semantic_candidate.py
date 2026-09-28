@@ -53,6 +53,7 @@ SEMANTIC_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_DIVERSITY_TAIL_CANDIDATE_
 SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
 SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
 SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_SPECIALIST_MOE_V1"
+SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_V1"
 SEMANTIC_COMPLETED_ITERATION=10115
 REPRESENTATION="C0_V1_FROZEN_CONTROL"
 
@@ -101,6 +102,32 @@ class StrongSpecialistMoEPolicyNet(torch.nn.Module):
         fold_legal=batch["legal"][:,0]
         route=(made_ge_trips & fold_legal).unsqueeze(1)
         return torch.where(route,specialist,base)
+
+
+class StrongConfidenceGatedMoEPolicyNet(torch.nn.Module):
+    def __init__(self,base_model,specialist_model,fold_threshold:float):
+        super().__init__()
+        self.base_model=base_model.eval()
+        self.specialist_model=specialist_model.eval()
+        self.fold_threshold=float(fold_threshold)
+        self._spincore_confidence_gated_moe=True
+
+    def probabilities(self,batch):
+        base=self.base_model.probabilities(batch)
+        specialist=self.specialist_model.probabilities(batch)
+        semantic=batch["semantic"]
+        made_ge_trips=semantic[:,3:9].sum(dim=1)>0.5
+        fold_legal=batch["legal"][:,0]
+        route=(
+            made_ge_trips
+            & fold_legal
+            & (base[:,0] <= self.fold_threshold)
+        ).unsqueeze(1)
+        return torch.where(route,specialist,base)
+
+    def forward(self,batch):
+        probs=self.probabilities(batch).clamp_min(1e-30)
+        return torch.log(probs)
 
 
 class SemanticHybridBenchmarkPolicy:
@@ -174,13 +201,20 @@ class SemanticHybridBenchmarkPolicy:
             "resolved_amount_to":int(amount_to),
             "three_handed_mode":(
                 (
-                    "V1_GENERAL_SEMANTIC_STRONG_SPECIALIST_MOE_10115"
+                    "V1_GENERAL_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_10115"
                     if getattr(
                         self.semantic_policy,
-                        "_spincore_strong_specialist_moe",
+                        "_spincore_confidence_gated_moe",
                         False,
                     )
                     else (
+                        "V1_GENERAL_SEMANTIC_STRONG_SPECIALIST_MOE_10115"
+                        if getattr(
+                            self.semantic_policy,
+                            "_spincore_strong_specialist_moe",
+                            False,
+                        )
+                        else (
                         "V1_GENERAL_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
                         if getattr(
                             self.semantic_policy,
@@ -203,6 +237,7 @@ class SemanticHybridBenchmarkPolicy:
                         )
                         else "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
                         )
+                    )
                     )
                     )
                 )
@@ -246,6 +281,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
         SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA,
         SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA,
         SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
+        SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
     ):
         raise RuntimeError(f"wrong semantic tail-policy schema: {schema!r}")
     if payload.get("source_checkpoint_sha256")!=EXPECTED_SOURCE_SHA:
@@ -261,12 +297,24 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     if int(payload.get("selected_steps",-1))!=500:
         raise RuntimeError("semantic tail-policy step-budget mismatch")
 
-    if schema==SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA:
+    if schema in (
+        SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
+        SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
+    ):
         base_model=V1SemanticPolicyNet()
         base_model.load_state_dict(payload["base_model_state"])
         specialist_model=V1SemanticPolicyNet()
         specialist_model.load_state_dict(payload["specialist_model_state"])
-        model=StrongSpecialistMoEPolicyNet(base_model,specialist_model).eval()
+        if schema==SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA:
+            model=StrongConfidenceGatedMoEPolicyNet(
+                base_model,
+                specialist_model,
+                float(payload["fold_threshold"]),
+            ).eval()
+        else:
+            model=StrongSpecialistMoEPolicyNet(
+                base_model,specialist_model
+            ).eval()
     else:
         model=V1SemanticPolicyNet()
         model.load_state_dict(payload["model_state"])
