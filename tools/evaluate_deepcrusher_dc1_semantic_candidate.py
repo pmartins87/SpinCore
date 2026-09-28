@@ -155,13 +155,20 @@ class SemanticHybridBenchmarkPolicy:
             "resolved_amount_to":int(amount_to),
             "three_handed_mode":(
                 (
-                    "V1_GENERAL_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+                    "V1_GENERAL_SEMANTIC_FULLPOOL_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
                     if getattr(
                         self.semantic_policy,
-                        "_spincore_stratified_diversity_candidate",
+                        "_spincore_fullpool_diversity_candidate",
                         False,
                     )
                     else (
+                        "V1_GENERAL_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+                        if getattr(
+                            self.semantic_policy,
+                            "_spincore_stratified_diversity_candidate",
+                            False,
+                        )
+                        else (
                         "V1_GENERAL_SEMANTIC_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
                         if getattr(
                             self.semantic_policy,
@@ -169,6 +176,7 @@ class SemanticHybridBenchmarkPolicy:
                             False,
                         )
                         else "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
+                        )
                     )
                 )
                 if domain=="THREE_HANDED"
@@ -209,6 +217,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
         SEMANTIC_POLICY_SCHEMA,
         SEMANTIC_DIVERSITY_SCHEMA,
         SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA,
+        SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA,
     ):
         raise RuntimeError(f"wrong semantic tail-policy schema: {schema!r}")
     if payload.get("source_checkpoint_sha256")!=EXPECTED_SOURCE_SHA:
@@ -230,6 +239,9 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     model._spincore_diversity_candidate=(schema==SEMANTIC_DIVERSITY_SCHEMA)
     model._spincore_stratified_diversity_candidate=(
         schema==SEMANTIC_STRATIFIED_DIVERSITY_SCHEMA
+    )
+    model._spincore_fullpool_diversity_candidate=(
+        schema==SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA
     )
 
     _SPIN=SemanticHybridBenchmarkPolicy(agent,model)
