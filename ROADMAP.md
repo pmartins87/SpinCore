@@ -3129,3 +3129,73 @@ Independent validation:
 Only if the offline MoE gate passes does the runner automatically launch the
 same exact DC1 1k replay. 5k remains blocked until that final gate passes.
 
+## Pure strong-specialist MoE offline gate: substantial repair but FAIL by two frozen criteria — 2026-09-28
+
+The learned strong-hand specialist completed its offline gate and stopped before
+DC1 as designed.
+
+Selection:
+- 120,000 fresh teacher episodes collected;
+- specialist milestones evaluated at 10/25/50/100 steps;
+- **10 steps** selected by the frozen lowest-selection-CE rule;
+- later steps continued reducing low-target Fold tails but worsened selection
+  CE, so simply training longer is not the correct next move.
+
+Independent 80,000-episode validation:
+- 466 unique strong/Fold-legal states;
+- full-pool -> pure specialist:
+  - strong weighted CE: **0.68887 -> 0.59137** (~14.2% better);
+  - strong weighted TV: **0.16387 -> 0.12908** (~21.2% better);
+  - overall strong Fold abs bias: **4.81 p.p. -> 1.86 p.p.**;
+  - low-target-Fold mean: **6.06% -> 3.15%**;
+  - low-target-Fold p95: **44.99% -> 18.78%**;
+  - straight/flush Fold bias: **6.76 p.p. -> 3.58 p.p.**;
+  - river Fold bias: **9.28 p.p. -> 2.77 p.p.**.
+
+Two frozen criteria fail:
+1. strong CE improvement is ~14.2%, short of the frozen >=20% requirement;
+2. legitimate high-Fold-target abs bias worsens from **31.96 p.p.** to
+   **35.76 p.p.**, a +3.79 p.p. regression beyond the +2 p.p. guard.
+
+Therefore the pure specialist is not admitted and DC1 was correctly skipped.
+
+The screenshot/Desktop absence is expected: the older combined runner copied
+artifacts only after the conditional DC1 branch, so an offline gate failure left
+the report in WSL only. Future runners copy the offline audit to Desktop before
+the gate decision.
+
+### Next gate: confidence-routed specialist MoE
+
+The failure pattern is asymmetric:
+- the specialist is much better on the common low-target strong-hand states;
+- the full-pool base is safer on the rare legitimate high-Fold teacher states.
+
+Added:
+- `tools/audit_3h_semantic_confidence_gated_moe_10115.py`;
+- evaluator support for
+  `SPINCORE_3H_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_V1`;
+- `tools/run_3h_semantic_confidence_gated_moe_and_dc1_10115.sh`.
+
+No expert is retrained.  A confidence router uses the full-pool base Fold
+probability only to decide which learned expert supplies the complete
+distribution on the already-defined strong/Fold-legal semantic stratum:
+- if base Fold <= calibrated threshold -> specialist;
+- otherwise -> full-pool base.
+
+Threshold calibration:
+- fresh 80k-episode calibration stream;
+- grid 0.10..0.90 by 0.05;
+- feasible thresholds must already improve CE, overall Fold bias, low-target
+  mean/p95, and keep legitimate high-Fold bias within +1.5 p.p. of base;
+- among feasible thresholds choose lowest weighted CE.
+
+Final untouched validation:
+- fresh 120k-episode stream;
+- require >=600 unique strong states;
+- CE and TV >=10% better than base;
+- overall Fold bias, low-target mean/p95, straight/flush bias and river bias
+  each >=30% better;
+- legitimate high-Fold bias no more than +1.5 p.p. worse than base.
+
+Only PASS automatically launches exact fixed-seed DC1 1k. 5k remains blocked.
+
