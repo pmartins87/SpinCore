@@ -3002,3 +3002,74 @@ Frozen PASS requirements:
 
 Only a PASS returns to exact DC1 1k. 5k remains blocked.
 
+## Stratified +512 strong-diversity repair PASS — 2026-09-28
+
+The second-stage diversity intervention passed all eight frozen criteria on a
+new 40,000-episode evaluation stream.
+
+Data/identity:
+- canonical ordinary train stream reproduced exactly: 22,726 samples;
+- canonical 500-step tail reproduced with max parameter drift **0.0**;
+- independent augmentation pool: 180,000 episodes / 640,542 decisions;
+- **1,039** novel strong states available;
+- fixed +512 stratified selection:
+  - 128 river strong;
+  - 160 non-river straight/flush;
+  - 160 non-river trips;
+  - 64 remaining;
+- new evaluation: 40,000 episodes / 142,178 decisions;
+- **194** strong Fold-legal states.
+
+Strong-hand Fold absolute bias on the new evaluation:
+- canonical tail: **25.45 p.p.**;
+- prior +256 diversity candidate: **11.08 p.p.**;
+- +512 stratified candidate: **7.56 p.p.**.
+
+Therefore the +512 stratified candidate improves:
+- ~70.3% vs canonical;
+- ~31.7% vs the already-passed +256 diversity candidate.
+
+Targeted strata:
+- straight/flush bias:
+  - canonical **37.62 p.p.**;
+  - +256 **17.52 p.p.**;
+  - +512 stratified **10.78 p.p.**
+  (~38.5% better than +256);
+- river strong bias:
+  - canonical **37.58 p.p.**;
+  - +256 **14.04 p.p.**;
+  - +512 stratified **9.96 p.p.**
+  (~29.1% better than +256).
+
+Global cost remains comfortably inside the frozen tolerance:
+- CE ratio stratified/canonical **1.00317** (+0.32%);
+- TV ratio **1.00967** (+0.97%);
+- high-card/no-draw absolute-bias increase vs canonical only **0.588 p.p.**.
+
+All precommitted criteria passed.
+
+### Next gate: exact DC1 1k stratified replay
+
+Added:
+- evaluator support for schema
+  `SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_DIVERSITY_TAIL_CANDIDATE_V1`;
+- `tools/run_deepcrusher_dc1_semantic_stratified_1k.sh`.
+
+To avoid needless recomputation, this runner reuses the previously completed
+exact 1k baseline/canonical/+256 reports and sanity audits, validates their seed
+and scenario identity, and executes only the new stratified arm on the same
+1,000 scenario/deal seeds.  HU remains unchanged.
+
+Frozen scale-up indicators:
+- exact HU parity across all four arms;
+- stratified POSTFLOP_TRIPS_PLUS_FOLD count no higher than baseline;
+- high-card-jam rate no more than 10% above the +256 diversity arm;
+- top-pair fold no higher than +256;
+- preflop AA fold no higher than +256;
+- deep 72o jam no higher than +256;
+- stratified 3H paired mean vs baseline remains positive.
+
+PASS authorizes **DC1 5k development scale-up only**.  It does not authorize
+production, DC2 or a canonical strength claim while DC0 real-OpenHoldem parity
+remains pending.
+
