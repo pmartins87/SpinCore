@@ -2909,3 +2909,96 @@ The key repair checks are whether the candidate:
 
 A clean 1k replay is required before any 5k scale-up.
 
+## DC1 1k strong-diversity replay: partial repair, not clean enough for 5k — 2026-09-28
+
+The three-arm exact DC1 development replay completed on identical 1,000
+scenario/deal seeds:
+- 538 THREE_HANDED;
+- 462 TRUE_HEADS_UP;
+- HU scenario margins are exactly identical across baseline, canonical and
+  diversity arms.
+
+Absolute 3H development EV vs frozen DeepCrusher R8:
+- baseline 10105: **-21.276** chips/policy-seat-hand,
+  95% CI **[-33.520, -9.032]**;
+- canonical 10115: **-14.823**,
+  95% CI **[-24.425, -5.221]**;
+- +256 strong-diversity candidate: **-13.359**,
+  95% CI **[-23.239, -3.479]**.
+
+Paired 3H deltas:
+- canonical - baseline: **+6.453**,
+  95% CI **[-3.700, +16.606]**;
+- diversity - baseline: **+7.918**,
+  95% CI **[-2.120, +17.955]**;
+- diversity - canonical: **+1.465**,
+  95% CI **[-1.121, +4.051]**.
+
+Thus the diversity candidate improves the mean again, but none of these paired
+3H intervals has a positive lower bound.
+
+Sanity flags:
+- deep high-card jam: baseline **149**, canonical **60**, diversity **64**;
+- top-pair fold: **3 / 1 / 1**;
+- preflop AA fold: **6 / 0 / 0**;
+- deep 72o jam: **8 / 0 / 0**;
+- trips-or-better fold: **1 / 6 / 4**.
+
+The diversity repair therefore moves the intended strong-hand surface in the
+right direction (6 -> 4 sampled folds) but does not restore it to baseline
+(1), and it slightly regresses high-card-jam count versus canonical (60 -> 64).
+The frozen repair indicators for those two surfaces fail, so the candidate is
+not clean enough for a 5k scale-up.
+
+The remaining sampled strong-hand folds are still high-probability policy
+surfaces, not merely sampling tails:
+- Q9 straight on turn 2-T-8-J: Fold **53.9%**;
+- 83 trips on river 8-9-K-5-8: Fold **93.6%**;
+- 65 low flush on river T-A-4-Q-J four-spade board: Fold **45.5%**
+  (sampled twice in paired lineups).
+
+Compared with the canonical tail, the +256 diversity intervention materially
+reduces two of the three unique residual states but leaves a severe river-trips
+outlier.
+
+### Decision
+
+Do not scale DC1 to 5k yet.
+
+The broad independent repair audit already established that unique strong-state
+diversity is the correct mechanism. The 1k replay shows that +256 random novel
+states is not enough for the tail of the distribution. The next gate increases
+novel support and stratifies it toward the broad pre-identified weak surfaces,
+without using DC1 states as training data.
+
+Added:
+- `tools/audit_3h_semantic_stratified_strong_diversity_10115.py`;
+- `tools/run_3h_semantic_stratified_strong_diversity_10115.sh`.
+
+Frozen intervention:
+- canonical ordinary 22,726-sample strategy train stream;
+- +512 novel strong teacher states from a new 180,000-episode pool;
+- quotas:
+  - 128 river strong;
+  - 160 non-river straight/flush;
+  - 160 non-river trips;
+  - 64 remaining novel strong;
+- same 500 optimizer steps;
+- no DC1 state is used in training/selection.
+
+A new 40,000-episode evaluation compares:
+- canonical tail;
+- prior +256 diversity candidate;
+- new +512 stratified candidate.
+
+Frozen PASS requirements:
+- >=150 strong states in the new eval;
+- strong-hand Fold bias >=20% better than the +256 candidate;
+- straight/flush bias >=20% better than +256;
+- river strong bias >=20% better than +256;
+- total strong bias >=60% better than canonical;
+- global CE and TV no more than 2% worse than canonical;
+- high-card/no-draw bias no more than +1 p.p. worse than canonical.
+
+Only a PASS returns to exact DC1 1k. 5k remains blocked.
+
