@@ -3160,3 +3160,33 @@ Conditional DC1 scale-up gate remains:
 
 Only a full PASS authorizes DC1 5k development scale-up.
 
+## Full-pool +1,039 offline gate PASS; DC1 retry blocked only by schema constant bug — 2026-09-28
+
+The full-pool repair completed successfully before the DC1 phase.
+
+Offline evaluation:
+- new independent evaluation: 50,000 episodes / 178,061 decisions;
+- 301 strong Fold-legal states;
+- canonical strong Fold abs bias: **22.24 p.p.**;
+- +512 stratified: **4.58 p.p.**;
+- full-pool +1,039: **3.37 p.p.**;
+- all eight frozen offline criteria passed.
+
+The combined runner then correctly advanced to the exact DC1 1k phase, but the
+worker initializer crashed before any benchmark result because
+`SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA` was referenced in
+`evaluate_deepcrusher_dc1_semantic_candidate.py` without being defined at
+module scope. This is an evaluator plumbing bug, not a policy/audit failure.
+
+Fix:
+- added the missing full-pool schema constant;
+- added `tools/run_deepcrusher_dc1_semantic_fullpool_1k_resume.sh`.
+
+The resume runner requires the already-saved offline PASS report and model, so
+it does **not** regenerate the 180k augmentation pool or 50k evaluation. It
+runs only the pending exact DC1 1k full-pool arm, compares against the already
+completed baseline and +512 stratified fixed-seed results, and exports the
+compact bundle.
+
+DC1 5k remains blocked until this resumed 1k gate completes.
+
