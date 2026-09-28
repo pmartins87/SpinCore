@@ -2964,3 +2964,90 @@ PASS authorizes **DC1 5k development scale-up only**.  It does not authorize
 production, DC2 or a canonical strength claim while DC0 real-OpenHoldem parity
 remains pending.
 
+## DC1 1k stratified +512 replay: better again, but frozen scale-up gate still fails — 2026-09-28
+
+The exact fixed-seed DC1 replay of the +512 stratified strong-diversity
+candidate completed on the same 1,000 scenarios:
+- 538 THREE_HANDED;
+- 462 TRUE_HEADS_UP;
+- exact HU scenario-margin parity preserved.
+
+Absolute 3H development EV vs DeepCrusher:
+- baseline 10105: **-21.276**;
+- canonical 10115: **-14.823**;
+- +256 diversity: **-13.359**;
+- +512 stratified: **-12.729** chips/policy-seat-hand.
+
+Paired 3H deltas:
+- +512 stratified - baseline: **+8.548**,
+  95% CI **[-1.745, +18.841]**;
+- +512 stratified - canonical: **+2.095**,
+  95% CI **[-0.517, +4.706]**;
+- +512 stratified - +256 diversity: **+0.630**,
+  95% CI **[-2.337, +3.597]**.
+
+So the mean continues to move in the desired direction, but the paired lower
+bound is still not positive.
+
+Sanity flags:
+- deep high-card jam: **149 / 60 / 64 / 68**
+  (baseline / canonical / +256 / +512);
+- top-pair fold: **3 / 1 / 1 / 1**;
+- AA fold: **6 / 0 / 0 / 0**;
+- deep 72o jam: **8 / 0 / 0 / 0**;
+- trips-or-better fold: **1 / 6 / 4 / 3**.
+
+The +512 candidate therefore improves the target anomaly again (6 -> 4 -> 3)
+but still fails the frozen requirement of no more strong-hand sampled folds than
+the baseline (3 > 1).  All other frozen 1k scale-up indicators pass.
+
+The remaining three sampled folds are not broad regressions; they are three
+specific states whose Fold probabilities have already been reduced sharply:
+- turn Q9 straight on 2-T-8-J: canonical **89.28%**, +256 **53.89%**,
+  +512 **24.84%**;
+- river 83 trips on 8-9-K-5-8: **96.13% -> 93.58% -> 35.60%**;
+- river 65 flush on T-A-4-Q-J four-spade board:
+  **88.38% -> 45.48% -> 11.90%**.
+
+Thus the intervention direction remains correct, but the rare-state tail is not
+yet clean enough to satisfy the frozen exact-DC1 gate.  5k remains blocked.
+
+### Next gate: full novel strong-state pool
+
+The validated 180,000-episode augmentation run already contained **1,039**
+unique novel strong Fold-legal states.  The +512 experiment intentionally used
+only a stratified subset.  The next intervention uses **all 1,039** novel
+teacher-labelled strong states, still without using any DC1 state for training.
+
+Added:
+- `tools/audit_3h_semantic_fullpool_strong_diversity_10115.py`;
+- `tools/run_3h_semantic_fullpool_strong_diversity_and_dc1_10115.sh`;
+- DC1 evaluator support for the full-pool candidate schema.
+
+The combined runner is intentionally autonomous:
+1. reconstruct exact canonical base train;
+2. regenerate the deterministic 180k pool and require exactly 1,039 novel
+   strong states;
+3. train the +1,039 full-pool tail for the same 500 steps;
+4. evaluate on a brand-new 50,000-episode stream;
+5. only if all frozen offline criteria pass, automatically execute the exact
+   fixed-seed DC1 1k candidate replay.
+
+Offline frozen criteria:
+- >=220 strong states in new eval;
+- overall strong Fold bias >=15% better than +512;
+- straight/flush bias >=15% better than +512;
+- river bias >=15% better than +512;
+- overall strong bias >=70% better than canonical;
+- global CE and TV no more than 2% worse than canonical;
+- high-card/no-draw bias no more than +1 p.p. worse than canonical.
+
+Conditional DC1 scale-up gate remains:
+- exact HU parity;
+- trips-or-better sampled Fold count <= baseline;
+- high-card-jam rate <=10% above +512;
+- top-pair Fold, AA Fold and deep 72o jam no worse than +512;
+- paired 3H mean vs baseline positive.
+
+Only a full PASS authorizes DC1 5k development scale-up.
+
