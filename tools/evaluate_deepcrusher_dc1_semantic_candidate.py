@@ -49,6 +49,7 @@ from spincore_nn.action_models import collate_action_observations
 
 EXPECTED_SOURCE_SHA="f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0"
 SEMANTIC_POLICY_SCHEMA="SPINCORE_3H_SEMANTIC_RESEARCH_TAIL_POLICY_V1"
+SEMANTIC_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_DIVERSITY_TAIL_CANDIDATE_V1"
 SEMANTIC_COMPLETED_ITERATION=10115
 REPRESENTATION="C0_V1_FROZEN_CONTROL"
 
@@ -152,7 +153,11 @@ class SemanticHybridBenchmarkPolicy:
             "resolved_action_type":int(action_type),
             "resolved_amount_to":int(amount_to),
             "three_handed_mode":(
-                "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
+                (
+                    "V1_GENERAL_SEMANTIC_STRONG_DIVERSITY_AVERAGE_POLICY_10115"
+                    if getattr(self.semantic_policy,"_spincore_diversity_candidate",False)
+                    else "V1_GENERAL_SEMANTIC_AVERAGE_POLICY_10115"
+                )
                 if domain=="THREE_HANDED"
                 else "UNCHANGED_HU_ENS8_10105"
             ),
@@ -186,11 +191,18 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
 
     agent=LeanHybridDeploymentAgent.from_bundle(bundle_path,device="cpu",seed=0)
     payload=torch.load(semantic_policy_path,map_location="cpu",weights_only=False)
-    if payload.get("schema")!=SEMANTIC_POLICY_SCHEMA:
-        raise RuntimeError("wrong semantic tail-policy schema")
+    schema=str(payload.get("schema"))
+    if schema not in (SEMANTIC_POLICY_SCHEMA,SEMANTIC_DIVERSITY_SCHEMA):
+        raise RuntimeError(f"wrong semantic tail-policy schema: {schema!r}")
     if payload.get("source_checkpoint_sha256")!=EXPECTED_SOURCE_SHA:
         raise RuntimeError("semantic tail-policy source mismatch")
-    if int(payload.get("completed_iteration",-1))!=SEMANTIC_COMPLETED_ITERATION:
+    completed_iteration=int(
+        payload.get(
+            "completed_iteration",
+            payload.get("semantic_completed_iteration",-1),
+        )
+    )
+    if completed_iteration!=SEMANTIC_COMPLETED_ITERATION:
         raise RuntimeError("semantic tail-policy iteration mismatch")
     if int(payload.get("selected_steps",-1))!=500:
         raise RuntimeError("semantic tail-policy step-budget mismatch")
@@ -198,6 +210,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     model=V1SemanticPolicyNet()
     model.load_state_dict(payload["model_state"])
     model.eval()
+    model._spincore_diversity_candidate=(schema==SEMANTIC_DIVERSITY_SCHEMA)
 
     _SPIN=SemanticHybridBenchmarkPolicy(agent,model)
     _DC=DeepCrusherR8Policy.from_repository(root_path)
