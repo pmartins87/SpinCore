@@ -3338,3 +3338,70 @@ Final untouched validation:
 
 Only PASS automatically launches exact fixed-seed DC1 1k. 5k remains blocked.
 
+## Confidence-gated specialist MoE offline gate FAIL — 2026-09-28
+
+The confidence-routed MoE completed its independent offline validation and
+stopped before DC1 as designed.
+
+Calibration:
+- 80,000 fresh teacher episodes;
+- 421 unique strong/Fold-legal states;
+- threshold grid 0.10..0.90 by 0.05;
+- frozen selection chose Fold threshold **0.90**.
+
+Independent validation:
+- 120,000 fresh teacher episodes / 426,513 decisions;
+- **636** unique strong/Fold-legal states;
+- route fraction **96.54%**, so the selected router behaved close to the pure
+  specialist on most strong states.
+
+Full-pool -> confidence-gated MoE:
+- strong CE: **0.64490 -> 0.59758** (~7.34% better);
+- strong TV: **0.16100 -> 0.13475** (~16.3% better);
+- overall strong Fold abs bias: **4.69 p.p. -> 2.69 p.p.**;
+- low-target Fold mean: **5.80% -> 3.86%**;
+- low-target Fold p95: **43.19% -> 27.00%**;
+- straight/flush Fold bias: **5.65 p.p. -> 3.82 p.p.**;
+- river Fold bias: **5.81 p.p. -> 3.52 p.p.**.
+
+Two frozen criteria still fail:
+1. CE improvement is only ~7.34%, short of the required >=10%;
+2. legitimate high-Fold-target abs bias worsens from **21.22 p.p.** to
+   **23.34 p.p.**, +2.12 p.p., exceeding the +1.5 p.p. guard.
+
+Therefore the confidence router does not solve the remaining class-imbalance
+problem robustly enough, and DC1 was correctly skipped.
+
+### Next gate: target-stratified learned specialist
+
+The failure is now localized within the specialist training distribution:
+legitimate high-Fold strong states are rare (~5% of the independent strong
+surface), while low-target strong states dominate.
+
+Added:
+- `tools/audit_3h_semantic_stratified_specialist_moe_10115.py`;
+- evaluator support for
+  `SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_SPECIALIST_MOE_V1`;
+- `tools/run_3h_semantic_stratified_specialist_moe_and_dc1_10115.sh`.
+
+The next experiment uses a new 300k-episode teacher pool and compares two
+specialist-training arms from the same full-pool initialization:
+- UNIFORM natural sampling;
+- STRATIFIED 70/15/15 low/mid/high teacher-Fold minibatches.
+
+A deterministic stratified 80/20 train/selection split chooses among
+10/25/50/100/200 steps by lowest CE subject to preservation constraints.
+The selected arm is retrained on all collected unique strong states and
+validated on a completely new 150k-episode stream.
+
+Frozen final criteria:
+- >=700 unique strong validation states;
+- >=20 legitimate high-target-Fold states;
+- CE and TV >=10% better than full-pool;
+- overall Fold bias, low-target mean/p95, straight/flush bias and river bias
+  each >=30% better;
+- legitimate high-target-Fold bias no more than +1 p.p. worse than full-pool.
+
+Only PASS automatically launches the exact fixed-seed DC1 1k. 5k remains
+blocked.
+
