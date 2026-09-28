@@ -311,6 +311,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
         SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
         SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
         SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA,
+        SEMANTIC_FOLD_LOGIT_CALIBRATED_SCHEMA,
     ):
         if selected_steps not in (10,25,50,100,200):
             raise RuntimeError("semantic specialist step-budget mismatch")
@@ -320,6 +321,8 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
     if schema in (
         SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
         SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
+        SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA,
+        SEMANTIC_FOLD_LOGIT_CALIBRATED_SCHEMA,
     ):
         base_model=V1SemanticPolicyNet()
         base_model.load_state_dict(payload["base_model_state"])
