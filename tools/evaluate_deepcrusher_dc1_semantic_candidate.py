@@ -55,6 +55,7 @@ SEMANTIC_FULLPOOL_DIVERSITY_SCHEMA="SPINCORE_3H_SEMANTIC_FULLPOOL_STRONG_DIVERSI
 SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_STRONG_SPECIALIST_MOE_V1"
 SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_V1"
 SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA="SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_SPECIALIST_MOE_V1"
+SEMANTIC_FOLD_LOGIT_CALIBRATED_SCHEMA="SPINCORE_3H_SEMANTIC_FOLD_LOGIT_CALIBRATED_STRONG_SPECIALIST_MOE_V1"
 SEMANTIC_COMPLETED_ITERATION=10115
 REPRESENTATION="C0_V1_FROZEN_CONTROL"
 
@@ -131,6 +132,39 @@ class StrongConfidenceGatedMoEPolicyNet(torch.nn.Module):
         return torch.log(probs)
 
 
+class FoldLogitCalibratedStrongMoEPolicyNet(torch.nn.Module):
+    def __init__(self,base_model,specialist_model,fold_logit_scale:float,fold_logit_bias:float):
+        super().__init__()
+        self.base_model=base_model.eval()
+        self.specialist_model=specialist_model.eval()
+        self.fold_logit_scale=float(fold_logit_scale)
+        self.fold_logit_bias=float(fold_logit_bias)
+        self._spincore_fold_logit_calibrated_moe=True
+
+    def probabilities(self,batch):
+        base=self.base_model.probabilities(batch)
+        specialist=self.specialist_model.probabilities(batch)
+        semantic=batch["semantic"]
+        strong=semantic[:,3:9].sum(dim=1)>0.5
+        fold_legal=batch["legal"][:,0]
+        route=(strong & fold_legal).unsqueeze(1)
+
+        pf=specialist[:,0].clamp(1e-8,1.0-1e-8)
+        logit=torch.log(pf)-torch.log1p(-pf)
+        q=torch.sigmoid(
+            self.fold_logit_scale*logit+self.fold_logit_bias
+        )
+        remain=(1.0-q).clamp_min(0.0)
+        nonfold=specialist[:,1:]
+        nonfold_sum=nonfold.sum(dim=1).clamp_min(1e-8)
+        calibrated_nonfold=nonfold*(remain/nonfold_sum).unsqueeze(1)
+        calibrated=torch.cat([q.unsqueeze(1),calibrated_nonfold],dim=1)
+        return torch.where(route,calibrated,base)
+
+    def forward(self,batch):
+        return torch.log(self.probabilities(batch).clamp_min(1e-30))
+
+
 class SemanticHybridBenchmarkPolicy:
     policy_id=SPINCORE_POLICY_ID
 
@@ -145,6 +179,8 @@ class SemanticHybridBenchmarkPolicy:
     def three_handed_mode_label(self,domain):
         if domain!="THREE_HANDED":
             return "UNCHANGED_HU_ENS8_10105"
+        if getattr(self.semantic_policy,"_spincore_fold_logit_calibrated_moe",False):
+            return "V1_GENERAL_SEMANTIC_FOLD_LOGIT_CALIBRATED_STRONG_MOE_10115"
         if getattr(self.semantic_policy,"_spincore_confidence_gated_moe",False):
             return "V1_GENERAL_SEMANTIC_CONFIDENCE_GATED_STRONG_MOE_10115"
         if getattr(self.semantic_policy,"_spincore_stratified_specialist_moe",False):
@@ -257,6 +293,7 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
         SEMANTIC_STRONG_SPECIALIST_MOE_SCHEMA,
         SEMANTIC_CONFIDENCE_GATED_MOE_SCHEMA,
         SEMANTIC_STRATIFIED_SPECIALIST_MOE_SCHEMA,
+        SEMANTIC_FOLD_LOGIT_CALIBRATED_SCHEMA,
     ):
         raise RuntimeError(f"wrong semantic tail-policy schema: {schema!r}")
     if payload.get("source_checkpoint_sha256")!=EXPECTED_SOURCE_SHA:
@@ -293,6 +330,13 @@ def init_worker(solver_path,bundle_path,semantic_policy_path,root_path,seed):
                 base_model,
                 specialist_model,
                 float(payload["fold_threshold"]),
+            ).eval()
+        elif schema==SEMANTIC_FOLD_LOGIT_CALIBRATED_SCHEMA:
+            model=FoldLogitCalibratedStrongMoEPolicyNet(
+                base_model,
+                specialist_model,
+                float(payload["fold_logit_scale"]),
+                float(payload["fold_logit_bias"]),
             ).eval()
         else:
             model=StrongSpecialistMoEPolicyNet(
