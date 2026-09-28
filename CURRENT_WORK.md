@@ -3190,3 +3190,81 @@ compact bundle.
 
 DC1 5k remains blocked until this resumed 1k gate completes.
 
+## Full-pool DC1 1k: broad repair strong, exact fixed-seed gate still misses by one fold — 2026-09-28
+
+The full-pool +1,039 candidate completed the exact fixed-seed DC1 1k replay.
+
+Development EV:
+- baseline 10105 3H vs DeepCrusher: **-21.276**;
+- +512 stratified: **-12.729**;
+- full-pool +1,039: **-12.240** chips/policy-seat-hand.
+
+Paired 3H:
+- full-pool - baseline: **+9.036**,
+  95% CI **[-1.240, +19.312]**;
+- full-pool - +512 stratified: **+0.488**,
+  95% CI **[-2.543, +3.520]**.
+
+Sanity:
+- high-card jam: baseline **149**, +512 **68**, full-pool **66**;
+- top-pair fold: **3 / 1 / 0**;
+- AA fold: **6 / 0 / 0**;
+- deep 72o jam: **8 / 0 / 0**;
+- trips-or-better fold: **1 / 3 / 2**.
+
+Thus every frozen scale-up indicator passes except the deliberately strict
+`trips-or-better fold <= baseline` condition (2 > 1).
+
+The two residual sampled folds are:
+- river 83 trips on 8-9-K-5-8: Fold **44.82%**;
+- river 65 flush on T-A-4-Q-J four-spade board: Fold **10.67%**.
+
+The broad independent 50k audit remains excellent:
+- 301 strong states;
+- canonical Fold abs bias **22.24 p.p.**;
+- +512 **4.58 p.p.**;
+- full-pool **3.37 p.p.**.
+
+This shows the global/full-pool network is now broadly calibrated but still has
+a sparse local tail. Repeatedly adding examples to the same global network has
+diminishing returns and risks tuning to the fixed DC1 prefix.
+
+### Next architecture gate: learned strong-hand specialist MoE
+
+Instead of another hard-coded action rule or further global reweighting, the
+next experiment uses a learned specialist only on the rare semantic stratum:
+postflop made_category >= TRIPS and Fold legal.
+
+Important:
+- the specialist learns the **full teacher action distribution**;
+- there is no "never fold trips+" hard-code;
+- the validated full-pool model remains unchanged for all ordinary states;
+- no DC1 states are used for training.
+
+Added:
+- `tools/audit_3h_semantic_strong_specialist_moe_10115.py`;
+- evaluator support for
+  `SPINCORE_3H_SEMANTIC_STRONG_SPECIALIST_MOE_V1`;
+- `tools/run_3h_semantic_strong_specialist_moe_and_dc1_10115.sh`.
+
+Specialist training:
+- new 120k-episode canonical-teacher stream;
+- unique strong/Fold-legal states only;
+- deterministic 80/20 train/selection split;
+- initialize from the full-pool model;
+- choose 10/25/50/100 fine-tuning steps by lowest weighted CE on the selection
+  split;
+- retrain on all collected strong states at the selected budget.
+
+Independent validation:
+- new 80k-episode stream;
+- require >=400 unique strong states;
+- strong CE and TV >=20% better than full-pool;
+- overall strong Fold bias >=30% better;
+- low-target-Fold mean >=40% better and p95 >=30% better;
+- straight/flush and river Fold bias >=30% better;
+- legitimate high-Fold-target bias no more than +2 p.p. worse.
+
+Only if the offline MoE gate passes does the runner automatically launch the
+same exact DC1 1k replay. 5k remains blocked until that final gate passes.
+
