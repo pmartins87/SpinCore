@@ -2722,3 +2722,81 @@ max parameter drift before the intervention arms are trained.
 PASS authorizes an exact DC1 1k replay of the diversity candidate.  It still
 does not authorize production, DC2 or a 5k benchmark.
 
+## Strong-hand diversity repair PASS — 2026-09-27
+
+The controlled diversity-vs-repeat experiment passed all frozen criteria.
+
+Canonical baseline on the new untouched 30,000-episode evaluation:
+- 160 strong Fold-legal states;
+- teacher Fold weighted mean **6.55%**;
+- canonical semantic tail Fold weighted mean **28.87%**;
+- strong-hand absolute Fold bias **22.32 p.p.**;
+- straight/flush bias **33.61 p.p.**;
+- river strong bias **26.98 p.p.**.
+
+Equal-weight repeat control:
+- same +256 strong slots as the candidate, but created only by repeating the
+  original 44 train states;
+- strong-hand absolute Fold bias remains **21.30 p.p.**.
+
+Diverse candidate:
+- +256 genuinely new teacher-labelled strong states;
+- selected from **366** novel candidates found in an independent 60,000-episode
+  teacher stream;
+- strong-hand absolute Fold bias falls to **6.91 p.p.**
+  (~69.0% better than baseline, ~67.6% better than repeat control);
+- straight/flush bias falls to **12.94 p.p.** (~61.5% better);
+- river strong bias falls to **10.91 p.p.** (~59.6% better).
+
+Global cost remains inside the frozen tolerance:
+- CE ratio diverse/baseline **1.0084** (+0.84%);
+- TV ratio **1.0191** (+1.91%);
+- high-card/no-draw ALL_IN abs bias worsens by only **0.248 p.p.**.
+
+The exact canonical 500-step tail was reproduced with max parameter difference
+**0.0** before intervention, confirming experiment identity.
+
+All eight precommitted criteria passed.
+
+### Interpretation
+
+The failure mechanism is now causally isolated at the experiment level:
+**new strong-state diversity**, not merely additional class weight, is what
+repairs the unseen strong-hand Fold surface.
+
+The repeat control received exactly the same number of extra strong-hand slots,
+same total dataset size, same 500-step optimizer budget and same minibatch index
+sequence, yet barely improved the strong-hand bias.  The diverse arm produces a
+large reduction while preserving global fit.
+
+This candidate is still diagnostic-only and not promoted.
+
+### Next gate: exact three-arm DC1 1k replay
+
+Added:
+- updated `tools/evaluate_deepcrusher_dc1_semantic_candidate.py` to accept the
+  strong-diversity tail-candidate schema;
+- `tools/run_deepcrusher_dc1_semantic_strong_diversity_1k.sh`.
+
+The benchmark runs the exact same 1,000 scenario/deal seeds for:
+1. unchanged 10105 baseline;
+2. canonical 10115 semantic tail;
+3. 10115 strong-diversity candidate.
+
+HU ENS8 is identical in all three arms.
+
+The comparison reports:
+- absolute 3H development EV vs DeepCrusher for all three;
+- paired candidate-minus-baseline, canonical-minus-baseline and
+  candidate-minus-canonical deltas;
+- exact HU parity;
+- sanity-flag counts/rates for all three.
+
+The key repair checks are whether the candidate:
+- brings POSTFLOP_TRIPS_PLUS_FOLD back to no worse than baseline and no higher
+  than canonical;
+- avoids reintroducing high-card jams, top-pair folds or preflop AA folds;
+- does not lose paired 3H value versus the canonical tail.
+
+A clean 1k replay is required before any 5k scale-up.
+
