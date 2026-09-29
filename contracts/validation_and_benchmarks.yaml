@@ -224,3 +224,148 @@ invariants:
       - ROADMAP.md
       - tools/audit_3h_semantic_stratified_specialist_multiseed_10115.py
       - tools/run_deepcrusher_dc1_stratified_specialist_5k.sh
+
+  - id: DC-005
+    status: ACTIVE
+    scope: FROZEN_DEEPCRUSHER_R8_BASELINE
+    statement: >
+      The canonical DeepCrusher reference is branch
+      r8-v22-stable-20260914. Its operational OpenHoldem source must be exactly
+      DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt with SHA256
+      0113badc99727a7dd47c02448d4d042b5e008534cd63fd79a461a72b24eeb68d;
+      its strategic source is
+      DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_RECOVERED_20260914.txt with
+      SHA256 9fc2d00aacc915f3c265429f764056f3c6270df616244026aac22e455c803ee9.
+      A different source or hash is a different benchmark opponent.
+    provenance:
+      - python/spincore/deepcrusher_benchmark.py
+      - python_tests/test_deepcrusher_benchmark_contract.py
+  - id: DC-006
+    status: ACTIVE
+    scope: DEEPCRUSHER_DC0_SYMBOL_CLOSURE
+    statement: >
+      Canonical DC0 requires explicit semantics for every dependency reachable
+      from f$preflop, f$flop, f$turn, and f$river. Missing reachable functions or
+      unknown native symbols are blockers; benchmark code must never silently
+      zero-fill an unknown strategic symbol.
+    provenance:
+      - python/spincore/deepcrusher_r8_dc0.py
+      - python/spincore/deepcrusher_native_symbols.py
+      - tools/audit_deepcrusher_r8_dc0_readiness.py
+  - id: DC-007
+    status: ACTIVE
+    scope: DEEPCRUSHER_BENCHMARK_ENVIRONMENT
+    statement: >
+      The frozen non-strategic benchmark environment is
+      GGPoker_NoPT_NoNotes_V1: network$ggpoker true and other networks false,
+      PokerTracker and chair lookups OpenHoldem-undefined (-1), colour notes
+      zero, log$ expressions true, and strategic prwin/prtie symbols are not
+      supplied by this environment shim.
+    provenance:
+      - python/spincore/deepcrusher_native_symbols.py
+      - python_tests/test_deepcrusher_native_symbols.py
+  - id: DC-008
+    status: ACTIVE
+    scope: DEEPCRUSHER_PRELLOP_RANGE_EQUITY
+    statement: >
+      Frozen R8 preflop versus-multiplex support is restricted to range ids
+      4, 6, 9, 12, and 15 using the hash-pinned 169-class equity table. R8's
+      consumed value prwin + 0.5*prtie is preserved behaviorally as stored equity
+      with prtie zero; unrelated multiplex functions and non-preflop use fail
+      closed.
+    provenance:
+      - python/spincore/deepcrusher_preflop_equity.py
+      - python/spincore/deepcrusher_native_symbols.py
+      - python_tests/test_deepcrusher_preflop_equity.py
+  - id: DC-009
+    status: ACTIVE
+    scope: DEEPCRUSHER_STATE_AND_SUITS
+    statement: >
+      Canonical DeepCrusher decisions use a lossless observable state view and
+      exact deal-snapshot suit ids when suit-tie semantics can affect OpenHoldem
+      symbols. Canonicalized suit-equivalence labels are acceptable only for
+      static/unit contexts and are not a substitute for exact-suit benchmark
+      semantics.
+    provenance:
+      - python/spincore/deepcrusher_state.py
+      - python/spincore/deepcrusher_policy.py
+  - id: DC-010
+    status: ACTIVE
+    scope: DEEPCRUSHER_OPENPPL_LIFECYCLE
+    statement: >
+      Every synthetic paired benchmark hand creates isolated OpenPPL sessions per
+      DeepCrusher seat. Startup, hand-reset, new-round, and my-turn callbacks are
+      replayed in OpenHoldem order, preventing connection-level memory from one
+      paired replay from leaking into another.
+    provenance:
+      - python/spincore/deepcrusher_policy.py
+  - id: DC-011
+    status: ACTIVE
+    scope: DEEPCRUSHER_HISTORY_SYMBOLS
+    statement: >
+      History symbols are reconstructed from the complete ordered public action
+      transcript, while exact hero action-origin metadata preserves OpenHoldem's
+      distinction between minimum Raise-button actions and f$betsize actions.
+      Origin/history length mismatches fail closed.
+    provenance:
+      - python/spincore/deepcrusher_history_symbols.py
+      - python/spincore/deepcrusher_action.py
+      - python_tests/test_deepcrusher_history_symbols.py
+  - id: BENCH-010
+    status: ACTIVE
+    scope: EXACT_EXTERNAL_ACTION_APPLICATION
+    statement: >
+      DeepCrusher exact Fold/Check/Call/BetTo/RaiseTo/AllIn actions are applied
+      directly through the solver's exact-action ABI. Bet and raise amount_to
+      values are never quantized into SpinCore's seven-action abstraction.
+    provenance:
+      - python/spincore/deepcrusher_benchmark.py
+      - python_tests/test_deepcrusher_exact_action_bridge.py
+      - python_tests/test_deepcrusher_benchmark_contract.py
+  - id: BENCH-011
+    status: ACTIVE
+    scope: DEEPCRUSHER_ACTION_TRANSLATION
+    statement: >
+      OpenPPL action translation preserves OpenHoldem semantics: positive return
+      values are final f$betsize values in big blinds; -1000 <= value < 0 is a
+      pot fraction; values below -1000 are fixed action codes; zero is
+      check/fold; RaiseTo is a final BB wager; RaiseBy adds to ncallbets; and
+      unavailable aggression falls back through OpenPPL's legal passive-action
+      behavior.
+    provenance:
+      - python/spincore/deepcrusher_action.py
+  - id: BENCH-012
+    status: ACTIVE
+    scope: DEEPCRUSHER_ACTION_ROUNDING
+    statement: >
+      Offline exact-action translation uses deterministic half-up rounding only
+      when a fractional chip target must become an integer simulator amount and
+      then clamps to exact legal min/max bounds. This convention remains
+      provisional until real OpenHoldem action+sizing parity fixtures validate
+      it and cannot itself satisfy DC0.
+    provenance:
+      - python/spincore/deepcrusher_action.py
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - id: BENCH-013
+    status: ACTIVE
+    scope: BENCHMARK_ZERO_SUM_AND_EXPOSURE_BALANCE
+    statement: >
+      Every benchmark hand must conserve chips and every balanced scenario block
+      must give equal policy exposure. A non-zero-sum terminal row, unequal
+      policy exposure, or non-zero aggregate policy total is a hard benchmark
+      error.
+    provenance:
+      - python/spincore/deepcrusher_benchmark.py
+      - tools/evaluate_deepcrusher_dc1.py
+      - python_tests/test_deepcrusher_benchmark_contract.py
+  - id: BENCH-014
+    status: ACTIVE
+    scope: DC1_RUNTIME_ARTIFACTS
+    statement: >
+      Multiprocess DC1 may load only a compact inference bundle, not a multi-GB
+      training checkpoint. Worker processes use one Torch/OpenMP/BLAS thread
+      each, the scenario sampler is the canonical empirical SpinGo sampler, and
+      every scenario/deal identity is fixed before parallel execution.
+    provenance:
+      - tools/evaluate_deepcrusher_dc1.py
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
