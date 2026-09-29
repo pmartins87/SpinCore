@@ -111,3 +111,19 @@ invariants:
     provenance:
       - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
       - docs/RYZEN_OPTIMIZATION_POLICY.md
+
+  - id: PERF-024
+    status: ACTIVE
+    scope: ACTIVE_LONG_RUN_OPTIMIZATION_MIGRATION
+    statement: >
+      For an inefficient active long run with durable resume support, prepare and
+      validate a parity-preserving optimized continuation while the current run
+      continues when doing so is safe. Migrate only at a durable checkpoint and
+      only when measured target-host throughput plus remaining-work break-even
+      show a net benefit. Do not interrupt first and optimize afterward unless
+      immediate interruption is required for correctness or safety.
+    provenance:
+      - PERF-015
+      - PERF-022
+      - GOV-023
+      - user_decision_2026-09-29_semantic_long_parallel_migration
