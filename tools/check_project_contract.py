@@ -338,6 +338,7 @@ def main() -> int:
         PRIMARY_PAYOUT_VECTOR,
         UTILITY_SCALE_ID,
     )
+    from spincore.r7 import stratified_audit_indices
 
     assert LegacyScenarioConfig().total_chips == 1500
     assert abs(LegacyScenarioConfig().heads_up_prob - 0.4548) < 1e-12
@@ -352,6 +353,13 @@ def main() -> int:
     assert float(FIRST_RELEASE_TOTAL_CHIPS) == 1500.0
     assert tuple(PRIMARY_PAYOUT_VECTOR) == (1.0, 0.0, 0.0)
     assert UTILITY_SCALE_ID == "TOTAL_CHIPS_CONSTANT_1500_V1"
+
+    audit_a = stratified_audit_indices(10000, 10, 4)
+    audit_b = stratified_audit_indices(10000, 10, 4)
+    assert audit_a == audit_b
+    assert len(audit_a) == len(set(audit_a)) == 10
+    assert min(audit_a) < 1000
+    assert max(audit_a) >= 9000
 
     long_text = (ROOT / "tools" / "run_3h_semantic_long_10115_10315.py").read_text(
         encoding="utf-8"
