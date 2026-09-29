@@ -92,7 +92,7 @@ echo "POSTLONG_10315_POLICY_REBUILD_START"
   --out-fullpool "${FULLPOOL}" \
   --threads 8
 
-POLICY_PASS="@("${PY}" - "${POLICY_REPORT}" <<'PY'
+POLICY_PASS="$("${PY}" - "${POLICY_REPORT}" <<'PY'
 import json,sys
 r=json.load(open(sys.argv[1]))
 print("1" if r.get("postlong_policy_rebuild_pass") else "0")
@@ -124,7 +124,7 @@ echo "POSTLONG_10315_MULTISEED_START"
   --report "${MULTISEED_REPORT}" \
   --threads 8
 
-MULTISEED_PASS="@("${PY}" - "${MULTISEED_REPORT}" <<'PY'
+MULTISEED_PASS="$("${PY}" - "${MULTISEED_REPORT}" <<'PY'
 import json,sys
 r=json.load(open(sys.argv[1]))
 print("1" if r.get("semantic_stratified_specialist_multiseed_pass") else "0")
