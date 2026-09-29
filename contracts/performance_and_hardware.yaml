@@ -54,3 +54,31 @@ invariants:
     provenance:
       - ROADMAP.md
       - tools/lt3_hu_ens8_parallel_fit.py
+
+  - id: PERF-018
+    status: ACTIVE
+    scope: RYZEN_OPTIMIZATION
+    statement: Once one phase is accelerated, profile the resulting end-to-end workload and optimize the new dominant bottleneck specifically rather than continuing to scale a phase that is no longer limiting.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-019
+    status: ACTIVE
+    scope: TARGET_HOST_PROFILE
+    statement: The selected worker/thread profile and benchmark evidence must be persisted so later sessions and resume scripts do not silently revert to an unmeasured execution profile.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-020
+    status: ACTIVE
+    scope: PERFORMANCE_OPTIMIZATION
+    statement: A throughput optimization may change scheduling and implementation mechanics only; if it materially approximates or changes game semantics, sampling distribution, objective, representation, action semantics, or intended learning algorithm, it is an architecture decision and requires separate strategic adjudication.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: PERF-021
+    status: ACTIVE
+    scope: PARALLEL_ROOT_COLLECTION
+    statement: When root collection is process-parallel, the parent remains authoritative for scenario sampling and reservoir insertion, workers use independent deterministic root streams, and returned samples are merged in deterministic root order so worker scheduling does not redefine training semantics.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_parallel.py
