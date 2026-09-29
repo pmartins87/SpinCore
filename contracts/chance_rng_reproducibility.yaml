@@ -30,3 +30,23 @@ invariants:
     provenance:
       - ROADMAP.md
       - tools/run_3h_semantic_long_10115_10315.py
+
+  - id: RNG-010
+    status: ACTIVE
+    scope: LT3_DEVELOPMENT
+    statement: The reserved LT3 development seeds are 20261101 through 20261106 and are development-only, not training seeds.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - id: RNG-011
+    status: ACTIVE
+    scope: LT3_SEALED_HOLDOUT
+    statement: Seeds 20261121 through 20261126 remain sealed from LT3 development and may be opened only for a future promotion candidate after all research choices are frozen.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - id: RNG-012
+    status: ACTIVE
+    scope: RETIRED_LT2_HOLDOUT
+    statement: Historical LT2 final-holdout seeds 20261001 through 20261006 are retired and must never be recycled as LT3 development data.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+      - docs/LT2_HU_ENS8_FINAL_HOLDOUT_PROTOCOL_20260921.md
