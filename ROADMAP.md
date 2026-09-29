@@ -1,4 +1,4 @@
-# SpinCore Roadmap — active state 2026-09-22
+# SpinCore Roadmap — active state 2026-09-29
 
 ## Primary objective now
 
@@ -3636,3 +3636,86 @@ stratified strong-hand specialist from that new teacher and independently
 validate them.  This design intentionally avoids carrying the historical
 AveragePolicy target-conflict problem into the long training phase.
 
+
+
+## 3H semantic long 10115->10315 — ACTIVE — 2026-09-29
+
+The precommitted long semantic-Advantage continuation has now been launched on
+the Ryzen host.
+
+Observed launch evidence:
+- `SEMANTIC_LONG_10115_10315_GATE_CONTRACT_PASS`;
+- Release solver build PASS;
+- reservoir-write and ENS8 policy tests PASS;
+- `SEMANTIC_LONG_10115_10315_PREFLIGHT_PASS`;
+- 2M semantic precompute PASS in ~32.8 s;
+- iteration 10116 completed its 64/64 root-collection block without an error in
+  the user-provided live output. The subsequent fit/completion line had not yet
+  been observed at the time of this source-of-truth update.
+
+Frozen run contract remains unchanged:
+- source semantic teacher: 10115;
+- target: 10315;
+- +200 online 3H iterations / 12,800 new roots;
+- 64 roots/iteration;
+- eight semantic Advantage members x 1,600 fresh-fit steps/iteration;
+- canonical lean regret matching + softmax fallback;
+- HU frozen at 10105;
+- milestones 10165 / 10215 / 10265 / 10315;
+- rolling resume after every completed iteration;
+- no AveragePolicy continuation during the long run.
+
+Do not pull, restart, or launch another SpinCore trainer while this process is
+running. A terminal safety stop is evidence to inspect, not permission to select
+an earlier milestone post hoc.
+
+### Post-10315 pipeline frozen while training runs
+
+Repository-side preparation has been completed without touching the live local
+trainer:
+
+- `tools/build_3h_semantic_postlong_policy_10315.py` — fresh 8k ordinary
+  strategy-target rebuild from the 10315 teacher, frozen 500-step semantic
+  AveragePolicy bridge, independent 180k novel-strong augmentation for the
+  full-pool base, and independent 50k validation;
+- `tools/build_3h_semantic_stratified_specialist_10315.py` — rebuilds the
+  previously validated specialist architecture with **no new model selection**:
+  STRATIFIED 70/15/15 low/mid/high teacher-Fold sampling and fixed 25 steps;
+- `tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py` —
+  unchanged four-new-seed confirmation criteria adapted to the 10315 teacher;
+- `tools/run_3h_semantic_postlong_10315.sh` — guarded post-long pipeline. It
+  refuses to start unless the 10315 long report is PASS, all pathology guards
+  pass, the final ensemble hash matches, and frozen 10105/HU hashes remain
+  unchanged;
+- `tools/evaluate_deepcrusher_dc1_semantic_candidate_10315.py` plus
+  `tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh` — a later
+  fresh-seed (20261001) development comparison of baseline 10105 vs accepted
+  specialist 10115 vs rebuilt specialist 10315. This runner is prepared but is
+  **not authorized before the post-long rebuild + four-seed validation PASS**.
+
+The 5k post-long comparison precommits two separate questions:
+1. safety/baseline retention: 10315 must retain the resolved 3H improvement over
+   10105 and not regress repaired sanity surfaces;
+2. incremental value: 10315-vs-10115 is classified as
+   `POSITIVE_RESOLVED`, `POSITIVE_INCONCLUSIVE`, or
+   `NO_POSITIVE_INCREMENT`.
+
+This avoids the invalid inference that a longer run must be better merely
+because it contains more iterations.
+
+### Immediate operational action
+
+While the trainer is active: leave its PowerShell/WSL process untouched.
+Expected successful terminal sentinel:
+`SEMANTIC_LONG_10115_10315_TRAINING_PASS`.
+
+After that sentinel only:
+1. send/review the Desktop JSON
+   `SpinCore_3H_semantic_long_10115_10315.json`;
+2. if the report is clean, pull the new main;
+3. run `bash tools/run_3h_semantic_postlong_10315.sh`;
+4. stop again at its terminal PASS/FAIL and inspect evidence before DC1 5k.
+
+DC0 real-OpenHoldem action+sizing parity remains pending. Therefore all current
+DeepCrusher comparisons remain development evidence; production, DC2 and a
+canonical superiority claim remain blocked.
