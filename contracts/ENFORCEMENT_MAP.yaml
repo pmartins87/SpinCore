@@ -1,0 +1,821 @@
+schema: SPINCORE_CONTRACT_ENFORCEMENT_MAP_V1
+date: "2026-09-29"
+purpose: >
+  Record the primary enforcement path for every contract invariant. A mapping
+  marked PARTIAL_AUTOMATION or REVIEW does not pretend that the poker/strategic
+  statement is mechanically provable; it identifies the mandatory gate that
+  must carry the invariant into implementation and evidence. Contract CI fails
+  when an invariant exists without an enforcement binding.
+bindings:
+  - id: ACT-001
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-002
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-003
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-004
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-005
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-010
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-011
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-012
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ACT-013
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: ART-001
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-002
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-010
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-011
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-012
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-013
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-014
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: ART-015
+    mechanism: HASH_PROVENANCE_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: BENCH-001
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-002
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-003
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-004
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-005
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-006
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-007
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-008
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-009
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-010
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-011
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-012
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-013
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: BENCH-014
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: CHANCE-001
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: CHANCE-002
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: CHANCE-010
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: CHANCE-020
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: CHANCE-021
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: CHANCE-022
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: CHANCE-023
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: CHANCE-024
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: CKPT-001
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-002
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-003
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-004
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-010
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-011
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-012
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-013
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: CKPT-014
+    mechanism: CHECKPOINT_REGRESSION_AND_ARTIFACT_GUARD
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/checkpoints_and_artifacts.yaml
+  - id: DC-001
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-002
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-003
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-004
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-005
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-006
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-007
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-008
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-009
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-010
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: DC-011
+    mechanism: BENCHMARK_PREFLIGHT_AND_RUNNER_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: GAME-001
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-002
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-003
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-004
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-005
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-006
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-010
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-011
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-012
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-013
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GAME-014
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: GOAL-001
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/goals_and_product.yaml
+  - id: GOAL-002
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/goals_and_product.yaml
+  - id: GOAL-003
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/goals_and_product.yaml
+  - id: GOAL-004
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/goals_and_product.yaml
+  - id: GOAL-005
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/goals_and_product.yaml
+  - id: GOV-001
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: GOV-002
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: GOV-003
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: GOV-004
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: GOV-005
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: GOV-010
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-011
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-012
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-013
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-014
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-015
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-016
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-017
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-018
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-019
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-020
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: GOV-021
+    mechanism: MANDATORY_PREFLIGHT_AND_REVIEW
+    automation: REVIEW_PLUS_CI_GUARDS
+    declared_in: contracts/governance.yaml
+  - id: MODEL-001
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-002
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-020
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-021
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-022
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-023
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-024
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-030
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-031
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: MODEL-032
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: OH-001
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-002
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-003
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-004
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-005
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-006
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-007
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-008
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-009
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-010
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-011
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-012
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-013
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-014
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-015
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-016
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-017
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-018
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-019
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-020
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: OH-021
+    mechanism: RUNTIME_PARITY_AND_FAIL_CLOSED_GATE
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/openholdem_and_deployment.yaml
+  - id: PERF-001
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: PERF-002
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: PROJECT_CONTRACT.yaml
+  - id: PERF-010
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-011
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-012
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-013
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-014
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-015
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-016
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-017
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-018
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-019
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-020
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-021
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-022
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: PERF-023
+    mechanism: STAGE_MANIFEST_PERFORMANCE_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/performance_and_hardware.yaml
+  - id: REP-001
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-002
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-003
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-010
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-011
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-012
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-013
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-014
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-015
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-016
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-017
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: REP-018
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/action_and_representation.yaml
+  - id: RNG-001
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: RNG-002
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: RNG-003
+    mechanism: SEED_CHANCE_PROTOCOL_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: RNG-010
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: RNG-011
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: RNG-012
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/chance_rng_reproducibility.yaml
+  - id: SAFE-001
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: SAFE-002
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: SAFE-010
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: SAFE-011
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: SCEN-001
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: SCEN-002
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: SCEN-003
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: SCEN-004
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: SCEN-005
+    mechanism: SEMANTIC_REGRESSION_AND_PREFLIGHT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/game_and_scenarios.yaml
+  - id: SRC-001
+    mechanism: CONTRACT_CI_SOURCE_AUDIT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/source_of_truth.yaml
+  - id: SRC-002
+    mechanism: CONTRACT_CI_SOURCE_AUDIT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/source_of_truth.yaml
+  - id: SRC-003
+    mechanism: CONTRACT_CI_SOURCE_AUDIT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/source_of_truth.yaml
+  - id: SRC-004
+    mechanism: CONTRACT_CI_SOURCE_AUDIT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/source_of_truth.yaml
+  - id: SRC-005
+    mechanism: CONTRACT_CI_SOURCE_AUDIT
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/source_of_truth.yaml
+  - id: TRAIN-001
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-002
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-003
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-004
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-005
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-006
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-007
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-008
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-009
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-010
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-011
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-012
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-020
+    mechanism: CONTRACT_CI_LITERAL_ASSERTION_PLUS_DOMAIN_REGRESSION
+    automation: AUTOMATED_AND_REVIEW
+    declared_in: contracts/training_and_models.yaml
+  - id: TRAIN-021
+    mechanism: TRAINING_STAGE_PREFLIGHT_AND_REGRESSION
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/training_and_models.yaml
+  - id: VALID-001
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-002
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-003
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-010
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-011
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-012
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-013
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-020
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-021
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-022
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-023
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-024
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-025
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-026
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-030
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-031
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-032
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
+  - id: VALID-033
+    mechanism: PRECOMMITTED_VALIDATION_GATE_AND_REVIEW
+    automation: PARTIAL_AUTOMATION
+    declared_in: contracts/validation_and_benchmarks.yaml
