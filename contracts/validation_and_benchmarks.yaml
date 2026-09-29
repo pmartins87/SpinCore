@@ -402,3 +402,39 @@ invariants:
     provenance:
       - docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md
       - docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md
+
+  - id: SAFE-010
+    status: ACTIVE
+    scope: DEPLOYMENT_OR_CANONICAL_PROMOTION
+    statement: >
+      Canonical/extreme strategic sentinels must combine exact integrity
+      fingerprints with independently precommitted poker-plausibility checks.
+      The sentinel corpus must cover HU and 3H separately, materially different
+      stack depths, strong and weak holdings, and relevant facing-action/payout
+      contexts. A failed strategic bound is investigated rather than weakened
+      after observing the candidate.
+    provenance:
+      - validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: SAFE-011
+    status: ACTIVE
+    scope: POLICY_PATHOLOGY_AUDIT
+    statement: >
+      Aggregate fit or EV metrics cannot replace broad pathology review. Before
+      canonical promotion, audit for nonfinite/illegal probability mass,
+      accidental one-action collapse, unreachable action IDs, wrong HU/3H
+      routing, unintended identity-equivalent outputs across distinct strategic
+      profiles, and malformed-state discontinuities.
+    provenance:
+      - validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - id: VALID-033
+    status: ACTIVE
+    scope: MULTI_DOMAIN_PROMOTION
+    statement: >
+      Promotion evidence is reported separately for every required strategy
+      domain/profile. A strong aggregate or a passing HU policy cannot mask
+      missing or failed 3H evidence, and vice versa.
+    provenance:
+      - validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md
+      - docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md
