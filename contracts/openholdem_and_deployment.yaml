@@ -129,3 +129,39 @@ invariants:
       absolute error within the frozen 2e-4 tolerance against Python fixtures.
     provenance:
       - docs/LT2_NATIVE_CPP_INFERENCE_PARITY_RESULT_20260921.md
+
+  - id: OH-015
+    status: ACTIVE
+    scope: OPENHOLDEM_RAW_SYMBOL_ADAPTER
+    statement: >
+      Runtime normalizes documented OpenHoldem symbols strictly: balanceN is
+      stack behind, currentbetN is chips currently in play for the chair, pot is
+      total chips in play including player bets, dealt/playing/all-in bitfields
+      define chair status, betround 1..4 maps to preflop..river, and
+      ncommoncardsknown is visible community-card count. Wrong hand identity,
+      unsupported blinds, fractional chip balances, and inconsistent
+      board-count/betround frames fail closed.
+    provenance:
+      - docs/LT2_OPENHOLDEM_SYMBOL_ADAPTER_RESULT_20260921.md
+  - id: OH-016
+    status: ACTIVE
+    scope: LT2_WINDOWS_SHADOW_DLL
+    statement: >
+      The first real OpenHoldem shadow-load gate must use the exact Windows DLL
+      binary that passed the mock-host gate and must first verify the actual
+      OpenHoldem executable architecture. An x64 DLL must not be loaded into an
+      x86 host; an x86 host requires a separately built and mock-tested x86 DLL.
+    provenance:
+      - docs/LT2_OPENHOLDEM_SHADOW_DLL_WINDOWS_MOCK_RESULT_20260921.md
+  - id: OH-017
+    status: ACTIVE
+    scope: LT2_HYBRID_DEPLOYMENT_BASELINE
+    statement: >
+      The frozen LT2 hybrid deployment route is THREE_HANDED finalized
+      AveragePolicy and TRUE_HEADS_UP eight-member raw-Advantage mean followed
+      by unchanged lean regret matching. Cross-language/runtime integration may
+      not modify weights, domain routing, action semantics, regret matching, or
+      policy selection.
+    provenance:
+      - docs/LT2_HYBRID_DEPLOYMENT_PARITY_RESULT_20260921.md
+      - docs/LT2_NATIVE_CPP_INFERENCE_PARITY_RESULT_20260921.md
