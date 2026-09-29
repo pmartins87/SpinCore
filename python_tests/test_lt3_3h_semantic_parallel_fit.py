@@ -168,3 +168,43 @@ def test_parallel_semantic_fit_is_tensor_exact_to_sequential_reference(tmp_path)
         ]
     finally:
         packed.close()
+
+
+def test_sequential_reference_matches_canonical_pilot_fit_ensemble(monkeypatch):
+    memory, semantic, train_pool, member_meta = _fixture()
+    contract = par.make_fit_contract(
+        member_meta,
+        learning_rate=3e-4,
+        batch_size=16,
+        member_steps=5,
+    )
+
+    import run_3h_semantic_online_pilot_10105 as pilot
+
+    monkeypatch.setattr(pilot, "MEMBER_STEPS", 5)
+    torch.set_num_threads(1)
+    _models, canonical_states, canonical_meta, _wall = pilot.fit_ensemble(
+        memory,
+        semantic,
+        train_pool,
+        member_meta,
+        lr=3e-4,
+        batch_size=16,
+        iteration=12345,
+    )
+    reference = par.fit_members_sequential_reference(
+        memory,
+        semantic,
+        train_pool,
+        contract,
+        threads=1,
+    )
+    assert len(canonical_states) == len(reference) == 8
+    for member in range(8):
+        assert par.tensor_states_equal(
+            canonical_states[member], reference[member]["state"]
+        )
+        assert canonical_meta[member]["init_seed"] == reference[member]["init_seed"]
+        assert canonical_meta[member]["batch_seed"] == reference[member]["batch_seed"]
+        assert canonical_meta[member]["steps"] == reference[member]["steps"]
+        assert canonical_meta[member]["loss_last"] == reference[member]["loss_last"]
