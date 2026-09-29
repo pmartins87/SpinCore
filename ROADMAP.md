@@ -3590,3 +3590,49 @@ This remains development evidence only. DC0 real-OpenHoldem action+sizing
 parity remains pending, so production, DC2 and a canonical strength claim are
 still blocked.
 
+### Longer semantic-Advantage continuation prepared: 10115 -> 10315
+
+Added:
+- `tools/run_3h_semantic_long_10115_10315.py`;
+- `tools/run_3h_semantic_long_10115_10315.sh`.
+
+The long run deliberately keeps the architecture that passed the fresh-seed 5k:
+- 3H semantic Advantage only;
+- canonical lean regret-matching + softmax fallback;
+- 64 roots per online iteration;
+- eight members, each fresh-fit for 1,600 steps;
+- same deterministic member init/batch seeds;
+- same 2M Advantage reservoir;
+- same protected 50k reservoir positions;
+- HU remains frozen at 10105;
+- no historical AveragePolicy continuation is performed.
+
+Budget:
+- semantic iteration **10115 -> 10315**;
+- **200** additional online iterations;
+- **12,800** new 3H roots;
+- milestones at 10165 / 10215 / 10265 / 10315;
+- projected duration about **27 hours** from the measured canonical 10105->10115
+  rate (~484 s tree+fit per online iteration plus fixed overhead).
+
+The runner is resumable after every completed online iteration.  It verifies
+before starting that:
+- canonical 10115 source replay passed with the canonical fallback contract;
+- the canonical 10115 resume and final ensemble are tensor-identical;
+- the fresh-seed DC1 5k long-train-readiness gate passed;
+- frozen 10105 checkpoint/HU hashes are unchanged;
+- repository, RAM and disk preconditions are satisfied.
+
+Milestone pathology guards are precommitted and intentionally loose:
+- finite diagnostics;
+- pairwise TV and argmax disagreement may not deteriorate by >35% vs 10115;
+- no-draw raw/member-mix All-in probability may not rise by >15 p.p.
+
+A guard failure stops the run; it does not select/promote a milestone.
+
+A successful long run freezes only a new semantic Advantage teacher at 10315.
+The next stage must freshly rebuild AveragePolicy targets and the validated
+stratified strong-hand specialist from that new teacher and independently
+validate them.  This design intentionally avoids carrying the historical
+AveragePolicy target-conflict problem into the long training phase.
+
