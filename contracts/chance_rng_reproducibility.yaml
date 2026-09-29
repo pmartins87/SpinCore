@@ -50,3 +50,62 @@ invariants:
     provenance:
       - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
       - docs/LT2_HU_ENS8_FINAL_HOLDOUT_PROTOCOL_20260921.md
+
+  - id: CHANCE-020
+    status: ACTIVE
+    scope: INFORMATION_SET_TARGETS
+    statement: >
+      Hidden opponent cards and unrevealed future board cards are not legal
+      policy inputs. Their effect on sampled counterfactual targets is
+      conditional target variance, not evidence that the network should observe
+      future or private information.
+    provenance:
+      - docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md
+      - docs/LT2_SAME_INPUT_TARGET_VARIANCE_AUDIT_20260917.md
+  - id: CHANCE-021
+    status: ACTIVE
+    scope: VARIANCE_DIAGNOSTICS
+    statement: >
+      A repeated target mean conditioned on one fixed hidden deal/future board
+      is not a GTO oracle and its residual against a model is not pure network
+      approximation error. Variance analyses must distinguish opponent-action,
+      opponent-private-card, future-chance, historical-policy, and learnable
+      conditional-mean components where the experiment supports that
+      decomposition.
+    provenance:
+      - docs/LT2_REPEATED_TARGET_VARIANCE_RESULT_20260917.md
+      - docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md
+  - id: CHANCE-022
+    status: ACTIVE
+    scope: LOCALIZED_CHANCE_INTERVENTIONS
+    statement: >
+      Evidence that chance averaging improves an estimator in one domain/street
+      does not authorize a global all-street training change. Chance/sampling
+      interventions remain localized unless representative evidence shows the
+      same causal mechanism in the broader scope.
+    provenance:
+      - docs/LT2_CROSS_STREET_FUTURE_CHANCE_RESULT_20260918.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: CHANCE-023
+    status: ACTIVE
+    scope: CHANCE_AVERAGING_MECHANICS
+    statement: >
+      Any future chance-averaging implementation that claims to change only a
+      target estimator must preserve deterministic root identity, sample
+      count/order/identity, unaffected-street targets, and canonical RNG
+      progression; otherwise it is a different training process and requires a
+      separate contract.
+    provenance:
+      - docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_FAILURE_20260918.md
+      - docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md
+  - id: CHANCE-024
+    status: EXPERIMENT_ONLY
+    scope: HISTORICAL_LT2_HU_PREFLOP_BOARD_ONLY_ESTIMATOR
+    statement: >
+      K4 future-board averaging was the measured compute elbow for the historical
+      Stage-B HU-preflop board-only estimator experiment; K8 doubled node cost
+      without resolved additional TV, regret, or argmax gain. This is preserved
+      as historical estimator evidence and is not an active global LT2/LT3
+      training semantic.
+    provenance:
+      - docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md
