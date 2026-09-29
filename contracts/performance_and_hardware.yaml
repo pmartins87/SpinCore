@@ -82,3 +82,19 @@ invariants:
       - docs/RYZEN_OPTIMIZATION_POLICY.md
       - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
       - python/spincore/lean_parallel.py
+
+  - id: PERF-022
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10115_10315_TRANSITION
+    statement: >
+      The already-running sequential 10115->10315 semantic long process is a
+      grandfathered scientific execution and may finish untouched. Its low CPU
+      utilization is a recorded performance regression, not grounds to alter the
+      live run. If that process terminates before success, or if the lane is
+      extended/restarted later, the sequential fitter is not reusable until an
+      optimized semantic-member fitter proves output/seed semantics parity and
+      a measured target-Ryzen throughput profile is frozen.
+    provenance:
+      - contracts/run_manifests/semantic_long_10115_10315_active.json
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+      - ROADMAP.md
