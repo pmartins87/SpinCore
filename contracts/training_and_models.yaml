@@ -98,3 +98,32 @@ invariants:
     statement: The true zero-regret untrained bootstrap behavior is uniform over effective legal actions; the raw-advantage softmax fallback applies only after a fitted Advantage model exists.
     provenance:
       - python/spincore/deep_cfr.py
+
+  - id: TRAIN-008
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_BASELINE
+    statement: Ordinary lean external-sampling training uses exact_opponent_levels equal to zero unless a separately declared bounded diagnostic or successor contract explicitly changes it.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_functional_training.py
+  - id: TRAIN-009
+    status: ACTIVE
+    scope: BASE_POLICY
+    statement: The base learner is self-play and does not train against a fixed scripted opponent or embed an opponent-specific exploit model; exploit adaptation belongs to a later explicitly separated layer.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md
+  - id: TRAIN-010
+    status: ACTIVE
+    scope: VALIDATED_LT2_LT3_LINEAGE
+    statement: The accumulated validated learning state is preserved by default; a clean-from-zero restart is a separate expensive research arm, not an assumed repair, unless new evidence shows the retained state is invalid.
+    provenance:
+      - ROADMAP.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: TRAIN-011
+    status: ACTIVE
+    scope: TRAINING_DURATION
+    statement: Additional roots or iterations are not themselves evidence of strategic improvement; continuation requires an explicit research/utilization rationale and later strategic evidence.
+    provenance:
+      - ROADMAP.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
