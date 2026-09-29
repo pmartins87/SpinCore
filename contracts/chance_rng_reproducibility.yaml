@@ -1,0 +1,32 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: CHANCE_RNG
+status: PARTIAL_AUDIT
+invariants:
+  - id: RNG-001
+    status: ACTIVE
+    scope: TRAINING
+    statement: Scenario, deck, policy, model initialization, and fit batch randomness must use explicit deterministic seed contracts when the relevant lane declares reproducibility.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+      - tools/run_3h_semantic_long_10115_10315.py
+  - id: RNG-002
+    status: ACTIVE
+    scope: SEALED_HOLDOUTS
+    statement: Sealed holdout seeds may not be used for development choices, tuning, or architecture selection; retired sealed seeds are not recycled as development data.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - id: RNG-003
+    status: ACTIVE
+    scope: EXPERIMENTAL_GATES
+    statement: Seed shopping, threshold relaxation, and result-dependent dropping of scenarios/source seeds are prohibited unless a new experiment is preregistered before seeing its outcomes.
+    provenance:
+      - validation/R7_5_ARCH_RESET_V1PLUS_PHASE2B10_PRIVATE_PUBLIC_CHANCE_DECOMPOSITION_PRECOMMIT_20260824.md
+      - CURRENT_WORK.md
+  - id: CHANCE-010
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10115_10315
+    statement: The long lane preserves the same 2M Advantage reservoir and the same protected 50k reservoir positions inherited from the controlled split.
+    provenance:
+      - ROADMAP.md
+      - tools/run_3h_semantic_long_10115_10315.py
