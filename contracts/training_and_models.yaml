@@ -140,3 +140,31 @@ invariants:
     statement: The rebuilt specialist uses a fresh 300000-episode teacher pool, requires at least 1200 unique strong states including at least 30 high-target and 10 mid-target Fold states, starts from the rebuilt full-pool general model, uses the already-selected STRATIFIED mode, and trains exactly 25 steps without a new 10315 model-selection sweep.
     provenance:
       - tools/build_3h_semantic_stratified_specialist_10315.py
+
+  - id: TRAIN-012
+    status: ACTIVE
+    scope: SEMANTIC_ADVANTAGE_BEHAVIOR_AND_TARGET_GENERATION
+    statement: >
+      Semantic Advantage ensemble behavior must use the canonical
+      lean_regret_matching_policy mapping, including stable masked softmax over
+      legal raw advantages when every legal averaged advantage is non-positive.
+      A separate helper may not silently substitute uniform fallback.
+    provenance:
+      - ROADMAP.md
+      - python/spincore/lean_action_policy.py
+      - tools/run_3h_semantic_research_10105_10115.py
+      - tools/run_3h_semantic_long_10115_10315.py
+  - id: MODEL-024
+    status: ACTIVE
+    scope: ACCEPTED_3H_RESEARCH_ARCHITECTURE_AT_10115
+    statement: >
+      The accepted 10115 three-handed research architecture is the rebuilt
+      full-pool semantic general AveragePolicy plus the unchanged
+      target-stratified strong-hand specialist, with specialist training mode
+      STRATIFIED and 25 optimizer steps. Failed pure-specialist,
+      confidence-router, and Fold-logit-calibrated variants are historical
+      evidence and are not silently promoted.
+    provenance:
+      - ROADMAP.md
+      - tools/audit_3h_semantic_stratified_specialist_multiseed_10115.py
+      - tools/run_deepcrusher_dc1_stratified_specialist_5k.sh
