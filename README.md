@@ -8,17 +8,22 @@ The repository was rebuilt after the original R5 Git bundle and part of the R6/R
 
 Current state: R0-R6 and R7.0-R7.2 physically rebuilt/recertified; later roadmap state is tracked in `ROADMAP.md`. **As of 2026-09-09, single-blind 10/20 R7.5.4 evidence is localized only and must not select the final global SpinGo policy/action abstraction until re-evaluated under the representative legacy tournament-state distribution.**
 
-Permanent invariants include true-HU vs 3H domain separation, exact cloneable hidden state, explicit-payout ICM continuation utility for production Deep CFR, fail-closed ambiguous simultaneous elimination, external-sampling advantage targets, own-reach average-policy collection, full-reservoir deterministic audits, and exact mid-iteration checkpoint/resume. These invariants are subordinate to the mandatory legacy-first quality policy where the older roadmap contains certification-only requirements that do not affect actual playing quality.
+Permanent/current invariants are represented and scope-resolved in `PROJECT_CONTRACT.yaml` and its modules. Historical documents remain evidence/provenance; they do not silently override the active contract.
 
 
-## Project contract migration
+## Project contract
 
-As of 2026-09-29 the repository is migrating all active invariants into one
-machine-readable logical contract rooted at `PROJECT_CONTRACT.yaml`. The
-contract covers the whole project, not only performance. Its current status is
-`BOOTSTRAP_AUDIT_REQUIRED`; see `contracts/AUDIT_STATUS.yaml` and
-`docs/PROJECT_CONTRACT_MIGRATION_20260929.md`.
+As of 2026-09-29 the exhaustive migration is complete. The machine-readable
+logical contract rooted at `PROJECT_CONTRACT.yaml` is the first normative
+source for active project invariants and has status `COMPLETE`.
 
-This migration is deliberately fail-closed for new long-training or
-architecture-changing work. The already-running 10115->10315 semantic long
-training is the explicit grandfathered exception.
+The closure is auditable through `contracts/AUDIT_STATUS.yaml`,
+`contracts/SOURCE_AUDIT_INDEX.json`, `contracts/SOURCE_AUDIT_OVERRIDES.yaml`,
+`contracts/SOURCE_FAMILY_ADJUDICATIONS.yaml`, and
+`contracts/ENFORCEMENT_MAP.yaml`. Contract CI fails on missing scopes,
+provenance/enforcement bindings, unaudited new source material, or illegal
+COMPLETE-state drift.
+
+The already-running 10115->10315 semantic long training remains the explicit
+grandfathered execution. It may finish untouched, but its sequential fitter is
+not reusable for a restart/extension without the current performance contract.
