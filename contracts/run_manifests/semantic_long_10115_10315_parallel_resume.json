@@ -1,0 +1,60 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "SEMANTIC_LONG_10115_10315_PARALLEL_RESUME",
+  "status": "BLOCKED_PERFORMANCE_GATE",
+  "runner": "tools/run_3h_semantic_long_10115_10315_parallel_resume.sh",
+  "runner_blob_sha": null,
+  "contract_ids": [
+    "GOV-023",
+    "PERF-001",
+    "PERF-002",
+    "PERF-010",
+    "PERF-011",
+    "PERF-012",
+    "PERF-013",
+    "PERF-014",
+    "PERF-015",
+    "PERF-016",
+    "PERF-017",
+    "PERF-019",
+    "PERF-020",
+    "PERF-022",
+    "PERF-024",
+    "TRAIN-020",
+    "MODEL-020",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003",
+    "CKPT-004",
+    "SAFE-002",
+    "ART-015"
+  ],
+  "affected_domains": [
+    "GOV",
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "PERF",
+    "CKPT",
+    "SAFE",
+    "ART"
+  ],
+  "duration_class": "LONG_GT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "performance_gate": {
+    "status": "PENDING",
+    "evidence": null,
+    "requirements": {
+      "production_tensor_exact": true,
+      "production_final_loss_exact": true,
+      "production_member_metadata_exact": true,
+      "minimum_fit_speedup": 1.25,
+      "minimum_projected_net_seconds_saved": 1800,
+      "minimum_mem_available_gib": 4,
+      "maximum_swap_used_gib": 1
+    }
+  },
+  "selected_profile": null,
+  "support_blobs": null,
+  "block_reason": "Run the guarded semantic parallel parity/throughput gate against the latest durable resume after stopping the serial trainer at a checkpoint boundary. Do not launch this stage while status is BLOCKED_PERFORMANCE_GATE."
+}
