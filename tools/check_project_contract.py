@@ -14,6 +14,7 @@ except ImportError as exc:
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_CONTRACT = ROOT / "PROJECT_CONTRACT.yaml"
 AUDIT_STATUS = ROOT / "contracts" / "AUDIT_STATUS.yaml"
+RUNNER_BASELINE = ROOT / "contracts" / "RUNNER_BASELINE.yaml"
 
 ID_RE = re.compile(r"^[A-Z]+-[0-9]{3}$")
 ALLOWED_INVARIANT_STATUS = {
@@ -119,6 +120,51 @@ def main() -> int:
             "audit status contains undeclared domains: " + ", ".join(unknown_audit_domains)
         )
 
+
+    baseline = load_yaml(RUNNER_BASELINE)
+    if baseline.get("schema") != "SPINCORE_RUNNER_BASELINE_V1":
+        raise AssertionError("wrong runner-baseline schema")
+    baseline_rows = baseline.get("entries") or []
+    baseline_by_path = {
+        str(row["path"]): str(row["blob_sha"])
+        for row in baseline_rows
+        if isinstance(row, dict)
+    }
+    all_contract_ids = set(ids)
+    governed_runner_paths = sorted(
+        p.relative_to(ROOT).as_posix()
+        for p in (ROOT / "tools").iterdir()
+        if p.is_file()
+        and re.match(r"^(?:run_|benchmark_).+\.(?:py|sh)$", p.name)
+    )
+    missing_baseline_or_declaration = []
+    for rel in governed_runner_paths:
+        path = ROOT / rel
+        actual = __import__("subprocess").check_output(
+            ["git", "hash-object", str(path)], text=True
+        ).strip()
+        if baseline_by_path.get(rel) == actual:
+            continue
+        head = "\n".join(path.read_text(encoding="utf-8").splitlines()[:120])
+        if "PROJECT_CONTRACT_IDS" not in head:
+            missing_baseline_or_declaration.append(rel)
+            continue
+        declared = set(re.findall(r"[A-Z]+-[0-9]{3}", head))
+        if not declared:
+            raise AssertionError(
+                f"{rel} declares PROJECT_CONTRACT_IDS but contains no IDs"
+            )
+        unknown = sorted(declared - all_contract_ids)
+        if unknown:
+            raise AssertionError(
+                f"{rel} references unknown contract IDs: {unknown}"
+            )
+    if missing_baseline_or_declaration:
+        raise AssertionError(
+            "new/modified runner or benchmark lacks PROJECT_CONTRACT_IDS: "
+            + ", ".join(missing_baseline_or_declaration)
+        )
+
     if root.get("status") == "COMPLETE":
         incomplete = sorted(
             d for d in required_domains if audit_coverage.get(d) != "COMPLETE"
@@ -177,6 +223,7 @@ def main() -> int:
     print("PROJECT_CONTRACT_LINT_PASS")
     print(f"invariants={len(ids)}")
     print(f"required_domains={len(required_domains)}")
+    print(f"governed_runner_baseline={len(baseline_by_path)}")
     print("represented_prefixes=" + ",".join(sorted(represented_prefixes)))
     print(f"root_status={root.get('status')}")
     return 0
