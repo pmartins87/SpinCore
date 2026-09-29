@@ -20,6 +20,7 @@ RUNNER_BASELINE = ROOT / "contracts" / "RUNNER_BASELINE.yaml"
 SOURCE_AUDIT_INDEX = ROOT / "contracts" / "SOURCE_AUDIT_INDEX.json"
 SOURCE_AUDIT_OVERRIDES = ROOT / "contracts" / "SOURCE_AUDIT_OVERRIDES.yaml"
 SOURCE_FAMILY_ADJUDICATIONS = ROOT / "contracts" / "SOURCE_FAMILY_ADJUDICATIONS.yaml"
+ENFORCEMENT_MAP = ROOT / "contracts" / "ENFORCEMENT_MAP.yaml"
 
 ID_RE = re.compile(r"^[A-Z]+-[0-9]{3}$")
 ALLOWED_INVARIANT_STATUS = {
@@ -98,6 +99,8 @@ def main() -> int:
         status = row.get("status")
         if status not in ALLOWED_INVARIANT_STATUS:
             raise AssertionError(f"invalid status for {iid}: {status!r}")
+        if not str(row.get("scope") or "").strip():
+            raise AssertionError(f"missing scope for {iid}")
         if not str(row.get("statement") or "").strip():
             raise AssertionError(f"missing statement for {iid}")
         if not row.get("provenance"):
@@ -108,6 +111,37 @@ def main() -> int:
     duplicates = [iid for iid, n in Counter(ids).items() if n > 1]
     if duplicates:
         raise AssertionError(f"duplicate invariant IDs: {duplicates}")
+
+    enforcement = load_yaml(ENFORCEMENT_MAP)
+    if enforcement.get("schema") != "SPINCORE_CONTRACT_ENFORCEMENT_MAP_V1":
+        raise AssertionError("wrong enforcement-map schema")
+    enforcement_rows = enforcement.get("bindings") or []
+    enforcement_by_id = {}
+    for row in enforcement_rows:
+        if not isinstance(row, dict):
+            raise AssertionError("malformed enforcement binding")
+        iid = str(row.get("id") or "")
+        if iid in enforcement_by_id:
+            raise AssertionError(f"duplicate enforcement binding: {iid}")
+        if not str(row.get("mechanism") or "").strip():
+            raise AssertionError(f"missing enforcement mechanism: {iid}")
+        if not str(row.get("automation") or "").strip():
+            raise AssertionError(f"missing enforcement automation class: {iid}")
+        if not str(row.get("declared_in") or "").strip():
+            raise AssertionError(f"missing enforcement declaration source: {iid}")
+        enforcement_by_id[iid] = row
+    missing_enforcement = sorted(set(ids) - set(enforcement_by_id))
+    unknown_enforcement = sorted(set(enforcement_by_id) - set(ids))
+    if missing_enforcement:
+        raise AssertionError(
+            "contract invariants lack enforcement mapping: "
+            + ", ".join(missing_enforcement)
+        )
+    if unknown_enforcement:
+        raise AssertionError(
+            "enforcement map references unknown invariants: "
+            + ", ".join(unknown_enforcement)
+        )
 
     source_index = json.loads(SOURCE_AUDIT_INDEX.read_text(encoding="utf-8"))
     if source_index.get("schema") != "SPINCORE_CONTRACT_SOURCE_AUDIT_INDEX_V1":
@@ -505,6 +539,7 @@ def main() -> int:
     print("PROJECT_CONTRACT_LINT_PASS")
     print(f"invariants={len(ids)}")
     print(f"required_domains={len(required_domains)}")
+    print(f"enforcement_bindings={len(enforcement_by_id)}")
     print(f"governed_runner_baseline={len(baseline_by_path)}")
     print(f"stage_manifests={len(manifest_rows)}")
     print(f"contract_source_index={len(indexed_sources)}")
