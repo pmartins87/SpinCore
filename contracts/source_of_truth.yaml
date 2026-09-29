@@ -29,3 +29,18 @@ invariants:
     statement: A conflict between the active contract, frozen evidence, implementation, and project documentation must be surfaced and adjudicated; silent precedence by recency is prohibited.
     provenance:
       - PROJECT_CONTRACT.yaml
+
+  - id: SRC-005
+    status: ACTIVE
+    scope: RECOVERY_AND_RECERTIFICATION_CLAIMS
+    statement: >
+      Historical semantic decisions may remain useful when old source bytes are
+      lost, but a document or recorded test result must not be relabelled as
+      proof that the current checkout is physically reproducible. Claims of
+      current recertification require the reachable source/tests/artifacts that
+      produced or independently reproduce them; recovery evidence and current
+      physical evidence remain explicitly distinguished.
+    provenance:
+      - validation/RECOVERY_INTEGRITY_AUDIT_20260809.md
+      - validation/R0_R7_2_REBUILD_RECERTIFICATION_20260809.md
+      - README.md
