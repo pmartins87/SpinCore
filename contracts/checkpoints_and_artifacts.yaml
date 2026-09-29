@@ -1,0 +1,42 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: CKPT_ART
+status: PARTIAL_AUDIT
+invariants:
+  - id: CKPT-001
+    status: ACTIVE
+    scope: TRAINING
+    statement: Long training must be resumable and checkpoint/resume must preserve the declared training state rather than silently restarting or changing semantics.
+    provenance:
+      - README.md
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: CKPT-002
+    status: ACTIVE
+    scope: HU_ENS8_LANES
+    statement: The ordinary checkpoint and matched HU ENS8 sidecar are a mandatory pair; the ordinary checkpoint alone is not the current HU behavior.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - id: CKPT-003
+    status: ACTIVE
+    scope: FROZEN_SOURCE_ARTIFACTS
+    statement: Frozen source checkpoints, sidecars, and raw milestones are read-only; derived finalization/evaluation must operate on copies when the source artifact is declared immutable.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+      - docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md
+  - id: CKPT-004
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10115_10315
+    statement: The long semantic lane persists a resume state after every completed iteration and may resume only from a contract-valid completed iteration.
+    provenance:
+      - tools/run_3h_semantic_long_10115_10315.py
+  - id: ART-001
+    status: ACTIVE
+    scope: CANONICAL_RUNS
+    statement: Canonical results record source artifact identities/hashes, code provenance, sampler seeds, workload size, worker profile, metrics, and claim/parity status sufficient to prevent silent result replacement.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - id: ART-002
+    status: ACTIVE
+    scope: BENCHMARK_HISTORY
+    statement: Later results must not overwrite older canonical results; regression history is cumulative.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
