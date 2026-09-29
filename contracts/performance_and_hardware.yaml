@@ -1,0 +1,56 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: PERF
+status: PARTIAL_AUDIT
+invariants:
+  - id: PERF-010
+    status: ACTIVE
+    scope: RYZEN_HEAVY_COMPUTE
+    statement: The user's 32-logical-thread Ryzen is the primary heavy-compute host and substantial workloads must be designed and measured for that hardware.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-011
+    status: ACTIVE
+    scope: RYZEN_HEAVY_COMPUTE
+    statement: Independent CPU-bound work should use process parallelism when semantics are unchanged, normally one Torch/OpenMP/BLAS thread per worker; avoid oversubscription.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-012
+    status: ACTIVE
+    scope: ITERATIVE_HEAVY_COMPUTE
+    statement: Persistent pools should amortize process spawn/model-load overhead across iterations when practical.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-013
+    status: ACTIVE
+    scope: OPTIMIZATION_SELECTION
+    statement: CPU utilization is diagnostic, not the objective; select by useful end-to-end throughput, memory safety, stability, and semantic parity.
+    provenance:
+      - AGENTS.md
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-014
+    status: ACTIVE
+    scope: EXECUTION_ARCHITECTURE_CHANGE
+    statement: Re-benchmark the actual Ryzen when the relevant execution architecture materially changes and persist the selected profile.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-015
+    status: ACTIVE
+    scope: ACTIVE_SERIAL_RUN_MIGRATION
+    statement: When introducing an optimization into an active serial long run, stop only after a durable checkpoint when practical and resume from that checkpoint after parity is established.
+    provenance:
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: PERF-016
+    status: ACTIVE
+    scope: ENS8_OR_OTHER_INDEPENDENT_MEMBER_FITS
+    statement: Sequential member fitting is not an acceptable final long-run execution path when a parity-preserving concurrent implementation yields material speedup.
+    provenance:
+      - ROADMAP.md
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - id: PERF-017
+    status: ACTIVE
+    scope: KNOWN_LT3_ENS8_IMPLEMENTATION
+    statement: The validated LT3 ENS8 execution precedent is four concurrent processes with eight Torch threads per member and exact parity; this is a precedent, not a blind requirement for different model shapes.
+    provenance:
+      - ROADMAP.md
+      - tools/lt3_hu_ens8_parallel_fit.py
