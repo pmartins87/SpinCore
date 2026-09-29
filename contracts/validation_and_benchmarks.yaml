@@ -110,3 +110,22 @@ invariants:
     statement: DC1 is a mechanical smoke at approximately 1000 to 5000 sampled states and must verify legality, state convergence, pairing balance, zero-sum accounting, and exact sizing before scale-up.
     provenance:
       - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+
+  - id: VALID-010
+    status: ACTIVE
+    scope: LT3_PROMOTION
+    statement: The sealed LT3 holdout may be opened only after all research choices for the candidate are frozen; no sealed-holdout result may be used to tune or add a candidate post hoc.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - id: VALID-011
+    status: ACTIVE
+    scope: SEALED_HOLDOUT_FAILURE
+    statement: A failed sealed holdout is reported as failure and its seeds are not reused for tuning; subsequent research requires a genuinely new preregistered protocol rather than threshold relaxation on the opened holdout.
+    provenance:
+      - docs/LT2_HU_ENS8_FINAL_HOLDOUT_PROTOCOL_20260921.md
+  - id: VALID-012
+    status: ACTIVE
+    scope: LT2_FINAL_HOLDOUT
+    statement: The completed LT2 ENS8 final holdout is not rerun or tuned against; its PASS remains historical validation evidence for the frozen LT2 candidate rather than reusable development data.
+    provenance:
+      - docs/LT2_HU_ENS8_FINAL_HOLDOUT_RESULT_20260921.md
