@@ -124,6 +124,8 @@ bootstrap_invariants:
     statement: >
       Every active invariant discovered in project history must be migrated into
       this contract bundle; the user is not required to remember or enumerate it.
+    provenance:
+      source: docs/PROJECT_CONTRACT_MIGRATION_20260929.md
     enforcement: CONTRACT_COMPLETENESS_AUDIT
   - id: GOV-002
     status: ACTIVE
@@ -131,18 +133,24 @@ bootstrap_invariants:
       Questions, doubts, or suggestions do not by themselves supersede an active
       project decision. Strategic or contractual changes require explicit
       adjudication and provenance.
+    provenance:
+      source: PROJECT_CONTRACT.yaml
     enforcement: REVIEW
   - id: GOV-003
     status: ACTIVE
     statement: >
       New implementation work must identify which active contract IDs it touches
       before it may change behavior covered by those IDs.
+    provenance:
+      source: docs/PROJECT_CONTRACT_MIGRATION_20260929.md
     enforcement: PREMERGE_GATE
   - id: GOV-004
     status: ACTIVE
     statement: >
       If implementation, documentation, tests, and the active contract disagree,
       the affected workflow must fail closed until the conflict is resolved.
+    provenance:
+      source: PROJECT_CONTRACT.yaml
     enforcement: CI_AND_PREFLIGHT
   - id: PERF-001
     status: ACTIVE
@@ -173,6 +181,8 @@ bootstrap_invariants:
       mechanism. No new long training or architecture-changing stage may start
       under BOOTSTRAP_AUDIT_REQUIRED without explicit contract coverage for the
       affected domains.
+    provenance:
+      source: docs/PROJECT_CONTRACT_MIGRATION_20260929.md
     enforcement: TRANSITION_RULE
 
 completion_gate:
