@@ -77,3 +77,27 @@ invariants:
     provenance:
       - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
       - contracts/chance_rng_reproducibility.yaml
+
+  - id: GOV-020
+    status: ACTIVE
+    scope: EXECUTION_STATUS
+    statement: >
+      Distinguish STAGNATED, LONG_RUNNING, and BLOCKED execution. STAGNATED
+      means credible forward progress is lost and requires immediate diagnosis;
+      LONG_RUNNING means slow but credible compute that should normally preserve
+      already-spent valid work; BLOCKED means a required gate/dependency is
+      absent and downstream execution is unauthorized. Process liveness or
+      elapsed time never implies PASS.
+    provenance:
+      - validation/PROJECT_EXECUTION_STAGNATION_PROTOCOL_20260812.md
+  - id: GOV-021
+    status: ACTIVE
+    scope: EXECUTION_OBSERVABILITY
+    statement: >
+      Runtime pressure may not be solved by relaxing strategic gates, seeds,
+      sample counts, RNG semantics, or strategy parameters. Heartbeat and
+      observability changes must be semantically inert and may not consume
+      application RNG, mutate training state, alter command arguments, or
+      redefine child-process exit semantics.
+    provenance:
+      - validation/PROJECT_EXECUTION_STAGNATION_PROTOCOL_20260812.md
