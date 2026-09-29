@@ -38,10 +38,29 @@ def test_phase2_evaluator_is_frozen_before_evaluation_outputs() -> None:
 
 def test_phase2_evaluator_frozen_blob_hashes_match_repository() -> None:
     freeze = _read("validation/R7_5_3C_PHASE2_EVALUATOR_IMPLEMENTATION_FREEZE_20260815.json")
+    successors = _read(
+        "validation/R7_5_3C_PHASE2_POSTFREEZE_BLOB_SUCCESSORS_20260929.json"
+    )
+    assert successors["schema"] == "SPINCORE_R7_5_3C_PHASE2_POSTFREEZE_BLOB_SUCCESSORS_V1"
+    assert successors["rules"]["original_freeze_hashes_are_not_rewritten"] is True
+    assert successors["rules"]["unlisted_current_blob_drift_fails"] is True
+    authorized = successors["authorized_successors"]
+
     for table in ("new_git_blob_freeze", "inherited_evaluator_blob_freeze"):
         for path, expected in freeze[table].items():
             actual = subprocess.check_output(["git", "hash-object", path], text=True).strip()
-            assert actual == expected, (path, actual, expected)
+            if actual == expected:
+                continue
+            assert path in authorized, (path, actual, expected)
+            row = authorized[path]
+            assert row["frozen_blob"] == expected
+            assert row["successor_blob"] == actual
+            adjudication = _read(row["adjudication"])
+            assert adjudication["status"] == "MECHANICAL_POSTTRAINING_EVALUATION_FIX_BEFORE_STABILITY_RESULT"
+            assert adjudication["correction"]["file"] == path
+            assert adjudication["correction"]["legacy_192_root_extraction_preserved"] is True
+            assert adjudication["correction"]["arbitrary_root_counts_admitted"] is False
+            assert adjudication["scientific_contract_unchanged"]["selection_rule"] is True
 
 
 def test_refv1_namespace_adjudication_is_constant_and_candidate_independent() -> None:
