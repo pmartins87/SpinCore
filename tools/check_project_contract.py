@@ -339,6 +339,26 @@ def main() -> int:
         UTILITY_SCALE_ID,
     )
     from spincore.r7 import stratified_audit_indices
+    from spincore.deepcrusher_benchmark import (
+        DEEPC_RUSHER_BASELINE_BRANCH,
+        DEEPC_RUSHER_OPERATIONAL_SOURCE,
+        DEEPC_RUSHER_OPERATIONAL_SHA256,
+        DEEPC_RUSHER_STRATEGIC_SOURCE,
+        DEEPC_RUSHER_STRATEGIC_SHA256,
+        balanced_hu_lineups,
+        balanced_three_handed_lineups,
+        validate_three_handed_balance,
+        benchmark_contract,
+    )
+    from spincore.deepcrusher_native_symbols import (
+        BENCHMARK_ENVIRONMENT_PROFILE_ID,
+        OPENHOLDEM_UNDEFINED,
+        frozen_benchmark_environment,
+    )
+    from spincore.deepcrusher_preflop_equity import (
+        SUPPORTED_RANGE_IDS,
+        TABLE_TEXT_SHA256,
+    )
 
     assert LegacyScenarioConfig().total_chips == 1500
     assert abs(LegacyScenarioConfig().heads_up_prob - 0.4548) < 1e-12
@@ -360,6 +380,44 @@ def main() -> int:
     assert len(audit_a) == len(set(audit_a)) == 10
     assert min(audit_a) < 1000
     assert max(audit_a) >= 9000
+
+    assert DEEPC_RUSHER_BASELINE_BRANCH == "r8-v22-stable-20260914"
+    assert DEEPC_RUSHER_OPERATIONAL_SOURCE == (
+        "DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt"
+    )
+    assert DEEPC_RUSHER_OPERATIONAL_SHA256 == (
+        "0113badc99727a7dd47c02448d4d042b5e008534cd63fd79a461a72b24eeb68d"
+    )
+    assert DEEPC_RUSHER_STRATEGIC_SOURCE == (
+        "DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_RECOVERED_20260914.txt"
+    )
+    assert DEEPC_RUSHER_STRATEGIC_SHA256 == (
+        "9fc2d00aacc915f3c265429f764056f3c6270df616244026aac22e455c803ee9"
+    )
+    validate_three_handed_balance(balanced_three_handed_lineups())
+    for dead in (0, 1, 2):
+        hu = balanced_hu_lineups(dead)
+        assert len(hu) == 2
+        assert all(row.seats[dead] == "DEAD" for row in hu)
+    bench = benchmark_contract()
+    assert bench["no_size_quantization"] is True
+    assert bench["offline_only"] is True
+    assert BENCHMARK_ENVIRONMENT_PROFILE_ID == "GGPoker_NoPT_NoNotes_V1"
+    env = frozen_benchmark_environment(
+        ["network$ggpoker", "network$ipoker", "pt_hands_headsupchair",
+         "chair$villain", "colourcode_headsupchair", "log$probe", "prwin"]
+    )
+    assert env["network$ggpoker"] == 1.0
+    assert env["network$ipoker"] == 0.0
+    assert env["pt_hands_headsupchair"] == OPENHOLDEM_UNDEFINED == -1.0
+    assert env["chair$villain"] == -1.0
+    assert env["colourcode_headsupchair"] == 0.0
+    assert env["log$probe"] == 1.0
+    assert "prwin" not in env
+    assert SUPPORTED_RANGE_IDS == frozenset({4, 6, 9, 12, 15})
+    assert TABLE_TEXT_SHA256 == (
+        "114fd17d594fb63b5f46385687dc522f894c63bb6ccbf6a2d5c3c69ac2f34892"
+    )
 
     long_text = (ROOT / "tools" / "run_3h_semantic_long_10115_10315.py").read_text(
         encoding="utf-8"
