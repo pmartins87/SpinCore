@@ -82,14 +82,14 @@ coverage:
 
 known_reconciliation_items:
   - id: RECON-001
-    status: OPEN
+    status: RESOLVED
     topic: utility_scope
+    resolution: GAME-013
     detail: >
-      README preserves explicit-payout ICM continuation utility as a permanent
-      invariant for production Deep CFR, while the lean first-release path
-      deliberately trains WTA chip EV scaled by 1/1500. The contract must retain
-      these as scoped lanes rather than incorrectly treating either as globally
-      superseding the other.
+      The apparent conflict is lane-scoped rather than a supersession. Lean WTA
+      training retains chip delta /1500, while an explicit multi-place payout
+      production Deep-CFR lane retains payout-aware ICM continuation utility.
+      The scoped rule is now explicit in GAME-013.
   - id: RECON-002
     status: OPEN
     topic: representation_lineage
