@@ -56,5 +56,20 @@
   },
   "selected_profile": null,
   "support_blobs": null,
-  "block_reason": "Run the guarded semantic parallel parity/throughput gate against the latest durable resume after stopping the serial trainer at a checkpoint boundary. Do not launch this stage while status is BLOCKED_PERFORMANCE_GATE."
+  "block_reason": "Break-even precheck justifies stopping the serial trainer from a durable resume and running the guarded Ryzen parity/throughput gate. The parallel resume itself remains blocked until that gate PASS is reviewed and this manifest is explicitly promoted to READY.",
+  "break_even_precheck": {
+    "observed_completed_iteration": 10222,
+    "target_iteration": 10315,
+    "remaining_iterations": 93,
+    "recent_window_iterations": 10,
+    "recent_fit_seconds_mean": 515.8249100809022,
+    "recent_tree_seconds_mean": 9.937908518699988,
+    "recent_serial_iteration_seconds_mean": 525.7628185996022,
+    "projected_serial_hours_remaining": 13.58220614715639,
+    "conservative_fit_speedup_floor_for_gate": 1.25,
+    "projected_hours_remaining_at_1_25x_fit_speedup_before_gate_overhead": 10.918191893546714,
+    "gross_hours_saved_at_1_25x_fit_speedup": 2.664014253609676,
+    "decision": "PROCEED_TO_GUARDED_RYZEN_PARITY_THROUGHPUT_GATE",
+    "evidence_source": "user-provided training.log tail 10213..10222 on 2026-09-29"
+  }
 }
