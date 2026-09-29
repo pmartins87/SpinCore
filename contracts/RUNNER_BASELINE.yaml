@@ -1,0 +1,386 @@
+schema: SPINCORE_RUNNER_BASELINE_V1
+created_date: "2026-09-29"
+purpose: >
+  Grandfather the exact runner/benchmark blobs that existed when executable
+  contract governance was introduced. Any later modification or new runner must
+  declare PROJECT_CONTRACT_IDS in the file so changes cannot bypass active
+  invariants through forgotten project context.
+entries:
+  - path: tools/benchmark_lean_lt1_fit.py
+    blob_sha: 7cbd974aa3a4e0500b71083c962aa935bee58135
+  - path: tools/benchmark_lean_lt1_fit.sh
+    blob_sha: 7d7b681652e0300298a0a1dce8c59c63a8b8143f
+  - path: tools/benchmark_lean_lt2_concurrent_fit.py
+    blob_sha: cdb9d650a4fa91ce119ef95878f6169563603219
+  - path: tools/benchmark_lean_lt2_concurrent_fit.sh
+    blob_sha: 6ea05355453d40e65eccfbb5abe2e4cb34394af9
+  - path: tools/benchmark_lean_ryzen_workers.sh
+    blob_sha: f7cc6322c981a10fb52c60159645d979b142e40e
+  - path: tools/benchmark_lt2_stage_b_worker_count.py
+    blob_sha: 5f0d3534f0f66d8de098e35b0a8d1c331e4cd335
+  - path: tools/benchmark_lt2_stage_b_worker_count.sh
+    blob_sha: eef8d9ddf8b5957aace1d1be39577e486ed9d532
+  - path: tools/benchmark_lt3_hu_ens8_parallel_fit_matrix.py
+    blob_sha: 81d017b31e4ef27845a665dc19964e483a5b871d
+  - path: tools/benchmark_lt3_hu_ens8_parallel_fit.py
+    blob_sha: 320ea204ea5c363d1a59989560ce3141b278cef4
+  - path: tools/run_3h_advantage_budget_stability_10105.sh
+    blob_sha: 56293373c92426fd137c3535851f3cfe9b348133
+  - path: tools/run_3h_advantage_clean_holdout_10105.sh
+    blob_sha: 6e62cdf0bcff442924a9fcfd299353d9e5ca6943
+  - path: tools/run_3h_advantage_controlled_budget_curve_10105.sh
+    blob_sha: a3d6c163f85119e18814de80b1b993f334e71c1d
+  - path: tools/run_3h_allin_holdout_calibration_10105.sh
+    blob_sha: 8c7c8b37a5688e06d434472f2eb8013cf39ecdf6
+  - path: tools/run_3h_average_policy_semantic_continuation_10105.sh
+    blob_sha: f1bd562b47cd494bd66783bce82f433c8a93910b
+  - path: tools/run_3h_fresh_semantic_strategy_distill_10105.sh
+    blob_sha: 6f8dd40e141f4faf931f0f1af7d9a1900b9b5efc
+  - path: tools/run_3h_fresh_semantic_strategy_independent500_10105.sh
+    blob_sha: c4fd2352a554c5ff240d539ba7a92c552aad7173
+  - path: tools/run_3h_high_card_advantage_targets_10105.sh
+    blob_sha: 70e6678df8354ab394e5dcddf6d15cbab2f7d238
+  - path: tools/run_3h_high_card_model_target_gap_10105.sh
+    blob_sha: aa085d7aabfbdac546ee0bdf7ce0bf7068ecc19e
+  - path: tools/run_3h_semantic_confidence_gated_moe_and_dc1_10115.sh
+    blob_sha: b1f527e7b0b81f31cea307f1b43fcc2a51f2d8f9
+  - path: tools/run_3h_semantic_fallback_contract.sh
+    blob_sha: a4548714a6803d010bc9a25c602070c549b90fce
+  - path: tools/run_3h_semantic_fold_logit_calibrated_specialist_and_dc1_10115.sh
+    blob_sha: a9e5805edf5dd0f2e2c8c8a5e8f1f71b1375079c
+  - path: tools/run_3h_semantic_fullpool_strong_diversity_and_dc1_10115.sh
+    blob_sha: c17a73b51bd5e6f33b04f4de8e071cfa6bc8ec86
+  - path: tools/run_3h_semantic_long_10115_10315.py
+    blob_sha: 122ff2ffbefc2b0a1f82c361936d52554c78d9b5
+  - path: tools/run_3h_semantic_long_10115_10315.sh
+    blob_sha: c9f5c03bc14c61667f3e069e82ee1a56e1ffd193
+  - path: tools/run_3h_semantic_online_pilot_10105.py
+    blob_sha: 75609506e70bb7c5420454dc3ef9a435f063b3d2
+  - path: tools/run_3h_semantic_online_pilot_10105.sh
+    blob_sha: dd22b15bd999825fa71708a47ca75a2da15ccc54
+  - path: tools/run_3h_semantic_postlong_10315.sh
+    blob_sha: 33de5417446131527c3b0de295c510cd050cfe20
+  - path: tools/run_3h_semantic_research_10105_10115.py
+    blob_sha: ba157ff1a6f9f6e0f97f3915591c74695c944fca
+  - path: tools/run_3h_semantic_research_10105_10115.sh
+    blob_sha: abfe0242c9e2745fb0be67fd155a70d87250ebbb
+  - path: tools/run_3h_semantic_research_canonical_10105_10115.sh
+    blob_sha: 75410d785374c18da49fd698ba674834a26674b6
+  - path: tools/run_3h_semantic_sidecar_attribution_10105.sh
+    blob_sha: 84ac0f105f0a48398950d70b2a63049007aa5472
+  - path: tools/run_3h_semantic_stratified_specialist_moe_and_dc1_10115.sh
+    blob_sha: b5ee4da7a03caa11774279519e526532078d6d22
+  - path: tools/run_3h_semantic_stratified_specialist_multiseed_and_dc1_10115.sh
+    blob_sha: bbac8d1d1ba0458ffb849b8e772473906400fc67
+  - path: tools/run_3h_semantic_stratified_strong_diversity_10115.sh
+    blob_sha: f7bf2adbe5768b94c12640cd1fc5ca9ed779f8e4
+  - path: tools/run_3h_semantic_strong_diversity_repair_10115.sh
+    blob_sha: 098ab253dc76f7d0d7a2d0e836b521bd3cf4452b
+  - path: tools/run_3h_semantic_strong_specialist_moe_and_dc1_10115.sh
+    blob_sha: 9f0373a1b959d2e4a52747d8f2faf6404c2ff3f6
+  - path: tools/run_3h_semantic_tail_strong_hand_coverage_10115.sh
+    blob_sha: 35b6109924f69f0682f4416fc42ccdcf62c795bb
+  - path: tools/run_3h_semantic_tail_strong_hand_coverage_canonical_10115.sh
+    blob_sha: da626b043eb8df3b39ae655a4eba05af5943fca3
+  - path: tools/run_3h_v1_semantic_shadow_10105.py
+    blob_sha: ed30a97cb585643155fac51fc541ea5c3f1f1810
+  - path: tools/run_3h_v1_semantic_shadow_10105.sh
+    blob_sha: 67a7c98b15cafb94e14b8797a11ab1b36039c666
+  - path: tools/run_dc1_3h_average_vs_current_advantage.sh
+    blob_sha: 09ca1ea81dc4e6095d44b988f3683a92f30570c0
+  - path: tools/run_dc1_3h_ens8_uncertainty.sh
+    blob_sha: 1eba2c5207b5ae2b55dd3d2e154ded5f8fe3cc8a
+  - path: tools/run_dc1_semantic_strong_hand_attribution.sh
+    blob_sha: 265efc350fcc1b29ff12f86044bb040da431e840
+  - path: tools/run_dc1_trip_policy_vs_current_advantage.sh
+    blob_sha: 6c550bfbe23cee097d5681720d0047ccf79d4b13
+  - path: tools/run_deepcrusher_dc0_static_prepare.sh
+    blob_sha: 544722d8e99a4b8139b524c757e64f9d57380c55
+  - path: tools/run_deepcrusher_dc1_10105_smoke.sh
+    blob_sha: 4381a17243b037ed71ea9ab00da62a199a7cb1b4
+  - path: tools/run_deepcrusher_dc1_semantic_1k.sh
+    blob_sha: 82f76b02650fe2a3deea1395a9b20290e53ce5a8
+  - path: tools/run_deepcrusher_dc1_semantic_fullpool_1k_resume.sh
+    blob_sha: 13ab351796b980834871398b037e5c2681426de7
+  - path: tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh
+    blob_sha: 06c78690e4ca6622e2d47689eebf1f90f1df8a3b
+  - path: tools/run_deepcrusher_dc1_semantic_stratified_1k.sh
+    blob_sha: cf2d037e4fdd4001983e49ce2ad3675fcdd0cc78
+  - path: tools/run_deepcrusher_dc1_semantic_strong_diversity_1k.sh
+    blob_sha: ba1c2d7c9ba697c561c1123fb6b91aa46f946f83
+  - path: tools/run_deepcrusher_dc1_stratified_specialist_5k.sh
+    blob_sha: 44ce095503358cc848fcfaa71aab7ed63b5dbfcd
+  - path: tools/run_lean_functional_first_training.sh
+    blob_sha: 466461aa97bcb82bc9b8ea93f32a451e38050caa
+  - path: tools/run_lean_functional_ryzen_pilot.sh
+    blob_sha: 1bc84e8956d10fc35eefe40b4a8031c8d39d97a3
+  - path: tools/run_lean_functional_training.py
+    blob_sha: 96548daf8b18b27d97ac0373e1313b20d1843d9f
+  - path: tools/run_lean_learning_curve_eval.sh
+    blob_sha: bb8d5c6dfcc600a6709bf70c525da1eb37f59550
+  - path: tools/run_lean_strategy_quality_eval.sh
+    blob_sha: 52ae248726e45d14c966faa2c559e28636be4091
+  - path: tools/run_long_training_lt1.sh
+    blob_sha: a1aba2a9c16dccfaf72fb8c6fd6deec5f0b3d857
+  - path: tools/run_long_training_lt2_stage_a.sh
+    blob_sha: 53f88d23a35107042255e873e8821e33524c0bcc
+  - path: tools/run_long_training_lt2_stage_b.sh
+    blob_sha: cb5c52c440bbd80f26f78f2e648746fee792cd35
+  - path: tools/run_lt2_advantage_value_sensitivity.sh
+    blob_sha: 65e127e841b31bc56f23372ac599691e3a3e20c5
+  - path: tools/run_lt2_checkpoint_crossplay.sh
+    blob_sha: c6211d1a0f14a8d42eb69a60f173befa6ab4697d
+  - path: tools/run_lt2_cross_street_future_chance.sh
+    blob_sha: f3c3b418aa096225198171df96f07b52d6e508ec
+  - path: tools/run_lt2_cross_street_target_drift_tracking.sh
+    blob_sha: fd2a563d62990235cc6b13add9f62c57ac6e9850
+  - path: tools/run_lt2_hu_7600_8000_behavior_first_divergence.sh
+    blob_sha: 269ebc8065d2fa31956a62641e7c2f73e51365d2
+  - path: tools/run_lt2_hu_b400_broad_generalization.sh
+    blob_sha: b0ccdcebf2901d71621c3ddc6ca1fe92ef650367
+  - path: tools/run_lt2_hu_b400_online_pilot.sh
+    blob_sha: be5f5c8cb1defb6ffb16f2c6504d2aeb4cacf8cd
+  - path: tools/run_lt2_hu_b400_refresh_to_8000.sh
+    blob_sha: f29bea567213f239ad7326fad82d758f08c501d8
+  - path: tools/run_lt2_hu_behavior_first_divergence.sh
+    blob_sha: 708a8ce113968efa50fa77a505ae41097503b9e5
+  - path: tools/run_lt2_hu_ens8_deployment_parity.sh
+    blob_sha: e36947fd0bc2b1a613021d2ececa894ed3dcf11a
+  - path: tools/run_lt2_hu_ens8_final_holdout.sh
+    blob_sha: 71a7e6db4b0985317893a20ec72c4eee2bc4eccd
+  - path: tools/run_lt2_hu_ens8_learned_ecosystem_crossplay.sh
+    blob_sha: 58d5eb5bedda6d585a88bf1cf1528d004ce8b952
+  - path: tools/run_lt2_hu_ens8_online_pilot.py
+    blob_sha: b8c266dfaea3972289d25bb27cdc9c755e39feb5
+  - path: tools/run_lt2_hu_ens8_online_pilot.sh
+    blob_sha: 53711d4292a2e9ecbefd5caa6af8b82f1ca0c957
+  - path: tools/run_lt2_hu_ens8_post_pilot_forensic.sh
+    blob_sha: 15490f29c814377c51922d8dbcb692392192c658
+  - path: tools/run_lt2_hu_mature_ens4_broad_ev.sh
+    blob_sha: e79f260bcf657766aaddf00f9a76ef3a23787cc6
+  - path: tools/run_lt2_hu_mature_ens8_replicated_broad_ev.sh
+    blob_sha: d78ec9c742d316d63c675638b54236ab06be0fc6
+  - path: tools/run_lt2_hu_mature_ensemble_root_stability.sh
+    blob_sha: a865f947ce84c0b4b30ee464b7138276ce0612ab
+  - path: tools/run_lt2_hu_paired_fresh400_root_refit.sh
+    blob_sha: 5bda71f3ee14a80fc370762c6456b9a74b1a69fd
+  - path: tools/run_lt2_hu_policy_chain.sh
+    blob_sha: ac25bdbc303ad44b1950a025cd733c663ad21d3d
+  - path: tools/run_lt2_hu_preflop_board_averaging_smoke.sh
+    blob_sha: 31b838ebad2cbd7f6c290d8769d745623d28b98a
+  - path: tools/run_lt2_hu_preflop_board_only_averaging.sh
+    blob_sha: d2df642600631ff55cd7b0b6e56a66242182caa2
+  - path: tools/run_lt2_hu_preflop_conditional_resampling.sh
+    blob_sha: fc539437ac53e7e3ccdbe80cfcae4982979dbb8c
+  - path: tools/run_lt2_hu_preflop_target_estimator_budget.sh
+    blob_sha: 224c9aa8028e2c2b80f88f48076a7ef24e25c4f3
+  - path: tools/run_lt2_hu_refit_budget_root_stability.sh
+    blob_sha: ef7a74cfb6fb315b2b7e13ae6d811b5647feb331
+  - path: tools/run_lt2_hu_root_policy_drift_7600_8000.sh
+    blob_sha: 4795d19f13950c369c6014383b7086b2ccb93907
+  - path: tools/run_lt2_jammer_facing_allin_common_reference_v2.sh
+    blob_sha: 1c789adef8376ab8e65f92b3e2e55d2fad5e6e40
+  - path: tools/run_lt2_jammer_facing_allin_target_overlay.sh
+    blob_sha: 596a002fc4906b67587d5fc5d328d3c88c22f747
+  - path: tools/run_lt2_jammer_fai_broad_calibration.sh
+    blob_sha: 9644d82761041bb6d5fa510a29c54cb197778266
+  - path: tools/run_lt2_jammer_fai_controlled_refit.sh
+    blob_sha: eefaec8f68e352ed7edcf033667787a94a6ce636
+  - path: tools/run_lt2_jammer_fai_fold_shift_infoset.sh
+    blob_sha: 4858bd5e624a7e442ebe33a82cd1a0c742906b59
+  - path: tools/run_lt2_jammer_fai_population_reconciliation.sh
+    blob_sha: 7d95fcae5b6c9d2454666c3e4d1e1d7f0e0f80cf
+  - path: tools/run_lt2_jammer_fai_raw_margin_decomposition.sh
+    blob_sha: 8dbf797522fd690735fb066077195c0aa55d1e96
+  - path: tools/run_lt2_jammer_fai_structural_infoset_confirmation.sh
+    blob_sha: a640c542a46a4b54368beb9abfff2f6df3688a0b
+  - path: tools/run_lt2_native_cpp_inference_parity.sh
+    blob_sha: d1cd079ab7bbc199d67765dc0104295277514b16
+  - path: tools/run_lt2_native_openholdem_shadow_engine_audit.sh
+    blob_sha: 2a3ff14ef08102dbf23c752d275e1e7105c7c5e4
+  - path: tools/run_lt2_native_openholdem_tracker_audit.sh
+    blob_sha: 24673ea6af433f4b1a0ef89ab0a569e5aa1c209e
+  - path: tools/run_lt2_openholdem_host_inspection.sh
+    blob_sha: 3b447aa82343283b6429f4865d610445e73bb54c
+  - path: tools/run_lt2_openholdem_observable_tracker_e2e.sh
+    blob_sha: 445c371252948d0f365cb721ac007e7559f3c0bc
+  - path: tools/run_lt2_openholdem_shadow_dll_windows_gate.sh
+    blob_sha: fe1234b3cf2bd00c3eb00559109567e6c8f1bc8e
+  - path: tools/run_lt2_openholdem_symbol_adapter.sh
+    blob_sha: 71faab2664c33946f1a7ac41443c175abd145dd9
+  - path: tools/run_lt2_policy_drift_review.sh
+    blob_sha: a7173b2de22cec6dffbf02fe43b064e24817f3c5
+  - path: tools/run_lt2_public_snapshot_reconciler.sh
+    blob_sha: c3e2cdc6cc7e18b337bbde27dfa6a8c698b7c49f
+  - path: tools/run_lt2_repeated_target_variance_audit.sh
+    blob_sha: 9127b43e8da52792051653b487b1879c89a7998d
+  - path: tools/run_lt2_runtime_exact_transcript_rebuild.sh
+    blob_sha: d32c52d5595fbde17345371af60c7cb275d10895
+  - path: tools/run_lt2_runtime_heartbeat_tracker.sh
+    blob_sha: 93c42b4462c39812b3aebf0c1c0abf1bc35e4b34
+  - path: tools/run_lt2_runtime_hidden_filler_invariance.sh
+    blob_sha: 1ab2eac94f1e299a78d99ae1bcf2a0330a5656f1
+  - path: tools/run_lt2_same_input_target_variance.sh
+    blob_sha: a38ae332dd0317c08923ab2de629ae3cd351b5bd
+  - path: tools/run_lt2_stage_a_b_first_divergence.sh
+    blob_sha: 7050832120398793a60167a0dd8abada936a5562
+  - path: tools/run_lt2_stage_b_advantage_budget_sweep_v2.sh
+    blob_sha: 00b07e089eecda2eeff5719da7546aecb8e38cbb
+  - path: tools/run_lt2_stage_b_fit_budget_sweep.sh
+    blob_sha: ed6e756b93fd8c03d536a4470aec7d47c229f7b6
+  - path: tools/run_lt2_stage_b_learning_review.sh
+    blob_sha: de4c423c42c245df59e13a0460edabb67a380366
+  - path: tools/run_lt2_training_dynamics_fit_audit.sh
+    blob_sha: 55e8f456f9429488aed91663640c3b674f01d314
+  - path: tools/run_lt2_weak_baseline_variance_review.sh
+    blob_sha: 75d0b8fdba4f9cd6c102f3f6ac10edb4167aa2f3
+  - path: tools/run_lt3_10105_average_policy_fit_audit.sh
+    blob_sha: b05caf3a6c9e69d0b24de12058289420e1d50b10
+  - path: tools/run_lt3_10105_average_policy_shadow_refit.sh
+    blob_sha: fec7a2b0c9719e2acfea032321f01ed4fe9a2d6b
+  - path: tools/run_lt3_10105_strategy_target_conflict.sh
+    blob_sha: 65c0aac01ab31c2203cde68f3d3d34850288422e
+  - path: tools/run_lt3_10105_trip_coverage_audit.sh
+    blob_sha: a16582184b1e15a5bc464fb9bfd9b106edb63832
+  - path: tools/run_lt3_10105_trip_local_geometry_audit.sh
+    blob_sha: 9a69992a0c4a6437863df02350feef5fec91ad99
+  - path: tools/run_lt3_heavy_ens8_h1.py
+    blob_sha: 30d3539e0a6a25e7c7c2692ed7473f03784444af
+  - path: tools/run_lt3_heavy_ens8_h1.sh
+    blob_sha: b79a21b5da264671b048113a686ec096d6afe962
+  - path: tools/run_lt3_hu_ens8_parallel_fit_benchmark.sh
+    blob_sha: e8bfc662f731d8bf658ff5388e147abc7793a561
+  - path: tools/run_lt3_hu_ens8_parallel_fit_matrix.sh
+    blob_sha: dbe5ccdd904845e5fd9a08b978378b9d1d023efd
+  - path: tools/run_lt3_parallel_8200_9105.sh
+    blob_sha: 525177b431b3a2e62be15b8a625e481334457720
+  - path: tools/run_lt3_parallel_8200_9250.sh
+    blob_sha: 7575f3f4050a138bd481eca2bfd3ad6c1aff7280
+  - path: tools/run_lt3_parallel_8200_gate.sh
+    blob_sha: b10326ceb31c0e133b8f02abef0f85d0c4c5b1ae
+  - path: tools/run_lt3_parallel_9105_10105.py
+    blob_sha: 77b02283959dae507a2ca05b4e05adaf59c87366
+  - path: tools/run_lt3_parallel_9105_10105.sh
+    blob_sha: 157d2bfa51c25bc20586253b616995c28fa3ba0b
+  - path: tools/run_lt3_parallel_ens8_continuation.py
+    blob_sha: 5f1c4cd25e3018e77fa36b7029795553f532a3d1
+  - path: tools/run_lt3_post9105_dev_battery.sh
+    blob_sha: 164257ad5aa9d2c2ae96a40c6948328e42429a34
+  - path: tools/run_r7_3_advantage_centering_stability.py
+    blob_sha: e76833f9b020e5e435a9ee7112b65f8c52e4a8fd
+  - path: tools/run_r7_3_advantage_ensemble_end_to_end.py
+    blob_sha: 908a1d8f3e6c51fe805bab51d6d7592ccd04171e
+  - path: tools/run_r7_3_advantage_ensemble_mapping.py
+    blob_sha: ef7fb36a09f5548a8cb5fe411cb4b028f9f3672f
+  - path: tools/run_r7_3_advantage_ensemble_stability.py
+    blob_sha: d4223447d11da1c0800c00f9da0bdde356492174
+  - path: tools/run_r7_3_advantage_fit_factorial.py
+    blob_sha: 7c0bd4f5a8fdfe1b6dcd789940275a16f569462f
+  - path: tools/run_r7_3_advantage_fit_screen.py
+    blob_sha: be419c1816649941eeefd8912f5ad1a4e3095b86
+  - path: tools/run_r7_3_advantage_fit_sign_sensitivity.py
+    blob_sha: 9adb75996c83b7d624369265844b4255df00d714
+  - path: tools/run_r7_3_advantage_multistart_selection.py
+    blob_sha: ecb926ffa04be87d52de0a1b10240d312c27604b
+  - path: tools/run_r7_3_advantage_objective_e2e.py
+    blob_sha: aff1864e9676cd067b46b785da3b39521886a39d
+  - path: tools/run_r7_3_advantage_objective_stability.py
+    blob_sha: d34d8275bf160ee8c0622f565fe48c8b8a948c0a
+  - path: tools/run_r7_3_advantage_robust_policy_aggregation.py
+    blob_sha: 5360e4b28b0b9cf6117d09ce9f5017ca180de8ea
+  - path: tools/run_r7_3_advantage_target_aggregation.py
+    blob_sha: 267e53bed20c5ac36e9a027038120f948f28d5e1
+  - path: tools/run_r7_3_advantage_target_curve.py
+    blob_sha: 7a7d4876ed6f2c91cfdca64f1f5e16a26baa3612
+  - path: tools/run_r7_3_antithetic_x4_screen.py
+    blob_sha: 5996b3bb37f5ef3478c47e0d81f41e173af7ef37
+  - path: tools/run_r7_3_behavior_surrogate_stability.py
+    blob_sha: 5b014456bfd6ab373c083acc2e55db68c82638ef
+  - path: tools/run_r7_3_behavior_target_aggregation.py
+    blob_sha: cdb2d6569ec4ed75137c08aeac0fe9ef8432cb67
+  - path: tools/run_r7_3_common_advantage_fit_rng_screen.py
+    blob_sha: 09a5d0256125e0fdebeae698805f6cc11d36f8f0
+  - path: tools/run_r7_3_common_path_rng_screen.py
+    blob_sha: bec3d62391001477902815b6471beb347c03b3fa
+  - path: tools/run_r7_3_diagnostic.py
+    blob_sha: 9147cb1d66a264bcc7bab8bcc27958f9f04e82de
+  - path: tools/run_r7_3_direct_behavior_aggregated_regret_e2e.py
+    blob_sha: ea94d64642d97e3a7d7d4af24c6d847f5999a2f3
+  - path: tools/run_r7_3_direct_behavior_e2e.py
+    blob_sha: 252a58f200fe4482760d0a35c3989d25cd4f6c12
+  - path: tools/run_r7_3_exact_advantage_feasibility.py
+    blob_sha: 7f4476d4ceb2b0e4f8877be2d1cd0c3cb7535435
+  - path: tools/run_r7_3_exact_own_reach_feasibility.py
+    blob_sha: 0b42b8fdba8b0dc126ae18118c1e85993dec23c1
+  - path: tools/run_r7_3_frozen_candidate_640_acceptance.py
+    blob_sha: ec357fcb1d538aac34e48deef5657b6d53263f7d
+  - path: tools/run_r7_3_frozen_candidate_checkpoint_recert.py
+    blob_sha: 79b506caf036000c17dc5faa04f4d475358ab165
+  - path: tools/run_r7_3_frozen_candidate_fresh_repro.py
+    blob_sha: 430f70388b7a3075e0e877de68eed9248e2917e0
+  - path: tools/run_r7_3_iteration_compounding.py
+    blob_sha: fd483bd285095985b8fb5e667a9d09793dfe57e8
+  - path: tools/run_r7_3_own_reach_support_curve.py
+    blob_sha: df581f357f315e8459cb6e284087a96a14ed4f19
+  - path: tools/run_r7_3_partial_exact_640_candidate_entry.py
+    blob_sha: 63e808ff9d4f3b857b08640da9bc33eaa1c39c7b
+  - path: tools/run_r7_3_partial_exact_640_candidate.py
+    blob_sha: a024aee73f7981a5ee4c36a5311b211f933e6273
+  - path: tools/run_r7_3_partial_exact_advantage_screen_v2.py
+    blob_sha: 275a1520bc97f01b3d94b0aab557eca0afe88ae4
+  - path: tools/run_r7_3_partial_exact_advantage_screen.py
+    blob_sha: 8065a50d495b4514282ea03abaac9ee98bbdc090
+  - path: tools/run_r7_3_partial_exact_common_fit_screen.py
+    blob_sha: 07df773012ff8a6915b16f75bd76ecb040e55e35
+  - path: tools/run_r7_3_partial_exact_ensemble_e2e.py
+    blob_sha: f8d2c20c5accc8792dd452d13eae968b44b73147
+  - path: tools/run_r7_3_partial_exact_ensemble_paired.py
+    blob_sha: 1bce11efcaa28084e9dc8c9d929e3e24d18f3fc3
+  - path: tools/run_r7_3_partial_exact_policy_ensemble.py
+    blob_sha: f305e44941de7784af729d7e2c8dc6e251b5a445
+  - path: tools/run_r7_3_partial_exact_policy_mixture_paired.py
+    blob_sha: d8e24ac58d6c97e5b338c9e9cd370573934114f5
+  - path: tools/run_r7_3_partial_exact_support_by_iteration.py
+    blob_sha: 345c2c712ddb3ebf12c5c22fad5eb70d5f327922
+  - path: tools/run_r7_3_partial_exact_support_overlap.py
+    blob_sha: b9429b150b8c454c7b154f816a5731a09b0076ee
+  - path: tools/run_r7_3_path_replication_screen.py
+    blob_sha: 0aab2e413c802d4cf7628f70909180a972c2e2ba
+  - path: tools/run_r7_3_policy_mixture_decay_tremble.py
+    blob_sha: da5be75c56b4316408bc830b1d4effad59af8ef3
+  - path: tools/run_r7_3_policy_mixture_final_policy_ensemble.py
+    blob_sha: 8fea1cea818d4de2718478c2c486c4abf6881fd2
+  - path: tools/run_r7_3_policy_mixture_regret_floor.py
+    blob_sha: c6ad9bf4a6e6cfbf393fc46ab62e6268e51de700
+  - path: tools/run_r7_3_policy_mixture_support_conditioned.py
+    blob_sha: ff312aac2dc4b76678656e0bb4c86d36d7f2f2cd
+  - path: tools/run_r7_3_policy_mixture_temporal_blend.py
+    blob_sha: 0e0e85ac654eaabb70a6f292bed92e0bb5e84ae7
+  - path: tools/run_r7_3_policy_mixture_uncertainty_damping.py
+    blob_sha: bc7b6e09e2444aaa239878f305ce52446eb89c2d
+  - path: tools/run_r7_3_provisional_640_strategy_acceptance.py
+    blob_sha: 07dbe8a5b9722517df4819c67bccda1c9d376fc8
+  - path: tools/run_r7_3_replicated_640_candidate_v2.py
+    blob_sha: 2eb68a4fb675233cb34f50f781d4b6c4de644ad1
+  - path: tools/run_r7_3_replicated_640_candidate.py
+    blob_sha: 9e42b4c08e6bd2664884d867001df164a1c4e9a1
+  - path: tools/run_r7_3_replicated_candidate_entry.py
+    blob_sha: 99f3b18baa4f1dca65957d3af30955f6d878d6ff
+  - path: tools/run_r7_3_rng_coupling_screen.py
+    blob_sha: 4a5204b7a60e2487c3f3d2c0d036dd8f8bea9e5d
+  - path: tools/run_r7_3_shared_deck_support.py
+    blob_sha: d382577b36749b6d878edc348634ccc4029ef2d1
+  - path: tools/run_r7_3_support_overlap.py
+    blob_sha: c181bd02926d5228c6f8f23c9d60452f5c2d5530
+  - path: tools/run_r7_3_variance_decomposition.py
+    blob_sha: f34d00db725a0d55b48b8a4ebb2f69654acaf305
+  - path: tools/run_r7_4_domain_preflight.py
+    blob_sha: cce40eb3385f99a0255995253d0425ae770f1f89
+  - path: tools/run_r7_4_hu_ruleset_invariance.py
+    blob_sha: bf0adf9700d28d59e5d9aab9c008d7236b5657cf
+  - path: tools/run_r7_4_stability_pilot.py
+    blob_sha: df1791bff4df6eab7a5935a2243012ac00bff914
+  - path: tools/run_r7_5_4a_dense3h_wsl2_i2c1.sh
+    blob_sha: cd811d9bd40c1e2044ba32cfea4819f8f9ac67e7
+  - path: tools/run_with_heartbeat.py
+    blob_sha: d033a52b84ad119e6c1527b866cabb664e087e4d
