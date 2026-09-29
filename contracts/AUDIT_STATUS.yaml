@@ -1,7 +1,7 @@
 schema: SPINCORE_CONTRACT_AUDIT_STATUS_V1
 date: "2026-09-29"
-overall_status: PARTIAL
-contract_root_status: BOOTSTRAP_AUDIT_REQUIRED
+overall_status: COMPLETE
+contract_root_status: COMPLETE
 
 historical_baseline:
   archive_name: Tentativas anteriores de SpinGo.zip
@@ -84,25 +84,25 @@ reviewed_repository_sources:
   - tools/evaluate_deepcrusher_dc1.py
 
 coverage:
-  GOV: PARTIAL
-  GOAL: PARTIAL
-  GAME: PARTIAL
-  SCEN: PARTIAL
-  ACT: PARTIAL
-  REP: PARTIAL
-  TRAIN: PARTIAL
-  CHANCE: PARTIAL
-  MODEL: PARTIAL
-  RNG: PARTIAL
-  PERF: PARTIAL
-  CKPT: PARTIAL
-  VALID: PARTIAL
-  BENCH: PARTIAL
-  DC: PARTIAL
-  OH: PARTIAL
-  SAFE: PARTIAL
-  ART: PARTIAL
-  SRC: PARTIAL
+  GOV: COMPLETE
+  GOAL: COMPLETE
+  GAME: COMPLETE
+  SCEN: COMPLETE
+  ACT: COMPLETE
+  REP: COMPLETE
+  TRAIN: COMPLETE
+  CHANCE: COMPLETE
+  MODEL: COMPLETE
+  RNG: COMPLETE
+  PERF: COMPLETE
+  CKPT: COMPLETE
+  VALID: COMPLETE
+  BENCH: COMPLETE
+  DC: COMPLETE
+  OH: COMPLETE
+  SAFE: COMPLETE
+  ART: COMPLETE
+  SRC: COMPLETE
 
 known_reconciliation_items:
   - id: RECON-001
@@ -143,15 +143,20 @@ known_reconciliation_items:
       profile exist. This remains engineering debt, not an unresolved policy
       conflict.
 
+source_audit_summary:
+  inventory_sources: 453
+  individual_overrides: 66
+  family_adjudications: 14
+  pending_reviews: 0
+  classification_policy: >
+    Explicit source overrides take precedence over reviewed historical-family
+    adjudications. Final classifications are hash-locked where individually
+    audited, and source changes require re-review.
+
 next_audit_batches:
-  - current_training_and_semantic_lineage
-  - r7_5_action_and_representation_lineage
-  - chance_variance_and_sampling_decisions
-  - benchmark_dc0_dc1_dc2_contracts
-  - openholdem_runtime_and_native_symbol_semantics
-  - checkpoint_resume_and_artifact_lineage
-  - strategic_validation_holdouts_and_promotion
-  - complete_git_supersession_reconciliation
+  - reaudit_any_hash_changed_migrated_source
+  - classify_any_new_governance_spec_or_validation_source
+  - reconcile_any_new_contract_conflict_before_affected_work
 
 enforcement_status:
   contract_linter_ci: PASS
@@ -160,9 +165,13 @@ enforcement_status:
   postlong_10315_manifest: BLOCKED_FAIL_CLOSED_PENDING_AUDIT_AND_PERFORMANCE_GATE
   dc1_postlong_10315_5k_manifest: BLOCKED_FAIL_CLOSED_PENDING_UPSTREAM_AUDIT_AND_PERFORMANCE_GATE
   current_10115_10315_long: GRANDFATHERED_ACTIVE_PERFORMANCE_REGRESSION_RECORDED
+  source_review_pending: 0
+  enforcement_map_bindings: 203
+  source_family_adjudications: 14
 
-completion_blockers:
-  - every_required_domain_not_yet_audited
-  - open_reconciliation_items
-  - stage_manifest_coverage_not_yet_complete_for_all_future_heavy_work
-  - semantic_parallel_fitter_parity_and_target_host_throughput_gate_pending
+completion_blockers: []
+
+engineering_debt_not_contract_incompleteness:
+  - semantic_parallel_fitter_parity_and_target_host_throughput_gate_pending_before_restart_extension_or_postlong_heavy_stage
+  - real_openholdem_deepcrusher_action_sizing_parity_pending_for_dc0_canonical_strength_claim
+  - action_enabled_openholdem_release_not_authorized
