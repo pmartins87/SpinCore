@@ -3505,3 +3505,31 @@ The 5k benchmark should use a fresh scenario seed rather than extending the
 same 1k deterministic prefix, so the 5k result supplies genuinely new
 development evidence instead of counting the 1k prefix twice.
 
+### Fresh-seed DC1 5k scale-up prepared
+
+Added:
+- `tools/run_deepcrusher_dc1_stratified_specialist_5k.sh`.
+
+Unlike the earlier fixed-seed 1k gates, the 5k scale-up uses a **fresh benchmark
+seed 20260929** so the old 1k deterministic prefix is not counted again as new
+evidence.
+
+The runner executes three arms on the same 5,000 fresh scenarios:
+1. frozen 10105 baseline;
+2. full-pool 10115;
+3. unchanged multiseed-confirmed stratified specialist 10115.
+
+Precommitted long-train-readiness criteria:
+- all three evaluators PASS;
+- exact HU scenario-margin parity;
+- specialist-baseline paired 3H mean >0;
+- specialist-baseline paired 3H 95% CI lower bound >0;
+- specialist trips-or-better Fold rate <= baseline rate +0.01 percentage point;
+- specialist high-card-jam rate <=10% above full-pool;
+- top-pair Fold, AA Fold and deep 72o jam counts <= full-pool +1;
+- no unexpected specialist sanity-flag code.
+
+PASS supports freezing the current research architecture for the next longer
+training continuation. It still does not authorize production/DC2/canonical
+strength while DC0 real-OpenHoldem parity is pending.
+
