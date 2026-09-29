@@ -1,0 +1,188 @@
+schema: SPINCORE_PROJECT_CONTRACT_V1
+contract_id: SPINCORE_PROJECT_CONTRACT
+status: BOOTSTRAP_AUDIT_REQUIRED
+effective_date: "2026-09-29"
+
+purpose:
+  statement: >
+    Machine-readable source of truth for every active invariant that constrains
+    SpinCore design, training, evaluation, benchmarking, deployment, governance,
+    reproducibility, or operation. The contract must be complete enough that a
+    future implementation cannot lawfully bypass a prior active decision merely
+    because it was forgotten in conversation or buried in project history.
+  completeness_rule: >
+    This contract is not COMPLETE until every active invariant has been audited
+    from project history and represented here or in one of its declared modules.
+  user_reenumeration_required: false
+
+authority:
+  project_source_of_truth_order:
+    - PROJECT_CONTRACT.yaml
+    - contract_modules
+    - frozen_precommit_and_validation_artifacts
+    - ROADMAP.md
+    - CURRENT_WORK.md
+    - implementation_and_tests
+    - conversation
+  conflict_policy: >
+    A lower-priority source may not silently override an active higher-priority
+    invariant. Conflicts must stop the affected work until explicitly adjudicated.
+  no_silent_override: true
+  no_implicit_supersession: true
+
+lifecycle:
+  allowed_statuses:
+    - ACTIVE
+    - CONDITIONAL
+    - SUPERSEDED
+    - RETIRED
+    - EXPERIMENT_ONLY
+  change_requirements:
+    - explicit_reason
+    - affected_contract_ids
+    - evidence_or_new_requirement
+    - supersedes_reference_when_applicable
+    - repository_commit
+  deletion_policy: >
+    An invariant may not disappear from project governance by deletion alone.
+    It must be superseded or retired with provenance.
+
+coverage_domains:
+  - id: GOV
+    name: project_governance_and_decision_process
+    required: true
+  - id: GOAL
+    name: objectives_and_success_criteria
+    required: true
+  - id: GAME
+    name: game_rules_domains_and_scenario_definition
+    required: true
+  - id: SCEN
+    name: scenario_generation_sampling_and_reachability
+    required: true
+  - id: ACT
+    name: action_space_and_action_abstractions
+    required: true
+  - id: REP
+    name: state_representation_features_and_semantics
+    required: true
+  - id: TRAIN
+    name: training_algorithm_order_budgets_and_update_semantics
+    required: true
+  - id: CHANCE
+    name: chance_sampling_variance_control_and_private_public_card_semantics
+    required: true
+  - id: MODEL
+    name: model_architecture_ensembles_specialists_and_routing
+    required: true
+  - id: RNG
+    name: randomness_seed_and_reproducibility_contracts
+    required: true
+  - id: PERF
+    name: target_hardware_parallelism_memory_and_throughput
+    required: true
+  - id: CKPT
+    name: checkpoints_resume_lineage_and_artifact_integrity
+    required: true
+  - id: VALID
+    name: validation_gates_holdouts_statistics_and_stop_rules
+    required: true
+  - id: BENCH
+    name: benchmark_protocols_comparators_and_interpretation
+    required: true
+  - id: DC
+    name: dc0_dc1_dc2_progression_and_promotion_rules
+    required: true
+  - id: OH
+    name: openholdem_openppl_runtime_and_deployment_semantics
+    required: true
+  - id: SAFE
+    name: sanity_pathology_and_regression_guards
+    required: true
+  - id: ART
+    name: evidence_artifacts_hashes_schema_and_provenance
+    required: true
+  - id: SRC
+    name: repository_documentation_and_source_of_truth_hygiene
+    required: true
+
+contract_modules:
+  - contracts/governance.yaml
+  - contracts/game_and_scenarios.yaml
+  - contracts/action_and_representation.yaml
+  - contracts/training_and_models.yaml
+  - contracts/chance_rng_reproducibility.yaml
+  - contracts/performance_and_hardware.yaml
+  - contracts/checkpoints_and_artifacts.yaml
+  - contracts/validation_and_benchmarks.yaml
+  - contracts/openholdem_and_deployment.yaml
+  - contracts/source_of_truth.yaml
+
+bootstrap_invariants:
+  - id: GOV-001
+    status: ACTIVE
+    statement: >
+      Every active invariant discovered in project history must be migrated into
+      this contract bundle; the user is not required to remember or enumerate it.
+    enforcement: CONTRACT_COMPLETENESS_AUDIT
+  - id: GOV-002
+    status: ACTIVE
+    statement: >
+      Questions, doubts, or suggestions do not by themselves supersede an active
+      project decision. Strategic or contractual changes require explicit
+      adjudication and provenance.
+    enforcement: REVIEW
+  - id: GOV-003
+    status: ACTIVE
+    statement: >
+      New implementation work must identify which active contract IDs it touches
+      before it may change behavior covered by those IDs.
+    enforcement: PREMERGE_GATE
+  - id: GOV-004
+    status: ACTIVE
+    statement: >
+      If implementation, documentation, tests, and the active contract disagree,
+      the affected workflow must fail closed until the conflict is resolved.
+    enforcement: CI_AND_PREFLIGHT
+  - id: PERF-001
+    status: ACTIVE
+    statement: >
+      Any training block expected to exceed 60 minutes on the target host requires
+      a current throughput gate for the actual fitter/execution path, including
+      dominant bottleneck, parallelism benchmark, parity, end-to-end wall time,
+      CPU utilization, and memory headroom.
+    provenance:
+      source: ROADMAP.md
+      decision: Mandatory performance gate before long training
+    enforcement: LONG_RUN_PREFLIGHT
+  - id: PERF-002
+    status: ACTIVE
+    statement: >
+      For independent ensemble-member fitting, sequential execution is not an
+      accepted final implementation when an exact-parity or explicitly bounded
+      process-parallel implementation provides material speedup.
+    provenance:
+      source: ROADMAP.md
+      evidence: exact-parity 4x8 ENS8 benchmark
+    enforcement: LONG_RUN_PREFLIGHT
+  - id: GOV-005
+    status: ACTIVE
+    statement: >
+      The currently running 10115->10315 semantic long training remains
+      scientifically valid but is grandfathered from the new contract-enforcement
+      mechanism. No new long training or architecture-changing stage may start
+      under BOOTSTRAP_AUDIT_REQUIRED without explicit contract coverage for the
+      affected domains.
+    enforcement: TRANSITION_RULE
+
+completion_gate:
+  required_status: COMPLETE
+  requirements:
+    - all_required_coverage_domains_audited
+    - every_active_invariant_has_stable_id
+    - every_invariant_has_scope_and_provenance
+    - every_superseded_rule_has_replacement_or_retirement_reason
+    - enforcement_mapping_recorded_for_each_invariant
+    - unresolved_conflicts_zero
+    - contract_linter_and_ci_gate_pass
+  current_status: NOT_PASSED
