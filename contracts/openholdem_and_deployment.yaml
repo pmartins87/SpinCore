@@ -33,3 +33,99 @@ invariants:
     provenance:
       - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
       - CURRENT_WORK.md
+
+  - id: OH-006
+    status: ACTIVE
+    scope: OPENHOLDEM_RUNTIME_INFERENCE
+    statement: >
+      Deployment inference remains local to the runtime and loads only the
+      frozen deployment weights/bundle for the selected release; it must not
+      depend on a remote strategy service or silently substitute a different
+      model artifact.
+    provenance:
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+      - docs/LT2_NATIVE_CPP_INFERENCE_PARITY_RESULT_20260921.md
+  - id: OH-007
+    status: ACTIVE
+    scope: OPENHOLDEM_HIDDEN_STATE_RECONSTRUCTION
+    statement: >
+      Runtime reconstruction may use deterministic legal filler cards only for
+      hidden opponent holes and unrevealed future board cards. Fillers may never
+      overwrite Hero cards or already-visible board cards, and the canonical
+      solver state is rebuilt from the hand start when new public cards appear.
+    provenance:
+      - docs/LT2_RUNTIME_HIDDEN_FILLER_INVARIANCE_RESULT_20260921.md
+      - docs/LT2_RUNTIME_EXACT_TRANSCRIPT_REBUILD_RESULT_20260921.md
+  - id: OH-008
+    status: ACTIVE
+    scope: OPENHOLDEM_PUBLIC_TRANSCRIPT
+    statement: >
+      The runtime public transcript is canonical exact-action history. A valid
+      changed public snapshot appends the exact canonical action or actions
+      implied by actor order; duplicate snapshots are no-ops and corrupted,
+      skipped, ambiguous, or wrong-hand transitions fail closed.
+    provenance:
+      - docs/LT2_PUBLIC_SNAPSHOT_RECONCILER_RESULT_20260921.md
+      - docs/LT2_RUNTIME_HEARTBEAT_TRACKER_RESULT_20260921.md
+      - docs/LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_RESULT_20260921.md
+  - id: OH-009
+    status: ACTIVE
+    scope: OPENHOLDEM_ACTION_ALIAS_NORMALIZATION
+    statement: >
+      Public transcript normalization treats an all-in call as CALL and a
+      BetTo/RaiseTo exactly to the maximum stack as ALL_IN, while preserving the
+      exact amount-to semantics used by the canonical solver.
+    provenance:
+      - docs/LT2_PUBLIC_SNAPSHOT_RECONCILER_RESULT_20260921.md
+  - id: OH-010
+    status: ACTIVE
+    scope: OPENHOLDEM_LIFECYCLE_CACHE
+    statement: >
+      Duplicate heartbeat is a no-op; NewRound preserves the current hand
+      transcript; MyTurn computes at most once per canonical state; ProcessQuery
+      is cache-only; a state change invalidates the decision cache; and any
+      synchronization or hand-identity failure latches until HandReset.
+    provenance:
+      - docs/LT2_RUNTIME_HEARTBEAT_TRACKER_RESULT_20260921.md
+  - id: OH-011
+    status: ACTIVE
+    scope: OPENHOLDEM_INVISIBLE_CHECKS
+    statement: >
+      OpenHoldem-invisible CHECK actions may remain pending until actor-order
+      synchronization is proven. MyTurn may supply synchronization evidence, and
+      later observable changes may reconcile pending CHECKs plus the subsequent
+      visible action without fabricating history.
+    provenance:
+      - docs/LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_RESULT_20260921.md
+      - docs/LT2_NATIVE_OPENHOLDEM_TRACKER_RESULT_20260921.md
+  - id: OH-012
+    status: ACTIVE
+    scope: OPENHOLDEM_BETROUND_AND_REBUILD
+    statement: >
+      OpenHoldem-facing betround is derived from visible public cards and may
+      advance during an all-in runout even when the solver betting street remains
+      earlier; canonical solver state is reconstructed from the scenario, Hero
+      cards, visible board, deterministic hidden fillers, and exact transcript.
+    provenance:
+      - docs/LT2_OPENHOLDEM_OBSERVABLE_TRACKER_E2E_RESULT_20260921.md
+      - docs/LT2_NATIVE_OPENHOLDEM_TRACKER_RESULT_20260921.md
+  - id: OH-013
+    status: ACTIVE
+    scope: PRE_ACTION_DEPLOYMENT
+    statement: >
+      Native OpenHoldem integration remains SHADOW_NO_TABLE_ACTION until a
+      separately authorized action-enabled deployment gate passes. Shadow/mock
+      host tests must keep all action-control outputs hard-zero and execute zero
+      table actions.
+    provenance:
+      - docs/LT2_NATIVE_OPENHOLDEM_SHADOW_ENGINE_RESULT_20260921.md
+      - ROADMAP.md
+  - id: OH-014
+    status: ACTIVE
+    scope: NATIVE_NUMERIC_PARITY
+    statement: >
+      The accepted LT2 native inference implementation requires zero argmax
+      mismatches, zero illegal-action mass, finite outputs, and per-probability
+      absolute error within the frozen 2e-4 tolerance against Python fixtures.
+    provenance:
+      - docs/LT2_NATIVE_CPP_INFERENCE_PARITY_RESULT_20260921.md
