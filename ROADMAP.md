@@ -3885,3 +3885,35 @@ Decision: stop the serial trainer now, preserving the latest durable
 parallel resume itself remains blocked until the production 1600-step gate is
 tensor/loss/metadata exact, memory-safe, and the manifest is explicitly promoted
 to READY from that evidence.
+
+
+### 2026-09-29 — semantic parallel Ryzen gate PASS; 4x8 resume authorized
+
+The guarded target-host gate completed successfully from durable iteration 10222.
+
+Evidence:
+- local dependency-free semantic selftest: PASS;
+- semantic precompute 2,000,000 rows: 32.153 s;
+- packed mmap build: 607,800,000 bytes in 2.514 s;
+- quick 2x8 profile: exact parity, 1.417622x speedup;
+- quick 4x8 profile: exact parity, 1.717933x speedup;
+- full canonical serial 1600-step ENS8 fit: 474.071 s;
+- full selected 4x8 1600-step fit: 283.269 s;
+- production fit speedup: **1.673575x**;
+- final tensors: **exact**;
+- final losses: **exact**;
+- member seed/step metadata: **exact**;
+- whole gate: exit 0, 15:25 wall, ~1529% average CPU, 14,881,928 KiB
+  max RSS reported by /usr/bin/time, zero OS-reported swaps;
+- gate sentinel: **SEMANTIC_PARALLEL_FIT_GATE_PASS**.
+
+The manifest
+`contracts/run_manifests/semantic_long_10115_10315_parallel_resume.json`
+is now **READY** with the selected **4 concurrent processes x 8 Torch threads**
+profile and hash-pinned support files.
+
+Operational consequence: resume the same scientific 10115->10315 experiment
+from the existing durable `resume_state.pt`; do not restart from 10115 and do
+not change seeds, member steps, tree sampling, safety guards, or milestone
+selection.  The only admitted change is the parity-proven independent member-fit
+execution mechanism.
