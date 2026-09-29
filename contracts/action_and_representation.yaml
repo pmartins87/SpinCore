@@ -107,3 +107,67 @@ invariants:
       - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
       - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
       - validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md
+
+  - id: REP-015
+    status: ACTIVE
+    scope: CURRENT_LEAN_LT2_LT3_POLICY_INPUT
+    statement: >
+      SPNNIV1 is the active neural observation schema for the current lean
+      functional LT2/LT3 policy lineage. Historical R7.5 SPNNIV3 work remains
+      candidate/experimental evidence and may not become the current policy
+      input implicitly or through generic package exports.
+    provenance:
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - validation/R9_R12_SPNNIV3_MIGRATION_DEBT_AUDIT_20260816.json
+  - id: REP-016
+    status: ACTIVE
+    scope: NON_POLICY_INTERNAL_CARRIERS
+    statement: >
+      Use of SPNNIV3 as an exact/lossless carrier for diagnostics or the
+      DeepCrusher offline oracle does not redefine the current SpinCore policy
+      network input. Representation identities are role-scoped and must not be
+      conflated across training, deployment, benchmark-oracle, and diagnostic
+      paths.
+    provenance:
+      - python/spincore/deepcrusher_state.py
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - validation/R7_5_REPRESENTATION_INTEGRITY_AUDIT_20260814.md
+  - id: REP-017
+    status: ACTIVE
+    scope: LEGACY_R7_5_REPRESENTATION_EXPERIMENTS
+    statement: >
+      R7.5 representation candidates, including SPNNIV3 H2/H3 lineages, remain
+      historical experimental evidence unless an explicit later contract
+      promotes them under the representative real tournament distribution.
+      Stale R9/R10 references to a presumed future R7.5.5 winner are not an
+      implicit production selection.
+    provenance:
+      - validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
+      - validation/R9_R10_SPNNIV3_GATE_DESIGN_ADJUDICATION_20260816.md
+      - validation/R9_R12_SPNNIV3_MIGRATION_DEBT_AUDIT_20260816.json
+  - id: ACT-012
+    status: ACTIVE
+    scope: CURRENT_LEAN_LT2_LT3_ACTION_ABSTRACTION
+    statement: >
+      The active lean LT2/LT3 strategic action abstraction is the legacy-derived
+      seven-action vocabulary carried in ten universal slots. Historical R7.5
+      action-set candidates A/B/C and fixed-10/20 ablations remain localized
+      experiments and cannot silently supersede this action contract.
+    provenance:
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
+      - validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md
+  - id: ACT-013
+    status: ACTIVE
+    scope: FUTURE_ACTION_ABSTRACTION_CHANGE
+    statement: >
+      Reopening the action abstraction requires representative full-distribution
+      evidence and an explicit contract change. A larger action set is not
+      preferred merely because it is more granular; additional branches must
+      justify strategic benefit against tree-size and wall-clock cost.
+    provenance:
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
