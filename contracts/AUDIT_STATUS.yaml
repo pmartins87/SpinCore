@@ -42,10 +42,26 @@ reviewed_repository_sources:
   - python/spincore/lean_training_scope.py
   - tools/run_3h_semantic_long_10115_10315.py
   - tools/lt3_hu_ens8_parallel_fit.py
+  - docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md
+  - validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md
+  - validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md
+  - validation/R7_5_REPRESENTATION_INTEGRITY_AUDIT_20260814.md
+  - validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json
+  - validation/GOVERNANCE_STALENESS_AUDIT_20260816.json
+  - python/spincore/deep_cfr.py
+  - python/spincore/lean_functional_training.py
+  - python/spincore/r7.py
+  - python/spincore/r7_5_action_cfr.py
+  - python/spincore/lean_parallel.py
+  - python/spincore/solver.py
+  - include/spincore/hand_engine.hpp
+  - src/hand_engine.cpp
+  - include/spincore/tournament_value.hpp
+  - src/tournament_value.cpp
 
 coverage:
   GOV: PARTIAL
-  GOAL: PENDING
+  GOAL: PARTIAL
   GAME: PARTIAL
   SCEN: PARTIAL
   ACT: PARTIAL
@@ -108,8 +124,16 @@ next_audit_batches:
   - strategic_validation_holdouts_and_promotion
   - complete_git_supersession_reconciliation
 
+enforcement_status:
+  contract_linter_ci: PASS
+  future_runner_change_declaration_gate: PASS
+  stage_manifest_checker: IMPLEMENTED
+  postlong_10315_manifest: BLOCKED_FAIL_CLOSED_PENDING_AUDIT_AND_PERFORMANCE_GATE
+  dc1_postlong_10315_5k_manifest: BLOCKED_FAIL_CLOSED_PENDING_UPSTREAM_AUDIT_AND_PERFORMANCE_GATE
+  current_10115_10315_long: GRANDFATHERED_ACTIVE_PERFORMANCE_REGRESSION_RECORDED
+
 completion_blockers:
   - every_required_domain_not_yet_audited
   - open_reconciliation_items
-  - no_contract_linter_in_ci_yet
-  - no_long_run_manifest_enforcement_yet
+  - stage_manifest_coverage_not_yet_complete_for_all_future_heavy_work
+  - semantic_parallel_fitter_parity_and_target_host_throughput_gate_pending
