@@ -52,7 +52,7 @@ assert r["final_safety_guard_pass"] is True
 assert all(r["final_safety_guard"].values())
 
 p=torch.load(adv,map_location="cpu",weights_only=False)
-assert p["schema"]=="SPINCORE_3H_SEMANTIC_RESEARCH_ENSEMBLE_V1"
+assert p["schema"]=="SPINCORE_3H_SEMANTIC_LONG_ENSEMBLE_V1"
 assert p["source_checkpoint_sha256"]==expected
 assert int(p["completed_iteration"])==10315
 assert len(p["members"])==8
