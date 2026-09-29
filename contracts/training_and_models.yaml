@@ -168,3 +168,38 @@ invariants:
       - ROADMAP.md
       - tools/audit_3h_semantic_stratified_specialist_multiseed_10115.py
       - tools/run_deepcrusher_dc1_stratified_specialist_5k.sh
+
+  - id: MODEL-030
+    status: CONDITIONAL
+    scope: FUTURE_OPPONENT_EXPLOITATION_IF_ENABLED
+    statement: >
+      Opponent-specific exploitation is an explicit overlay on an independently
+      available audited baseline, never a replacement for it. Exploit identity
+      binds strategic profile/domain/action schema, baseline policy, opponent
+      identity/data cutoff, model/configuration, uncertainty method, and exploit
+      policy identity.
+    provenance:
+      - validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md
+  - id: MODEL-031
+    status: CONDITIONAL
+    scope: FUTURE_OPPONENT_EXPLOITATION_IF_ENABLED
+    statement: >
+      An exploit may activate only under a precommitted uncertainty/safety
+      protocol with independent or held-out evidence. Unknown or ambiguous
+      opponents, insufficient/stale/corrupt evidence, unsupported profile/domain,
+      excessive uncertainty, or hash/schema mismatch fall back to the audited
+      baseline or no-action safety barrier; they never borrow another player's
+      exploit model.
+    provenance:
+      - validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md
+  - id: MODEL-032
+    status: CONDITIONAL
+    scope: FUTURE_OPPONENT_EXPLOITATION_IF_ENABLED
+    statement: >
+      Exploitation may not alter the canonical encoder, legal-action mapping, or
+      OpenHoldem translator, and in three-handed play it may not model the target
+      opponent while assuming the third player's behavior is irrelevant.
+      Opponent-model updates are versioned and auditable rather than invisible
+      mutation of an approved exploit artifact.
+    provenance:
+      - validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md
