@@ -1,5 +1,10 @@
 from spincore.deepcrusher_benchmark import DecisionTrace
-from spincore.decision_sanity import (\n    evaluate_visible_hand,\n    immediate_straight_flush_draw_outs,\n    preflop_class,\n    sanity_flags,\n)
+from spincore.decision_sanity import (
+    evaluate_visible_hand,
+    immediate_straight_flush_draw_outs,
+    preflop_class,
+    sanity_flags,
+)
 
 
 def cid(rank: int, suit: int) -> int:
@@ -30,6 +35,7 @@ def trace(*, hole, board=(), action_type=0, blind="10/20", stacks=(400,400,0), a
         board=tuple(board),
         action_type=action_type,
         amount_to=0,
+        policy_detail=policy_detail,
     )
 
 
