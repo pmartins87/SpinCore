@@ -75,7 +75,11 @@ invariants:
   - id: TRAIN-006
     status: ACTIVE
     scope: R7_OWN_REACH_AVERAGE_POLICY_CAPABILITY
-    statement: The preserved R7 action-CFR path retains own-reach AveragePolicy collection semantics: target-player decisions are recorded under current behavior while non-target actors are expanded across legal actions. This capability must not be silently redefined when an R7-derived lane depends on it.
+    statement: >
+      The preserved R7 action-CFR path retains own-reach AveragePolicy collection
+      semantics: target-player decisions are recorded under current behavior while
+      non-target actors are expanded across legal actions. This capability must
+      not be silently redefined when an R7-derived lane depends on it.
     provenance:
       - README.md
       - python/spincore/deep_cfr.py
