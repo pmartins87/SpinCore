@@ -1,6 +1,6 @@
 schema: SPINCORE_PROJECT_CONTRACT_V1
 contract_id: SPINCORE_PROJECT_CONTRACT
-status: BOOTSTRAP_AUDIT_REQUIRED
+status: COMPLETE
 effective_date: "2026-09-29"
 
 purpose:
@@ -203,4 +203,15 @@ completion_gate:
     - enforcement_mapping_recorded_for_each_invariant
     - unresolved_conflicts_zero
     - contract_linter_and_ci_gate_pass
-  current_status: NOT_PASSED
+  current_status: PASSED
+
+completion_evidence:
+  audit_status: contracts/AUDIT_STATUS.yaml
+  source_inventory: contracts/SOURCE_AUDIT_INDEX.json
+  source_overrides: contracts/SOURCE_AUDIT_OVERRIDES.yaml
+  source_family_adjudications: contracts/SOURCE_FAMILY_ADJUDICATIONS.yaml
+  enforcement_map: contracts/ENFORCEMENT_MAP.yaml
+  runner_baseline: contracts/RUNNER_BASELINE.yaml
+  contract_linter: tools/check_project_contract.py
+  ci_workflow: .github/workflows/project_contract.yml
+  completed_date: "2026-09-29"
