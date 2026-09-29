@@ -3672,3 +3672,60 @@ PASS supports freezing the current research architecture for the next longer
 training continuation. It still does not authorize production/DC2/canonical
 strength while DC0 real-OpenHoldem parity is pending.
 
+## Fresh-seed DC1 5k PASS: research architecture ready for longer continuation — 2026-09-29
+
+The precommitted fresh-seed DC1 5k scale-up completed on seed **20260929**:
+- 5,000 scenarios total;
+- 2,847 THREE_HANDED;
+- 2,153 TRUE_HEADS_UP;
+- all three evaluator arms PASS;
+- exact HU scenario-margin parity preserved.
+
+Absolute 3H development EV vs DeepCrusher:
+- frozen baseline 10105: **-10.3451**, 95% CI **[-15.3403, -5.3499]**;
+- full-pool 10115: **-3.9600**, 95% CI **[-8.0876, +0.1677]**;
+- unchanged stratified specialist 10115: **-3.8986**, 95% CI **[-8.0242, +0.2270]**.
+
+The absolute specialist-vs-DeepCrusher interval still crosses zero.  This run
+therefore does **not** establish canonical superiority over DeepCrusher.
+
+The precommitted paired development comparison does establish that the 10115
+research architecture improved materially over its own frozen 10105 baseline
+on this fresh 5k seed:
+- specialist - baseline, THREE_HANDED:
+  **+6.4465**, 95% CI **[+2.1185, +10.7745]**, n=2,847;
+- specialist - baseline, ALL:
+  **+3.6706**, 95% CI **[+1.2049, +6.1364]**, n=5,000.
+
+Specialist vs full-pool is essentially neutral:
+- THREE_HANDED **+0.0614**, 95% CI **[-0.0441, +0.1668]**;
+- only two of 2,847 3H scenario clusters differ, with zero specialist-negative
+  clusters in this benchmark.
+
+Sanity surfaces remain repaired:
+- deep high-card jam: **733 / 340 / 341**
+  (baseline / full-pool / specialist);
+- top-pair Fold: **17 / 1 / 1**;
+- trips-or-better Fold: **12 / 3 / 2**;
+- AA Fold: **16 / 0 / 0**;
+- deep 72o jam: **54 / 6 / 6**;
+- no unexpected specialist sanity-code appeared.
+
+All ten precommitted long-train-readiness criteria are true, including the
+strongest requirement:
+- paired 3H specialist-baseline mean >0;
+- paired 3H 95% CI lower bound >0.
+
+Decision:
+- **DC1 5k long-train-readiness PASS**;
+- freeze the current 3H research architecture;
+- the next compute-heavy step is a longer semantic-Advantage continuation
+  using the same canonical softmax-fallback behavior contract;
+- after that continuation, rebuild fresh final AveragePolicy targets and the
+  validated stratified strong-hand specialist from the new teacher, then repeat
+  independent validation before any promotion.
+
+This remains development evidence only. DC0 real-OpenHoldem action+sizing
+parity remains pending, so production, DC2 and a canonical strength claim are
+still blocked.
+
