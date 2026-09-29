@@ -56,3 +56,41 @@ invariants:
     provenance:
       - CURRENT_WORK.md
       - tools/build_3h_semantic_stratified_specialist_10315.py
+
+  - id: TRAIN-004
+    status: ACTIVE
+    scope: EXTERNAL_SAMPLING_ADVANTAGE_TARGETS
+    statement: At a traverser node, every effective legal action branch is evaluated and the stored advantage target is action value minus the current-policy node value; at ordinary opponent nodes external sampling follows the current behavior unless an explicitly declared partial-exact diagnostic level is active.
+    provenance:
+      - README.md
+      - python/spincore/deep_cfr.py
+      - python/spincore/r7_5_action_cfr.py
+  - id: TRAIN-005
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_AVERAGE_POLICY
+    statement: The current lean functional path collects AveragePolicy targets on independent ordinary sampled game trajectories, storing the current behavior distribution at each encountered decision and sampling one action to continue.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_functional_training.py
+  - id: TRAIN-006
+    status: ACTIVE
+    scope: R7_OWN_REACH_AVERAGE_POLICY_CAPABILITY
+    statement: The preserved R7 action-CFR path retains own-reach AveragePolicy collection semantics: target-player decisions are recorded under current behavior while non-target actors are expanded across legal actions. This capability must not be silently redefined when an R7-derived lane depends on it.
+    provenance:
+      - README.md
+      - python/spincore/deep_cfr.py
+      - python/spincore/r7.py
+      - python/spincore/r7_5_action_cfr.py
+  - id: TRAIN-007
+    status: ACTIVE
+    scope: LEAN_ADVANTAGE_FIT
+    statement: A fresh Advantage approximator is reinitialized for a declared CFR fit cycle without clearing accumulated training memories; between reset and completed fit the model is not treated as a valid regret approximator.
+    provenance:
+      - python/spincore/deep_cfr.py
+      - python/spincore/lean_functional_training.py
+  - id: MODEL-002
+    status: ACTIVE
+    scope: UNTRAINED_BEHAVIOR
+    statement: The true zero-regret untrained bootstrap behavior is uniform over effective legal actions; the raw-advantage softmax fallback applies only after a fitted Advantage model exists.
+    provenance:
+      - python/spincore/deep_cfr.py
