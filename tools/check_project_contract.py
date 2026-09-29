@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import fnmatch
 import json
 import re
 import sys
@@ -18,6 +19,7 @@ AUDIT_STATUS = ROOT / "contracts" / "AUDIT_STATUS.yaml"
 RUNNER_BASELINE = ROOT / "contracts" / "RUNNER_BASELINE.yaml"
 SOURCE_AUDIT_INDEX = ROOT / "contracts" / "SOURCE_AUDIT_INDEX.json"
 SOURCE_AUDIT_OVERRIDES = ROOT / "contracts" / "SOURCE_AUDIT_OVERRIDES.yaml"
+SOURCE_FAMILY_ADJUDICATIONS = ROOT / "contracts" / "SOURCE_FAMILY_ADJUDICATIONS.yaml"
 
 ID_RE = re.compile(r"^[A-Z]+-[0-9]{3}$")
 ALLOWED_INVARIANT_STATUS = {
@@ -119,6 +121,40 @@ def main() -> int:
         for row in source_rows
         if isinstance(row, dict) and row.get("path")
     }
+
+    family_doc = load_yaml(SOURCE_FAMILY_ADJUDICATIONS)
+    if family_doc.get("schema") != "SPINCORE_CONTRACT_SOURCE_FAMILY_ADJUDICATIONS_V1":
+        raise AssertionError("wrong source-family-adjudications schema")
+    family_rows = family_doc.get("families") or []
+    seen_family_ids = set()
+    family_matches = {}
+    for family in family_rows:
+        if not isinstance(family, dict):
+            raise AssertionError("malformed source-family adjudication")
+        fid = str(family.get("id") or "")
+        pattern = str(family.get("pattern") or "")
+        status = str(family.get("audit_status") or "")
+        if not fid or fid in seen_family_ids:
+            raise AssertionError(f"invalid/duplicate source-family id: {fid!r}")
+        seen_family_ids.add(fid)
+        if not pattern:
+            raise AssertionError(f"source-family {fid} has empty pattern")
+        if status not in allowed_source_statuses:
+            raise AssertionError(
+                f"invalid family audit status {status!r}: {fid}"
+            )
+        matched = sorted(
+            rel for rel in indexed_sources if fnmatch.fnmatchcase(rel, pattern)
+        )
+        if not matched:
+            raise AssertionError(
+                f"source-family {fid} pattern matched no inventory paths: {pattern}"
+            )
+        family_matches[fid] = matched
+        for rel in matched:
+            indexed_sources[rel]["audit_status"] = status
+            indexed_sources[rel]["audit_status_source"] = f"family:{fid}"
+
     overrides = load_yaml(SOURCE_AUDIT_OVERRIDES)
     if overrides.get("schema") != "SPINCORE_CONTRACT_SOURCE_AUDIT_OVERRIDES_V1":
         raise AssertionError("wrong source-audit-overrides schema")
@@ -139,6 +175,20 @@ def main() -> int:
         indexed_sources[rel]["audit_status"] = status
         indexed_sources[rel]["blob_sha"] = str(row.get("blob_sha") or "")
         indexed_sources[rel]["audit_status_source"] = "override"
+
+    for family in family_rows:
+        fid = str(family["id"])
+        for basis in family.get("basis_sources") or []:
+            rel = str(basis)
+            if rel not in seen_override_paths:
+                raise AssertionError(
+                    f"source-family {fid} basis is not individually audited: {rel}"
+                )
+            effective = str(indexed_sources[rel].get("audit_status") or "")
+            if effective in {"PENDING_REVIEW", "REVIEWED_PARTIAL_MIGRATION", "CONFLICT_DEBT"}:
+                raise AssertionError(
+                    f"source-family {fid} basis is not closed: {rel}={effective}"
+                )
     current_source_paths = set()
     for path in ROOT.iterdir():
         if path.is_file() and path.name in {
@@ -459,6 +509,8 @@ def main() -> int:
     print(f"stage_manifests={len(manifest_rows)}")
     print(f"contract_source_index={len(indexed_sources)}")
     print(f"source_audit_overrides={len(seen_override_paths)}")
+    print(f"source_family_adjudications={len(seen_family_ids)}")
+    print(f"source_family_classified={len(set().union(*[set(v) for v in family_matches.values()]) if family_matches else set())}")
     print(f"pending_source_reviews={sum(1 for r in indexed_sources.values() if str(r.get('audit_status')) in {'PENDING_REVIEW','REVIEWED_PARTIAL_MIGRATION','CONFLICT_DEBT'})}")
     print("represented_prefixes=" + ",".join(sorted(represented_prefixes)))
     print(f"root_status={root.get('status')}")
