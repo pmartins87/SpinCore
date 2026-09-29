@@ -1,11 +1,12 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "SEMANTIC_LONG_10115_10315_PARALLEL_RESUME",
-  "status": "BLOCKED_PERFORMANCE_GATE",
+  "status": "READY",
   "runner": "tools/run_3h_semantic_long_10115_10315_parallel_resume.sh",
-  "runner_blob_sha": null,
+  "runner_blob_sha": "d892b2ac71ada15700c7d693771bcb99e7f4b330",
   "contract_ids": [
     "GOV-023",
+    "GOV-024",
     "PERF-001",
     "PERF-002",
     "PERF-010",
@@ -42,8 +43,44 @@
   "duration_class": "LONG_GT_60M",
   "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
   "performance_gate": {
-    "status": "PENDING",
-    "evidence": null,
+    "status": "PASS",
+    "evidence": {
+      "source": "local Ryzen gate output and semantic_parallel_fit_gate.json",
+      "report_path": "runs/3h_semantic_long_10115_10315/parallel_fit_gate/semantic_parallel_fit_gate.json",
+      "completed_iteration": 10222,
+      "quick_profiles": [
+        {
+          "concurrency": 2,
+          "threads_per_member": 8,
+          "exact_parity": true,
+          "speedup": 1.417622017998927,
+          "wall_seconds": 42.918853722999984
+        },
+        {
+          "concurrency": 4,
+          "threads_per_member": 8,
+          "exact_parity": true,
+          "speedup": 1.7179333497210805,
+          "wall_seconds": 35.416223822000006
+        }
+      ],
+      "production": {
+        "serial_fit_wall_seconds": 474.071,
+        "parallel_fit_wall_seconds": 283.268507357,
+        "fit_speedup": 1.6735746472781527,
+        "tensor_exact": true,
+        "final_loss_exact": true,
+        "member_metadata_exact": true
+      },
+      "resource_observation": {
+        "overall_gate_cpu_percent": 1529,
+        "maximum_resident_set_kib": 14881928,
+        "os_reported_swaps": 0,
+        "gate_exit_status": 0,
+        "gate_wall_time": "00:15:25.19"
+      },
+      "precommitted_gate_result": "PASS"
+    },
     "requirements": {
       "production_tensor_exact": true,
       "production_final_loss_exact": true,
@@ -54,9 +91,22 @@
       "maximum_swap_used_gib": 1
     }
   },
-  "selected_profile": null,
-  "support_blobs": null,
-  "block_reason": "Break-even precheck justifies stopping the serial trainer from a durable resume and running the guarded Ryzen parity/throughput gate. The parallel resume itself remains blocked until that gate PASS is reviewed and this manifest is explicitly promoted to READY.",
+  "selected_profile": {
+    "concurrency": 4,
+    "threads_per_member": 8,
+    "declared_threads": 32,
+    "selection_reason": "Fastest exact-parity tested Ryzen profile; full 1600-step production fit speedup 1.6735746472781527x versus canonical serial reference."
+  },
+  "support_blobs": {
+    "tools/run_3h_semantic_long_10115_10315_parallel_resume.sh": "d892b2ac71ada15700c7d693771bcb99e7f4b330",
+    "tools/run_3h_semantic_long_10115_10315_parallel.py": "d0c9191d31afd041f021f88f091af6eebc448004",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
+    "tools/selftest_3h_semantic_parallel_fit.py": "dbb31f5aeed111ad1736c9b14b7301a35cbb9413",
+    "tools/run_3h_semantic_long_10115_10315.py": "122ff2ffbefc2b0a1f82c361936d52554c78d9b5",
+    "tools/run_3h_semantic_online_pilot_10105.py": "75609506e70bb7c5420454dc3ef9a435f063b3d2",
+    "tools/benchmark_3h_semantic_parallel_fit_10115_10315.py": "5415cf21de54a64e00a585b0e8fe73780d9ea38d"
+  },
+  "block_reason": null,
   "break_even_precheck": {
     "observed_completed_iteration": 10222,
     "target_iteration": 10315,
@@ -71,5 +121,15 @@
     "gross_hours_saved_at_1_25x_fit_speedup": 2.664014253609676,
     "decision": "PROCEED_TO_GUARDED_RYZEN_PARITY_THROUGHPUT_GATE",
     "evidence_source": "user-provided training.log tail 10213..10222 on 2026-09-29"
+  },
+  "authorization": {
+    "decision": "AUTHORIZED_TO_RESUME_PARALLEL_FROM_DURABLE_10222_OR_LATER_RESUME",
+    "conditions": [
+      "stage manifest and support blob hashes match main",
+      "no semantic long trainer already running",
+      "resume schema/source checkpoint/target/member contracts validate",
+      "WSL memory preflight passes",
+      "local dependency-free semantic parallel selftest passes"
+    ]
   }
 }
