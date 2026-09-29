@@ -46,6 +46,21 @@ lifecycle:
   deletion_policy: >
     An invariant may not disappear from project governance by deletion alone.
     It must be superseded or retired with provenance.
+  continuous_update_policy: >
+    This is a living contract, not a one-time migration snapshot. Whenever the
+    project makes a new durable decision, changes an existing decision, resolves
+    a conflict, accepts or rejects an architecture, freezes a gate, changes a
+    training/benchmark/deployment rule, or discovers a new invariant that should
+    constrain future work, the contract bundle must be updated in the same
+    decision cycle. A decision is not considered durably recorded merely because
+    it appears in conversation, ROADMAP, CURRENT_WORK, code, or a validation
+    artifact.
+  synchronization_rule: >
+    Contract modules, enforcement bindings, stage manifests, ROADMAP/CURRENT_WORK,
+    and affected source-of-truth documents must be kept mutually consistent.
+    Contract CI completeness is continuous: COMPLETE means no known active
+    invariant is missing now, not that future decisions require no contract
+    maintenance.
 
 coverage_domains:
   - id: GOV
