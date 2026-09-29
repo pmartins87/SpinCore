@@ -101,3 +101,32 @@ invariants:
       redefine child-process exit semantics.
     provenance:
       - validation/PROJECT_EXECUTION_STAGNATION_PROTOCOL_20260812.md
+
+  - id: GOV-022
+    status: ACTIVE
+    scope: CONTRACT_CONTINUOUS_MAINTENANCE
+    statement: >
+      The project contract is a living source of truth. Every new durable
+      project decision, accepted/rejected architecture, frozen gate, changed
+      invariant, resolved conflict, or newly discovered rule that should
+      constrain future work must update the relevant contract module and its
+      enforcement/provenance in the same decision cycle. COMPLETE is a
+      continuously maintained state, not a one-time historical certification.
+    provenance:
+      - PROJECT_CONTRACT.yaml
+      - user_decision_2026-09-29_contract_must_be_dynamic
+
+  - id: GOV-023
+    status: ACTIVE
+    scope: TECHNICAL_RECOMMENDATIONS_DURING_LONG_COMPUTE
+    statement: >
+      Before recommending that a long-running valid computation simply continue
+      unchanged, evaluate whether a materially better continuation path exists.
+      At minimum inspect checkpoint/resume granularity, remaining workload,
+      current bottleneck, prior optimization precedents, semantic-parity risk,
+      migration cost, and expected break-even. Preserve already-spent valid work,
+      but do not default to waiting when a safe higher-throughput continuation
+      may dominate.
+    provenance:
+      - contracts/performance_and_hardware.yaml
+      - user_feedback_2026-09-29_semantic_long_recommendation_review
