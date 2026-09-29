@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT="${HOME}/spincore_lean_functional"
 cd "${ROOT}"
 PY="${ROOT}/.venv_lean/bin/python"
+
+# PROJECT_CONTRACT_IDS: BENCH-001,BENCH-002,BENCH-003,BENCH-004,BENCH-005,DC-001,DC-002,DC-004,PERF-001,VALID-001,SAFE-001,ART-001,SRC-003
+"${PY}" tools/check_stage_manifest.py --manifest contracts/run_manifests/dc1_postlong_10315_5k.json --runner tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
 
 SOURCE="${ROOT}/runs/lt3_parallel_9105_10105/20260922_132104"
