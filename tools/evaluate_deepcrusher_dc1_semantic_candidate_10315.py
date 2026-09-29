@@ -4,7 +4,7 @@ from __future__ import annotations
 """DC1 development benchmark for the 10315 3H semantic AveragePolicy candidate.
 
 THREE_HANDED uses the research-only V1+general-semantic AveragePolicy/specialist
-rebuilt from the 10315->10315 semantic Advantage teacher.
+rebuilt from the 10115->10315 semantic Advantage teacher.
 TRUE_HEADS_UP is unchanged and uses the frozen 10105 HU ENS8 from the ordinary
 hybrid inference bundle.
 
