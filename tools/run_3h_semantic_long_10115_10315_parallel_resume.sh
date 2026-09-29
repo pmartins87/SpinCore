@@ -7,6 +7,7 @@ ROOT="${HOME}/spincore_lean_functional"
 cd "${ROOT}"
 
 PY="${ROOT}/.venv_lean/bin/python"
+export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
 MANIFEST="${ROOT}/contracts/run_manifests/semantic_long_10115_10315_parallel_resume.json"
 RUNNER="tools/run_3h_semantic_long_10115_10315_parallel_resume.sh"
@@ -127,7 +128,6 @@ fi
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j 8 --target spincore_solver_c
 
-export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
 export OPENBLAS_NUM_THREADS=8
