@@ -1,0 +1,58 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: TRAIN_MODEL
+status: PARTIAL_AUDIT
+invariants:
+  - id: TRAIN-001
+    status: ACTIVE
+    scope: LEAN_DEEP_CFR
+    statement: Training uses external-sampling Deep CFR; traverser nodes evaluate all legal branches and opponent nodes sample one action from current behavior.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: TRAIN-002
+    status: ACTIVE
+    scope: LEAN_DEEP_CFR
+    statement: Advantage samples enter a uniform reservoir; AveragePolicy samples come from independent ordinary sampled trajectories using the current behavior distribution.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - README.md
+  - id: TRAIN-003
+    status: ACTIVE
+    scope: LEAN_BEHAVIOR
+    statement: Positive predicted advantages are regret-matched; when all legal predicted advantages are non-positive, behavior uses stable masked softmax over raw advantages rather than uniform fallback.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - CURRENT_WORK.md
+  - id: MODEL-001
+    status: ACTIVE
+    scope: DOMAIN_SEPARATION
+    statement: Advantage and AveragePolicy are separate models and 3H/HU are maintained as separate policy families.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: TRAIN-020
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10115_10315
+    statement: The active long lane trains THREE_HANDED semantic Advantage only from semantic iteration 10115 to 10315, 200 iterations, 64 roots per iteration, with HU frozen at 10105 and no AveragePolicy training during the long phase.
+    provenance:
+      - ROADMAP.md
+      - tools/run_3h_semantic_long_10115_10315.py
+  - id: MODEL-020
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10115_10315
+    statement: The semantic Advantage teacher uses eight members, each fresh-fit for 1600 steps per online iteration with the frozen deterministic member seed contract.
+    provenance:
+      - ROADMAP.md
+      - tools/run_3h_semantic_long_10115_10315.py
+  - id: TRAIN-021
+    status: ACTIVE
+    scope: POST_10315
+    statement: After successful 10315 completion, AveragePolicy targets must be freshly rebuilt from the final teacher; historical AveragePolicy continuation is not used.
+    provenance:
+      - ROADMAP.md
+      - tools/run_3h_semantic_long_10115_10315.py
+  - id: MODEL-021
+    status: ACTIVE
+    scope: POST_10315_SPECIALIST
+    statement: The validated strong-hand specialist architecture is rebuilt without new post-hoc model selection; route is postflop made-category at least trips with Fold legal, using STRATIFIED low/mid/high teacher-Fold sampling and fixed 25 steps.
+    provenance:
+      - CURRENT_WORK.md
+      - tools/build_3h_semantic_stratified_specialist_10315.py
