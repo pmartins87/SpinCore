@@ -3719,3 +3719,32 @@ After that sentinel only:
 DC0 real-OpenHoldem action+sizing parity remains pending. Therefore all current
 DeepCrusher comparisons remain development evidence; production, DC2 and a
 canonical superiority claim remain blocked.
+
+
+## Comprehensive project contract — bootstrap migration started — 2026-09-29
+
+Decision: SpinCore will maintain one logical machine-readable project contract
+whose scope is **every active invariant**, not only performance.
+
+Root:
+- `PROJECT_CONTRACT.yaml`.
+
+Migration protocol:
+- `docs/PROJECT_CONTRACT_MIGRATION_20260929.md`.
+
+Required coverage includes project goals/governance, game/domain/scenario rules,
+action abstractions, representations/features, training semantics, chance/RNG,
+model/ensemble/specialist architecture, Ryzen/performance, checkpoint/resume
+lineage, validation/holdouts/statistics, benchmark/DC0-DC1-DC2 progression,
+OpenHoldem/OpenPPL runtime/deployment, sanity/pathology guards, artifact/hash
+provenance and repository/source-of-truth hygiene.
+
+The user is not required to re-enumerate old decisions. Migration must recover
+them from repository history, frozen artifacts, specs, code/tests and Git
+history, reconcile superseded decisions, assign stable IDs and map every active
+invariant to enforcement.
+
+Until the completeness gate is PASS, contract status remains
+`BOOTSTRAP_AUDIT_REQUIRED`. The currently running 10115->10315 semantic long
+run is grandfathered; no new long training or architecture-changing stage should
+begin without contract coverage for the affected domains.
