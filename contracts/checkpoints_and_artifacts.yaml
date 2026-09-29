@@ -147,3 +147,16 @@ invariants:
       digest, and gate metadata.
     provenance:
       - validation/ARTIFACT_PERSISTENCE_ORDERING_INCIDENT_20260813.md
+
+  - id: ART-015
+    status: ACTIVE
+    scope: LOCAL_HEAVY_COMPUTE_EVIDENCE
+    statement: >
+      An admissible Ryzen heavy run starts from an exact frozen source commit
+      and clean tracked worktree, records machine/OS, Python, PyTorch, thread
+      environment, command line, start/end times and return code, preserves the
+      frozen RNG/global-root semantics across checkpoints, and returns a SHA256
+      artifact inventory plus immutable run manifest for repository-side
+      certification.
+    provenance:
+      - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
