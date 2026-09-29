@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "DC1_POSTLONG_10315_FRESH_SEED_5K",
-  "status": "BLOCKED_UPSTREAM_AND_CONTRACT_AUDIT",
+  "status": "BLOCKED_UPSTREAM_AND_PERFORMANCE_GATE",
   "runner": "tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh",
   "runner_blob_sha": null,
   "contract_ids": [
@@ -38,5 +38,5 @@
     "evidence": null,
     "requirement": "Measure the three-arm 5k benchmark workload on the target Ryzen and freeze a memory-safe worker profile before launch."
   },
-  "block_reason": "Requires postlong 10315 validation PASS plus audited affected domains and a fresh Ryzen benchmark profile."
+  "block_reason": "The comprehensive contract audit is complete. This stage requires postlong 10315 rebuild/validation PASS and a fresh memory-safe target-Ryzen throughput profile for the three-arm 5k benchmark workload."
 }
