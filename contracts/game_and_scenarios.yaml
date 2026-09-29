@@ -71,3 +71,27 @@ invariants:
     statement: A root uses one complete sampled deal and that same deal is reused across traversers; different roots use independent deterministic root seeds.
     provenance:
       - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+
+  - id: GAME-010
+    status: ACTIVE
+    scope: SOLVER_STATE
+    statement: Hidden card/deal state must remain exact and cloneable; an explicit supplied deal must validate live/dead seats, card range, and global card uniqueness rather than approximating hidden state.
+    provenance:
+      - README.md
+      - include/spincore/hand_engine.hpp
+      - src/hand_engine.cpp
+      - python/spincore/solver.py
+  - id: GAME-011
+    status: ACTIVE
+    scope: HAND_SETTLEMENT
+    statement: Terminal hand settlement must conserve the fixed tournament chip supply exactly; a chip-conservation mismatch is a hard error.
+    provenance:
+      - src/hand_engine.cpp
+  - id: GAME-012
+    status: ACTIVE
+    scope: PAYOUT_AWARE_TERMINAL_CONTINUATION
+    statement: Ambiguous equal-stack simultaneous eliminations under unequal payouts must fail closed when table-position information is unavailable; the dealer-aware path may resolve them only through the declared table-position rule.
+    provenance:
+      - README.md
+      - include/spincore/tournament_value.hpp
+      - src/tournament_value.cpp
