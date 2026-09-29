@@ -5,6 +5,9 @@ ROOT="${HOME}/spincore_lean_functional"
 cd "${ROOT}"
 
 PY="${ROOT}/.venv_lean/bin/python"
+
+# PROJECT_CONTRACT_IDS: TRAIN-021,MODEL-021,PERF-001,PERF-002,PERF-010,PERF-013,CKPT-001,VALID-002,SAFE-001,ART-001,SRC-003
+"${PY}" tools/check_stage_manifest.py --manifest contracts/run_manifests/postlong_10315.json --runner tools/run_3h_semantic_postlong_10315.sh
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
 
 SOURCE="${ROOT}/runs/lt3_parallel_9105_10105/20260922_132104"
