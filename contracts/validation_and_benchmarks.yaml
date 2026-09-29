@@ -129,3 +129,50 @@ invariants:
     statement: The completed LT2 ENS8 final holdout is not rerun or tuned against; its PASS remains historical validation evidence for the frozen LT2 candidate rather than reusable development data.
     provenance:
       - docs/LT2_HU_ENS8_FINAL_HOLDOUT_RESULT_20260921.md
+
+  - id: VALID-020
+    status: ACTIVE
+    scope: POST_10315_AVERAGE_POLICY_REBUILD
+    statement: The ordinary semantic tail passes only if semantic weighted CE is at least 10 percent better than V1, semantic weighted TV at least 15 percent better than V1, high-card/no-draw absolute bias at least 50 percent better than V1, and semantic CE at least 10 percent better than the step-0 semantic model, on the independent postlong evaluation stream.
+    provenance:
+      - tools/build_3h_semantic_postlong_policy_10315.py
+  - id: VALID-021
+    status: ACTIVE
+    scope: POST_10315_FULLPOOL_REBUILD
+    statement: The full-pool general model passes only if global semantic CE and TV are no more than 2 percent worse than the ordinary tail, high-card/no-draw absolute bias is no more than 1 percentage point worse, and strong-hand Fold absolute bias is not worse than the ordinary tail.
+    provenance:
+      - tools/build_3h_semantic_postlong_policy_10315.py
+  - id: VALID-022
+    status: ACTIVE
+    scope: POST_10315_SPECIALIST_MULTISEED
+    statement: >
+      The rebuilt specialist must pass four new 120000-episode streams. Each
+      seed must contain at least 600 unique strong states and 20 high-target
+      states; pooled evidence must contain at least 2400 strong and 100
+      high-target states. Pooled CE and TV must each improve by at least 10
+      percent versus full-pool; pooled Fold bias, low-target mean, low-target
+      p95, straight/flush bias, and river bias must each improve by at least 30
+      percent; pooled high-target bias may worsen by at most 1 percentage point;
+      no seed may worsen high-target bias by more than 5 points or regress CE.
+    provenance:
+      - tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py
+  - id: VALID-023
+    status: ACTIVE
+    scope: POST_10315_DC1_5K
+    statement: >
+      The fresh-seed 5000-scenario DC1 comparison uses seed 20261001 and the
+      same scenario identities for frozen 10105, accepted specialist 10115, and
+      rebuilt specialist 10315. Safety requires all evaluators PASS, exact HU
+      parity, positive 10315-minus-10105 3H mean with CI95 lower bound above
+      zero, trips-Fold rate no more than 0.01 percentage point above 10115,
+      high-card-jam rate no more than 10 percent above 10115, top-pair Fold,
+      AA Fold and deep-72o-jam counts no more than 10115 plus one, and no new
+      unexpected sanity code.
+    provenance:
+      - tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh
+  - id: VALID-024
+    status: ACTIVE
+    scope: POST_10315_INCREMENTAL_VALUE
+    statement: In the post-10315 DC1 comparison, incremental 10315-versus-10115 evidence is POSITIVE_RESOLVED only when paired 3H mean is positive and its CI95 lower bound is above zero; positive mean with nonpositive lower bound is POSITIVE_INCONCLUSIVE; otherwise it is NO_POSITIVE_INCREMENT.
+    provenance:
+      - tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh
