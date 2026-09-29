@@ -98,3 +98,16 @@ invariants:
       - contracts/run_manifests/semantic_long_10115_10315_active.json
       - docs/RYZEN_OPTIMIZATION_POLICY.md
       - ROADMAP.md
+
+  - id: PERF-023
+    status: ACTIVE
+    scope: COMPUTE_PLACEMENT
+    statement: >
+      GitHub Actions is primarily the contract referee for CI, short
+      deterministic regression, independent certification, and durable evidence;
+      the user's Ryzen is preferred for multi-hour traversal/training and large
+      multi-seed CPU workloads. Compute placement may change execution mechanics
+      but not strategic thresholds or experiment semantics.
+    provenance:
+      - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
+      - docs/RYZEN_OPTIMIZATION_POLICY.md
