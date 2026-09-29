@@ -1,0 +1,35 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: OH
+status: PARTIAL_AUDIT
+invariants:
+  - id: OH-001
+    status: ACTIVE
+    scope: OPENHOLDEM_RUNTIME
+    statement: Strategy inference is triggered on the my-turn lifecycle, cached for subsequent queries, and not recomputed on heartbeat; hand/new-round lifecycle must reset or refresh runtime state as required.
+    provenance:
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: OH-002
+    status: ACTIVE
+    scope: OPENHOLDEM_STATE_ACQUISITION
+    statement: Runtime must reconstruct the canonical solver state/observation and may not maintain an independent legacy 292-feature poker interpretation.
+    provenance:
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: OH-003
+    status: ACTIVE
+    scope: OPENHOLDEM_STATE_ACQUISITION
+    statement: Missing values that can change state, domain, legality, or strategic meaning must fail closed rather than silently defaulting to zero.
+    provenance:
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: OH-004
+    status: ACTIVE
+    scope: NATIVE_INFERENCE
+    statement: Native C++ inference must preserve 3H AveragePolicy, HU ENS8 raw-output averaging, fallback semantics, legal masking, and Python probability/argmax parity within the declared tolerance.
+    provenance:
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: OH-005
+    status: ACTIVE
+    scope: DEPLOYMENT_PROMOTION
+    statement: Real OpenHoldem action and exact sizing parity on deterministic fixtures is distinct from executable-oracle smoke and remains required before canonical deployment/strength promotion.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+      - CURRENT_WORK.md
