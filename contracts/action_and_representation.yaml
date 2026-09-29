@@ -1,0 +1,57 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: ACT_REP
+status: PARTIAL_AUDIT
+invariants:
+  - id: ACT-001
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_ACTION_SPACE
+    statement: The active seven action labels are FOLD, CHECK_CALL, POT_33, POT_50, POT_75, POT_100, ALL_IN carried in universal slots 0,1,3,5,7,8,9; slots 2,4,6 are dormant.
+    provenance:
+      - python/spincore/lean_action_scope.py
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: ACT-002
+    status: ACTIVE
+    scope: PREFLOP
+    statement: POT_33 means normal open to 2.0 BB; POT_75 means isolation to 2.5 BB plus 1 BB per extra limper; POT_50 means 3-bet to 5.0 BB plus 2 BB per caller after the raise.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_action_scope.py
+  - id: ACT-003
+    status: ACTIVE
+    scope: PREFLOP
+    statement: Legacy branch restrictions are preserved for limp-vs-isolation and multi-raise trees; duplicate exact actions are deduplicated.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_action_scope.py
+  - id: ACT-004
+    status: ACTIVE
+    scope: POSTFLOP
+    statement: Fractional bet/raise sizes are 33/50/75/100 percent of pot after paying the call; illegal/unaffordable fractional raises are pruned and near-stack fractions collapse to all-in under the legacy approximately-60%-effective-stack rule.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_action_scope.py
+  - id: ACT-005
+    status: ACTIVE
+    scope: RUNTIME
+    statement: Exact OpenHoldem/runtime action amounts must use the canonical lean resolver rather than a second independent sizing implementation.
+    provenance:
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: REP-001
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_BASELINE
+    statement: The canonical game state remains exact; compact neural encoding is only the network boundary.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: REP-002
+    status: ACTIVE
+    scope: SPNNIV1_LANE
+    statement: SPNNIV1 uses the documented card, numeric, categorical, legal-mask, and public-history fields rather than the legacy 292-float feature vector.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: REP-003
+    status: ACTIVE
+    scope: HAND_SEMANTICS
+    statement: Evaluator/features must distinguish board texture from Hero-contributed made-hand strength wherever strategically required; board-only categories must not be treated as Hero-made hands.
+    provenance:
+      - AGENTS.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
