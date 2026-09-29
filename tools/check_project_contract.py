@@ -109,6 +109,9 @@ def main() -> int:
     source_index = json.loads(SOURCE_AUDIT_INDEX.read_text(encoding="utf-8"))
     if source_index.get("schema") != "SPINCORE_CONTRACT_SOURCE_AUDIT_INDEX_V1":
         raise AssertionError("wrong source-audit-index schema")
+    allowed_source_statuses = set(source_index.get("allowed_audit_statuses") or [])
+    if not allowed_source_statuses:
+        raise AssertionError("source audit index has no allowed_audit_statuses")
     source_rows = source_index.get("entries") or []
     indexed_sources = {
         str(row["path"]): row
@@ -143,6 +146,8 @@ def main() -> int:
         status = str(row.get("audit_status") or "")
         if not status:
             raise AssertionError(f"source audit status missing: {rel}")
+        if status not in allowed_source_statuses:
+            raise AssertionError(f"invalid source audit status {status!r}: {rel}")
         if status in {
             "MIGRATED_ACTIVE",
             "HISTORICAL_NO_ACTIVE_INVARIANT",
@@ -306,7 +311,7 @@ def main() -> int:
         pending_sources = sorted(
             rel for rel, row in indexed_sources.items()
             if str(row.get("audit_status")) in {
-                "PENDING_REVIEW", "REVIEWED_PARTIAL_MIGRATION"
+                "PENDING_REVIEW", "REVIEWED_PARTIAL_MIGRATION", "CONFLICT_DEBT"
             }
         )
         if pending_sources:
@@ -366,7 +371,7 @@ def main() -> int:
     print(f"governed_runner_baseline={len(baseline_by_path)}")
     print(f"stage_manifests={len(manifest_rows)}")
     print(f"contract_source_index={len(indexed_sources)}")
-    print(f"pending_source_reviews={sum(1 for r in indexed_sources.values() if str(r.get('audit_status')) in {'PENDING_REVIEW','REVIEWED_PARTIAL_MIGRATION'})}")
+    print(f"pending_source_reviews={sum(1 for r in indexed_sources.values() if str(r.get('audit_status')) in {'PENDING_REVIEW','REVIEWED_PARTIAL_MIGRATION','CONFLICT_DEBT'})}")
     print("represented_prefixes=" + ",".join(sorted(represented_prefixes)))
     print(f"root_status={root.get('status')}")
     return 0
