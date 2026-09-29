@@ -133,13 +133,15 @@ known_reconciliation_items:
       ablations remain localized experimental evidence and cannot supersede the
       current contract without a representative full-distribution decision.
   - id: RECON-004
-    status: OPEN
+    status: RESOLVED
     topic: current_semantic_long_performance_regression
+    resolution: PERF-022
     detail: >
-      The active 10115->10315 semantic long fitter is sequential despite the
-      mandatory performance policy and prior exact-parity concurrent-ensemble
-      precedent. The running experiment is scientifically grandfathered, but
-      future execution requires a parity-validated optimized semantic fitter.
+      The live process is explicitly grandfathered and left untouched. The
+      sequential execution path is barred from restart/extension until a
+      parity-validated optimized semantic fitter and target-Ryzen throughput
+      profile exist. This remains engineering debt, not an unresolved policy
+      conflict.
 
 next_audit_batches:
   - current_training_and_semantic_lineage
