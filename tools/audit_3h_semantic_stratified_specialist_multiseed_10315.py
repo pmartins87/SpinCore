@@ -234,6 +234,7 @@ def main()->int:
         "schema":"SPINCORE_3H_SEMANTIC_STRATIFIED_SPECIALIST_MULTISEED_CONFIRMATION_10315_V1",
         "scope":"RESEARCH_ONLY_REBUILT_10315_MODEL_FOUR_NEW_SEEDS_NO_POSTHOC_SELECTION",
         "source_checkpoint_sha256":EXPECTED_SHA,
+        "semantic_completed_iteration":FINAL_ITERATION,
         "specialist_schema":SPECIALIST_SCHEMA,
         "specialist_selected_training_mode":source.get("selected_training_mode"),
         "specialist_selected_steps":int(source["selected_steps"]),
@@ -250,8 +251,8 @@ def main()->int:
             "PASS means the rebuilt 10315 target-stratified specialist reproduces "
             "its broad gains across four entirely new deterministic streams and "
             "the rare legitimate high-Fold issue does not reproduce materially "
-            "in pooled evidence. PASS authorizes one exact fixed-seed DC1 1k "
-            "replay only; no production/DC2/5k claim."
+            "in pooled evidence. PASS authorizes the precommitted fresh-seed "
+            "DC1 5k comparison only; no production/DC2/canonical-strength claim."
         ),
     }
     args.report.parent.mkdir(parents=True,exist_ok=True)
