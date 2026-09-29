@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections import Counter
@@ -165,6 +166,82 @@ def main() -> int:
             + ", ".join(missing_baseline_or_declaration)
         )
 
+    manifest_dir = ROOT / "contracts" / "run_manifests"
+    manifest_rows = []
+    if manifest_dir.is_dir():
+        for manifest_path in sorted(manifest_dir.glob("*.json")):
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if manifest.get("schema") != "SPINCORE_STAGE_MANIFEST_V1":
+                raise AssertionError(
+                    f"wrong stage-manifest schema: {manifest_path.relative_to(ROOT)}"
+                )
+            stage_id = str(manifest.get("stage_id") or "")
+            runner_rel = str(manifest.get("runner") or "")
+            if not stage_id or not runner_rel:
+                raise AssertionError(
+                    f"incomplete stage manifest: {manifest_path.relative_to(ROOT)}"
+                )
+            runner = ROOT / runner_rel
+            if not runner.is_file():
+                raise AssertionError(
+                    f"stage manifest runner missing: {runner_rel}"
+                )
+            refs = [str(x) for x in (manifest.get("contract_ids") or [])]
+            if not refs:
+                raise AssertionError(
+                    f"stage manifest has no contract IDs: {stage_id}"
+                )
+            unknown = sorted(set(refs) - all_contract_ids)
+            if unknown:
+                raise AssertionError(
+                    f"stage manifest {stage_id} references unknown IDs: {unknown}"
+                )
+            affected = [str(x) for x in (manifest.get("affected_domains") or [])]
+            unknown_domains = sorted(set(affected) - required_domains)
+            if unknown_domains:
+                raise AssertionError(
+                    f"stage manifest {stage_id} has undeclared domains: {unknown_domains}"
+                )
+
+            runner_head = "\n".join(
+                runner.read_text(encoding="utf-8").splitlines()[:120]
+            )
+            if "PROJECT_CONTRACT_IDS" in runner_head:
+                declared = set(re.findall(r"[A-Z]+-[0-9]{3}", runner_head))
+                missing_from_runner = sorted(set(refs) - declared)
+                if missing_from_runner:
+                    raise AssertionError(
+                        f"runner {runner_rel} omits manifest contract IDs: "
+                        + ",".join(missing_from_runner)
+                    )
+
+            status = str(manifest.get("status") or "")
+            if str(manifest.get("duration_class") or "") == "LONG_GT_60M":
+                perf = manifest.get("performance_gate") or {}
+                if status == "READY" and perf.get("status") != "PASS":
+                    raise AssertionError(
+                        f"READY long stage lacks PASS performance gate: {stage_id}"
+                    )
+                if not manifest.get("target_host_profile"):
+                    raise AssertionError(
+                        f"long stage lacks target host profile: {stage_id}"
+                    )
+
+            expected_blob = manifest.get("runner_blob_sha")
+            if status == "READY":
+                if not expected_blob:
+                    raise AssertionError(
+                        f"READY stage lacks runner_blob_sha: {stage_id}"
+                    )
+                actual_blob = __import__("subprocess").check_output(
+                    ["git", "hash-object", str(runner)], text=True
+                ).strip()
+                if str(expected_blob) != actual_blob:
+                    raise AssertionError(
+                        f"READY stage runner blob drift: {stage_id}"
+                    )
+            manifest_rows.append(stage_id)
+
     if root.get("status") == "COMPLETE":
         incomplete = sorted(
             d for d in required_domains if audit_coverage.get(d) != "COMPLETE"
@@ -224,6 +301,7 @@ def main() -> int:
     print(f"invariants={len(ids)}")
     print(f"required_domains={len(required_domains)}")
     print(f"governed_runner_baseline={len(baseline_by_path)}")
+    print(f"stage_manifests={len(manifest_rows)}")
     print("represented_prefixes=" + ",".join(sorted(represented_prefixes)))
     print(f"root_status={root.get('status')}")
     return 0
