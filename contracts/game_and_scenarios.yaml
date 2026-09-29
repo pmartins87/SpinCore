@@ -95,3 +95,22 @@ invariants:
       - README.md
       - include/spincore/tournament_value.hpp
       - src/tournament_value.cpp
+
+  - id: GAME-005
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_TRAINING
+    statement: Training samples realistic tournament hand/root states directly rather than simulating a continuous tournament from 10/20 to elimination; continuous-tournament simulation is a separate benchmark/deployment question.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: GAME-006
+    status: ACTIVE
+    scope: LEAN_WTA_BASE_POLICY
+    statement: Monetary buy-in or stake is not a strategy input when poker rules and chip-state semantics are unchanged; the learned WTA chip strategy is intended to be stake-invariant.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: CHANCE-002
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_TRAINING
+    statement: Ordinary training samples chance through deterministic complete-deal root seeds rather than exhaustively enumerating the deck; any chance-averaging intervention is a separately declared experiment.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
