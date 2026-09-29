@@ -40,3 +40,18 @@ invariants:
     statement: Later results must not overwrite older canonical results; regression history is cumulative.
     provenance:
       - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+
+  - id: CKPT-010
+    status: ACTIVE
+    scope: R7_EXACT_MID_ITERATION_RESUME
+    statement: Exact mid-iteration checkpoints preserve model weights, optimizer states, both reservoirs, batch RNG, Torch RNG, counters, and explicit phase/root/traverser/optimizer progress so resume does not silently replay or skip work.
+    provenance:
+      - README.md
+      - python/spincore/r7.py
+  - id: CKPT-011
+    status: ACTIVE
+    scope: ATOMIC_CHECKPOINT_WRITES
+    statement: Durable checkpoint writes use a temporary artifact followed by atomic replacement where the implementation declares atomic checkpoint semantics.
+    provenance:
+      - python/spincore/r7.py
+      - python/spincore/lean_functional_training.py
