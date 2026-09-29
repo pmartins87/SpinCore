@@ -1,0 +1,40 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "DC1_POSTLONG_10315_FRESH_SEED_5K",
+  "status": "BLOCKED_UPSTREAM_AND_CONTRACT_AUDIT",
+  "runner": "tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh",
+  "runner_blob_sha": null,
+  "contract_ids": [
+    "BENCH-001",
+    "BENCH-002",
+    "BENCH-003",
+    "BENCH-004",
+    "BENCH-005",
+    "DC-001",
+    "DC-002",
+    "DC-004",
+    "PERF-001",
+    "VALID-001",
+    "SAFE-001",
+    "ART-001",
+    "SRC-003"
+  ],
+  "affected_domains": [
+    "BENCH",
+    "DC",
+    "VALID",
+    "PERF",
+    "SCEN",
+    "ACT",
+    "SAFE",
+    "ART"
+  ],
+  "duration_class": "LONG_GT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "performance_gate": {
+    "status": "PENDING",
+    "evidence": null,
+    "requirement": "Measure the three-arm 5k benchmark workload on the target Ryzen and freeze a memory-safe worker profile before launch."
+  },
+  "block_reason": "Requires postlong 10315 validation PASS plus audited affected domains and a fresh Ryzen benchmark profile."
+}
