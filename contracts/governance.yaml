@@ -130,3 +130,17 @@ invariants:
     provenance:
       - contracts/performance_and_hardware.yaml
       - user_feedback_2026-09-29_semantic_long_recommendation_review
+
+  - id: GOV-024
+    status: ACTIVE
+    scope: LOCAL_HEAVY_RUN_PREFLIGHT
+    statement: >
+      Local Ryzen heavy-run preflights must not assume development-only tooling
+      such as pytest is installed in the production training virtualenv unless
+      that dependency is explicitly frozen in the target-host profile. Required
+      local safety/parity smoke checks must use the runtime dependency set or an
+      explicitly provisioned reproducible environment; CI-only test dependencies
+      remain CI concerns.
+    provenance:
+      - user_observed_failure_2026-09-29_missing_pytest_in_venv_lean
+      - tools/selftest_3h_semantic_parallel_fit.py
