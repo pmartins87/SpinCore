@@ -176,3 +176,16 @@ invariants:
     statement: In the post-10315 DC1 comparison, incremental 10315-versus-10115 evidence is POSITIVE_RESOLVED only when paired 3H mean is positive and its CI95 lower bound is above zero; positive mean with nonpositive lower bound is POSITIVE_INCONCLUSIVE; otherwise it is NO_POSITIVE_INCREMENT.
     provenance:
       - tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh
+
+  - id: VALID-013
+    status: ACTIVE
+    scope: R7_MODEL_FIT_AUDIT
+    statement: >
+      R7-family fit audits that rely on the preserved permanent audit contract
+      must use deterministic stratified indices spanning the reservoir support
+      rather than an arbitrary prefix or a result-dependent sample. The same
+      inputs and audit seed must reproduce the same audit index set.
+    provenance:
+      - README.md
+      - python/spincore/r7.py
+      - python_tests/test_r7.py
