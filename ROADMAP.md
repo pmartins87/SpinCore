@@ -3431,3 +3431,77 @@ Frozen confirmation requirements include:
 Only PASS automatically launches one exact fixed-seed DC1 1k replay of the
 unchanged specialist.  DC1 5k remains blocked.
 
+## Unchanged stratified specialist: four-seed confirmation PASS + exact DC1 1k PASS — 2026-09-28
+
+The unchanged target-stratified specialist passed the precommitted multi-seed
+confirmation without any parameter change.
+
+Four completely new 120,000-episode streams:
+- 480,000 episodes total;
+- 2,690 pooled strong/Fold-legal observations;
+- 115 pooled legitimate high-target-Fold states;
+- every per-seed sample-size guard passed;
+- no per-seed CE regression;
+- no per-seed high-target-bias regression >5 p.p.
+
+Pooled full-pool -> unchanged specialist:
+- CE ratio **0.82745** (~17.3% better);
+- TV ratio **0.74894** (~25.1% better);
+- overall Fold-bias ratio **0.40525** (~59.5% better);
+- low-target Fold-mean ratio **0.49286**;
+- low-target Fold-p95 ratio **0.35432**;
+- river-bias ratio **0.41165**;
+- straight/flush-bias ratio **0.45759**;
+- legitimate high-target Fold bias improves by **2.83 p.p.** in pooled
+  evidence rather than regressing.
+
+All precommitted multi-seed criteria passed.
+
+The runner therefore automatically executed the exact fixed-seed DC1 1k replay.
+That replay also passed every frozen scale-up indicator.
+
+Exact DC1 1k:
+- 538 THREE_HANDED / 462 TRUE_HEADS_UP;
+- exact HU scenario-margin parity preserved;
+- absolute 3H vs DeepCrusher:
+  - baseline 10105: **-21.276** chips/policy-seat-hand;
+  - full-pool 10115: **-12.240**;
+  - unchanged stratified specialist: **-12.245**;
+- paired 3H specialist - baseline:
+  **+9.032**, 95% CI **[-1.244, +19.308]**;
+- paired 3H specialist - full-pool:
+  **-0.004**, 95% CI **[-0.102, +0.093]**.
+
+The specialist therefore preserves the full-pool development EV essentially
+exactly while repairing the target rare strong-hand surface.
+
+Sanity:
+- POSTFLOP_TRIPS_PLUS_FOLD:
+  baseline **1**, full-pool **2**, specialist **1**;
+- POSTFLOP_DEEP_HIGH_CARD_JAM:
+  **149 / 66 / 66**;
+- POSTFLOP_TOP_PAIR_FOLD:
+  **3 / 0 / 0**;
+- PREFLOP_AA_FOLD:
+  **6 / 0 / 0**;
+- PREFLOP_DEEP_72O_JAM:
+  **8 / 0 / 0**.
+
+The single specialist strong-hand sampled Fold is the scenario-876 river low
+flush state; specialist Fold probability is ~10.20%, with the sampled uniform
+draw ~9.56%.  This is now a stochastic tail at roughly baseline-level observed
+frequency rather than the broad high-probability regression seen in the earlier
+semantic tails.
+
+### Decision
+
+The frozen DC1 1k scale-up gate is PASS.
+
+This authorizes the planned **DC1 5k development scale-up** only.  It does not
+authorize production, DC2, or a canonical strength claim; DC0 real-OpenHoldem
+action+sizing parity remains pending.
+
+The 5k benchmark should use a fresh scenario seed rather than extending the
+same 1k deterministic prefix, so the 5k result supplies genuinely new
+development evidence instead of counting the 1k prefix twice.
+
