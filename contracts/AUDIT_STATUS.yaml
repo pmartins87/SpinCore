@@ -1,0 +1,115 @@
+schema: SPINCORE_CONTRACT_AUDIT_STATUS_V1
+date: "2026-09-29"
+overall_status: PARTIAL
+contract_root_status: BOOTSTRAP_AUDIT_REQUIRED
+
+historical_baseline:
+  archive_name: Tentativas anteriores de SpinGo.zip
+  archive_sha256: 0ed90d7ee06a47cc16ced25e716240d94605a000898c21e380a24c024d27eee4
+  inspected_files:
+    - path: deepspin/scenario.py
+      sha256: f1172eff368a9f11f16553a02e592df7dc7cc55d3756210442310b8974502812
+    - path: deepspin/trainer.py
+      sha256: 016e153272d79f6f55595571a49b865178406310de54127ed07a349f793ee486
+    - path: deepspin/traversal.py
+      sha256: 55d725d29532cd6dcbc1d8069994f9d31690e68d4e8ba3ff5f6b381732ecd330
+    - path: deepspin/buffers.py
+      sha256: 984bb366f43ce5620d5b80751e94bbdc6c902463485d9c5d06d7d38d4e43a14c
+    - path: deepspin/networks.py
+      sha256: 1d24dd580d2b2e14db81364a495c8fcdc80edf5bcc54e52d6c9f6b108e4b44d5
+    - path: deepspin/user_deepspin.cpp
+      sha256: 0cc92148516d5dbf280ee26c92d78ab56b70ade8b3441b4397603fb8c98ce434
+    - path: deepspin/env/poker_env.cpp
+      sha256: 0defbc35ac2174f3a9dd4d896009ceb86febb906ee4758a68ba7f71a71595a20
+
+reviewed_repository_sources:
+  - AGENTS.md
+  - README.md
+  - ROADMAP.md
+  - CURRENT_WORK.md
+  - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - docs/RYZEN_OPTIMIZATION_POLICY.md
+  - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - docs/LONG_TRAINING_PLAN.md
+  - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md
+  - python/spincore/legacy_scenario.py
+  - python/spincore/legacy_scenario_data.json
+  - python/spincore/lean_action_scope.py
+  - python/spincore/lean_training_scope.py
+  - tools/run_3h_semantic_long_10115_10315.py
+  - tools/lt3_hu_ens8_parallel_fit.py
+
+coverage:
+  GOV: PARTIAL
+  GOAL: PENDING
+  GAME: PARTIAL
+  SCEN: PARTIAL
+  ACT: PARTIAL
+  REP: PARTIAL
+  TRAIN: PARTIAL
+  CHANCE: PARTIAL
+  MODEL: PARTIAL
+  RNG: PARTIAL
+  PERF: PARTIAL
+  CKPT: PARTIAL
+  VALID: PARTIAL
+  BENCH: PARTIAL
+  DC: PARTIAL
+  OH: PARTIAL
+  SAFE: PARTIAL
+  ART: PARTIAL
+  SRC: PARTIAL
+
+known_reconciliation_items:
+  - id: RECON-001
+    status: OPEN
+    topic: utility_scope
+    detail: >
+      README preserves explicit-payout ICM continuation utility as a permanent
+      invariant for production Deep CFR, while the lean first-release path
+      deliberately trains WTA chip EV scaled by 1/1500. The contract must retain
+      these as scoped lanes rather than incorrectly treating either as globally
+      superseding the other.
+  - id: RECON-002
+    status: OPEN
+    topic: representation_lineage
+    detail: >
+      SPNNIV1 is canonical for the lean functional lane, while later R7.5
+      representation work includes SPNNIV3. Audit exact lane boundaries and
+      deployment dependencies before declaring a global representation invariant.
+  - id: RECON-003
+    status: OPEN
+    topic: action_abstraction_lineage
+    detail: >
+      The seven-action legacy-derived lean abstraction is active in LT2/LT3,
+      while historical R7.5 action-abstraction experiments contain broader
+      candidate spaces. Preserve diagnostic history without allowing localized
+      single-blind results to override the global lean action contract.
+  - id: RECON-004
+    status: OPEN
+    topic: current_semantic_long_performance_regression
+    detail: >
+      The active 10115->10315 semantic long fitter is sequential despite the
+      mandatory performance policy and prior exact-parity concurrent-ensemble
+      precedent. The running experiment is scientifically grandfathered, but
+      future execution requires a parity-validated optimized semantic fitter.
+
+next_audit_batches:
+  - current_training_and_semantic_lineage
+  - r7_5_action_and_representation_lineage
+  - chance_variance_and_sampling_decisions
+  - benchmark_dc0_dc1_dc2_contracts
+  - openholdem_runtime_and_native_symbol_semantics
+  - checkpoint_resume_and_artifact_lineage
+  - strategic_validation_holdouts_and_promotion
+  - complete_git_supersession_reconciliation
+
+completion_blockers:
+  - every_required_domain_not_yet_audited
+  - open_reconciliation_items
+  - no_contract_linter_in_ci_yet
+  - no_long_run_manifest_enforcement_yet
