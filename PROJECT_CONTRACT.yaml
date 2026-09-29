@@ -122,6 +122,7 @@ contract_modules:
 bootstrap_invariants:
   - id: GOV-001
     status: ACTIVE
+    scope: CONTRACT_MIGRATION
     statement: >
       Every active invariant discovered in project history must be migrated into
       this contract bundle; the user is not required to remember or enumerate it.
@@ -130,6 +131,7 @@ bootstrap_invariants:
     enforcement: CONTRACT_COMPLETENESS_AUDIT
   - id: GOV-002
     status: ACTIVE
+    scope: DECISION_PROCESS
     statement: >
       Questions, doubts, or suggestions do not by themselves supersede an active
       project decision. Strategic or contractual changes require explicit
@@ -139,6 +141,7 @@ bootstrap_invariants:
     enforcement: REVIEW
   - id: GOV-003
     status: ACTIVE
+    scope: NEW_SUBSTANTIAL_WORK
     statement: >
       New implementation work must identify which active contract IDs it touches
       before it may change behavior covered by those IDs.
@@ -147,6 +150,7 @@ bootstrap_invariants:
     enforcement: PREMERGE_GATE
   - id: GOV-004
     status: ACTIVE
+    scope: CONFLICT_RESOLUTION
     statement: >
       If implementation, documentation, tests, and the active contract disagree,
       the affected workflow must fail closed until the conflict is resolved.
@@ -155,6 +159,7 @@ bootstrap_invariants:
     enforcement: CI_AND_PREFLIGHT
   - id: PERF-001
     status: ACTIVE
+    scope: LONG_RUNS_GT_60M
     statement: >
       Any training block expected to exceed 60 minutes on the target host requires
       a current throughput gate for the actual fitter/execution path, including
@@ -166,6 +171,7 @@ bootstrap_invariants:
     enforcement: LONG_RUN_PREFLIGHT
   - id: PERF-002
     status: ACTIVE
+    scope: INDEPENDENT_ENSEMBLE_MEMBER_FITTING
     statement: >
       For independent ensemble-member fitting, sequential execution is not an
       accepted final implementation when an exact-parity or explicitly bounded
@@ -176,6 +182,7 @@ bootstrap_invariants:
     enforcement: LONG_RUN_PREFLIGHT
   - id: GOV-005
     status: ACTIVE
+    scope: BOOTSTRAP_TRANSITION
     statement: >
       The currently running 10115->10315 semantic long training remains
       scientifically valid but is grandfathered from the new contract-enforcement
