@@ -54,3 +54,26 @@ invariants:
     statement: Historical experimental results are evidence, not automatically active invariants; decisions frozen from those results become invariants and superseded decisions remain traceable.
     provenance:
       - docs/PROJECT_CONTRACT_MIGRATION_20260929.md
+
+  - id: GOV-018
+    status: ACTIVE
+    scope: FINITE_EXPERIMENTAL_PROGRAMS
+    statement: >
+      A bounded research gate must retain a finite exit contract. Internal
+      diagnostics or mechanical recovery do not create new roadmap stages, and
+      repeated subgates may not be invented merely to avoid a PASS/FAIL/fallback
+      decision already defined by the active experiment.
+    provenance:
+      - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOV-019
+    status: ACTIVE
+    scope: FAILED_OR_BLOCKED_GATES
+    statement: >
+      A FAIL/BLOCKED result does not authorize seed shopping, threshold
+      relaxation, dropping failed domains/rows, or an unbounded chain of
+      remediation attempts. Further work requires the predeclared fallback or an
+      explicit architecture/contract decision.
+    provenance:
+      - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
+      - contracts/chance_rng_reproducibility.yaml
