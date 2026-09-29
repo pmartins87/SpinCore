@@ -3999,3 +3999,25 @@ positive, stop after a durable completed-iteration resume, pull main, run the
 guarded Ryzen production parity/throughput gate, and promote the parallel stage
 only from PASS evidence.  If the remaining workload is too small for the
 migration to repay its gate/startup cost, let the serial run finish.
+
+
+### 2026-09-29 — semantic-long migration break-even reached at 10222
+
+Live training evidence for iterations 10213..10222 shows:
+- mean fit time: 515.825 s/iteration;
+- mean tree time: 9.938 s/iteration;
+- mean serial iteration time: 525.763 s;
+- latest durable completed iteration observed: 10222;
+- remaining iterations to 10315: 93;
+- projected serial time remaining: 13.58 h.
+
+Even at the precommitted minimum acceptable production fit speedup of 1.25x,
+the projected remaining runtime falls to ~10.92 h before benchmark/startup
+overhead, a gross saving of ~2.66 h.  This comfortably exceeds the migration
+gate's required >=30 minute net savings threshold.
+
+Decision: stop the serial trainer now, preserving the latest durable
+`resume_state.pt`, then run the guarded Ryzen parity/throughput gate.  The
+parallel resume itself remains blocked until the production 1600-step gate is
+tensor/loss/metadata exact, memory-safe, and the manifest is explicitly promoted
+to READY from that evidence.
