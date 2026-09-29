@@ -369,3 +369,36 @@ invariants:
     provenance:
       - tools/evaluate_deepcrusher_dc1.py
       - docs/RYZEN_OPTIMIZATION_POLICY.md
+
+  - id: VALID-030
+    status: ACTIVE
+    scope: MODEL_DIAGNOSIS_FROM_SAMPLED_TARGETS
+    statement: >
+      Raw model-to-sampled-target MSE is not sufficient evidence for network
+      capacity, representation, or optimizer failure when target generation is
+      Monte-Carlo. Before changing model capacity on that basis, quantify or
+      otherwise control the conditional target variance relevant to the claimed
+      failure.
+    provenance:
+      - docs/LT2_REPEATED_TARGET_VARIANCE_RESULT_20260917.md
+      - docs/LT2_HU_PREFLOP_CONDITIONAL_RESAMPLING_RESULT_20260917.md
+  - id: VALID-031
+    status: ACTIVE
+    scope: SPARSE_DIAGNOSTIC_SUBSETS
+    statement: >
+      Sparse exact-duplicate or rare-subset evidence must report coverage and
+      may not be extrapolated as a global decomposition or policy conclusion.
+      A predeclared sparse-coverage branch takes precedence over a tempting
+      numerical split from an unrepresentative subset.
+    provenance:
+      - docs/LT2_SAME_INPUT_TARGET_VARIANCE_RESULT_20260917.md
+  - id: VALID-032
+    status: ACTIVE
+    scope: ESTIMATOR_TO_STRATEGY_PROMOTION
+    statement: >
+      A lower-variance or lower-MSE target estimator is not automatically a
+      stronger playing policy. Mechanical estimator improvements authorize only
+      the next bounded causal training/evaluation gate declared in advance.
+    provenance:
+      - docs/LT2_HU_PREFLOP_BOARD_AVERAGING_SMOKE_RESULT_20260918.md
+      - docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md
