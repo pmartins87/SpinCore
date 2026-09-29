@@ -17,6 +17,7 @@ ROOT_CONTRACT = ROOT / "PROJECT_CONTRACT.yaml"
 AUDIT_STATUS = ROOT / "contracts" / "AUDIT_STATUS.yaml"
 RUNNER_BASELINE = ROOT / "contracts" / "RUNNER_BASELINE.yaml"
 SOURCE_AUDIT_INDEX = ROOT / "contracts" / "SOURCE_AUDIT_INDEX.json"
+SOURCE_AUDIT_OVERRIDES = ROOT / "contracts" / "SOURCE_AUDIT_OVERRIDES.yaml"
 
 ID_RE = re.compile(r"^[A-Z]+-[0-9]{3}$")
 ALLOWED_INVARIANT_STATUS = {
@@ -114,10 +115,30 @@ def main() -> int:
         raise AssertionError("source audit index has no allowed_audit_statuses")
     source_rows = source_index.get("entries") or []
     indexed_sources = {
-        str(row["path"]): row
+        str(row["path"]): dict(row)
         for row in source_rows
         if isinstance(row, dict) and row.get("path")
     }
+    overrides = load_yaml(SOURCE_AUDIT_OVERRIDES)
+    if overrides.get("schema") != "SPINCORE_CONTRACT_SOURCE_AUDIT_OVERRIDES_V1":
+        raise AssertionError("wrong source-audit-overrides schema")
+    override_rows = overrides.get("entries") or []
+    seen_override_paths = set()
+    for row in override_rows:
+        if not isinstance(row, dict) or not row.get("path"):
+            raise AssertionError("malformed source-audit override")
+        rel = str(row["path"])
+        if rel in seen_override_paths:
+            raise AssertionError(f"duplicate source-audit override: {rel}")
+        seen_override_paths.add(rel)
+        if rel not in indexed_sources:
+            raise AssertionError(f"source-audit override not in inventory: {rel}")
+        status = str(row.get("audit_status") or "")
+        if status not in allowed_source_statuses:
+            raise AssertionError(f"invalid override audit status {status!r}: {rel}")
+        indexed_sources[rel]["audit_status"] = status
+        indexed_sources[rel]["blob_sha"] = str(row.get("blob_sha") or "")
+        indexed_sources[rel]["audit_status_source"] = "override"
     current_source_paths = set()
     for path in ROOT.iterdir():
         if path.is_file() and path.name in {
@@ -437,6 +458,7 @@ def main() -> int:
     print(f"governed_runner_baseline={len(baseline_by_path)}")
     print(f"stage_manifests={len(manifest_rows)}")
     print(f"contract_source_index={len(indexed_sources)}")
+    print(f"source_audit_overrides={len(seen_override_paths)}")
     print(f"pending_source_reviews={sum(1 for r in indexed_sources.values() if str(r.get('audit_status')) in {'PENDING_REVIEW','REVIEWED_PARTIAL_MIGRATION','CONFLICT_DEBT'})}")
     print("represented_prefixes=" + ",".join(sorted(represented_prefixes)))
     print(f"root_status={root.get('status')}")
