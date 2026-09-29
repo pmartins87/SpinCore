@@ -45,7 +45,7 @@ export OPENBLAS_NUM_THREADS=8
 
 "${PY}" -m py_compile   tools/lt3_3h_semantic_parallel_fit.py   tools/benchmark_3h_semantic_parallel_fit_10115_10315.py   tools/run_3h_semantic_long_10115_10315_parallel.py
 
-"${PY}" -m pytest -q python_tests/test_lt3_3h_semantic_parallel_fit.py
+"${PY}" tools/selftest_3h_semantic_parallel_fit.py
 
 mkdir -p "${WORK}"
 rm -rf "${WORK}/packed"
