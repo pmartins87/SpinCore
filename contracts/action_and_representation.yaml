@@ -90,3 +90,20 @@ invariants:
     statement: Changing the action abstraction changes the strategic experiment; evidence collected under a different action set cannot be relabelled as evidence for the new abstraction, and candidate comparisons must control model capacity, seeds, roots, and exact-action aliases.
     provenance:
       - validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md
+
+  - id: REP-013
+    status: ACTIVE
+    scope: LEAN_SPNNIV1_MODEL_FAMILY
+    statement: The lean SPNNIV1 model family uses card and categorical embeddings, normalized numeric inputs, a public-history sequence encoder, and a 10-slot universal action carrier while the baseline exposes only its seven active legacy-derived actions.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_functional_training.py
+      - python/spincore/lean_action_scope.py
+  - id: REP-014
+    status: ACTIVE
+    scope: LEGACY_292_FEATURES
+    statement: The legacy 292-feature semantic vocabulary remains diagnostic and heritage material; it is not silently restored wholesale into the neural input without evidence of a concrete representational weakness and a declared contract change.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+      - validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md
