@@ -160,3 +160,16 @@ invariants:
       certification.
     provenance:
       - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
+
+  - id: CKPT-015
+    status: ACTIVE
+    scope: STANDALONE_CHECKPOINT_DESERIALIZATION_PREFLIGHT
+    statement: >
+      Any standalone local preflight or resume script that deserializes a project
+      checkpoint with torch.load(..., weights_only=False) must initialize the
+      repository Python import path before the first deserialization attempt so
+      project-defined pickle classes can be resolved. Import-path setup belongs
+      before checkpoint validation, not later in the training launch path.
+    provenance:
+      - user_observed_failure_2026-09-29_resume_preflight_missing_spincore_import
+      - tools/run_3h_semantic_long_10115_10315_parallel_resume.sh
