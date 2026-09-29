@@ -3,7 +3,7 @@
   "stage_id": "SEMANTIC_LONG_10115_10315_PARALLEL_RESUME",
   "status": "READY",
   "runner": "tools/run_3h_semantic_long_10115_10315_parallel_resume.sh",
-  "runner_blob_sha": "d892b2ac71ada15700c7d693771bcb99e7f4b330",
+  "runner_blob_sha": "bb6b4f8069bd1c34efffb1b4a479a0fadb9c78e9",
   "contract_ids": [
     "GOV-023",
     "GOV-024",
@@ -27,6 +27,7 @@
     "RNG-002",
     "RNG-003",
     "CKPT-004",
+    "CKPT-015",
     "SAFE-002",
     "ART-015"
   ],
@@ -98,7 +99,7 @@
     "selection_reason": "Fastest exact-parity tested Ryzen profile; full 1600-step production fit speedup 1.6735746472781527x versus canonical serial reference."
   },
   "support_blobs": {
-    "tools/run_3h_semantic_long_10115_10315_parallel_resume.sh": "d892b2ac71ada15700c7d693771bcb99e7f4b330",
+    "tools/run_3h_semantic_long_10115_10315_parallel_resume.sh": "bb6b4f8069bd1c34efffb1b4a479a0fadb9c78e9",
     "tools/run_3h_semantic_long_10115_10315_parallel.py": "d0c9191d31afd041f021f88f091af6eebc448004",
     "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
     "tools/selftest_3h_semantic_parallel_fit.py": "dbb31f5aeed111ad1736c9b14b7301a35cbb9413",
@@ -129,7 +130,8 @@
       "no semantic long trainer already running",
       "resume schema/source checkpoint/target/member contracts validate",
       "WSL memory preflight passes",
-      "local dependency-free semantic parallel selftest passes"
+      "local dependency-free semantic parallel selftest passes",
+      "repository Python import path initialized before standalone checkpoint deserialization"
     ]
   }
 }
