@@ -1,0 +1,68 @@
+schema: SPINCORE_CONTRACT_SOURCE_FAMILY_ADJUDICATIONS_V1
+date: "2026-09-29"
+purpose: >
+  Review historical evidence families through authoritative closure/selection
+  documents. Explicit per-source overrides always take precedence. A family
+  classification does not delete historical evidence; it only states that the
+  family is no longer an independent source of active project invariants after
+  the listed closure decisions, except where a source is individually overridden.
+families:
+  - id: HIST-R7_3
+    pattern: "validation/R7_3_*"
+    audit_status: SUPERSEDED_EVIDENCE
+    basis_sources:
+      - validation/R7_4_FINAL_GATE.json
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+    rationale: >
+      R7.3 candidate experiments and fit/variance screens fed the later R7.4
+      provisional line. The current lean functional architecture supersedes
+      their candidate-specific gates while permanent mechanics such as exact
+      resume and deterministic audits are separately migrated into the contract.
+  - id: HIST-R7_4
+    pattern: "validation/R7_4_*"
+    audit_status: SUPERSEDED_EVIDENCE
+    basis_sources:
+      - validation/R7_4_FINAL_GATE.json
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+    rationale: >
+      R7.4 closed the recovered pre-lean line and authorized later engineering,
+      but its candidate-specific quality gates are not the active LT2/LT3
+      training contract. Reusable mechanics are separately migrated.
+  - id: HIST-R7_5_3
+    pattern: "validation/R7_5_3*"
+    audit_status: SUPERSEDED_EVIDENCE
+    basis_sources:
+      - validation/R7_5_FINITE_CLOSURE_AND_COMPUTE_POLICY_20260816.md
+      - validation/R7_5_ARCH_RESET_V1PLUS_CLOSURE_AND_V1_FALLBACK_SELECTION_20260825.md
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+    rationale: >
+      The bounded R7.5.3 representation-admission/remediation line is historical.
+      Its successor investigations closed without a richer winner and the
+      certified-stable V1 fallback was selected. Anti-tuning, finite-exit,
+      chance/RNG, and compute-placement lessons are separately active.
+  - id: HIST-R7_5_ARCH_RESET
+    pattern: "validation/R7_5_ARCH_RESET_V1PLUS_*"
+    audit_status: SUPERSEDED_EVIDENCE
+    basis_sources:
+      - validation/R7_5_ARCH_RESET_V1PLUS_CLOSURE_AND_V1_FALLBACK_SELECTION_20260825.md
+      - docs/LEGACY_292_FEATURE_AUDIT.md
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+    rationale: >
+      Phase2A/B/C V1+ architecture-reset experiments are closed historical
+      evidence. The binding outcome is the stable SPNNIV1 fallback selection;
+      no Phase2C3, larger-K, post-hoc estimator repair, or implicit SPNNIV3
+      production promotion remains authorized.
+  - id: HIST-R7_5_4
+    pattern: "validation/R7_5_4*"
+    audit_status: SUPERSEDED_EVIDENCE
+    basis_sources:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+      - validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md
+    rationale: >
+      R7.5.4 action-abstraction experiments were candidate-specific and include
+      fixed-10/20-localized evidence. The active lean LT2/LT3 action contract is
+      the later full-distribution legacy-derived seven-action baseline; reusable
+      exact-action and dedup semantics are separately migrated.
