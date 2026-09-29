@@ -1,0 +1,56 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: GOV
+status: PARTIAL_AUDIT
+invariants:
+  - id: GOV-010
+    status: ACTIVE
+    scope: GLOBAL
+    statement: Before proposing or executing training, architecture, action-abstraction, sampler, evaluator/state, runtime integration, or heavy Ryzen work, read the active project contract and the repository sources it references.
+    provenance:
+      - AGENTS.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOV-011
+    status: ACTIVE
+    scope: GLOBAL
+    statement: SpinCore is an evolution of the multi-year DeepSpin/SpinGo baseline, not a greenfield replacement; inspect the legacy implementation before replacing a component already addressed there.
+    provenance:
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+      - README.md
+  - id: GOV-012
+    status: ACTIVE
+    scope: STRATEGIC_OR_ARCHITECTURAL_CHANGE
+    statement: A strategic or architectural change requires a concrete defect, limitation, new requirement, or evidence-based reason; a newer or cleaner implementation alone is insufficient.
+    provenance:
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOV-013
+    status: ACTIVE
+    scope: HEAVY_COMPUTE
+    statement: Do not start heavy compute before confirming game distribution, legal actions, hand evaluation, utility semantics, hidden/public state, and runtime action mapping for the intended game.
+    provenance:
+      - AGENTS.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOV-014
+    status: ACTIVE
+    scope: EXPENSIVE_EVIDENCE
+    statement: Expensive tests must state which decision they can change; use adaptive evidence and stop repeated testing when the decision is already resolved.
+    provenance:
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOV-015
+    status: ACTIVE
+    scope: BAD_PLAY_DIAGNOSIS
+    statement: More training is not the default explanation for bad play; first investigate semantics, evaluator, representation, sampling, objective/traversal, action mapping, and training/runtime parity.
+    provenance:
+      - AGENTS.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOV-016
+    status: ACTIVE
+    scope: CONTRACT_CHANGE
+    statement: Active invariants may only be changed by explicit adjudication that records the reason, affected IDs, evidence or new requirement, and supersession relation.
+    provenance:
+      - PROJECT_CONTRACT.yaml
+  - id: GOV-017
+    status: ACTIVE
+    scope: PROJECT_HISTORY
+    statement: Historical experimental results are evidence, not automatically active invariants; decisions frozen from those results become invariants and superseded decisions remain traceable.
+    provenance:
+      - docs/PROJECT_CONTRACT_MIGRATION_20260929.md
