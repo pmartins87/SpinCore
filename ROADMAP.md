@@ -3917,3 +3917,29 @@ from the existing durable `resume_state.pt`; do not restart from 10115 and do
 not change seeds, member steps, tree sampling, safety guards, or milestone
 selection.  The only admitted change is the parity-proven independent member-fit
 execution mechanism.
+
+
+### 2026-09-29 — optimized resume preflight import-path fix
+
+The first optimized-resume launch stopped immediately after
+`STAGE_CONTRACT_PASS` while validating `resume_state.pt`.  The standalone
+inline `torch.load(..., weights_only=False)` ran before the runner exported the
+repository Python path, so pickle could not resolve project-defined
+`spincore` classes and raised `ModuleNotFoundError: No module named
+'spincore'`.
+
+This was a preflight ordering bug, not a checkpoint, parity, manifest or
+training failure.  The trainer did not start and the durable resume was not
+mutated.
+
+Durable correction:
+- the optimized-resume runner now exports
+  `PYTHONPATH=${ROOT}/python:${ROOT}/tools` immediately after selecting the
+  training interpreter, before any standalone checkpoint deserialization;
+- new invariant `CKPT-015` freezes this ordering rule for future standalone
+  checkpoint preflights;
+- the READY stage manifest is refreshed to the corrected runner blob and now
+  includes `CKPT-015`.
+
+Re-run only from the corrected main after project-contract CI validates the new
+runner/manifest binding.
