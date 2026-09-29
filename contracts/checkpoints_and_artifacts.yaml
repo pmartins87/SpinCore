@@ -89,3 +89,61 @@ invariants:
       and is the only binary admitted to the first real x64 shadow-load gate.
     provenance:
       - docs/LT2_OPENHOLDEM_SHADOW_DLL_WINDOWS_MOCK_RESULT_20260921.md
+
+  - id: CKPT-012
+    status: ACTIVE
+    scope: CHECKPOINTED_BEHAVIOR_STATE
+    statement: >
+      A checkpoint is resumable only if it preserves every state component that
+      can change future behavior, not merely the primary model bundle. Ensemble
+      side members, previous-generation ensembles, wrapper parameters, adaptive
+      state, or equivalent sidecars must be serialized and integrity-checked
+      whenever the active lane depends on them.
+    provenance:
+      - validation/R7_3_CANDIDATE_CHECKPOINT_READINESS_20260810.md
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+  - id: CKPT-013
+    status: ACTIVE
+    scope: DETERMINISTIC_RESTORE
+    statement: >
+      Restoring auxiliary/side models must not consume or perturb the restored
+      global RNG streams. Module construction that would otherwise advance
+      Torch RNG is isolated so stop-restore-continue can remain identical to
+      continuous execution.
+    provenance:
+      - validation/R7_3_CANDIDATE_CHECKPOINT_READINESS_20260810.md
+      - python/spincore/r7_candidate_checkpoint.py
+  - id: CKPT-014
+    status: ACTIVE
+    scope: RESUME_EQUIVALENCE
+    statement: >
+      When exact resume equivalence is claimed, continuous execution and
+      stop-checkpoint-fresh-restore-continue must match the declared behavioral
+      state, including model and optimizer states, reservoir contents/order,
+      counters, batch RNG, Torch RNG, stage/progress metadata, and any active
+      side-model state.
+    provenance:
+      - validation/R7_4_STAGED_RESUME_EQUIVALENCE.json
+      - validation/R7_3_CANDIDATE_CHECKPOINT_READINESS_20260810.md
+  - id: ART-013
+    status: ACTIVE
+    scope: GITHUB_ARTIFACT_PERSISTENCE
+    statement: >
+      A workflow that persists an immutable computed artifact into Git must
+      checkout the destination branch before downloading the artifact into the
+      checkout workspace, then validate provenance before copy/add/commit/push.
+      Downloading into the workspace before a clean checkout is forbidden
+      because checkout may erase valid evidence.
+    provenance:
+      - validation/ARTIFACT_PERSISTENCE_ORDERING_INCIDENT_20260813.md
+  - id: ART-014
+    status: ACTIVE
+    scope: SCIENTIFIC_ARTIFACT_RECOVERY
+    statement: >
+      A persistence-layer failure after successful immutable evidence creation
+      does not by itself invalidate the scientific computation and must not
+      trigger an unnecessary rerun. Recovery may persist the original immutable
+      artifact after validating execution SHA, workflow/run identity, content
+      digest, and gate metadata.
+    provenance:
+      - validation/ARTIFACT_PERSISTENCE_ORDERING_INCIDENT_20260813.md
