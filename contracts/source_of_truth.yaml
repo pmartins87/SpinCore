@@ -1,0 +1,31 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: SRC
+status: PARTIAL_AUDIT
+invariants:
+  - id: SRC-001
+    status: ACTIVE
+    scope: GLOBAL
+    statement: PROJECT_CONTRACT.yaml and its modules are the first normative source for active invariants; ROADMAP.md and CURRENT_WORK.md retain chronological and contextual history.
+    provenance:
+      - PROJECT_CONTRACT.yaml
+      - docs/PROJECT_CONTRACT_MIGRATION_20260929.md
+  - id: SRC-002
+    status: ACTIVE
+    scope: REPOSITORY_POLICY_FILES
+    statement: Policy/source-of-truth files created to govern the project must be reread and updated as the project evolves; they may not become dead documentation.
+    provenance:
+      - AGENTS.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: SRC-003
+    status: ACTIVE
+    scope: NEW_WORK
+    statement: New substantial work must declare which active contract IDs it relies on, changes, challenges, or supersedes.
+    provenance:
+      - PROJECT_CONTRACT.yaml
+      - docs/PROJECT_CONTRACT_MIGRATION_20260929.md
+  - id: SRC-004
+    status: ACTIVE
+    scope: CONFLICTS
+    statement: A conflict between the active contract, frozen evidence, implementation, and project documentation must be surfaced and adjudicated; silent precedence by recency is prohibited.
+    provenance:
+      - PROJECT_CONTRACT.yaml
