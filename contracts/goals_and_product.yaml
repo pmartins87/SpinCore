@@ -1,0 +1,36 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: GOAL
+status: PARTIAL_AUDIT
+invariants:
+  - id: GOAL-001
+    status: ACTIVE
+    scope: PRODUCT
+    statement: SpinCore is intended to make complete No-Limit Hold'em decisions from preflop through river in realistic Spin & Go states across both three-handed and true heads-up play.
+    provenance:
+      - docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md
+  - id: GOAL-002
+    status: ACTIVE
+    scope: STRATEGIC_OBJECTIVE
+    statement: The current primary poker objective is long-run chip EV under the declared WTA training scope, not hand-win frequency, showdown rate, survival time, visual plausibility, or monetary sample results.
+    provenance:
+      - docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: GOAL-003
+    status: ACTIVE
+    scope: GENERALIZATION
+    statement: SpinCore must become a generally strong poker policy rather than a policy trained solely to exploit DeepCrusher or another fixed opponent.
+    provenance:
+      - docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md
+  - id: GOAL-004
+    status: ACTIVE
+    scope: EXTERNAL_QUALITY
+    statement: Beating a faithful frozen DeepCrusher reference in an extensive fair offline benchmark is a mandatory quality goal, but DeepCrusher victory is not the definition of optimal play.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+      - docs/POKER_GOALS_AND_TRAINING_EXPLAINED.md
+  - id: GOAL-005
+    status: ACTIVE
+    scope: QUALITY_PROCESS
+    statement: Optimize for actual poker-playing strength, correctness, robustness, and runtime viability rather than certification ceremony or raw iteration count.
+    provenance:
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
