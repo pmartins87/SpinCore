@@ -3987,9 +3987,15 @@ Precommitted migration requirements:
 - at most 1 GiB swap used;
 - original durable resume hash unchanged by the benchmark.
 
+Repository validation is now green: the main regression passed **515 tests**
+including canonical-sequential-vs-reference and small tensor-exact
+sequential-vs-process-parallel semantic fitting; project-contract CI also
+passed with the new living-contract rules and blocked migration manifest.
+
 Do not interrupt the active trainer merely because the optimized code exists.
-First finish repository CI, then compare the latest completed iteration with the
-remaining workload.  If migration still has positive break-even, stop after a
-durable completed-iteration resume, run the guarded Ryzen gate, and promote the
-parallel stage only from PASS evidence.  If the remaining workload is too small
-for the migration to repay its gate/startup cost, let the serial run finish.
+The next decision input is the **latest durable completed iteration** and recent
+tree/fit timing from the live run.  If remaining-work break-even is still
+positive, stop after a durable completed-iteration resume, pull main, run the
+guarded Ryzen production parity/throughput gate, and promote the parallel stage
+only from PASS evidence.  If the remaining workload is too small for the
+migration to repay its gate/startup cost, let the serial run finish.
