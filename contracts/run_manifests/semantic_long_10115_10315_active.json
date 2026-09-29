@@ -1,0 +1,33 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "SEMANTIC_LONG_10115_10315",
+  "status": "GRANDFATHERED_ACTIVE",
+  "runner": "tools/run_3h_semantic_long_10115_10315.sh",
+  "runner_blob_sha": "c9f5c03bc14c61667f3e069e82ee1a56e1ffd193",
+  "contract_ids": [
+    "TRAIN-020",
+    "MODEL-020",
+    "CHANCE-010",
+    "CKPT-004",
+    "SAFE-002",
+    "PERF-016"
+  ],
+  "affected_domains": [
+    "TRAIN",
+    "MODEL",
+    "CHANCE",
+    "RNG",
+    "PERF",
+    "CKPT",
+    "SAFE",
+    "ART"
+  ],
+  "duration_class": "LONG_GT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "performance_gate": {
+    "status": "GRANDFATHERED_REGRESSION",
+    "evidence": "Observed sequential 8-thread semantic member fitting at approximately 26 percent total CPU despite prior 4x8 exact-parity ensemble precedent.",
+    "remediation": "Do not restart or extend this execution path after interruption without a parity-validated semantic parallel fitter and measured target-host throughput gate."
+  },
+  "block_reason": "The process was already running before executable contract enforcement. Scientific semantics remain valid, but the execution path violates the active performance policy and is not reusable for a restart/extension."
+}
