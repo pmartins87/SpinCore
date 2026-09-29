@@ -114,3 +114,20 @@ invariants:
     statement: Ordinary training samples chance through deterministic complete-deal root seeds rather than exhaustively enumerating the deck; any chance-averaging intervention is a separately declared experiment.
     provenance:
       - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+
+  - id: GAME-013
+    status: ACTIVE
+    scope: UTILITY_BY_PAYOUT_LANE
+    statement: >
+      Utility is explicitly scoped by the real payout problem. The lean
+      winner-take-all lane uses exact terminal chip delta scaled by the constant
+      1/1500. A production Deep-CFR lane whose real tournament pays multiple
+      finishing positions retains explicit-payout ICM continuation utility.
+      Neither rule silently supersedes the other outside its payout scope.
+    provenance:
+      - README.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/deep_cfr.py
+      - include/spincore/tournament_value.hpp
+      - src/tournament_value.cpp
