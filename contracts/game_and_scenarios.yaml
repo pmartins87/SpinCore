@@ -1,0 +1,73 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: GAME_SCEN
+status: PARTIAL_AUDIT
+invariants:
+  - id: GAME-001
+    status: ACTIVE
+    scope: LEAN_FUNCTIONAL_AND_DESCENDANTS_UNLESS_EXPLICITLY_SUPERSEDED
+    statement: The tournament chip supply is 1500 and ante is not modeled.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_training_scope.py
+  - id: GAME-002
+    status: ACTIVE
+    scope: GLOBAL_POLICY_FAMILY
+    statement: THREE_HANDED and TRUE_HEADS_UP are distinct strategy domains and must not silently share one policy brain.
+    provenance:
+      - README.md
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+  - id: GAME-003
+    status: ACTIVE
+    scope: WTA_TRAINING
+    statement: Winner-take-all training uses exact chip delta scaled by the global constant 1/1500; blind-dependent utility scaling is not allowed.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/lean_training_scope.py
+  - id: GAME-004
+    status: ACTIVE
+    scope: FINAL_GLOBAL_STRATEGIC_DECISIONS
+    statement: Final training/evaluation must represent the real 3H/HU blind ladder and realistic stack distribution; a single blind such as 10/20 is diagnostic-only and cannot select the global policy or action abstraction.
+    provenance:
+      - AGENTS.md
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: SCEN-001
+    status: ACTIVE
+    scope: LEGACY_REALISTIC_SAMPLER
+    statement: The nine blind levels and per-domain empirical blind weights are canonical in python/spincore/legacy_scenario_data.json.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/legacy_scenario.py
+      - python/spincore/legacy_scenario_data.json
+  - id: SCEN-002
+    status: ACTIVE
+    scope: LEGACY_REALISTIC_SAMPLER
+    statement: The unforced domain mixture uses heads_up_prob 0.4548, with per-domain blind-conditioned empirical stack tables and total chips constrained to 1500.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/legacy_scenario.py
+  - id: SCEN-003
+    status: ACTIVE
+    scope: TRUE_HEADS_UP
+    statement: True HU uses exactly one dead logical seat, random live-seat mapping, and dealer chosen among live seats.
+    provenance:
+      - python/spincore/legacy_scenario.py
+  - id: SCEN-004
+    status: ACTIVE
+    scope: THREE_HANDED
+    statement: Three positive stacks are sampled from the blind-conditioned legacy table, rescaled to exactly 1500, randomly permuted, and the dealer is randomized.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/legacy_scenario.py
+  - id: SCEN-005
+    status: ACTIVE
+    scope: FORCED_LATE_3H_SCENARIOS
+    statement: Forced 3H 80/160 and 100/200 scenario generation uses the historical 60/120 stack table fallback.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - python/spincore/legacy_scenario.py
+  - id: CHANCE-001
+    status: ACTIVE
+    scope: ROOT_COLLECTION
+    statement: A root uses one complete sampled deal and that same deal is reused across traversers; different roots use independent deterministic root seeds.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
