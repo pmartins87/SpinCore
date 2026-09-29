@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION",
-  "status": "BLOCKED_CONTRACT_AUDIT",
+  "status": "BLOCKED_PERFORMANCE_GATE",
   "runner": "tools/run_3h_semantic_postlong_10315.sh",
   "runner_blob_sha": null,
   "contract_ids": [
@@ -42,5 +42,5 @@
     "evidence": null,
     "requirement": "Benchmark actual postlong collection+fit path on Ryzen, prove semantic parity, and select measured throughput profile before launch."
   },
-  "block_reason": "Contract migration and a current Ryzen throughput/parity gate for this exact postlong execution path are not complete."
+  "block_reason": "The comprehensive contract audit is complete. This stage remains blocked only until a parity-preserving target-Ryzen throughput gate is completed for the exact postlong collection+fit execution path."
 }
