@@ -3884,3 +3884,54 @@ Until the completeness gate passes, status remains `BOOTSTRAP_AUDIT_REQUIRED`.
 The currently running 10115->10315 semantic long run is grandfathered; no new
 long training or architecture-changing stage should begin without contract
 coverage for the affected domains.
+
+
+## Comprehensive project contract — COMPLETE — 2026-09-29
+
+The exhaustive migration started earlier today is now closed.
+
+Canonical governance:
+- `PROJECT_CONTRACT.yaml` status: **COMPLETE**;
+- required coverage domains: **19 / 19 COMPLETE**;
+- machine-readable active/conditional/experimental invariants: **203**;
+- every invariant has explicit scope, provenance and an entry in
+  `contracts/ENFORCEMENT_MAP.yaml`;
+- all four migration reconciliation items are **RESOLVED**.
+
+Source audit:
+- exhaustive governance/spec/validation inventory: **453 sources**;
+- individually adjudicated/hash-bound source overrides: **66**;
+- reviewed historical-family adjudications: **14**;
+- effective pending source reviews: **0**.
+
+Executable enforcement now includes:
+- `tools/check_project_contract.py` + contract CI;
+- source-hash re-review for individually migrated sources;
+- historical-family closure rules with explicit overrides taking precedence;
+- future runner/benchmark declaration gate through `PROJECT_CONTRACT_IDS`;
+- long-stage manifests and performance-gate requirements;
+- frozen runner baseline preventing old scripts from silently becoming new
+  strategic contracts.
+
+This closure does **not** remove engineering blockers. In particular:
+- the already-running 10115->10315 semantic long process remains grandfathered
+  and must finish untouched;
+- its sequential fitter is barred from restart/extension;
+- the post-10315 heavy pipeline remains fail-closed until the exact
+  postlong execution path has a parity-preserving Ryzen performance gate;
+- canonical DeepCrusher strength claims remain blocked on DC0 real-OpenHoldem
+  action/sizing parity.
+
+The older section titled "Comprehensive project contract — bootstrap migration
+started" is historical chronology and is superseded by this closure section.
+
+### Immediate operational action after contract closure
+
+Do not pull, restart or launch another trainer while the live
+10115->10315 process is running.
+
+If it reaches `SEMANTIC_LONG_10115_10315_TRAINING_PASS`, preserve the output
+and inspect it first. Do **not** launch the postlong heavy pipeline merely
+because training finished: satisfy its current stage/performance manifest before
+starting that workload. A terminal FAIL/stop is also evidence to inspect, not
+permission to select an earlier milestone or restart the sequential fitter.
