@@ -165,3 +165,52 @@ invariants:
     provenance:
       - docs/LT2_HYBRID_DEPLOYMENT_PARITY_RESULT_20260921.md
       - docs/LT2_NATIVE_CPP_INFERENCE_PARITY_RESULT_20260921.md
+
+  - id: OH-018
+    status: ACTIVE
+    scope: ACTION_ENABLED_RUNTIME_IF_AUTHORIZED
+    statement: >
+      Every action-capable runtime decision must be reproducible from an
+      append-only audit record binding hand/decision identity, bridge/runtime
+      identity, strategic profile and domain, policy hash, canonical input or
+      observation hash, legal mask, policy probabilities, selected abstract
+      action, sampling RNG provenance when stochastic, translated action/amount,
+      barrier status, and latency/error telemetry.
+    provenance:
+      - validation/R10_OPENHOLDEM_RUNTIME_GATE_DESIGN_20260812.md
+  - id: OH-019
+    status: CONDITIONAL
+    scope: FUTURE_ACTION_ENABLED_RELEASE
+    statement: >
+      Before any real table-action authorization, freeze one immutable release
+      manifest binding source commit/tree, OpenHoldem host identity and
+      architecture, bridge/DLL hashes, policy and optional exploit hashes,
+      strategic profile, observation/action schemas, runtime dependencies,
+      table/scrape configuration, unresolved debts, and target-machine
+      requirements. Downstream homologation evidence is valid only for those
+      exact bytes and identities.
+    provenance:
+      - validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md
+  - id: OH-020
+    status: CONDITIONAL
+    scope: FUTURE_ACTION_ENABLED_RELEASE
+    statement: >
+      A real action-enabled release requires live/target-environment shadow
+      validation plus deterministic replay and fault/recovery testing. Invalid,
+      ambiguous, stale, corrupt, or unsupported state must produce no unverified
+      strategic action; restart/rollback must restore only manifest-valid
+      components.
+    provenance:
+      - validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md
+      - validation/R10_OPENHOLDEM_RUNTIME_GATE_DESIGN_20260812.md
+  - id: OH-021
+    status: CONDITIONAL
+    scope: FUTURE_ACTION_ENABLED_RELEASE
+    statement: >
+      End-to-end action homologation compares intended abstract action with the
+      action actually presented/emitted by OpenHoldem, including chip amount,
+      min-raise, stack-limited raise, call/check/fold, rounding, and all-in
+      semantics. A discrepancy is not waived as strategically close enough.
+    provenance:
+      - validation/R12_OPERATIONAL_HOMOLOGATION_GATE_DESIGN_20260812.md
+      - validation/R10_OPENHOLDEM_RUNTIME_GATE_DESIGN_20260812.md
