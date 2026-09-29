@@ -47,3 +47,66 @@ invariants:
     provenance:
       - ROADMAP.md
       - tools/run_3h_semantic_long_10115_10315.py
+
+  - id: BENCH-001
+    status: ACTIVE
+    scope: DEEPCRUSHER_CANONICAL_BENCHMARK
+    statement: The canonical initial external opponent is frozen DeepCrusher R8 v22; a later R9 or other opponent may be added but may not silently replace historical R8 v22 results.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: BENCH-002
+    status: ACTIVE
+    scope: DEEPCRUSHER_CANONICAL_BENCHMARK
+    statement: Comparisons use paired realistic scenarios and the same complete deals wherever practical, with policy assignments or seats swapped so card and position luck cannot determine the result.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: BENCH-003
+    status: ACTIVE
+    scope: DEEPCRUSHER_CANONICAL_BENCHMARK
+    statement: Each strategy retains its own exact action sizing; DeepCrusher is not projected into SpinCore's action abstraction and SpinCore continues to use the sizes its policy learned.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: BENCH-004
+    status: ACTIVE
+    scope: HU_DEEPCRUSHER_BENCHMARK
+    statement: Each sampled HU state/deal is evaluated in a two-game seat-swap pair so each policy receives the same card and position opportunities.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: BENCH-005
+    status: ACTIVE
+    scope: THREE_HANDED_DEEPCRUSHER_BENCHMARK
+    statement: Each sampled 3H state/deal uses the canonical six-game AAB/ABB rotation, yielding equal policy-seat exposure, equal logical-seat exposure, and zero-sum accounting.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: BENCH-006
+    status: ACTIVE
+    scope: DC2
+    statement: DC2 starts with at least 100000 sampled states and extends in chunks only when confidence precision can change the decision; sample-count ceremony alone does not justify more compute.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: BENCH-007
+    status: ACTIVE
+    scope: DC2_QUALIFICATION
+    statement: Qualification requires overall paired SpinCore-minus-DeepCrusher chip EV above zero, CI95 lower bound above zero, no major-domain collapse hidden by an isolated subgroup, and no material illegal-action or action-translation rate.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+      - ROADMAP.md
+  - id: BENCH-008
+    status: ACTIVE
+    scope: DC3
+    statement: Full-tournament benchmarking may begin only after continuous tournament semantics are separately frozen, including starting stacks, dealer movement, blind progression, 3H-to-HU transition, elimination/tie semantics, and paired card seeding.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: DC-003
+    status: ACTIVE
+    scope: DC0
+    statement: Canonical DeepCrusher admission requires structural OpenPPL/source fidelity, faithful relevant symbol definitions, preserved action sizing/all-in semantics, and representative deterministic parity against the frozen OpenHoldem strategy.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
+  - id: DC-004
+    status: ACTIVE
+    scope: DC1
+    statement: DC1 is a mechanical smoke at approximately 1000 to 5000 sampled states and must verify legality, state convergence, pairing balance, zero-sum accounting, and exact sizing before scale-up.
+    provenance:
+      - docs/DEEPC_RUSHER_BENCHMARK_SPEC.md
