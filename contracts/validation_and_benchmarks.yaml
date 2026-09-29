@@ -1,0 +1,49 @@
+schema: SPINCORE_CONTRACT_MODULE_V1
+module_id: VALID_BENCH_DC
+status: PARTIAL_AUDIT
+invariants:
+  - id: VALID-001
+    status: ACTIVE
+    scope: POLICY_QUALITY
+    statement: Prefer controlled paired chip-EV evaluation under representative states over raw monetary tournament outcomes when measuring policy quality.
+    provenance:
+      - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+  - id: VALID-002
+    status: ACTIVE
+    scope: DEVELOPMENT_VS_HOLDOUT
+    statement: Development evidence cannot by itself authorize a promotion reserved for a sealed holdout or a later canonical gate.
+    provenance:
+      - docs/LT3_HEAVY_TRAINING_PLAN_20260921.md
+      - docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md
+  - id: VALID-003
+    status: ACTIVE
+    scope: PAIRED_STATISTICS
+    statement: Where the protocol uses paired confidence intervals, POSITIVE means CI95 lower bound greater than zero, NEGATIVE means CI95 upper bound less than zero, otherwise INCONCLUSIVE.
+    provenance:
+      - docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md
+  - id: DC-001
+    status: ACTIVE
+    scope: DEEPCRUSHER_EXTERNAL_STRENGTH_LANE
+    statement: DC0 real-OpenHoldem action and sizing parity is required before a DeepCrusher comparison can authorize a canonical strength claim.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+      - CURRENT_WORK.md
+  - id: DC-002
+    status: ACTIVE
+    scope: PRE_DC0_PARITY
+    statement: DC1 may run before final OpenHoldem parity only as DEVELOPMENT_ONLY mechanical or strategic diagnostic evidence; reports must not claim canonical superiority or inferiority.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - id: SAFE-001
+    status: ACTIVE
+    scope: STRATEGIC_EVALUATION
+    statement: Aggregate EV is necessary but not sufficient; retain decision traces and sanity/pathology review surfaces for gross strategic errors.
+    provenance:
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - id: SAFE-002
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10115_10315
+    statement: Milestone guards are pathology stops, not model-selection criteria; a failed milestone stops the run and cannot promote an earlier milestone post hoc.
+    provenance:
+      - ROADMAP.md
+      - tools/run_3h_semantic_long_10115_10315.py
