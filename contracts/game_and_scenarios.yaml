@@ -131,3 +131,18 @@ invariants:
       - python/spincore/deep_cfr.py
       - include/spincore/tournament_value.hpp
       - src/tournament_value.cpp
+
+  - id: GAME-014
+    status: ACTIVE
+    scope: STRATEGIC_PROFILE_IDENTITY
+    statement: >
+      A policy may be reused across nominal stakes/currencies only when the
+      effective poker problem is strategically identical. Changes to effective
+      starting stacks, blind/ante schedule, payout vector, ruleset, action
+      abstraction, utility semantics, learning profile, or strategy domain
+      create a distinct strategic profile and may not be silently routed to an
+      unrelated policy.
+    provenance:
+      - docs/FIRST_FUNCTIONAL_TRAINING_SPEC.md
+      - validation/R8_0_UNIVERSAL_3MAX_SIMULATOR_CONTRACT_20260817.json
+      - validation/R8_PRODUCTION_TRAINING_GATE_DESIGN_20260812.md
