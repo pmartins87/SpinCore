@@ -189,3 +189,38 @@ invariants:
       - README.md
       - python/spincore/r7.py
       - python_tests/test_r7.py
+
+  - id: VALID-025
+    status: ACTIVE
+    scope: DEVELOPMENT_BENCHMARK_DATA_ISOLATION
+    statement: >
+      Exact DC1 benchmark states, deals, sampled actions, and pathology examples
+      may be used for diagnosis and replay but may not be inserted into candidate
+      training or selection data unless a new explicitly preregistered experiment
+      changes that rule before seeing its benchmark outcomes.
+    provenance:
+      - ROADMAP.md
+      - docs/DEEPCRUSHER_BENCHMARK_CONTRACT_20260917.md
+  - id: BENCH-009
+    status: ACTIVE
+    scope: DC1_SCALEUP
+    statement: >
+      A larger DC1 development scale-up that is intended as new evidence uses a
+      fresh scenario seed rather than merely extending the exact deterministic
+      prefix already inspected in the smaller DC1 replay.
+    provenance:
+      - ROADMAP.md
+      - tools/run_deepcrusher_dc1_stratified_specialist_5k.sh
+  - id: VALID-026
+    status: ACTIVE
+    scope: ACCEPTED_10115_SPECIALIST_EVIDENCE
+    statement: >
+      The unchanged 10115 target-stratified specialist is admitted as the
+      research architecture only because it passed four completely new
+      120000-episode confirmation streams and then a fresh-seed 5000-scenario
+      DC1 long-train-readiness gate. Earlier failed or post-hoc observations do
+      not independently authorize promotion.
+    provenance:
+      - ROADMAP.md
+      - tools/audit_3h_semantic_stratified_specialist_multiseed_10115.py
+      - tools/run_deepcrusher_dc1_stratified_specialist_5k.sh
