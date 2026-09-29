@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROOT_CONTRACT = ROOT / "PROJECT_CONTRACT.yaml"
 AUDIT_STATUS = ROOT / "contracts" / "AUDIT_STATUS.yaml"
 RUNNER_BASELINE = ROOT / "contracts" / "RUNNER_BASELINE.yaml"
+SOURCE_AUDIT_INDEX = ROOT / "contracts" / "SOURCE_AUDIT_INDEX.json"
 
 ID_RE = re.compile(r"^[A-Z]+-[0-9]{3}$")
 ALLOWED_INVARIANT_STATUS = {
@@ -104,6 +105,57 @@ def main() -> int:
     duplicates = [iid for iid, n in Counter(ids).items() if n > 1]
     if duplicates:
         raise AssertionError(f"duplicate invariant IDs: {duplicates}")
+
+    source_index = json.loads(SOURCE_AUDIT_INDEX.read_text(encoding="utf-8"))
+    if source_index.get("schema") != "SPINCORE_CONTRACT_SOURCE_AUDIT_INDEX_V1":
+        raise AssertionError("wrong source-audit-index schema")
+    source_rows = source_index.get("entries") or []
+    indexed_sources = {
+        str(row["path"]): row
+        for row in source_rows
+        if isinstance(row, dict) and row.get("path")
+    }
+    current_source_paths = set()
+    for path in ROOT.iterdir():
+        if path.is_file() and path.name in {
+            "README.md", "AGENTS.md", "ROADMAP.md", "CURRENT_WORK.md"
+        }:
+            current_source_paths.add(path.name)
+    for dirname in ("docs", "validation"):
+        base = ROOT / dirname
+        if base.is_dir():
+            for path in base.rglob("*"):
+                if path.is_file() and path.suffix.lower() in {".md", ".json", ".yaml", ".yml"}:
+                    current_source_paths.add(path.relative_to(ROOT).as_posix())
+    missing_from_index = sorted(current_source_paths - set(indexed_sources))
+    stale_index_paths = sorted(set(indexed_sources) - current_source_paths)
+    if missing_from_index:
+        raise AssertionError(
+            "contract source index misses repository sources: "
+            + ", ".join(missing_from_index[:20])
+        )
+    if stale_index_paths:
+        raise AssertionError(
+            "contract source index references missing sources: "
+            + ", ".join(stale_index_paths[:20])
+        )
+    for rel, row in indexed_sources.items():
+        status = str(row.get("audit_status") or "")
+        if not status:
+            raise AssertionError(f"source audit status missing: {rel}")
+        if status in {
+            "MIGRATED_ACTIVE",
+            "HISTORICAL_NO_ACTIVE_INVARIANT",
+            "SUPERSEDED_EVIDENCE",
+            "DEBT_RESOLVED",
+        }:
+            actual = __import__("subprocess").check_output(
+                ["git", "hash-object", str(ROOT / rel)], text=True
+            ).strip()
+            if str(row.get("blob_sha") or "") != actual:
+                raise AssertionError(
+                    f"audited contract source changed and needs re-review: {rel}"
+                )
 
     audit = load_yaml(AUDIT_STATUS)
     if audit.get("schema") != "SPINCORE_CONTRACT_AUDIT_STATUS_V1":
@@ -251,6 +303,17 @@ def main() -> int:
                 "root marked COMPLETE while domains remain incomplete: "
                 + ", ".join(incomplete)
             )
+        pending_sources = sorted(
+            rel for rel, row in indexed_sources.items()
+            if str(row.get("audit_status")) in {
+                "PENDING_REVIEW", "REVIEWED_PARTIAL_MIGRATION"
+            }
+        )
+        if pending_sources:
+            raise AssertionError(
+                "root marked COMPLETE with unaudited contract sources: "
+                + ", ".join(pending_sources[:20])
+            )
         open_recon = [
             x.get("id")
             for x in (audit.get("known_reconciliation_items") or [])
@@ -302,6 +365,8 @@ def main() -> int:
     print(f"required_domains={len(required_domains)}")
     print(f"governed_runner_baseline={len(baseline_by_path)}")
     print(f"stage_manifests={len(manifest_rows)}")
+    print(f"contract_source_index={len(indexed_sources)}")
+    print(f"pending_source_reviews={sum(1 for r in indexed_sources.values() if str(r.get('audit_status')) in {'PENDING_REVIEW','REVIEWED_PARTIAL_MIGRATION'})}")
     print("represented_prefixes=" + ",".join(sorted(represented_prefixes)))
     print(f"root_status={root.get('status')}")
     return 0
