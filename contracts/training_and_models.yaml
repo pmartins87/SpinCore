@@ -127,3 +127,16 @@ invariants:
     provenance:
       - ROADMAP.md
       - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+
+  - id: MODEL-022
+    status: ACTIVE
+    scope: POST_10315_AVERAGE_POLICY_REBUILD
+    statement: The post-10315 rebuild uses 8000 fresh ordinary teacher episodes, 500 strategy optimizer steps, an independent 180000-episode augmentation stream for novel strong/Fold-legal states, and a separate 50000-episode evaluation stream; strong means postflop made-category at least trips with Fold legal.
+    provenance:
+      - tools/build_3h_semantic_postlong_policy_10315.py
+  - id: MODEL-023
+    status: ACTIVE
+    scope: POST_10315_SPECIALIST_BUILD
+    statement: The rebuilt specialist uses a fresh 300000-episode teacher pool, requires at least 1200 unique strong states including at least 30 high-target and 10 mid-target Fold states, starts from the rebuilt full-pool general model, uses the already-selected STRATIFIED mode, and trains exactly 25 steps without a new 10315 model-selection sweep.
+    provenance:
+      - tools/build_3h_semantic_stratified_specialist_10315.py
