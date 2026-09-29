@@ -3799,3 +3799,61 @@ and inspect it first. Do **not** launch the postlong heavy pipeline merely
 because training finished: satisfy its current stage/performance manifest before
 starting that workload. A terminal FAIL/stop is also evidence to inspect, not
 permission to select an earlier milestone or restart the sequential fitter.
+
+
+## 2026-09-29 — living contract + semantic-long optimization migration
+
+The project contract is explicitly **living**.  `PROJECT_CONTRACT.yaml` now
+states that COMPLETE is continuously maintained, not a one-time migration
+certificate.  New durable decisions, accepted/rejected architectures, frozen
+gates, resolved conflicts and newly discovered invariants must update the
+relevant contract module and enforcement/provenance in the same decision cycle
+(`GOV-022`).
+
+The recommendation process for active long compute was also corrected.  Before
+recommending "let the run finish unchanged", inspect resume/checkpoint
+granularity, remaining workload, dominant bottleneck, prior optimization
+precedents, parity risk, migration cost and break-even (`GOV-023`).  For a
+valid but inefficient resumable long run, prepare/validate the optimized
+continuation while the current process continues when safe, and migrate only at
+a durable checkpoint after measured target-host parity/throughput proves a net
+benefit (`PERF-024`).
+
+### 10115->10315 semantic fit migration
+
+The current serial process remains scientifically valid and should keep running
+while the replacement is prepared.  Its `resume_state.pt` is durable at every
+completed iteration, so a controlled migration need not discard completed work.
+
+Implementation now prepared on main:
+- `tools/lt3_3h_semantic_parallel_fit.py` — persistent process pool + mmap
+  mirror preserving member seeds, batch-position stream, sample order, model
+  init, Adam updates and authoritative Algorithm-R reservoir;
+- `python_tests/test_lt3_3h_semantic_parallel_fit.py` — packed-batch parity,
+  observer composition and tensor-exact small-fit parity regression;
+- `tools/benchmark_3h_semantic_parallel_fit_10115_10315.py` and guarded shell
+  runner — bounded Ryzen gate comparing canonical 8-thread sequential fitting
+  with 2x8 and 4x8 profiles, then full 1600-step serial-vs-selected parity;
+- `tools/run_3h_semantic_long_10115_10315_parallel.py` — wrapper that changes
+  only the member-fit execution mechanism and delegates all long-run semantics,
+  resume, safety guards and reporting to the frozen serial runner;
+- `contracts/run_manifests/semantic_long_10115_10315_parallel_resume.json` —
+  currently **BLOCKED_PERFORMANCE_GATE**.  The optimized resume cannot start
+  until the actual Ryzen gate passes and the manifest is explicitly promoted to
+  READY.
+
+Precommitted migration requirements:
+- exact production final tensors;
+- exact final losses and member seed metadata;
+- production fit speedup >= 1.25x;
+- projected net remaining savings >= 30 minutes after pack/pool startup;
+- at least 4 GiB MemAvailable during the gate;
+- at most 1 GiB swap used;
+- original durable resume hash unchanged by the benchmark.
+
+Do not interrupt the active trainer merely because the optimized code exists.
+First finish repository CI, then compare the latest completed iteration with the
+remaining workload.  If migration still has positive break-even, stop after a
+durable completed-iteration resume, run the guarded Ryzen gate, and promote the
+parallel stage only from PASS evidence.  If the remaining workload is too small
+for the migration to repay its gate/startup cost, let the serial run finish.
