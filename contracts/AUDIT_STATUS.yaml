@@ -66,6 +66,22 @@ reviewed_repository_sources:
   - src/hand_engine.cpp
   - include/spincore/tournament_value.hpp
   - src/tournament_value.cpp
+  - validation/R7_5_REPRESENTATION_AND_ACTION_ABSTRACTION_PRECOMMIT_20260813.md
+  - validation/R9_R10_SPNNIV3_GATE_DESIGN_ADJUDICATION_20260816.md
+  - validation/R9_R12_SPNNIV3_MIGRATION_DEBT_AUDIT_20260816.json
+  - docs/LEGACY_VS_SPINCORE_ARCHITECTURE_MAP.md
+  - docs/LEGACY_292_FEATURE_AUDIT.md
+  - python/spincore/deepcrusher_action.py
+  - python/spincore/deepcrusher_benchmark.py
+  - python/spincore/deepcrusher_native_symbols.py
+  - python/spincore/deepcrusher_policy.py
+  - python/spincore/deepcrusher_preflop_equity.py
+  - python/spincore/deepcrusher_r8_dc0.py
+  - python/spincore/deepcrusher_state.py
+  - python/spincore/deepcrusher_history_symbols.py
+  - tools/preflight_deepcrusher_benchmark.py
+  - tools/audit_deepcrusher_r8_dc0_readiness.py
+  - tools/evaluate_deepcrusher_dc1.py
 
 coverage:
   GOV: PARTIAL
@@ -99,20 +115,23 @@ known_reconciliation_items:
       production Deep-CFR lane retains payout-aware ICM continuation utility.
       The scoped rule is now explicit in GAME-013.
   - id: RECON-002
-    status: OPEN
+    status: RESOLVED
     topic: representation_lineage
+    resolution: REP-015,REP-016,REP-017
     detail: >
-      SPNNIV1 is canonical for the lean functional lane, while later R7.5
-      representation work includes SPNNIV3. Audit exact lane boundaries and
-      deployment dependencies before declaring a global representation invariant.
+      Representation identity is now explicitly role-scoped. SPNNIV1 remains
+      the current lean LT2/LT3 policy input; SPNNIV3 remains valid as a
+      diagnostic/oracle carrier and historical R7.5 candidate lineage but is
+      not an implicit policy-input or production winner.
   - id: RECON-003
-    status: OPEN
+    status: RESOLVED
     topic: action_abstraction_lineage
+    resolution: ACT-012,ACT-013
     detail: >
-      The seven-action legacy-derived lean abstraction is active in LT2/LT3,
-      while historical R7.5 action-abstraction experiments contain broader
-      candidate spaces. Preserve diagnostic history without allowing localized
-      single-blind results to override the global lean action contract.
+      The active LT2/LT3 action abstraction is the legacy-derived seven-action
+      vocabulary in the ten-slot carrier. Historical R7.5 A/B/C and 10/20
+      ablations remain localized experimental evidence and cannot supersede the
+      current contract without a representative full-distribution decision.
   - id: RECON-004
     status: OPEN
     topic: current_semantic_long_performance_regression
