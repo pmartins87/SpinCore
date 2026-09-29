@@ -55,3 +55,38 @@ invariants:
     provenance:
       - AGENTS.md
       - docs/LEGACY_BASELINE_AND_QUALITY_POLICY.md
+
+  - id: REP-010
+    status: ACTIVE
+    scope: ALL_LEARNED_OBSERVATIONS
+    statement: Every learned observation must be derived from an authoritative legally reachable game state and ordered public trajectory; derived features may summarize exact facts but may not replace, contradict, or synthesize impossible combinations of them.
+    provenance:
+      - validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md
+      - validation/R7_5_REAL_GAME_REACHABILITY_AUDIT.json
+  - id: REP-011
+    status: ACTIVE
+    scope: CARD_AND_HISTORY_REPRESENTATION_DESIGN
+    statement: A representation candidate may remove only explicitly proven game symmetries; it must preserve exact observable card information, private/public role, street chronology, strategically relevant suit relations, legal-action identity, and path-dependent betting information required by the strategy.
+    provenance:
+      - validation/R7_5_REPRESENTATION_INTEGRITY_AUDIT_20260814.md
+      - validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md
+  - id: REP-012
+    status: ACTIVE
+    scope: PUBLIC_HISTORY
+    statement: Path-dependent strategic context must be derived from the complete ordered public action trajectory rather than guessed from a late table snapshot when multiple legal histories can lead to the same instantaneous geometry.
+    provenance:
+      - validation/R7_5_FULL_PRIOR_ATTEMPT_HERITAGE_AUDIT_20260814.md
+      - docs/LT2_OPENHOLDEM_RUNTIME_INTEGRATION_20260921.md
+  - id: ACT-010
+    status: ACTIVE
+    scope: UNIVERSAL_ACTION_RESOLUTION
+    statement: Nominal action primitives that resolve to the same exact action in a state must not remain as duplicate effective neural branches; exact action resolution and deterministic state-local deduplication are authoritative.
+    provenance:
+      - validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md
+      - python/spincore/r7_5_action_cfr.py
+  - id: ACT-011
+    status: ACTIVE
+    scope: ACTION_ABSTRACTION_SELECTION
+    statement: Changing the action abstraction changes the strategic experiment; evidence collected under a different action set cannot be relabelled as evidence for the new abstraction, and candidate comparisons must control model capacity, seeds, roots, and exact-action aliases.
+    provenance:
+      - validation/R7_5_4_ACTION_ABSTRACTION_SOURCE_AUDIT_20260813.md
