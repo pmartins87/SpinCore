@@ -4075,3 +4075,21 @@ Roadmap rule for the retry:
 
 This implements the active execution-observability contract rather than adding a new
 research stage.
+
+
+### 2026-09-30 — postlong multiseed worker-memory correction
+
+The observable retry localized the second interruption to
+MULTISEED_PARALLEL_BEGIN after serial multiseed had passed. The benchmark was
+deserializing the ~2.8 GB frozen 10105 training checkpoint inside every
+collection worker even though those workers consume only the 10315 semantic
+teacher and solver. This redundant fan-out is now removed and guarded by test.
+
+Retry policy:
+1. keep the postlong manifest BLOCKED;
+2. preserve the exact scientific workload and parity criteria;
+3. parent-validate the frozen checkpoint once;
+4. collection subprocesses load only data they consume;
+5. keep durable phase journaling and resource evidence;
+6. rerun the complete gate only after main regression + project-contract CI PASS;
+7. promote to READY only from a complete performance-gate PASS.
