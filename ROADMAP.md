@@ -4114,3 +4114,10 @@ Remaining sequence:
 3. Set POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION to READY.
 4. Run the full postlong rebuild/validation.
 5. Only after that scientific gate passes, run the precommitted fresh-seed DC1 5k comparison.
+
+
+### 2026-09-30 — postlong-10315 READY transition complete
+
+The stage manifest is READY with the frozen profile and exact support hashes.
+Next action is the full postlong rebuild/validation. Only a complete scientific
+PASS unlocks the precommitted fresh-seed DC1 5k comparison.
