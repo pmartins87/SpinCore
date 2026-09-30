@@ -32,9 +32,11 @@ done
   echo "ERROR: frozen 10315 teacher SHA mismatch" >&2; exit 4;
 }
 
-if pgrep -af "run_3h_semantic_long_10115_10315|run_3h_semantic_postlong_10315" >/dev/null 2>&1; then
-  echo "ERROR: semantic long/postlong process is already running." >&2
-  pgrep -af "run_3h_semantic_long_10115_10315|run_3h_semantic_postlong_10315" >&2 || true
+ACTIVE_PATTERN='[p]ython(3)? .*tools/(benchmark_3h_semantic_postlong_10315_performance|run_3h_semantic_long_10115_10315(_parallel)?|build_3h_semantic_postlong_policy_10315|build_3h_semantic_stratified_specialist_10315|audit_3h_semantic_stratified_specialist_multiseed_10315(_parallel)?)\\.py|[b]ash .*tools/run_3h_semantic_postlong_10315\\.sh|[b]ash .*tools/run_3h_semantic_long_10115_10315[^ ]*\\.sh'
+ACTIVE_PROCS="$(ps -eo pid=,args= | grep -E "${ACTIVE_PATTERN}" || true)"
+if [[ -n "${ACTIVE_PROCS}" ]]; then
+  echo "ERROR: semantic long/postlong heavy process is already running." >&2
+  printf '%s\\n' "${ACTIVE_PROCS}" >&2
   exit 5
 fi
 
