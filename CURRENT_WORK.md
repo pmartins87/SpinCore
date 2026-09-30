@@ -4128,3 +4128,39 @@ validation.
 
 The postlong stage is still fail-closed on its own target-Ryzen performance
 gate. Completion of the long run does not waive that requirement.
+
+
+### 2026-09-30 — postlong 10315 performance gate prepared, stage still blocked
+
+The long semantic stage is complete, but the postlong rebuild is intentionally
+not launched yet because its manifest is LONG_GT_60M and requires its own Ryzen
+throughput/parity evidence.
+
+Prepared exact-path optimizations:
+- `tools/postlong_10315_collection.py` reproduces the canonical teacher
+  trajectory/RNG but stores only strong/Fold-legal samples for phases that later
+  discard every other decision; it preserves the canonical TRAIN-then-HOLD
+  concatenation and unique-state order;
+- policy rebuild keeps the small 8k base and 50k evaluation streams fully
+  canonical, while the 180k strong augmentation may use the compact collector
+  only after parity passes;
+- the 300k specialist stream likewise may use the compact collector only after
+  parity passes;
+- the four frozen 120k multiseed streams have a process-parallel candidate that
+  executes each independent seed unchanged and restores canonical seed order
+  before pooled metrics;
+- policy/fullpool/specialist fitting remains canonical 8-thread training; only
+  collection scheduling/storage is eligible for optimization.
+
+Guard:
+`tools/run_3h_semantic_postlong_10315_performance_gate.sh` benchmarks the real
+10315 teacher/solver on the Ryzen. It compares complete sample-stream digests
+across Torch thread profiles, compares compact unique-strong output against the
+full collector, tests four-seed serial vs process-parallel exactness, measures
+memory/swap, and includes unchanged 500-step fit cost in a conservative
+end-to-end projection.
+
+The postlong manifest remains **BLOCKED_PERFORMANCE_GATE**. A gate PASS is
+necessary but not sufficient: the measured profile must then be frozen into the
+manifest with exact runner/support hashes before the full postlong stage can
+start.
