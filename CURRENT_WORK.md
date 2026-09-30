@@ -4189,3 +4189,32 @@ Durable correction:
 
 The failed attempt did not enter the benchmark and did not mutate any training,
 teacher, checkpoint, or postlong artifact.
+
+
+### 2026-09-30 — first postlong performance-gate execution terminated before multiseed evidence
+
+The first dependency-correct local execution completed the canonical reference and all
+1/2/4/8-thread collection profiles. Every printed profile reported exact full-stream
+parity to the canonical 8-thread collector and exact compact unique-strong parity.
+The projected non-multiseed collection times were approximately 4872.0 s (1t),
+4858.4 s (2t), 4910.1 s (4t), and 4919.2 s (8t); the differences are small and do
+not by themselves select the final end-to-end profile.
+
+The process then terminated before emitting any multiseed, fit, resource, final PASS/FAIL,
+or JSON report. The PowerShell caller later exposed LASTEXITCODE=15. The preserved log
+contains no Python traceback or gate FAIL sentinel. A subsequent fresh WSL diagnostic
+showed ~29 GiB MemAvailable, zero swap usage, no retained OOM/segfault lines, no report,
+and no surviving benchmark process. This is insufficient to attribute the termination
+to OOM, SIGTERM, Windows/WSL shutdown, or another external cause.
+
+Do not promote the postlong manifest and do not interpret the partial matrix as gate PASS.
+
+Observability hardening is now part of the rerun path:
+- the benchmark writes an atomic phase journal before/after reference, each thread profile,
+  serial multiseed, parallel multiseed, fit benchmark, and final completion;
+- each phase marker includes current /proc/meminfo and the relevant worker/thread metadata;
+- the shell runner preserves the progress journal to the Windows Desktop with the report/log.
+
+This is semantically inert instrumentation under GOV-021. The next local rerun is authorized
+only after main CI confirms the instrumented gate is syntactically/regression clean. If it
+terminates again, the last durable phase journal becomes the primary fault-localization evidence.
