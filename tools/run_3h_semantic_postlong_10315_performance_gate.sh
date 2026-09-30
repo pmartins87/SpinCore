@@ -46,7 +46,7 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 6
 fi
 
-"${PY}" tools/check_project_contract.py
+"${PY}" tools/check_postlong_10315_performance_gate_preflight.py
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j 8 --target spincore_solver_c
