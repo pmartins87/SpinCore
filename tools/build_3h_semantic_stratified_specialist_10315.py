@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import audit_3h_fresh_semantic_strategy_distill_10105 as distill
 import audit_3h_semantic_stratified_specialist_moe_10115 as spec
+import postlong_10315_collection as compact
 from audit_3h_average_policy_semantic_continuation_10105 import V1SemanticPolicyNet
 from spincore.solver import SolverLibrary
 
@@ -84,9 +85,12 @@ def main() -> int:
     ap.add_argument("--report", type=Path, required=True)
     ap.add_argument("--out-model", type=Path, required=True)
     ap.add_argument("--threads", type=int, default=8)
+    ap.add_argument("--collection-threads", type=int, default=None)
     args = ap.parse_args()
 
-    torch.set_num_threads(int(args.threads))
+    fit_threads=int(args.threads)
+    collection_threads=int(args.collection_threads or args.threads)
+    torch.set_num_threads(collection_threads)
 
     cp = args.checkpoint.resolve(strict=True)
     if distill.sha256(cp) != EXPECTED_SHA:
@@ -98,11 +102,15 @@ def main() -> int:
     fullpool, fullpool_payload = load_fullpool(args.fullpool_tail)
     solver = SolverLibrary(args.solver.resolve(strict=True))
 
-    distill.MASTER_SEED = TRAIN_SEED
-    a, b, collection = distill.collect_fresh(
-        solver, adv, TRAIN_EPISODES
+    train_strong, hold_strong, collection_raw = compact.collect_strong_split(
+        solver,
+        adv,
+        TRAIN_EPISODES,
+        master_seed=TRAIN_SEED,
+        progress_prefix="POSTLONG_SPECIALIST_EPISODES",
     )
-    unique = spec.unique_strong(list(a) + list(b))
+    collection = compact.canonical_collection_stats(collection_raw)
+    unique = spec.unique_strong(list(train_strong) + list(hold_strong))
     strata = spec.stratum_counts(unique)
 
     if len(unique) < 1200:
@@ -118,6 +126,7 @@ def main() -> int:
             f"10315 mid-target strong stratum too small: {strata}"
         )
 
+    torch.set_num_threads(fit_threads)
     specialist = spec.clone_model(fullpool)
     optimizer = torch.optim.Adam(
         specialist.parameters(),
@@ -145,6 +154,8 @@ def main() -> int:
             "source_checkpoint_sha256": EXPECTED_SHA,
             "semantic_completed_iteration": FINAL_ITERATION,
             "selected_steps": SELECTED_STEPS,
+        "collection_threads": collection_threads,
+        "fit_threads": fit_threads,
             "selected_training_mode": SELECTED_MODE,
             "specialist_train_episodes": TRAIN_EPISODES,
             "specialist_collection_seed": TRAIN_SEED,
