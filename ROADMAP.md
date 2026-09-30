@@ -4053,3 +4053,25 @@ Durable correction:
 
 The failed attempt did not enter the benchmark and did not mutate any training,
 teacher, checkpoint, or postlong artifact.
+
+
+### 2026-09-30 — postlong performance-gate interruption handling
+
+The first real target-Ryzen postlong-10315 performance-gate execution completed the
+reference plus all 1/2/4/8-thread collection profiles with exact printed parity, then
+terminated before multiseed/fit/resource/final evidence. No JSON PASS/FAIL report was
+created; the caller later exposed LASTEXITCODE=15. Current diagnostics do not establish
+the termination cause, so the stage remains fail-closed.
+
+Roadmap rule for the retry:
+1. do not promote or launch postlong from the partial matrix;
+2. rerun only from a main revision where the gate emits durable phase markers/journal;
+3. use the journal to distinguish thread-profile, serial-multiseed, parallel-multiseed,
+   fit, or finalization failure if termination repeats;
+4. preserve semantic identity: instrumentation may improve observability only and may not
+   change seeds, episode counts, sample ordering, teacher inference, action RNG, fitting,
+   thresholds, or promotion criteria;
+5. only a complete performance-gate PASS may unlock manifest promotion to READY.
+
+This implements the active execution-observability contract rather than adding a new
+research stage.
