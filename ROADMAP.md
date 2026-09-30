@@ -4093,3 +4093,24 @@ Retry policy:
 5. keep durable phase journaling and resource evidence;
 6. rerun the complete gate only after main regression + project-contract CI PASS;
 7. promote to READY only from a complete performance-gate PASS.
+
+
+### 2026-09-30 — postlong-10315 performance gate satisfied; runner finalization
+
+The target-Ryzen gate is COMPLETE PASS. Frozen measured execution profile:
+collection 1 thread, fitting 8 threads, independent multiseed 4 workers x 1
+thread. Exact four-seed parity passed; multiseed speedup measured 3.4910938707293395x;
+projected total speedup measured 1.6879905346304902x; minimum benchmark
+MemAvailable was 15.042491912841797 GiB and swap use was zero.
+
+A final audit of the actual production parallel multiseed runner found the same
+unused multi-GB 10105 checkpoint load in each child. That load is removed before
+READY promotion, with parent SHA validation retained and scientific semantics
+unchanged.
+
+Remaining sequence:
+1. CI PASS for the production-runner memory-isolation correction.
+2. Freeze exact runner/support blob SHAs and performance-evidence SHA in the stage manifest.
+3. Set POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION to READY.
+4. Run the full postlong rebuild/validation.
+5. Only after that scientific gate passes, run the precommitted fresh-seed DC1 5k comparison.
