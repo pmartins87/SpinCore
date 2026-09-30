@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "SEMANTIC_LONG_10115_10315",
-  "status": "GRANDFATHERED_ACTIVE",
+  "status": "COMPLETE_PASS",
   "runner": "tools/run_3h_semantic_long_10115_10315.sh",
   "runner_blob_sha": "c9f5c03bc14c61667f3e069e82ee1a56e1ffd193",
   "contract_ids": [
@@ -25,9 +25,29 @@
   "duration_class": "LONG_GT_60M",
   "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
   "performance_gate": {
-    "status": "GRANDFATHERED_REGRESSION",
-    "evidence": "Observed sequential 8-thread semantic member fitting at approximately 26 percent total CPU despite prior 4x8 exact-parity ensemble precedent.",
-    "remediation": "Do not restart or extend this execution path after interruption without a parity-validated semantic parallel fitter and measured target-host throughput gate."
+    "status": "PASS_VIA_CONTROLLED_MIGRATION",
+    "evidence": {
+      "migration_checkpoint_iteration": 10222,
+      "optimized_profile": "4x8 process-parallel semantic member fitting",
+      "production_fit_gate_speedup": 1.6735746472781527,
+      "final_execution_avg_cpu_percent": 2900,
+      "final_execution_wall_clock": "07:37:34",
+      "swaps": 0
+    },
+    "remediation": "Closed. The original serial path was not reused; the experiment resumed from the durable 10222 checkpoint through the exact-parity 4x8 path and completed successfully."
   },
-  "block_reason": "The process was already running before executable contract enforcement. Scientific semantics remain valid, but the execution path violates the active performance policy and is not reusable for a restart/extension."
+  "block_reason": "Stage completed PASS. Do not rerun this manifest.",
+  "completion_evidence": {
+    "report_schema": "SPINCORE_3H_SEMANTIC_LONG_CONTINUATION_10115_10315_V1",
+    "report_sha256": "7396344bd7d890e142c4b1bf1e68ca0c449676c431643da0714cdcd093e145d1",
+    "completed_iteration": 10315,
+    "new_roots_recorded": 12800,
+    "final_safety_guard_pass": true,
+    "source_10105_mutated": false,
+    "hu_training_performed": false,
+    "final_ensemble_sha256": "acf86fa05d7e6ac611fa60a346758a3d838c7918937d14488810af9c95abf5ca",
+    "resume_state_sha256": "601d1fed1749b8fa234cb5ab94107f837fcaddafa3c05d178af64116df114642",
+    "production_status": "RESEARCH_ONLY_NOT_PROMOTED",
+    "online_rows": 200
+  }
 }
