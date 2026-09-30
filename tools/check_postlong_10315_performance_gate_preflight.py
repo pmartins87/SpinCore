@@ -66,11 +66,32 @@ def main() -> int:
         raise SystemExit("POSTLONG_PERF_PREFLIGHT_FAIL wrong postlong manifest schema")
     if postlong.get("stage_id") != "POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION":
         raise SystemExit("POSTLONG_PERF_PREFLIGHT_FAIL wrong postlong stage_id")
-    if postlong.get("status") != "BLOCKED_PERFORMANCE_GATE":
-        raise SystemExit(
-            "POSTLONG_PERF_PREFLIGHT_FAIL postlong must still be BLOCKED_PERFORMANCE_GATE"
-        )
+    status = postlong.get("status")
     perf = postlong.get("performance_gate") or {}
+    if status == "COMPLETE_PASS":
+        validation = postlong.get("validation_result") or {}
+        if perf.get("status") != "PASS":
+            raise SystemExit(
+                "POSTLONG_PERF_PREFLIGHT_FAIL completed postlong lacks performance PASS"
+            )
+        if not (
+            validation.get("policy_rebuild_pass") is True
+            and validation.get("specialist_build_pass") is True
+            and validation.get("multiseed_confirmation_pass") is True
+        ):
+            raise SystemExit(
+                "POSTLONG_PERF_PREFLIGHT_FAIL completed postlong lacks validation PASS evidence"
+            )
+        print("POSTLONG_10315_LOCAL_CONTRACT_PREFLIGHT_HISTORICAL_PASS")
+        print("root_status=COMPLETE")
+        print("postlong_status=COMPLETE_PASS")
+        print("performance_gate_status=PASS")
+        print("semantic_long_status=COMPLETE_PASS")
+        return 0
+    if status != "BLOCKED_PERFORMANCE_GATE":
+        raise SystemExit(
+            "POSTLONG_PERF_PREFLIGHT_FAIL unexpected postlong lifecycle state"
+        )
     if perf.get("status") != "PENDING":
         raise SystemExit(
             "POSTLONG_PERF_PREFLIGHT_FAIL performance gate must be PENDING before benchmark"
