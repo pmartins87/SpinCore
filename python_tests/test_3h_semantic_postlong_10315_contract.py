@@ -13,6 +13,7 @@ DC1_EVAL = Path("tools/evaluate_deepcrusher_dc1_semantic_candidate_10315.py")
 DC1_RUN = Path("tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh")
 PERF_BENCH = Path("tools/benchmark_3h_semantic_postlong_10315_performance.py")
 PERF_RUN = Path("tools/run_3h_semantic_postlong_10315_performance_gate.sh")
+PARALLEL_MULTI = Path("tools/audit_3h_semantic_stratified_specialist_multiseed_10315_parallel.py")
 
 LONG_SCHEMA = "SPINCORE_3H_SEMANTIC_LONG_ENSEMBLE_V1"
 SPEC_SCHEMA = "SPINCORE_3H_SEMANTIC_STRATIFIED_STRONG_SPECIALIST_MOE_V1"
@@ -58,6 +59,14 @@ def test_postlong_collection_workers_do_not_fan_out_training_checkpoint() -> Non
 
     fit = body[body.index("def _fit_worker"):body.index("def _meminfo")]
     assert fit.count("torch.load(") == 1
+
+
+def test_production_postlong_multiseed_worker_avoids_checkpoint_payload() -> None:
+    body = text(PARALLEL_MULTI)
+    worker = body[body.index("def _worker"):body.index("def run_parallel")]
+    assert "torch.load(" not in worker
+    assert "checkpoint" not in worker
+    assert "_payload=torch.load(cp" not in body
 
 
 def test_new_postlong_shell_runners_parse() -> None:
