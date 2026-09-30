@@ -5,9 +5,27 @@ ROOT="${HOME}/spincore_lean_functional"
 cd "${ROOT}"
 
 PY="${ROOT}/.venv_lean/bin/python"
+export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
+MANIFEST="${ROOT}/contracts/run_manifests/postlong_10315.json"
 
 # PROJECT_CONTRACT_IDS: TRAIN-021,MODEL-021,MODEL-022,MODEL-023,PERF-001,PERF-002,PERF-010,PERF-013,CKPT-001,VALID-002,VALID-020,VALID-021,VALID-022,SAFE-001,ART-001,SRC-003
 "${PY}" tools/check_stage_manifest.py --manifest contracts/run_manifests/postlong_10315.json --runner tools/run_3h_semantic_postlong_10315.sh
+
+readarray -t PROFILE < <("${PY}" - "${MANIFEST}" <<'PY'
+import json,sys
+m=json.load(open(sys.argv[1],"r",encoding="utf-8"))
+p=m.get("selected_profile") or {}
+for key in ("collection_threads","fit_threads","multiseed_workers","multiseed_threads_per_worker"):
+    if key not in p:
+        raise SystemExit("postlong selected_profile incomplete: "+key)
+    print(int(p[key]))
+PY
+)
+COLLECTION_THREADS="${PROFILE[0]}"
+FIT_THREADS="${PROFILE[1]}"
+MULTISEED_WORKERS="${PROFILE[2]}"
+MULTISEED_THREADS="${PROFILE[3]}"
+
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
 
 SOURCE="${ROOT}/runs/lt3_parallel_9105_10105/20260922_132104"
@@ -31,9 +49,9 @@ done
   echo "ERROR: frozen HU sidecar SHA mismatch" >&2; exit 4;
 }
 
-export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
-export OMP_NUM_THREADS=8
-export MKL_NUM_THREADS=8
+export OMP_NUM_THREADS="${FIT_THREADS}"
+export MKL_NUM_THREADS="${FIT_THREADS}"
+export OPENBLAS_NUM_THREADS="${FIT_THREADS}"
 
 "${PY}" - "${LONG_REPORT}" "${ADV}" "${EXPECTED_CP}" <<'PY'
 import hashlib,json,sys,torch
@@ -71,7 +89,9 @@ cmake --build build -j 8 --target spincore_solver_c
 "${PY}" -m py_compile \
   tools/build_3h_semantic_postlong_policy_10315.py \
   tools/build_3h_semantic_stratified_specialist_10315.py \
-  tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py
+  tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py \
+  tools/audit_3h_semantic_stratified_specialist_multiseed_10315_parallel.py \
+  tools/postlong_10315_collection.py
 
 RUN="${ROOT}/runs/3h_semantic_postlong_10315"
 mkdir -p "${RUN}"
@@ -85,6 +105,7 @@ SPECIALIST="${RUN}/semantic_stratified_specialist_10315.pt"
 
 MULTISEED_REPORT="${RUN}/postlong_stratified_specialist_multiseed_10315.json"
 
+echo "postlong_profile=collection:${COLLECTION_THREADS} fit:${FIT_THREADS} multiseed:${MULTISEED_WORKERS}x${MULTISEED_THREADS}"
 echo "POSTLONG_10315_POLICY_REBUILD_START"
 "${PY}" tools/build_3h_semantic_postlong_policy_10315.py \
   --checkpoint "${CHECKPOINT}" \
@@ -93,7 +114,8 @@ echo "POSTLONG_10315_POLICY_REBUILD_START"
   --report "${POLICY_REPORT}" \
   --out-tail "${TAIL}" \
   --out-fullpool "${FULLPOOL}" \
-  --threads 8
+  --threads "${FIT_THREADS}" \
+  --collection-threads "${COLLECTION_THREADS}"
 
 POLICY_PASS="$("${PY}" - "${POLICY_REPORT}" <<'PY'
 import json,sys
@@ -115,17 +137,19 @@ echo "POSTLONG_10315_SPECIALIST_BUILD_START"
   --solver "${SOLVER}" \
   --report "${SPECIALIST_REPORT}" \
   --out-model "${SPECIALIST}" \
-  --threads 8
+  --threads "${FIT_THREADS}" \
+  --collection-threads "${COLLECTION_THREADS}"
 echo "POSTLONG_10315_SPECIALIST_BUILD_PASS"
 
 echo "POSTLONG_10315_MULTISEED_START"
-"${PY}" tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py \
+"${PY}" tools/audit_3h_semantic_stratified_specialist_multiseed_10315_parallel.py \
   --checkpoint "${CHECKPOINT}" \
   --semantic-advantage "${ADV}" \
   --stratified-specialist "${SPECIALIST}" \
   --solver "${SOLVER}" \
   --report "${MULTISEED_REPORT}" \
-  --threads 8
+  --workers "${MULTISEED_WORKERS}" \
+  --threads-per-worker "${MULTISEED_THREADS}"
 
 MULTISEED_PASS="$("${PY}" - "${MULTISEED_REPORT}" <<'PY'
 import json,sys
