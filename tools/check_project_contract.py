@@ -402,6 +402,24 @@ def main() -> int:
                     raise AssertionError(
                         f"READY stage runner blob drift: {stage_id}"
                     )
+                support = manifest.get("support_blob_shas") or {}
+                if not isinstance(support, dict) or not support:
+                    raise AssertionError(
+                        f"READY stage lacks support_blob_shas: {stage_id}"
+                    )
+                for support_rel, support_sha in sorted(support.items()):
+                    support_path = ROOT / str(support_rel)
+                    if not support_path.is_file():
+                        raise AssertionError(
+                            f"READY stage support file missing: {stage_id}:{support_rel}"
+                        )
+                    actual_support = __import__("subprocess").check_output(
+                        ["git", "hash-object", str(support_path)], text=True
+                    ).strip()
+                    if str(support_sha) != actual_support:
+                        raise AssertionError(
+                            f"READY stage support blob drift: {stage_id}:{support_rel}"
+                        )
             manifest_rows.append(stage_id)
 
     if root.get("status") == "COMPLETE":
