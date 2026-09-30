@@ -114,6 +114,20 @@ def unique_strong_from_split(train_strong,hold_strong):
     return cal.unique_strong(list(train_strong)+list(hold_strong))
 
 
+def canonical_collection_stats(stats):
+    return {
+        key:int(stats[key])
+        for key in (
+            "episodes",
+            "train_episodes",
+            "holdout_episodes",
+            "decisions",
+            "train_samples",
+            "holdout_samples",
+        )
+    }
+
+
 def sample_digest(samples) -> str:
     h=hashlib.sha256()
     for s in samples:
