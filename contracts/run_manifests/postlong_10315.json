@@ -3,7 +3,7 @@
   "stage_id": "POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION",
   "status": "BLOCKED_PERFORMANCE_GATE",
   "runner": "tools/run_3h_semantic_postlong_10315.sh",
-  "runner_blob_sha": null,
+  "runner_blob_sha": "eb2d85002ab0b0e5a08e3051d8ea9ee0e72da2b9",
   "contract_ids": [
     "TRAIN-021",
     "MODEL-021",
@@ -46,10 +46,31 @@
   "duration_class": "LONG_GT_60M",
   "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
   "performance_gate": {
-    "status": "PENDING",
-    "evidence": null,
+    "status": "PASS",
+    "evidence": "runs/3h_semantic_long_10115_10315/postlong_performance_gate/postlong_10315_performance_gate.json",
     "runner": "tools/run_3h_semantic_postlong_10315_performance_gate.sh",
-    "requirement": "Benchmark canonical full collection and memory-safe strong-only collection across Ryzen thread profiles; prove exact sample/unique-strong parity; prove exact four-seed process-parallel validation; measure memory/swap and projected end-to-end speedup before launch."
+    "requirement": "Benchmark canonical full collection and memory-safe strong-only collection across Ryzen thread profiles; prove exact sample/unique-strong parity; prove exact four-seed process-parallel validation; measure memory/swap and projected end-to-end speedup before launch.",
+    "evidence_sha256": "f6731c1639b697ce94489b1e4a23e9f4d2240acae606316bcf8390605fc074ee",
+    "runner_blob_sha": "695e0ceb9670dede50073f95d7cfc1290b5d3544",
+    "benchmark_blob_sha": "93e71f726a23059a39c0bc64e3e94f8ed1b9ae49",
+    "measured_multiseed_speedup": 3.4910938707293395,
+    "projected_end_to_end_speedup": 1.6879905346304902,
+    "min_mem_available_gib": 15.042491912841797,
+    "max_swap_used_gib": 0
   },
-  "block_reason": "Long semantic training completed PASS. Postlong remains fail-closed only until the dedicated target-Ryzen exact parity/throughput gate passes and freezes collection/multiseed execution profile."
+  "block_reason": "Long semantic training completed PASS. Postlong remains fail-closed only until the dedicated target-Ryzen exact parity/throughput gate passes and freezes collection/multiseed execution profile.",
+  "selected_profile": {
+    "collection_threads": 1,
+    "fit_threads": 8,
+    "multiseed_workers": 4,
+    "multiseed_threads_per_worker": 1
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/build_3h_semantic_postlong_policy_10315.py": "879c569f103ea4ce458c68d2791c08b756b279e0",
+    "tools/build_3h_semantic_stratified_specialist_10315.py": "1444ab3a50e1a0e3c00df1b436335bea0ad56166",
+    "tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py": "6b39b1cb8e5ba6a1a8bf92bc4c6437354fdea679",
+    "tools/audit_3h_semantic_stratified_specialist_multiseed_10315_parallel.py": "1e9217cc5537e1bd657edc084847090c8be51f98",
+    "tools/postlong_10315_collection.py": "0c606b1ac97262729b1a43a7330387162de68ce1"
+  }
 }
