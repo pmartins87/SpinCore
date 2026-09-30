@@ -266,6 +266,32 @@ def main()->int:
     solver=args.solver.resolve(strict=True)
     long_report=args.long_report.resolve(strict=True)
     report_path=args.report.resolve()
+    progress_path=report_path.with_name("postlong_10315_performance_gate_progress.json")
+
+    def progress(stage:str, **extra):
+        payload={
+            "schema":"SPINCORE_3H_SEMANTIC_POSTLONG_10315_PERFORMANCE_PROGRESS_V1",
+            "stage":str(stage),
+            "pid":int(os.getpid()),
+            "unix_time":float(time.time()),
+            "meminfo":_meminfo(),
+        }
+        payload.update(extra)
+        atomic_json(payload,progress_path)
+        print(
+            "POSTLONG_PERF_PHASE "
+            +json.dumps(
+                {
+                    "stage":str(stage),
+                    "meminfo":payload["meminfo"],
+                    **{k:v for k,v in extra.items() if k in ("threads","workers","speedup","exact")},
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+
+    progress("START")
 
     r=json.loads(long_report.read_text(encoding="utf-8"))
     if r.get("schema")!="SPINCORE_3H_SEMANTIC_LONG_CONTINUATION_10115_10315_V1":
@@ -279,9 +305,12 @@ def main()->int:
 
     task_base=(str(cp),str(adv),str(solver),int(policy.AUGMENT_SEED),BENCH_EPISODES)
     with Monitor() as monitor:
+        progress("REFERENCE_BEGIN",threads=8)
         reference=_run_isolated(_full_worker,task_base+(8,))
+        progress("REFERENCE_PASS",threads=8)
         profiles=[]
         for threads in THREAD_PROFILES:
+            progress("THREAD_PROFILE_BEGIN",threads=int(threads))
             full=_run_isolated(_full_worker,task_base+(int(threads),))
             compact_row=_run_isolated(_compact_worker,task_base+(int(threads),))
             full_exact=(
@@ -305,6 +334,22 @@ def main()->int:
                 "compact_unique_strong_exact_to_full":bool(compact_exact),
                 "projected_non_multiseed_collection_seconds":projected_serial_component,
             })
+            progress(
+                "THREAD_PROFILE_PASS",
+                threads=int(threads),
+                full_exact=bool(full_exact),
+                compact_exact=bool(compact_exact),
+                projected_non_multiseed_seconds=float(projected_serial_component),
+                completed_profiles=[
+                    {
+                        "threads":int(x["threads"]),
+                        "full_exact":bool(x["full_stream_exact_to_canonical_8t"]),
+                        "compact_exact":bool(x["compact_unique_strong_exact_to_full"]),
+                        "projected_non_multiseed_seconds":float(x["projected_non_multiseed_collection_seconds"]),
+                    }
+                    for x in profiles
+                ],
+            )
             print(
                 "POSTLONG_PERF_THREAD_PROFILE "
                 +json.dumps({
@@ -331,6 +376,7 @@ def main()->int:
         )
         selected_threads=int(selected["threads"])
 
+        progress("MULTISEED_SERIAL_BEGIN",threads=selected_threads,workers=1)
         serial4=_run_isolated(
             _serial_four_worker,
             (
@@ -338,6 +384,14 @@ def main()->int:
                 tuple(int(x) for x in multiseed.SEEDS),
                 BENCH_EPISODES,selected_threads,
             ),
+        )
+
+        progress(
+            "MULTISEED_SERIAL_PASS",
+            threads=selected_threads,
+            workers=1,
+            serial_wall_seconds=float(serial4["wall_seconds"]),
+            serial_maxrss_kib=int(serial4["maxrss_kib"]),
         )
 
         ctx=mp.get_context("spawn")
@@ -348,6 +402,7 @@ def main()->int:
             )
             for seed in multiseed.SEEDS
         ]
+        progress("MULTISEED_PARALLEL_BEGIN",threads=selected_threads,workers=4)
         t0=time.perf_counter()
         with ProcessPoolExecutor(max_workers=4,mp_context=ctx) as pool:
             parallel_rows=list(pool.map(_compact_worker,parallel_tasks,chunksize=1))
@@ -366,10 +421,25 @@ def main()->int:
                 multi_exact=False
                 break
         multi_speedup=serial4["wall_seconds"]/parallel_wall if parallel_wall>0 else 0.0
+        progress(
+            "MULTISEED_PARALLEL_PASS",
+            threads=selected_threads,
+            workers=4,
+            speedup=float(multi_speedup),
+            exact=bool(multi_exact),
+            parallel_wall_seconds=float(parallel_wall),
+        )
 
+        progress("FIT_BENCHMARK_BEGIN",threads=8)
         fit=_run_isolated(
             _fit_worker,
             (str(cp),str(adv),str(solver),BENCH_EPISODES),
+        )
+        progress(
+            "FIT_BENCHMARK_PASS",
+            threads=8,
+            fixed_fit_seconds=float(fit["fixed_fit_seconds"]),
+            fit_maxrss_kib=int(fit["maxrss_kib"]),
         )
     resources=monitor.report()
 
@@ -448,6 +518,15 @@ def main()->int:
         ),
     }
     atomic_json(payload,report_path)
+    progress(
+        "COMPLETE_PASS" if passed else "COMPLETE_FAIL",
+        selected_collection_threads=int(selected_threads),
+        multiseed_speedup=float(multi_speedup),
+        projected_end_to_end_speedup=float(projected_speedup),
+        criteria=criteria,
+        resources=resources,
+        report=str(report_path),
+    )
     print(
         "POSTLONG_10315_PERFORMANCE_GATE_PASS"
         if passed else
