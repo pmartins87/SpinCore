@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import audit_3h_fresh_semantic_strategy_distill_10105 as distill
 import audit_3h_fresh_semantic_strategy_independent500_10105 as confirm
 import audit_3h_semantic_tail_strong_hand_coverage_10115 as coverage
+import postlong_10315_collection as compact
 from audit_3h_average_policy_semantic_continuation_10105 import (
     semantic_vector_from_obs,
 )
@@ -145,9 +146,12 @@ def main() -> int:
     ap.add_argument("--out-tail", type=Path, required=True)
     ap.add_argument("--out-fullpool", type=Path, required=True)
     ap.add_argument("--threads", type=int, default=8)
+    ap.add_argument("--collection-threads", type=int, default=None)
     args = ap.parse_args()
 
-    torch.set_num_threads(int(args.threads))
+    fit_threads=int(args.threads)
+    collection_threads=int(args.collection_threads or args.threads)
+    torch.set_num_threads(collection_threads)
     cp = args.checkpoint.resolve(strict=True)
     if distill.sha256(cp) != EXPECTED_SHA:
         raise RuntimeError("source 10105 checkpoint SHA mismatch")
@@ -172,21 +176,25 @@ def main() -> int:
 
     step0_v1, _, step0_sem, _ = confirm.initial_policy_pair(d3, cfg)
     v1, v1opt, tail, tailopt = confirm.initial_policy_pair(d3, cfg)
+    torch.set_num_threads(fit_threads)
     confirm.train_500(v1, v1opt, tail, tailopt, base_train, cfg)
 
     # Independent novel strong-state pool for the full-pool general model.
     base_strong = [s for s in base_train if strong(s)]
     base_keys = {skey(s) for s in base_strong}
 
-    distill.MASTER_SEED = AUGMENT_SEED
-    aug_a, aug_b, augment_collection = distill.collect_fresh(
-        solver, adv, AUGMENT_EPISODES
+    torch.set_num_threads(collection_threads)
+    aug_train_strong, aug_hold_strong, augment_collection_raw = compact.collect_strong_split(
+        solver,
+        adv,
+        AUGMENT_EPISODES,
+        master_seed=AUGMENT_SEED,
+        progress_prefix="POSTLONG_AUGMENT_EPISODES",
     )
+    augment_collection = compact.canonical_collection_stats(augment_collection_raw)
     seen = set()
     novel = []
-    for s in list(aug_a) + list(aug_b):
-        if not strong(s):
-            continue
+    for s in list(aug_train_strong) + list(aug_hold_strong):
         k = skey(s)
         if k in base_keys or k in seen:
             continue
@@ -199,6 +207,7 @@ def main() -> int:
 
     full_train = list(base_train) + novel
     _, _, fullpool, fullopt = confirm.initial_policy_pair(d3, cfg)
+    torch.set_num_threads(fit_threads)
     train_semantic_only(fullpool, fullopt, full_train, cfg)
     fullpool.eval()
     tail.eval()
@@ -207,6 +216,7 @@ def main() -> int:
     step0_sem.eval()
 
     # Completely independent evaluation.
+    torch.set_num_threads(collection_threads)
     distill.MASTER_SEED = EVAL_SEED
     ev_a, ev_b, eval_collection = distill.collect_fresh(
         solver, adv, EVAL_EPISODES
@@ -217,6 +227,7 @@ def main() -> int:
             f"10315 independent evaluation too small: {len(evaluation)}"
         )
 
+    torch.set_num_threads(fit_threads)
     step0 = distill.metrics(step0_v1, step0_sem, evaluation)
     tail_global = distill.metrics(v1, tail, evaluation)
     full_global = distill.metrics(v1, fullpool, evaluation)
@@ -280,6 +291,8 @@ def main() -> int:
             "source_checkpoint_sha256": EXPECTED_SHA,
             "semantic_completed_iteration": FINAL_ITERATION,
             "selected_steps": SELECTED_STEPS,
+        "collection_threads": collection_threads,
+        "fit_threads": fit_threads,
             "train_collection_seed": BASE_TRAIN_SEED,
             "model_state": {
                 k: v.detach().cpu() for k, v in tail.state_dict().items()
