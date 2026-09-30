@@ -40,7 +40,7 @@ from spincore.solver import SolverLibrary
 def _worker(task):
     (
         seed_index,seed,episodes,threads,
-        checkpoint,semantic_advantage,specialist,solver_path,
+        semantic_advantage,specialist,solver_path,
     )=task
     os.environ["OMP_NUM_THREADS"]=str(int(threads))
     os.environ["MKL_NUM_THREADS"]=str(int(threads))
@@ -51,10 +51,6 @@ def _worker(task):
     except RuntimeError:
         pass
 
-    cp=Path(checkpoint).resolve(strict=True)
-    if serial.distill.sha256(cp)!=serial.EXPECTED_SHA:
-        raise RuntimeError("source checkpoint SHA mismatch")
-    _payload=torch.load(cp,map_location="cpu",weights_only=False)
     adv=serial.load_adv(Path(semantic_advantage))
     base,spec_model,source=serial.load_specialist(Path(specialist))
     solver=SolverLibrary(Path(solver_path).resolve(strict=True))
@@ -119,7 +115,7 @@ def run_parallel(
     tasks=[
         (
             index,int(seed),int(episodes_per_seed),int(threads_per_worker),
-            str(checkpoint),str(semantic_advantage),str(specialist),str(solver),
+            str(semantic_advantage),str(specialist),str(solver),
         )
         for index,seed in enumerate(serial.SEEDS,1)
     ]
@@ -265,7 +261,9 @@ def main()->int:
 
     if serial.distill.sha256(cp)!=serial.EXPECTED_SHA:
         raise RuntimeError("source checkpoint SHA mismatch")
-    _payload=torch.load(cp,map_location="cpu",weights_only=False)
+    # Integrity is established by the frozen checkpoint SHA.  The multiseed
+    # evaluator does not consume the training-checkpoint payload, so do not
+    # deserialize this multi-GB file in the parent or any spawned worker.
     base,spec_model,source=serial.load_specialist(specialist)
 
     results,wall=run_parallel(
