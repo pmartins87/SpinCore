@@ -135,12 +135,16 @@ invariants:
     status: ACTIVE
     scope: LOCAL_HEAVY_RUN_PREFLIGHT
     statement: >
-      Local Ryzen heavy-run preflights must not assume development-only tooling
-      such as pytest is installed in the production training virtualenv unless
-      that dependency is explicitly frozen in the target-host profile. Required
-      local safety/parity smoke checks must use the runtime dependency set or an
-      explicitly provisioned reproducible environment; CI-only test dependencies
-      remain CI concerns.
+      Local Ryzen heavy-run preflights must not assume development/CI-only
+      tooling or parser packages such as pytest or PyYAML are installed in the
+      production training virtualenv unless those dependencies are explicitly
+      frozen in the target-host profile. Required local safety/parity/contract
+      checks must use the runtime dependency set or a dependency-free targeted
+      checker for the exact stage. The exhaustive project-contract YAML lint
+      remains a CI responsibility unless a reproducible local CI environment is
+      explicitly provisioned.
     provenance:
       - user_observed_failure_2026-09-29_missing_pytest_in_venv_lean
+      - user_observed_failure_2026-09-30_missing_pyyaml_in_venv_lean
       - tools/selftest_3h_semantic_parallel_fit.py
+      - tools/check_postlong_10315_performance_gate_preflight.py
