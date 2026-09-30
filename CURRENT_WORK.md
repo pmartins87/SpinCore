@@ -4268,3 +4268,12 @@ collection, model inference, metrics, canonical seed ordering, and criteria are
 unchanged. A regression test now guards this worker-memory isolation.
 
 READY promotion remains fail-closed until CI passes on this exact correction.
+
+
+### 2026-09-30 — postlong-10315 manifest READY
+
+The frozen postlong-10315 stage manifest has been explicitly promoted to READY
+after the target-Ryzen performance gate PASS and CI-verified production-runner
+memory isolation. READY authorizes only the exact postlong rebuild/validation
+runner and its frozen support blobs/profile. It does not promote a policy and
+does not authorize DC1 unless the postlong scientific gate itself passes.
