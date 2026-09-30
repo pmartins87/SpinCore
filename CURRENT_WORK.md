@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-09-29
-Status: **3H SEMANTIC LONG 10115 -> 10315 ACTIVE / POSTLONG PIPELINE PREPARED — DC0 REAL-OPENHOLDEM PARITY PENDING**
+Status: **3H SEMANTIC LONG 10115 -> 10315 PASS / POSTLONG PERFORMANCE GATE NEXT — DC0 REAL-OPENHOLDEM PARITY PENDING**
 
 ## Strategic baseline
 
@@ -4079,3 +4079,52 @@ Durable correction:
 
 Re-run only from the corrected main after project-contract CI validates the new
 runner/manifest binding.
+
+
+## 2026-09-30 — semantic long 10115->10315 COMPLETE PASS
+
+The frozen 3H semantic-Advantage long continuation completed successfully at
+iteration **10315**.
+
+Scientific evidence from the final report:
+- schema: `SPINCORE_3H_SEMANTIC_LONG_CONTINUATION_10115_10315_V1`;
+- status: **PASS**;
+- complete online sequence: **200 iterations**, 10116..10315;
+- roots: **64/iteration**, **12,800/12,800** new roots recorded;
+- ensemble: **8 members**, **1,600 fit steps/member/iteration**;
+- member init/batch seed contract remained constant across all 200 rows;
+- Advantage seen counters remained contiguous across the entire run;
+- all milestone guards at 10165, 10215, 10265 and 10315: **PASS**;
+- final safety guard: **PASS** on every frozen pathology condition;
+- source 10105 mutated: **false**;
+- HU training performed: **false**;
+- final ensemble SHA256:
+  `acf86fa05d7e6ac611fa60a346758a3d838c7918937d14488810af9c95abf5ca`;
+- final resume SHA256:
+  `601d1fed1749b8fa234cb5ab94107f837fcaddafa3c05d178af64116df114642`;
+- uploaded final JSON SHA256:
+  `7396344bd7d890e142c4b1bf1e68ca0c449676c431643da0714cdcd093e145d1`;
+- status remains **RESEARCH_ONLY_NOT_PROMOTED**.
+
+Performance evidence from the actual mixed serial/parallel run:
+- serial segment 10116..10222: mean fit **489.557 s**, mean whole iteration
+  **500.562 s**;
+- exact-parity 4x8 segment 10223..10315: mean fit **280.791 s**, mean whole
+  iteration **292.148 s**;
+- realized fit speedup: **1.7435x**;
+- realized whole-iteration speedup: **1.7134x**;
+- optimized resume invocation report wall: **28,611.069 s = 7.9475 h**;
+- shell wall clock including wrapper/build/pre/post steps: **7:37:34**;
+- average CPU reported by /usr/bin/time: **2900%**;
+- max RSS: **14,881,672 KiB**;
+- swaps: **0**.
+
+Interpretation remains exactly scoped: this PASS proves that the frozen
+semantic-Advantage architecture completed the 200-iteration long continuation
+without tripping its precommitted pathology guards. It does **not** itself
+produce or promote a deployable AveragePolicy. The next scientific gate remains
+fresh 10315 policy distillation, fixed specialist rebuild, and independent
+validation.
+
+The postlong stage is still fail-closed on its own target-Ryzen performance
+gate. Completion of the long run does not waive that requirement.
