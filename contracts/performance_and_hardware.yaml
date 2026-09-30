@@ -138,9 +138,12 @@ invariants:
       collection counts and identical ordered unique-strong sample content.
       Validation streams with independently frozen seeds may execute in separate
       processes when each per-seed stream is exact and the parent restores the
-      canonical frozen seed order before pooled metrics. The production profile
-      remains fail-closed until measured Ryzen throughput and memory headroom
-      pass the stage performance gate.
+      canonical frozen seed order before pooled metrics. Collection workers must
+      load only state they actually consume; a parent-validated multi-GB training
+      checkpoint must not be redundantly deserialized into each worker when the
+      collection path uses only the frozen semantic teacher and solver. The
+      production profile remains fail-closed until measured Ryzen throughput and
+      memory headroom pass the stage performance gate.
     provenance:
       - PERF-001
       - PERF-013
