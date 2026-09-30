@@ -20,7 +20,15 @@
     "MODEL-023",
     "VALID-020",
     "VALID-021",
-    "VALID-022"
+    "VALID-022",
+    "GOV-023",
+    "PERF-014",
+    "PERF-015",
+    "PERF-017",
+    "PERF-025",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
   ],
   "affected_domains": [
     "TRAIN",
@@ -40,7 +48,8 @@
   "performance_gate": {
     "status": "PENDING",
     "evidence": null,
-    "requirement": "Benchmark actual postlong collection+fit path on Ryzen, prove semantic parity, and select measured throughput profile before launch."
+    "runner": "tools/run_3h_semantic_postlong_10315_performance_gate.sh",
+    "requirement": "Benchmark canonical full collection and memory-safe strong-only collection across Ryzen thread profiles; prove exact sample/unique-strong parity; prove exact four-seed process-parallel validation; measure memory/swap and projected end-to-end speedup before launch."
   },
-  "block_reason": "The comprehensive contract audit is complete. This stage remains blocked only until a parity-preserving target-Ryzen throughput gate is completed for the exact postlong collection+fit execution path."
+  "block_reason": "Long semantic training completed PASS. Postlong remains fail-closed only until the dedicated target-Ryzen exact parity/throughput gate passes and freezes collection/multiseed execution profile."
 }
