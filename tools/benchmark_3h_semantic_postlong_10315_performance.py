@@ -69,20 +69,22 @@ def _set_threads(threads:int)->None:
         pass
 
 
-def _load_teacher(checkpoint:str,adv_path:str,solver_path:str):
-    cp=Path(checkpoint).resolve(strict=True)
-    if distill.sha256(cp)!=distill.EXPECTED_SHA:
-        raise RuntimeError("source checkpoint SHA mismatch")
-    _payload=torch.load(cp,map_location="cpu",weights_only=False)
+def _load_collection_context(adv_path:str,solver_path:str):
+    # Collection depends only on the frozen 10315 semantic-Advantage teacher
+    # and solver.  Do NOT deserialize the ~multi-GB 10105 training checkpoint
+    # in collection workers: the parent validates that checkpoint once and the
+    # collection path never consumes its payload.  This is especially important
+    # for process-parallel multiseed validation, where redundant torch.load()
+    # copies create a large transient memory fan-out without changing semantics.
     adv,_adv_payload=policy.load_adv(Path(adv_path))
     solver=SolverLibrary(Path(solver_path).resolve(strict=True))
-    return cp,adv,solver
+    return adv,solver
 
 
 def _full_worker(task):
-    checkpoint,adv_path,solver_path,seed,episodes,threads=task
+    adv_path,solver_path,seed,episodes,threads=task
     _set_threads(int(threads))
-    _cp,adv,solver=_load_teacher(checkpoint,adv_path,solver_path)
+    adv,solver=_load_collection_context(adv_path,solver_path)
     distill.MASTER_SEED=int(seed)
     started=time.perf_counter()
     a,b,stats=distill.collect_fresh(solver,adv,int(episodes))
@@ -105,9 +107,9 @@ def _full_worker(task):
 
 
 def _compact_worker(task):
-    checkpoint,adv_path,solver_path,seed,episodes,threads=task
+    adv_path,solver_path,seed,episodes,threads=task
     _set_threads(int(threads))
-    _cp,adv,solver=_load_teacher(checkpoint,adv_path,solver_path)
+    adv,solver=_load_collection_context(adv_path,solver_path)
     started=time.perf_counter()
     a,b,stats=compact.collect_strong_split(
         solver,
@@ -138,9 +140,9 @@ def _run_isolated(fn,task):
 
 
 def _serial_four_worker(task):
-    checkpoint,adv_path,solver_path,seeds,episodes,threads=task
+    adv_path,solver_path,seeds,episodes,threads=task
     _set_threads(int(threads))
-    _cp,adv,solver=_load_teacher(checkpoint,adv_path,solver_path)
+    adv,solver=_load_collection_context(adv_path,solver_path)
     rows=[]
     started=time.perf_counter()
     for seed in seeds:
@@ -167,8 +169,9 @@ def _serial_four_worker(task):
 def _fit_worker(task):
     checkpoint,adv_path,solver_path,episodes=task
     _set_threads(8)
-    cp,adv,solver=_load_teacher(checkpoint,adv_path,solver_path)
+    cp=Path(checkpoint).resolve(strict=True)
     payload=torch.load(cp,map_location="cpu",weights_only=False)
+    adv,solver=_load_collection_context(adv_path,solver_path)
     d3=(payload.get("domains") or {}).get(distill.DOMAIN) or {}
     cfg=dict(payload.get("config") or {})
     distill.MASTER_SEED=int(policy.BASE_TRAIN_SEED)
@@ -284,14 +287,26 @@ def main()->int:
                 {
                     "stage":str(stage),
                     "meminfo":payload["meminfo"],
-                    **{k:v for k,v in extra.items() if k in ("threads","workers","speedup","exact")},
+                    **{
+                        k:v for k,v in extra.items()
+                        if k in (
+                            "threads","workers","speedup","exact",
+                            "worker_maxrss_kib","checkpoint_size_gib","adv_size_gib",
+                        )
+                    },
                 },
                 sort_keys=True,
             ),
             flush=True,
         )
 
-    progress("START")
+    if distill.sha256(cp)!=distill.EXPECTED_SHA:
+        raise RuntimeError("source checkpoint SHA mismatch")
+    progress(
+        "START",
+        checkpoint_size_gib=float(cp.stat().st_size)/(1024**3),
+        adv_size_gib=float(adv.stat().st_size)/(1024**3),
+    )
 
     r=json.loads(long_report.read_text(encoding="utf-8"))
     if r.get("schema")!="SPINCORE_3H_SEMANTIC_LONG_CONTINUATION_10115_10315_V1":
@@ -303,7 +318,7 @@ def main()->int:
     if str(r.get("final_ensemble_sha256"))!=distill.sha256(adv):
         raise RuntimeError("teacher ensemble hash/report mismatch")
 
-    task_base=(str(cp),str(adv),str(solver),int(policy.AUGMENT_SEED),BENCH_EPISODES)
+    task_base=(str(adv),str(solver),int(policy.AUGMENT_SEED),BENCH_EPISODES)
     with Monitor() as monitor:
         progress("REFERENCE_BEGIN",threads=8)
         reference=_run_isolated(_full_worker,task_base+(8,))
@@ -380,7 +395,7 @@ def main()->int:
         serial4=_run_isolated(
             _serial_four_worker,
             (
-                str(cp),str(adv),str(solver),
+                str(adv),str(solver),
                 tuple(int(x) for x in multiseed.SEEDS),
                 BENCH_EPISODES,selected_threads,
             ),
@@ -391,13 +406,13 @@ def main()->int:
             threads=selected_threads,
             workers=1,
             serial_wall_seconds=float(serial4["wall_seconds"]),
-            serial_maxrss_kib=int(serial4["maxrss_kib"]),
+            worker_maxrss_kib=int(serial4["maxrss_kib"]),
         )
 
         ctx=mp.get_context("spawn")
         parallel_tasks=[
             (
-                str(cp),str(adv),str(solver),int(seed),
+                str(adv),str(solver),int(seed),
                 BENCH_EPISODES,selected_threads,
             )
             for seed in multiseed.SEEDS
