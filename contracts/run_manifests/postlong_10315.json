@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION",
-  "status": "BLOCKED_PERFORMANCE_GATE",
+  "status": "READY",
   "runner": "tools/run_3h_semantic_postlong_10315.sh",
   "runner_blob_sha": "eb2d85002ab0b0e5a08e3051d8ea9ee0e72da2b9",
   "contract_ids": [
@@ -58,7 +58,7 @@
     "min_mem_available_gib": 15.042491912841797,
     "max_swap_used_gib": 0
   },
-  "block_reason": "Long semantic training completed PASS. Postlong remains fail-closed only until the dedicated target-Ryzen exact parity/throughput gate passes and freezes collection/multiseed execution profile.",
+  "block_reason": null,
   "selected_profile": {
     "collection_threads": 1,
     "fit_threads": 8,
