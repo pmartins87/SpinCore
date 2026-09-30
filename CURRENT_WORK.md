@@ -4218,3 +4218,33 @@ Observability hardening is now part of the rerun path:
 This is semantically inert instrumentation under GOV-021. The next local rerun is authorized
 only after main CI confirms the instrumented gate is syntactically/regression clean. If it
 terminates again, the last durable phase journal becomes the primary fault-localization evidence.
+
+
+### 2026-09-30 — multiseed parallel crash reproduced; redundant checkpoint fan-out removed
+
+The instrumented retry reproduced the interruption at an exact phase boundary:
+reference PASS, all 1/2/4/8-thread collection profiles PASS with exact parity,
+serial four-seed multiseed PASS, then the process disappeared immediately after
+MULTISEED_PARALLEL_BEGIN. This localizes the fault to the concurrent four-worker
+transition rather than to collector semantics or the serial multiseed stream.
+
+Code inspection found an execution-only defect in the benchmark worker loader:
+every full/compact/serial collection worker called torch.load() on the frozen
+10105 training checkpoint even though collection never consumed that payload.
+The project had already documented this checkpoint at roughly 2.8 GB and had
+previously avoided fanning it out to multiprocess DC1 workers for the same
+reason. Four spawned validation workers therefore incurred a large redundant
+deserialization/memory burst exactly at the reproduced failure boundary.
+
+Correction on main:
+- collection workers now load only the frozen 10315 semantic teacher and solver;
+- the parent validates the 10105 checkpoint SHA once before any worker starts;
+- the fit benchmark still loads the checkpoint because it actually consumes
+  domains/config, but only once instead of the previous duplicate load;
+- a regression test forbids torch.load/checkpoint fan-out in collection workers;
+- PERF-025 now records the worker-memory isolation rule;
+- phase journaling remains active so a repeated failure still localizes exactly.
+
+This does not change seeds, episodes, sample order, teacher inference, action RNG,
+training, thresholds, or promotion criteria. The postlong stage remains blocked
+until the complete target-Ryzen gate passes.
