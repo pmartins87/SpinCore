@@ -4164,3 +4164,28 @@ The postlong manifest remains **BLOCKED_PERFORMANCE_GATE**. A gate PASS is
 necessary but not sufficient: the measured profile must then be frozen into the
 manifest with exact runner/support hashes before the full postlong stage can
 start.
+
+
+### 2026-09-30 — postlong performance gate local dependency preflight fix
+
+The first local postlong-10315 performance-gate launch stopped before any
+benchmark because `.venv_lean` does not contain PyYAML and the shell runner
+incorrectly invoked the full repository YAML contract linter locally.
+
+This is the same class of environment-boundary defect previously exposed by
+the missing local pytest dependency: the production training virtualenv must
+not be silently treated as the CI/development environment.
+
+Durable correction:
+- the local performance gate no longer invokes
+  `tools/check_project_contract.py`;
+- `tools/check_postlong_10315_performance_gate_preflight.py` is a
+  dependency-free standard-library checker for the exact stage. It verifies
+  root contract COMPLETE, required invariant IDs, the blocked/PENDING postlong
+  manifest, target Ryzen profile, and the completed semantic-long evidence;
+- exhaustive YAML contract lint remains enforced by GitHub project-contract CI;
+- `GOV-024` now explicitly covers both pytest and PyYAML/CI-only parser
+  dependencies.
+
+The failed attempt did not enter the benchmark and did not mutate any training,
+teacher, checkpoint, or postlong artifact.
