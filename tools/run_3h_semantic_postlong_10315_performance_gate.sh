@@ -17,6 +17,7 @@ ADV="${LONG}/semantic_long_ensemble_final_10315.pt"
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
 WORK="${LONG}/postlong_performance_gate"
 REPORT="${WORK}/postlong_10315_performance_gate.json"
+PROGRESS="${WORK}/postlong_10315_performance_gate_progress.json"
 
 EXPECTED_CP="f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0"
 EXPECTED_ADV="acf86fa05d7e6ac611fa60a346758a3d838c7918937d14488810af9c95abf5ca"
@@ -66,6 +67,7 @@ if command -v powershell.exe >/dev/null 2>&1; then
   DWSL="$(wslpath -u "${DWIN}" 2>/dev/null || true)"
   if [[ -n "${DWSL}" && -d "${DWSL}" ]]; then
     [[ -f "${REPORT}" ]] && cp -f "${REPORT}" "${DWSL}/SpinCore_3H_postlong_10315_performance_gate.json" || true
+    [[ -f "${PROGRESS}" ]] && cp -f "${PROGRESS}" "${DWSL}/SpinCore_3H_postlong_10315_performance_gate_progress.json" || true
     [[ -f "${WORK}/postlong_10315_performance_gate.log" ]] && cp -f "${WORK}/postlong_10315_performance_gate.log" "${DWSL}/SpinCore_3H_postlong_10315_performance_gate.log" || true
   fi
 fi
