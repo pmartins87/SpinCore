@@ -4248,3 +4248,23 @@ Correction on main:
 This does not change seeds, episodes, sample order, teacher inference, action RNG,
 training, thresholds, or promotion criteria. The postlong stage remains blocked
 until the complete target-Ryzen gate passes.
+
+
+### 2026-09-30 — postlong-10315 Ryzen performance gate PASS
+
+The complete target-Ryzen performance/parity gate passed on the corrected
+memory-isolated collection path. Evidence SHA256:
+f6731c1639b697ce94489b1e4a23e9f4d2240acae606316bcf8390605fc074ee.
+
+Measured profile: collection=1 thread; fit=8 threads; multiseed=4 workers x 1
+thread. Four-seed parity was exact. Multiseed speedup was 3.4910938707293395x;
+projected end-to-end speedup was 1.6879905346304902x; minimum MemAvailable was
+15.042491912841797 GiB; swap use was zero.
+
+Before READY promotion, the actual production multiseed runner was audited and
+the same unused 10105 checkpoint deserialization was found in each spawned
+worker. It was removed while retaining parent SHA validation. Per-seed RNG,
+collection, model inference, metrics, canonical seed ordering, and criteria are
+unchanged. A regression test now guards this worker-memory isolation.
+
+READY promotion remains fail-closed until CI passes on this exact correction.
