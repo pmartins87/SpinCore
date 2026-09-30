@@ -66,6 +66,12 @@ jobs:
           set -euo pipefail
           python -m compileall -q python tools python_tests
 
+      - name: Postlong 10315 local contract preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/check_postlong_10315_performance_gate_preflight.py
+
       - name: Python regression
         shell: bash
         env:
