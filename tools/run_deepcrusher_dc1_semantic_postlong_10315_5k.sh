@@ -5,7 +5,7 @@ ROOT="${HOME}/spincore_lean_functional"
 cd "${ROOT}"
 PY="${ROOT}/.venv_lean/bin/python"
 
-# PROJECT_CONTRACT_IDS: BENCH-001,BENCH-002,BENCH-003,BENCH-004,BENCH-005,DC-001,DC-002,DC-004,PERF-001,VALID-001,VALID-023,VALID-024,SAFE-001,ART-001,SRC-003
+# PROJECT_CONTRACT_IDS: BENCH-001,BENCH-002,BENCH-003,BENCH-004,BENCH-005,DC-001,DC-002,DC-004,BENCH-014,PERF-001,PERF-010,PERF-011,PERF-013,PERF-014,PERF-019,VALID-001,VALID-023,VALID-024,SAFE-001,ART-001,SRC-003
 "${PY}" tools/check_stage_manifest.py --manifest contracts/run_manifests/dc1_postlong_10315_5k.json --runner tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
 
@@ -82,7 +82,7 @@ echo "DC1_POSTLONG_5K_BASELINE_START"
 "${PY}" tools/evaluate_deepcrusher_dc1.py \
   --solver "${SOLVER}" \
   --spin-bundle "${BASE_BUNDLE}" \
-  --scenarios "${SCENARIOS}" --workers 8 --seed "${SEED}" \
+  --scenarios "${SCENARIOS}" --workers 16 --seed "${SEED}" \
   --report "${BASE_REPORT}" --traces "${BASE_TRACES}" --max-decisions 300
 "${PY}" tools/audit_benchmark_decisions.py \
   --traces "${BASE_TRACES}" --report "${BASE_SANITY}" --max-examples-per-code 100
@@ -92,7 +92,7 @@ echo "DC1_POSTLONG_5K_10115_START"
   --solver "${SOLVER}" \
   --base-spin-bundle "${BASE_BUNDLE}" \
   --semantic-policy "${OLD_SPEC}" \
-  --scenarios "${SCENARIOS}" --workers 8 --seed "${SEED}" \
+  --scenarios "${SCENARIOS}" --workers 16 --seed "${SEED}" \
   --report "${OLD_REPORT}" --traces "${OLD_TRACES}" --max-decisions 300
 "${PY}" tools/audit_benchmark_decisions.py \
   --traces "${OLD_TRACES}" --report "${OLD_SANITY}" --max-examples-per-code 100
@@ -102,7 +102,7 @@ echo "DC1_POSTLONG_5K_10315_START"
   --solver "${SOLVER}" \
   --base-spin-bundle "${BASE_BUNDLE}" \
   --semantic-policy "${NEW_SPEC}" \
-  --scenarios "${SCENARIOS}" --workers 8 --seed "${SEED}" \
+  --scenarios "${SCENARIOS}" --workers 16 --seed "${SEED}" \
   --report "${NEW_REPORT}" --traces "${NEW_TRACES}" --max-decisions 300
 "${PY}" tools/audit_benchmark_decisions.py \
   --traces "${NEW_TRACES}" --report "${NEW_SANITY}" --max-examples-per-code 100
