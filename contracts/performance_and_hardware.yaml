@@ -127,3 +127,23 @@ invariants:
       - PERF-022
       - GOV-023
       - user_decision_2026-09-29_semantic_long_parallel_migration
+
+  - id: PERF-025
+    status: ACTIVE
+    scope: POSTLONG_STRONG_STATE_COLLECTION_AND_INDEPENDENT_SEED_VALIDATION
+    statement: >
+      When a postlong stage needs only the strong/Fold-legal subset of a
+      deterministic teacher stream, it may avoid retaining unrelated decision
+      samples only if a target-host parity gate proves identical canonical
+      collection counts and identical ordered unique-strong sample content.
+      Validation streams with independently frozen seeds may execute in separate
+      processes when each per-seed stream is exact and the parent restores the
+      canonical frozen seed order before pooled metrics. The production profile
+      remains fail-closed until measured Ryzen throughput and memory headroom
+      pass the stage performance gate.
+    provenance:
+      - PERF-001
+      - PERF-013
+      - PERF-015
+      - tools/postlong_10315_collection.py
+      - tools/benchmark_3h_semantic_postlong_10315_performance.py
