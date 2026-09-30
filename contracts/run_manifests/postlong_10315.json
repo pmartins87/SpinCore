@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "POSTLONG_3H_SEMANTIC_10315_REBUILD_AND_VALIDATION",
-  "status": "READY",
+  "status": "COMPLETE_PASS",
   "runner": "tools/run_3h_semantic_postlong_10315.sh",
   "runner_blob_sha": "eb2d85002ab0b0e5a08e3051d8ea9ee0e72da2b9",
   "contract_ids": [
@@ -72,5 +72,12 @@
     "tools/audit_3h_semantic_stratified_specialist_multiseed_10315.py": "6b39b1cb8e5ba6a1a8bf92bc4c6437354fdea679",
     "tools/audit_3h_semantic_stratified_specialist_multiseed_10315_parallel.py": "1e9217cc5537e1bd657edc084847090c8be51f98",
     "tools/postlong_10315_collection.py": "0c606b1ac97262729b1a43a7330387162de68ce1"
+  },
+  "validation_result": {
+    "evidence": "validation/POSTLONG_10315_VALIDATION_RESULT_20260930.json",
+    "bundle_sha256": "c8d979be47e30f56c281845eea0bc84c80298bfb969daa3ff96708c7bfc5fcfc",
+    "policy_rebuild_pass": true,
+    "specialist_build_pass": true,
+    "multiseed_confirmation_pass": true
   }
 }
