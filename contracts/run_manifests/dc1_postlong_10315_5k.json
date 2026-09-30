@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "DC1_POSTLONG_10315_FRESH_SEED_5K",
-  "status": "BLOCKED_UPSTREAM_AND_PERFORMANCE_GATE",
+  "status": "BLOCKED_PERFORMANCE_GATE",
   "runner": "tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh",
   "runner_blob_sha": null,
   "contract_ids": [
@@ -38,5 +38,10 @@
     "evidence": null,
     "requirement": "Measure the three-arm 5k benchmark workload on the target Ryzen and freeze a memory-safe worker profile before launch."
   },
-  "block_reason": "The comprehensive contract audit is complete. This stage requires postlong 10315 rebuild/validation PASS and a fresh memory-safe target-Ryzen throughput profile for the three-arm 5k benchmark workload."
+  "block_reason": "Postlong 10315 is COMPLETE_PASS. DC1 5k remains fail-closed only until its target-Ryzen three-arm worker-profile performance gate passes and freezes a memory-safe profile.",
+  "upstream_postlong": {
+    "status": "COMPLETE_PASS",
+    "manifest": "contracts/run_manifests/postlong_10315.json",
+    "bundle_sha256": "c8d979be47e30f56c281845eea0bc84c80298bfb969daa3ff96708c7bfc5fcfc"
+  }
 }
