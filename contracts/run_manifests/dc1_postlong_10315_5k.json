@@ -1,9 +1,9 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "DC1_POSTLONG_10315_FRESH_SEED_5K",
-  "status": "BLOCKED_PERFORMANCE_GATE",
+  "status": "READY",
   "runner": "tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh",
-  "runner_blob_sha": null,
+  "runner_blob_sha": "e3e49fef8a75dce56932625dc5a3751a43d4f7ee",
   "contract_ids": [
     "BENCH-001",
     "BENCH-002",
@@ -19,7 +19,13 @@
     "ART-001",
     "SRC-003",
     "VALID-023",
-    "VALID-024"
+    "VALID-024",
+    "BENCH-014",
+    "PERF-010",
+    "PERF-011",
+    "PERF-013",
+    "PERF-014",
+    "PERF-019"
   ],
   "affected_domains": [
     "BENCH",
@@ -34,14 +40,44 @@
   "duration_class": "LONG_GT_60M",
   "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
   "performance_gate": {
-    "status": "PENDING",
-    "evidence": null,
-    "requirement": "Measure the three-arm 5k benchmark workload on the target Ryzen and freeze a memory-safe worker profile before launch."
+    "status": "PASS",
+    "evidence": "runs/dc1_postlong_10315_performance_gate/dc1_postlong_10315_performance_gate.json",
+    "evidence_sha256": "11b987bda14c4d97bf15ed379cfb27213a599ff5cb55c4340eed7bb509cc5622",
+    "schema": "SPINCORE_DC1_POSTLONG_10315_PERFORMANCE_GATE_V1",
+    "performance_seed": 20269930,
+    "scientific_seed_20261001_used": false,
+    "scenarios_per_arm": 200,
+    "tested_workers": [
+      4,
+      8,
+      16,
+      32
+    ],
+    "exact_all_successful_profiles": true,
+    "selected_workers": 16,
+    "selected_threads_per_worker": 1,
+    "selected_projected_three_arm_5k_seconds": 436.28055850000004,
+    "selected_min_mem_available_gib": 22.751495361328125,
+    "selected_max_swap_used_gib": 0,
+    "requirement": "Freeze the exact memory-safe target-Ryzen worker profile for the three-arm 5k benchmark before launch."
   },
-  "block_reason": "Postlong 10315 is COMPLETE_PASS. DC1 5k remains fail-closed only until its target-Ryzen three-arm worker-profile performance gate passes and freezes a memory-safe profile.",
+  "block_reason": null,
   "upstream_postlong": {
     "status": "COMPLETE_PASS",
     "manifest": "contracts/run_manifests/postlong_10315.json",
     "bundle_sha256": "c8d979be47e30f56c281845eea0bc84c80298bfb969daa3ff96708c7bfc5fcfc"
+  },
+  "selected_profile": {
+    "workers": 16,
+    "threads_per_worker": 1
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/export_spincore_hybrid_inference.py": "b8c38334262d56f1e0cf4d54857d9c6cb9162a4b",
+    "tools/evaluate_deepcrusher_dc1.py": "0c5acd5d14b2f20699ff69b20ca25c937c3b02af",
+    "tools/evaluate_deepcrusher_dc1_semantic_candidate.py": "3b2b48ab13c635c72e50cd86b1d2e1a794c5cba3",
+    "tools/evaluate_deepcrusher_dc1_semantic_candidate_10315.py": "d1a5d33a7f721ba7282227a3b1fe497817c057b9",
+    "tools/audit_benchmark_decisions.py": "e400d7034b2db0e04159db53d9da10cbdaeeeed5",
+    "tools/test_deepcrusher_nouts_native_collision.py": "6432f0b4b3a08ae4bd2a2476c1957b0d757fc3dc"
   }
 }
