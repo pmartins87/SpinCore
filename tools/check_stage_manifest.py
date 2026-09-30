@@ -111,6 +111,20 @@ def main() -> int:
             f"STAGE_CONTRACT_FAIL runner blob drift actual={actual_blob} expected={expected_blob}"
         )
 
+    support = m.get("support_blob_shas") or {}
+    if not isinstance(support, dict) or not support:
+        raise SystemExit("STAGE_CONTRACT_FAIL READY stage lacks support_blob_shas")
+    for rel, expected in sorted(support.items()):
+        path = ROOT / str(rel)
+        if not path.is_file():
+            raise SystemExit(f"STAGE_CONTRACT_FAIL support file missing: {rel}")
+        actual = git_blob(path)
+        if actual != str(expected):
+            raise SystemExit(
+                f"STAGE_CONTRACT_FAIL support blob drift path={rel} "
+                f"actual={actual} expected={expected}"
+            )
+
     print("STAGE_CONTRACT_PASS")
     print("stage_id=" + str(m.get("stage_id")))
     print("runner=" + runner_path.relative_to(ROOT).as_posix())
