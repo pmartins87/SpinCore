@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# PROJECT_CONTRACT_IDS: VALID-025,VALID-030,VALID-031,VALID-032,SAFE-001,PERF-010,PERF-013,RNG-001,RNG-002,RNG-003,ART-001,SRC-003
+
 ROOT="${HOME}/spincore_lean_functional"
 cd "${ROOT}"
 PY="${ROOT}/.venv_lean/bin/python"
