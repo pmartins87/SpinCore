@@ -4318,3 +4318,31 @@ requirement that every later checkpoint beat the immediately previous one.
 
 This does not waive hard safety failures. It prevents noisy short-horizon EV
 comparisons from prematurely terminating a long training program.
+
+
+### 2026-10-01 — seed-cross 10315 rebuild variance confirmed material
+
+The same frozen 10315 teacher was rebuilt with the previously used 10115
+data-seed family and compared against the original 10315 rebuild and accepted
+10115 on a fresh common-state bank (seed 20261012; 20000 forced-3H episodes;
+89392 decisions).
+
+Preflop 72o All-in: original10315-vs-10115 mean absolute policy delta was
+0.0219816; same-teacher seed-cross-vs-original10315 was 0.0161792, a ratio
+0.7360. Strong-hand Fold: the corresponding values were 0.0164993 and
+0.0145630, ratio 0.8826.
+
+Conclusion: rebuild/data-sampling variance is a material contributor to the
+apparent 10115->10315 deployable-policy shift. This does not prove all teacher
+movement is noise, but a single rebuilt policy cannot be used as a precise proxy
+for teacher progression.
+
+The 10315 deployable single rebuild remains not promoted. The 10315 Advantage
+teacher remains a valid research continuation source. Future macro-checkpoint
+strength evidence must stabilize or explicitly model rebuild-seed dispersion
+(VALID-035).
+
+Next training horizon is frozen before any new strength result: 10315->15315,
+5000 additional iterations / 320000 roots, safety milestones every 500
+iterations, no comparative strength benchmark before 15315 unless a hard
+safety/integrity stop fires.
