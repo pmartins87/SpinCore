@@ -5,7 +5,7 @@ from pathlib import Path
 import runpy
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "contracts" / "run_manifests" / "post15315_multirebuild_preregistration.json"
+MANIFEST = ROOT / "contracts" / "post15315_multirebuild_preregistration.json"
 
 
 def load_manifest():
