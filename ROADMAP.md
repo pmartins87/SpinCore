@@ -4300,3 +4300,11 @@ Exit: immutable two-policy source manifest. No version-name-only identity.
 - all newly discovered slices are labelled exploratory/post hoc.
 
 Current instruction: advance G0-G4 only. Do not launch a large simulation.
+
+### Post-15315 action-carrier correction — frozen before teacher 15315
+
+All post-15315 rebuild aggregation and stability evidence uses the native
+10-slot universal network carrier. The first-release legacy-7 active slots are
+0,1,3,5,7,8,9; dormant slots 2,4,6 must remain illegal/zero. FOLD is slot 0 and
+ALL_IN is slot 9. Do not compress to a seven-column evidence vector unless a
+separate transformation is explicitly proved lossless and preregistered.

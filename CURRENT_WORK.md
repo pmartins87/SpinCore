@@ -4474,3 +4474,15 @@ Stop condition: **NO LARGE DEEPCRUSHER-vs-CRUSHERTBP SIMULATION** until both
 policies pass exact source freeze, semantic closure, action/lifecycle parity and
 real OpenHoldem fixture parity. This lane is repository engineering and must not
 interrupt or alter the independently frozen SpinCore training macroblock.
+
+### 2026-10-01 — correction to post-15315 stability carrier before teacher 15315
+
+The preregistered rebuild-stability evaluator now uses the native SpinCore
+10-slot universal network carrier, not a synthetic compact seven-column vector.
+The active legacy-7 actions occupy slots 0,1,3,5,7,8,9
+(FOLD, CHECK_CALL, POT_33, POT_50, POT_75, POT_100, ALL_IN); slots 2,4,6
+(MIN_RAISE, POT_40, POT_66) are dormant and must be illegal with zero
+probability. Therefore the rare-tail sentinels use FOLD slot 0 and ALL_IN slot
+9. This correction was made before any teacher-15315 output or post-15315
+rebuild result was observed and prevents a future compact-remapping mismatch
+between the stability gate and the actual policy network.
