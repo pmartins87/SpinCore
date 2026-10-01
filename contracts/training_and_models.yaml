@@ -203,3 +203,18 @@ invariants:
       mutation of an approved exploit artifact.
     provenance:
       - validation/R11_SAFE_EXPLOITATION_GATE_DESIGN_20260812.md
+
+  - id: TRAIN-022
+    status: ACTIVE
+    scope: SEMANTIC_LONG_10315_15315
+    statement: >
+      The next semantic-Advantage macroblock continues the frozen THREE_HANDED
+      teacher from iteration 10315 to 15315: 5000 additional online iterations,
+      64 roots per iteration, eight members, 1600 fit steps per member, canonical
+      lean regret-matching with softmax fallback, frozen HU@10105, and no
+      AveragePolicy or specialist training during the long phase. Safety/integrity
+      milestones occur every 500 iterations; no comparative strength benchmark
+      is run before 15315 unless a hard safety/integrity stop fires.
+    provenance:
+      - ROADMAP.md
+      - CURRENT_WORK.md
