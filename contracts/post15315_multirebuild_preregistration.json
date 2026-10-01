@@ -49,7 +49,10 @@
       "strong_augmentation_teacher_episodes_per_rebuild": 180000,
       "fullpool_fit_steps": 500,
       "start_state": "FROZEN_FINALIZED_10105_AVERAGE_POLICY_AND_OPTIMIZER",
-      "historical_average_policy_continuation": false
+      "historical_average_policy_continuation": false,
+      "min_ordinary_train_samples": 20000,
+      "min_ordinary_holdout_samples": 5000,
+      "min_novel_strong_states": 700
     },
     "specialist": {
       "teacher_episodes_per_rebuild": 300000,
@@ -345,6 +348,8 @@
       "python_tests/test_post15315_multirebuild_preregistration.py",
       "python_tests/test_post15315_rebuild_stability.py"
     ],
-    "production_rebuild_runner_status": "NOT_YET_READY_REQUIRES_TARGET_HOST_PERFORMANCE_GATE_AND_TEACHER_15315"
+    "production_rebuild_runner_status": "NOT_YET_READY_REQUIRES_TARGET_HOST_PERFORMANCE_GATE_AND_TEACHER_15315",
+    "member_builder": "tools/build_post15315_rebuild_member.py",
+    "post15315_collection": "tools/post15315_collection.py"
   }
 }
