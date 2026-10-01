@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-"""Resumable long 3H semantic-Advantage macroblock from 10315 to 15315.\n\nPROJECT_CONTRACT_IDS:\nTRAIN-020,TRAIN-022,MODEL-020,RNG-001,RNG-002,RNG-003,SAFE-002,VALID-034,VALID-035,CKPT-004,ART-015\n
+"""Resumable long 3H semantic-Advantage macroblock from 10315 to 15315.
+
+PROJECT_CONTRACT_IDS:
+TRAIN-020,TRAIN-022,MODEL-020,RNG-001,RNG-002,RNG-003,SAFE-002,VALID-034,VALID-035,CKPT-004,ART-015
+
+
 This is the next long-horizon compute macroblock. Short-horizon strength checks are intentionally omitted; only frozen safety/integrity milestones may stop the run.
 
 The architecture is intentionally frozen:
