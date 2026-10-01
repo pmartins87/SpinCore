@@ -4436,3 +4436,41 @@ and 8,200 policy/specialist fit steps before shared evaluation; K=12 adds
 until a target-Ryzen parity/throughput/memory gate validates the actual
 multi-rebuild execution path. This preparation does not touch the active
 10315->15315 trainer.
+
+
+## 2026-10-01 — DeepCrusher vs CrusherTBP benchmark lane opened
+
+A separate external-strategy benchmark lane is now active for a direct
+DeepCrusher-vs-CrusherTBP comparison. It reuses engineering from the
+SpinCore-vs-DeepCrusher line only after revalidation; no existing DC0 component
+is assumed correct merely because it previously passed an R8-specific gate.
+
+Source audit:
+- historical DeepCrusher R8 v22 remains exactly pinned, but it is not
+  automatically selected as the current DeepCrusher opponent;
+- the newer corrected DeepCrusher operational source must be recovered and
+  hash-pinned before G0 can pass;
+- exact local CrusherTBP candidate `CrusherTBP(2).txt` hashes to
+  `f164207d3b5eaad3f47137e75ea6d4245b76fa78888a897fc9fd67aa858aa000`,
+  but a same-sized Library duplicate must still be reconciled;
+- integrated OpenPPL library audit hash is
+  `eeb0fe6a842e7a6381f0bad31bd216763075da5c2f35d3a20f0b19588b2c0340`.
+
+New hard blockers found before any large run:
+- the portable action bridge does not yet reproduce the complete
+  OpenHoldem `f$allin_on_betsize_balance_ratio` conversion layer;
+- named technical 1/3 and 2/3 bet-pot actions must preserve OpenHoldem's literal
+  0.333 / 0.667 factors rather than a generic mathematical fraction;
+- CrusherTBP connection-initialization lifetime/order must be represented and
+  parity-tested.
+
+Governance is frozen in:
+- `docs/DEEPCRUSHER_VS_CRUSHERTBP_SOURCE_AUDIT_20261001.md`;
+- `docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md`;
+- invariants `DCTBP-001..009` in
+  `contracts/validation_and_benchmarks.yaml`.
+
+Stop condition: **NO LARGE DEEPCRUSHER-vs-CRUSHERTBP SIMULATION** until both
+policies pass exact source freeze, semantic closure, action/lifecycle parity and
+real OpenHoldem fixture parity. This lane is repository engineering and must not
+interrupt or alter the independently frozen SpinCore training macroblock.
