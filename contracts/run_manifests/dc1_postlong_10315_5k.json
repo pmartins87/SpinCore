@@ -124,7 +124,7 @@
     "benchmark_data_isolation": "Do not train/select a replacement candidate on the observed seed 20261001 states, deals, sampled actions, or pathology examples without a new preregistered experiment."
   },
   "next_action": {
-    "status": "DIAGNOSTIC_READY",
+    "status": "SEED_CROSS_VARIANCE_DIAGNOSTIC_READY",
     "accepted_candidate": "specialist_10115",
     "rejected_candidate": "specialist_10315",
     "diagnostic_scope": [
@@ -145,6 +145,41 @@
     "diagnostic_seed": 20261007,
     "diagnostic_episodes": 20000,
     "state_generator": "frozen 10105 hybrid policy on forced THREE_HANDED episodes",
-    "purpose": "Separate ordinary finite-sample/training variance from broad teacher drift versus distillation/generalization drift on common independent states."
+    "purpose": "Rebuild the same frozen 10315 teacher with the previously used 10115 data-seed family, then compare original-vs-seed-crossed 10315 on fresh common states. This isolates rebuild/data-sampling variance from teacher progression.",
+    "common_state_variance_diagnostic": {
+      "status": "COMPLETE",
+      "evidence_sha256": "6b1506c3ff7766f438950ffba5b1037abe873302ec7779046789330d67802594",
+      "seed": 20261007,
+      "episodes": 20000,
+      "decisions": 89613,
+      "preflop_72o": {
+        "count": 553,
+        "old_teacher_mean": 0.046628568393196373,
+        "new_teacher_mean": 0.048597846026520196,
+        "old_policy_mean": 0.047272859351309315,
+        "new_policy_mean": 0.052222825279588374,
+        "old_policy_p95": 0.2902716636657708,
+        "new_policy_p95": 0.39216454029083236,
+        "old_distill_gap_p95": 0.011790603585541235,
+        "new_distill_gap_p95": 0.060523763193844636
+      },
+      "strong_fold": {
+        "count": 442,
+        "old_teacher_mean": 0.011150555747588794,
+        "new_teacher_mean": 0.00823140486825257,
+        "old_policy_mean": 0.030306440959887496,
+        "new_policy_mean": 0.02414993757929693,
+        "old_policy_p95": 0.1578065924346446,
+        "new_policy_p95": 0.12457474991679168,
+        "new_policy_ge_50pct": 5
+      },
+      "interpretation": "Broad teacher drift is not supported. The 10315 deployable policy is broadly similar or better on average, but its rare probability tails move more than the teacher, consistent with finite-sample rebuild/distillation instability as a material contributor."
+    },
+    "seed_cross_runner": "tools/run_3h_10315_rebuild_seed_cross_variance.sh",
+    "seed_cross_runner_blob_sha": "2653b699d46d15321f0a359f88fe8aabef7daafd",
+    "seed_cross_script": "tools/audit_3h_10315_rebuild_seed_cross_variance.py",
+    "seed_cross_script_blob_sha": "2bb6b1ae39e43f59bf7c754e7dfc973631a8cb77",
+    "seed_cross_eval_seed": 20261012,
+    "performance_note": "Execution architecture is unchanged from the already target-Ryzen-gated postlong rebuild; PERF-014 does not require a new benchmark for seed-only diagnostic variation."
   }
 }
