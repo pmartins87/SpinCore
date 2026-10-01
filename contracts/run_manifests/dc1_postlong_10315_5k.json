@@ -124,7 +124,7 @@
     "benchmark_data_isolation": "Do not train/select a replacement candidate on the observed seed 20261001 states, deals, sampled actions, or pathology examples without a new preregistered experiment."
   },
   "next_action": {
-    "status": "SEED_CROSS_VARIANCE_DIAGNOSTIC_READY",
+    "status": "LONG_MACROBLOCK_10315_15315_READY_PENDING_CI",
     "accepted_candidate": "specialist_10115",
     "rejected_candidate": "specialist_10315",
     "diagnostic_scope": [
@@ -180,6 +180,28 @@
     "seed_cross_script": "tools/audit_3h_10315_rebuild_seed_cross_variance.py",
     "seed_cross_script_blob_sha": "2bb6b1ae39e43f59bf7c754e7dfc973631a8cb77",
     "seed_cross_eval_seed": 20261012,
-    "performance_note": "Execution architecture is unchanged from the already target-Ryzen-gated postlong rebuild; PERF-014 does not require a new benchmark for seed-only diagnostic variation."
+    "performance_note": "Execution architecture is unchanged from the already target-Ryzen-gated postlong rebuild; PERF-014 does not require a new benchmark for seed-only diagnostic variation.",
+    "seed_cross_variance_diagnostic": {
+      "status": "COMPLETE",
+      "seed": 20261012,
+      "episodes": 20000,
+      "decisions": 89392,
+      "preflop_72o": {
+        "count": 525,
+        "original10315_vs_10115_mean_abs_delta": 0.021981614558873323,
+        "same_teacher_seedcross_vs_original10315_mean_abs_delta": 0.016179244752912967,
+        "same_teacher_ratio": 0.736035322136148
+      },
+      "strong_fold": {
+        "count": 372,
+        "original10315_vs_10115_mean_abs_delta": 0.016499332182763927,
+        "same_teacher_seedcross_vs_original10315_mean_abs_delta": 0.014562998326137621,
+        "same_teacher_ratio": 0.8826416829979881
+      },
+      "interpretation": "Same-teacher rebuild/data-seed variance is a material contributor to the apparent 10115-to-10315 deployable-policy shift. This does not prove that all drift is rebuild noise, but it rules out treating one rebuilt policy as a precise proxy for teacher progression."
+    },
+    "teacher_10315_status": "VALID_CONTINUATION_SOURCE_RESEARCH_ONLY",
+    "deployable_10315_single_rebuild_status": "NOT_PROMOTED_SINGLE_REBUILD_UNSTABLE",
+    "long_macroblock_manifest": "contracts/run_manifests/semantic_long_10315_15315.json"
   }
 }
