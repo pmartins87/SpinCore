@@ -109,3 +109,19 @@ invariants:
       training semantic.
     provenance:
       - docs/LT2_HU_PREFLOP_BOARD_ONLY_AVERAGING_RESULT_20260918.md
+
+  - id: RNG-013
+    status: ACTIVE
+    scope: POST_15315_MULTI_REBUILD_AND_FRESH_EVALUATION
+    statement: >
+      All post-15315 rebuild-member seeds, the conditional K=12 extension
+      seeds, the common stability/quality/safety seeds, and the fresh DC1/DC2
+      benchmark seeds are frozen in
+      contracts/run_manifests/post15315_multirebuild_preregistration.json before
+      teacher 15315 is observed. These seeds are disjoint from prior observed
+      DC1/common-state diagnostics and from reserved LT3 development/sealed
+      holdout seeds. Seed shopping, result-dependent replacement, and dropping a
+      seeded member are prohibited.
+    provenance:
+      - contracts/run_manifests/post15315_multirebuild_preregistration.json
+      - CURRENT_WORK.md
