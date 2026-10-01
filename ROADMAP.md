@@ -4198,7 +4198,7 @@ percent-complete training counters across historical phases.
 ### Post-15315 multi-rebuild stabilization preregistration — frozen 2026-10-01
 
 Before any teacher-15315 result is observed, freeze
-`contracts/run_manifests/post15315_multirebuild_preregistration.json` as the
+`contracts/post15315_multirebuild_preregistration.json` as the
 required deployable-policy bridge for VALID-035.
 
 Execution order after 15315:
