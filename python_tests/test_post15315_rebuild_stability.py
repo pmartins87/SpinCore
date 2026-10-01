@@ -85,3 +85,14 @@ def test_k12_extension_uses_exactly_100_deterministic_balanced_splits():
     assert a["balanced_half_splits"] == b["balanced_half_splits"]
     assert all(len(row["left_members"]) == 6 for row in a["balanced_half_splits"])
     assert all(len(row["right_members"]) == 6 for row in a["balanced_half_splits"])
+
+
+def test_dormant_universal_slot_cannot_be_marked_legal():
+    probs, legal, s72, trips, hc = synthetic_inputs()
+    legal[:, 2] = True
+    try:
+        stability.evaluate(probs, legal, s72, trips, hc, manifest())
+    except ValueError as exc:
+        assert "dormant" in str(exc)
+    else:
+        raise AssertionError("dormant universal action slot was silently admitted")
