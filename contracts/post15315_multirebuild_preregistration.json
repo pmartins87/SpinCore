@@ -304,5 +304,15 @@
     20261124,
     20261125,
     20261126
-  ]
+  ],
+  "machine_readable_enforcement": {
+    "preregistration_checker": "tools/check_post15315_multirebuild_preregistration.py",
+    "preregistration_runner": "tools/run_post15315_multirebuild_preregistration_check.sh",
+    "stability_evaluator": "tools/evaluate_post15315_rebuild_stability.py",
+    "tests": [
+      "python_tests/test_post15315_multirebuild_preregistration.py",
+      "python_tests/test_post15315_rebuild_stability.py"
+    ],
+    "production_rebuild_runner_status": "NOT_YET_READY_REQUIRES_TARGET_HOST_PERFORMANCE_GATE_AND_TEACHER_15315"
+  }
 }
