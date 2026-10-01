@@ -95,6 +95,16 @@ def main() -> int:
     assert bool(agg["weight_by_fit_or_strength"]) is False
     assert bool(agg["drop_members_after_results"]) is False
     assert agg["representative_policy_selection"] == "PROHIBITED_FOR_PRIMARY_PROMOTION"
+    carrier = agg["action_carrier"]
+    assert carrier["schema"] == "UNIVERSAL_10_SLOT_NETWORK_CARRIER"
+    assert carrier["active_legacy7_slots"] == [0, 1, 3, 5, 7, 8, 9]
+    assert carrier["dormant_slots"] == [2, 4, 6]
+    assert int(carrier["fold_slot"]) == 0
+    assert int(carrier["all_in_slot"]) == 9
+    assert carrier["action_names"] == [
+        "FOLD", "CHECK_CALL", "MIN_RAISE", "POT_33", "POT_40",
+        "POT_50", "POT_66", "POT_75", "POT_100", "ALL_IN",
+    ]
 
     st = data["rebuild_stability_gate"]["thresholds"]
     assert float(st["broad_worst_split_mean_tv_max"]) == 0.03
