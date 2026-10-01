@@ -1,0 +1,115 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "SEMANTIC_LONG_10315_15315",
+  "status": "READY",
+  "runner": "tools/run_3h_semantic_long_10315_15315.sh",
+  "runner_blob_sha": "0058ec76f3998c307ab1e1a53408f2f54b2b5f1b",
+  "contract_ids": [
+    "GOV-023",
+    "GOV-024",
+    "PERF-001",
+    "PERF-002",
+    "PERF-010",
+    "PERF-011",
+    "PERF-012",
+    "PERF-013",
+    "PERF-014",
+    "PERF-015",
+    "PERF-016",
+    "PERF-017",
+    "PERF-019",
+    "PERF-020",
+    "TRAIN-020",
+    "TRAIN-022",
+    "MODEL-020",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003",
+    "CKPT-004",
+    "SAFE-002",
+    "VALID-034",
+    "VALID-035",
+    "ART-015"
+  ],
+  "affected_domains": [
+    "GOV",
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "PERF",
+    "CKPT",
+    "SAFE",
+    "VALID",
+    "ART"
+  ],
+  "duration_class": "LONG_GT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "source_stage": {
+    "stage_id": "SEMANTIC_LONG_10115_10315_PARALLEL_RESUME",
+    "completed_iteration": 10315,
+    "final_ensemble_sha256": "acf86fa05d7e6ac611fa60a346758a3d838c7918937d14488810af9c95abf5ca",
+    "resume_state_sha256": "601d1fed1749b8fa234cb5ab94107f837fcaddafa3c05d178af64116df114642"
+  },
+  "scientific_plan": {
+    "start_iteration": 10315,
+    "target_iteration": 15315,
+    "additional_iterations": 5000,
+    "roots_per_iteration": 64,
+    "expected_new_roots": 320000,
+    "ensemble_size": 8,
+    "member_steps": 1600,
+    "milestones": [
+      10815,
+      11315,
+      11815,
+      12315,
+      12815,
+      13315,
+      13815,
+      14315,
+      14815,
+      15315
+    ],
+    "milestone_purpose": "SAFETY_INTEGRITY_ONLY_NOT_STRENGTH_SELECTION",
+    "strength_benchmark_before_target": false,
+    "hu_training_performed": false
+  },
+  "performance_gate": {
+    "status": "PASS",
+    "mode": "INHERITED_EXACT_EXECUTION_PROFILE",
+    "source_manifest": "contracts/run_manifests/semantic_long_10115_10315_parallel_resume.json",
+    "rationale": "The new macroblock changes only scientific start/target horizon. Per-iteration collector, eight-member 1600-step fitter, packed reservoir transport, concurrency, threads, and target Ryzen host are unchanged, so PERF-014 does not require rebenchmarking.",
+    "production_fit_speedup": 1.6735746472781527,
+    "tensor_exact": true,
+    "final_loss_exact": true,
+    "member_metadata_exact": true,
+    "max_resident_set_kib": 14881928,
+    "swaps": 0
+  },
+  "selected_profile": {
+    "concurrency": 4,
+    "threads_per_member": 8,
+    "declared_threads": 32,
+    "selection_reason": "Inherited fastest exact-parity Ryzen profile from the identical per-iteration 10115->10315 execution path."
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/run_3h_semantic_long_10315_15315.py": "e4ffe0f2e15738fd8f883d7daaae379b6afd4000",
+    "tools/run_3h_semantic_long_10315_15315_parallel.py": "adc833a93fa4592ae2e0b9826023ff44fe93af97",
+    "tools/run_3h_semantic_long_10115_10315.py": "122ff2ffbefc2b0a1f82c361936d52554c78d9b5",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
+    "tools/selftest_3h_semantic_parallel_fit.py": "dbb31f5aeed111ad1736c9b14b7301a35cbb9413"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "AUTHORIZED_LONG_MACROBLOCK_NO_STRENGTH_BENCHMARK_BEFORE_15315",
+    "conditions": [
+      "main project-contract and main-regression CI PASS",
+      "stage manifest and frozen blob hashes match main",
+      "10315 source resume/final ensemble hashes and iteration validate",
+      "no other semantic long trainer is running",
+      "WSL memory preflight passes",
+      "parallel fitter selftest passes"
+    ]
+  }
+}
