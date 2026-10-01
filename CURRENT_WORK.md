@@ -4277,3 +4277,29 @@ after the target-Ryzen performance gate PASS and CI-verified production-runner
 memory isolation. READY authorizes only the exact postlong rebuild/validation
 runner and its frozen support blobs/profile. It does not promote a policy and
 does not authorize DC1 unless the postlong scientific gate itself passes.
+
+
+### 2026-10-01 — common-state 10115 vs 10315 variance attribution
+
+A fresh independent diagnostic used seed 20261007, 20000 forced-3H episodes,
+89613 decisions, and a frozen 10105 state generator. It did not reuse DC1 seed
+20261001 and did not train or select a policy.
+
+On 553 preflop 72o All-in opportunities, the Advantage-teacher mean moved only
+from 0.04663 to 0.04860 while the deployable policy moved from 0.04727 to
+0.05222. The teacher p95 was essentially unchanged (0.33324 -> 0.33305), but
+the deployable-policy p95 rose 0.29027 -> 0.39216 and distillation-gap p95 rose
+0.01179 -> 0.06052.
+
+On 442 postflop trips-plus/Fold-legal opportunities, both teacher and deployable
+policy improved on average: teacher Fold mean 0.01115 -> 0.00823 and policy Fold
+mean 0.03031 -> 0.02415; policy p95 also improved 0.15781 -> 0.12457. Five
+10315 states nevertheless retained >=50% Fold probability, showing a sparse
+tail rather than broad strategic collapse.
+
+Current interpretation: broad teacher deterioration is not supported. Rare-tail
+rebuild/distillation instability is a material hypothesis, with some upper-tail
+teacher movement on weak preflop states. A seed-cross diagnostic is now frozen:
+rebuild the same 10315 teacher using the previously used 10115 data-seed family,
+then compare original-vs-seed-crossed 10315 on fresh seed 20261012. This
+separates rebuild/data-sampling variance from teacher progression.
