@@ -4175,3 +4175,22 @@ The already parity-proven Ryzen 4x8 fitter profile is reused because the
 per-iteration execution path is unchanged. At 15315, deployable-policy evidence
 must use a preregistered rebuild-stabilization protocol rather than one arbitrary
 rebuild seed.
+
+
+### Parallel work while 10315->15315 trains
+
+The long macroblock is intentionally not a waiting period. Without touching the
+running teacher, prepare in parallel:
+1. preregister the 15315 multi-rebuild stabilization protocol required by
+   VALID-035, including rebuild count, seeds, aggregation/dispersion reporting,
+   and fresh evaluation seeds before any 15315 result exists;
+2. advance DC0 real-OpenHoldem action+sizing parity, the remaining blocker for a
+   canonical external-strength claim;
+3. harden resume/interruption verification for the multi-day 10315->15315 run
+   and provide lightweight progress/resource inspection that does not mutate the
+   run;
+4. prepare the post-15315 bounded evaluation pipeline, but do not execute any
+   comparative strength benchmark before 15315.
+
+TRAIN-023 forbids interpreting absolute iteration labels as homogeneous
+percent-complete training counters across historical phases.
