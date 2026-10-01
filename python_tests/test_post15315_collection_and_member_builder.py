@@ -62,10 +62,13 @@ def patch_collection_runtime(monkeypatch):
     monkeypatch.setattr(collection.distill, "LegacyScenarioSampler", DummySampler)
     monkeypatch.setattr(collection.distill, "LegacyScenarioConfig", lambda: object())
     monkeypatch.setattr(collection.distill, "LeanSolverState", DummyState)
+    class DummyActionSpec:
+        @staticmethod
+        def active_mask(street):
+            return 0x3FF
+
     monkeypatch.setattr(
-        collection.distill.FIRST_RELEASE_ACTION_SPEC,
-        "active_mask",
-        lambda street: 0x3FF,
+        collection.distill, "FIRST_RELEASE_ACTION_SPEC", DummyActionSpec()
     )
     monkeypatch.setattr(
         collection.distill,
