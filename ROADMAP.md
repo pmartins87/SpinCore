@@ -4151,3 +4151,27 @@ Adopt VALID-034. Separate cadence by purpose:
 After the active seed-cross diagnostic, choose the next long training horizon
 before inspecting any new strength benchmark. Do not tune that horizon from the
 seed-cross outcome.
+
+
+### 10315 -> 15315 macroblock frozen — 2026-10-01
+
+The seed-cross diagnostic confirmed that same-teacher rebuild/data-seed
+dispersion is large enough that short-horizon single-rebuild comparisons are
+not a reliable proxy for teacher progress. Adopt VALID-035.
+
+The next long training block is therefore preregistered independently of any
+future benchmark result:
+- start teacher: 10315;
+- target: 15315;
+- +5000 online iterations;
+- 64 roots/iteration = 320000 new roots;
+- eight semantic Advantage members x 1600 fit steps;
+- same canonical regret-matching/softmax-fallback semantics;
+- HU frozen at 10105;
+- safety/integrity milestones every 500 iterations;
+- no comparative strength benchmark before 15315.
+
+The already parity-proven Ryzen 4x8 fitter profile is reused because the
+per-iteration execution path is unchanged. At 15315, deployable-policy evidence
+must use a preregistered rebuild-stabilization protocol rather than one arbitrary
+rebuild seed.
