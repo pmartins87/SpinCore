@@ -52,7 +52,7 @@ This is dependency closure only; it is not runtime parity.
 
 Current exact audit inputs:
 
-- OpenHoldem source dump: SHA256 `8a2809bf32b226775a237c9a51f970e8fd55148e777890f9a275b5fd6bd8521`;
+- OpenHoldem source dump: SHA256 `8a2809bf32b226775a237c9a51f970e8fd55148e777890f9a275b5fd6bd8521e`;
 - manuals/library archive: SHA256 `2aea57b284d214be21a4d6fa6d1283a5772cf1c672e3c787c5a66348d6b14411`;
 - integrated OpenPPL library extracted from that archive: SHA256 `eeb0fe6a842e7a6381f0bad31bd216763075da5c2f35d3a20f0b19588b2c0340`;
 - observed runtime family in project logs: OpenHoldem 14.0.2.0, build marker `05fae382d72c5b9133fe3b8271782a82`.
