@@ -525,3 +525,100 @@ invariants:
       - contracts/post15315_multirebuild_preregistration.json
       - ROADMAP.md
       - CURRENT_WORK.md
+
+
+  - id: DCTBP-001
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_SOURCE_FREEZE
+    statement: >
+      No canonical DeepCrusher-vs-CrusherTBP result is admitted until both
+      strategy byte streams, repository commits, SHA256 hashes, pinned OpenPPL
+      libraries, OpenHoldem reference/runtime, external dependencies and the
+      benchmark environment are frozen in a manifest. A changed source/hash is
+      a different benchmark policy.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_SOURCE_AUDIT_20261001.md
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-002
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_DUAL_PARITY
+    statement: >
+      DeepCrusher and CrusherTBP must independently pass transitive OpenPPL /
+      OpenHoldem semantic closure and deterministic real-OpenHoldem action,
+      sizing and state-side-effect parity before any EV run may support a
+      strength claim. Missing or approximated reachable semantics are blockers
+      and may never be silently zero-filled.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-003
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_AUTOPLAYER_PIPELINE
+    statement: >
+      The portable action backend must preserve each policy's own f$betsize,
+      percentage-pot values, fixed action codes, RaiseTo, RaiseBy, ncallbets,
+      exact OpenHoldem technical bet-pot factors, min/max raise legality,
+      backup-action cascade and f$allin_on_betsize_balance_ratio conversion.
+      Neither policy may be projected into the other's betting abstraction.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_SOURCE_AUDIT_20261001.md
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-004
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_STATE_LIFETIME
+    statement: >
+      Canonical parity preserves OpenHoldem chair/position, pot/current-bet,
+      stacks, history, exact cards/suits, user-variable and memory-symbol
+      lifetimes, plus connection/startup/hand-reset/new-round/my-turn callback
+      order. Paired replays must not contaminate one another.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-005
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_PAIRING
+    statement: >
+      Canonical HU uses same-deal seat-swap pairs and canonical 3H uses a
+      same-deal six-game AAB/ABB rotation. Every terminal game is exactly
+      zero-sum, every complete block has equal policy and logical-seat exposure,
+      and any violation is a hard benchmark failure.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-006
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_EVIDENCE_ISOLATION
+    statement: >
+      Fixture, development and canonical seed namespaces are disjoint. Canonical
+      criteria, estimator, sample plan and any precision-based extension rule
+      are frozen before canonical outcomes are read; observed results may not be
+      used to relax or redefine them.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-007
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_PRIMARY_STATISTIC
+    statement: >
+      The primary sign convention is EV_DeepCrusher minus EV_CrusherTBP. The
+      analysis unit is the complete paired scenario cluster, with mean
+      chips/policy-seat-hand and preregistered 95 percent confidence interval
+      reported overall and separately for THREE_HANDED and TRUE_HEADS_UP.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-008
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_PERFORMANCE
+    statement: >
+      A multiprocess layout is admitted only after exact deterministic
+      worker-count equivalence against the one-worker reference on the same
+      scenario/deal slice. Selection records wall time, peak RAM/RSS and swap
+      and uses compact runtime assets; performance never waives parity.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+  - id: DCTBP-009
+    status: ACTIVE
+    scope: DEEPCRUSHER_VS_CRUSHERTBP_FORENSICS
+    statement: >
+      Canonical and development runs retain deterministic replay keys and enough
+      decision-level evidence to audit illegal actions, sizing, routing, state
+      contamination and strategic pathologies. Post-result subgroup analysis is
+      labelled exploratory unless preregistered before the canonical run.
+    provenance:
+      - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
