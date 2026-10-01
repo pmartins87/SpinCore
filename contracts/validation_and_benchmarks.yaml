@@ -457,3 +457,18 @@ invariants:
     provenance:
       - ROADMAP.md
       - CURRENT_WORK.md
+
+  - id: VALID-035
+    status: ACTIVE
+    scope: POLICY_REBUILD_SEED_VARIANCE
+    statement: >
+      Independent rebuilds from the same frozen teacher can differ materially.
+      A single rebuilt deployable policy is therefore not a precise proxy for
+      teacher progression when rebuild-seed dispersion is large. Future macro
+      strength gates must use a preregistered stabilization protocol or report
+      rebuild-seed dispersion explicitly, and diagnostic states remain excluded
+      from training and model selection.
+    provenance:
+      - CURRENT_WORK.md
+      - ROADMAP.md
+      - contracts/run_manifests/dc1_postlong_10315_5k.json
