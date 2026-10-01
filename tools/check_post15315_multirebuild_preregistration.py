@@ -58,6 +58,22 @@ def main() -> int:
     assert int(rp["primary_rebuild_count"]) == PRIMARY_K
     assert int(rp["conditional_extension_rebuild_count"]) == 4
     assert int(rp["maximum_rebuild_count"]) == MAX_K
+    avg = rp["average_policy"]
+    assert int(avg["ordinary_teacher_episodes_per_rebuild"]) == 8000
+    assert int(avg["ordinary_fit_steps"]) == 500
+    assert int(avg["strong_augmentation_teacher_episodes_per_rebuild"]) == 180000
+    assert int(avg["fullpool_fit_steps"]) == 500
+    assert int(avg["min_ordinary_train_samples"]) == 20000
+    assert int(avg["min_ordinary_holdout_samples"]) == 5000
+    assert int(avg["min_novel_strong_states"]) == 700
+    sp = rp["specialist"]
+    assert int(sp["teacher_episodes_per_rebuild"]) == 300000
+    assert sp["training_mode"] == "STRATIFIED_70_15_15_LOW_MID_HIGH_TEACHER_FOLD"
+    assert int(sp["fit_steps"]) == 25
+    assert int(sp["min_unique_strong_states"]) == 1200
+    assert int(sp["min_high_target_states"]) == 30
+    assert int(sp["min_mid_target_states"]) == 10
+
     members = list(rp["member_seeds"])
     assert len(members) == MAX_K
     assert [int(x["member"]) for x in members] == list(range(1, MAX_K + 1))
@@ -113,6 +129,13 @@ def main() -> int:
     assert float(st["preflop_72o_allin_worst_split_mean_probability_delta_max"]) == 0.025
     assert float(st["trips_plus_fold_worst_split_mean_probability_delta_max"]) == 0.02
     assert float(st["high_card_no_draw_allin_worst_split_mean_probability_delta_max"]) == 0.025
+
+    enforce = data["machine_readable_enforcement"]
+    assert enforce["member_builder"] == "tools/build_post15315_rebuild_member.py"
+    assert enforce["post15315_collection"] == "tools/post15315_collection.py"
+    assert enforce["production_rebuild_runner_status"] == (
+        "NOT_YET_READY_REQUIRES_TARGET_HOST_PERFORMANCE_GATE_AND_TEACHER_15315"
+    )
 
     perf = data["performance_and_cost"]
     assert int(perf["primary_teacher_collection_episodes"]) == 3_904_000

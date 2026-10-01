@@ -4486,3 +4486,30 @@ probability. Therefore the rare-tail sentinels use FOLD slot 0 and ALL_IN slot
 9. This correction was made before any teacher-15315 output or post-15315
 rebuild result was observed and prevents a future compact-remapping mismatch
 between the stability gate and the actual policy network.
+
+### 2026-10-01 — post-15315 deterministic member construction prepared
+
+The preregistered K=8/K=12 stabilization lane now has a deterministic
+single-member construction tool prepared without opening any 15315 result.
+`tools/build_post15315_rebuild_member.py` builds exactly one seeded member and
+performs no strength benchmark or member selection. It requires the exact
+teacher-15315 artifact SHA on the command line, verifies the frozen 10105 source,
+refuses accidental overwrite of durable member artifacts, and records hashes and
+sample digests for the ordinary, augmentation, fullpool and specialist stages.
+
+A separate `tools/post15315_collection.py` was introduced rather than changing
+the historical 10315 collector. It preserves the validated sampler/chance/action
+stream but writes the correct sample lineage identifier 15315 explicitly.
+This avoids silently carrying the historical ActionStrategySample iteration=10106
+into the post-15315 evidence.
+
+Construction support minima are now frozen in the preregistration before teacher
+15315 is observed: >=20,000 ordinary TRAIN decision samples, >=5,000 ordinary
+HOLD decision samples, >=700 novel strong augmentation states, plus the already
+frozen specialist minima 1,200 unique strong / 30 high-target / 10 mid-target.
+The tool uses the member-specific frozen collection and fit seeds and saves
+tail/fullpool/specialist artifacts atomically as BUILT_UNVALIDATED_NOT_PROMOTED.
+
+This does not make the production rebuild runner ready. The multi-member
+production execution remains blocked on teacher 15315 completion and the
+target-Ryzen performance/parity gate.
