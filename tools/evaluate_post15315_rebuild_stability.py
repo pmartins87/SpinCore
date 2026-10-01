@@ -280,8 +280,11 @@ def evaluate(
             ),
     }
     criteria = {
-        key: bool(np.isfinite(summary[key]) and summary[key] <= float(limit))
-        for key, limit in t.items()
+        metric: bool(
+            np.isfinite(summary[metric])
+            and summary[metric] <= float(t[metric + "_max"])
+        )
+        for metric in summary
     }
     criteria["surface_coverage_minima"] = bool(all(coverage_ok.values()))
 
