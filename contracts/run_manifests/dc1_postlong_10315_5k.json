@@ -124,7 +124,7 @@
     "benchmark_data_isolation": "Do not train/select a replacement candidate on the observed seed 20261001 states, deals, sampled actions, or pathology examples without a new preregistered experiment."
   },
   "next_action": {
-    "status": "DIAGNOSTIC_REQUIRED_BEFORE_ANY_NEW_TRAINING",
+    "status": "DIAGNOSTIC_READY",
     "accepted_candidate": "specialist_10115",
     "rejected_candidate": "specialist_10315",
     "diagnostic_scope": [
@@ -137,6 +137,14 @@
       "do not continue the same 10315 training lane merely by adding iterations",
       "use a newly preregistered diagnostic/training protocol and a fresh later DC1 seed for any replacement candidate"
     ],
-    "canonical_external_benchmark_blocker": "DC0 real-OpenHoldem action+sizing parity remains pending"
+    "canonical_external_benchmark_blocker": "DC0 real-OpenHoldem action+sizing parity remains pending",
+    "diagnostic_runner": "tools/run_3h_10115_10315_common_state_variance.sh",
+    "diagnostic_runner_blob_sha": "abc853ca8f65d0c5c24cfcfce6362489d9c7858e",
+    "diagnostic_script": "tools/audit_3h_10115_10315_common_state_variance.py",
+    "diagnostic_script_blob_sha": "f6b541b25b5d1612e7ceb51707fba2a59b5badbd",
+    "diagnostic_seed": 20261007,
+    "diagnostic_episodes": 20000,
+    "state_generator": "frozen 10105 hybrid policy on forced THREE_HANDED episodes",
+    "purpose": "Separate ordinary finite-sample/training variance from broad teacher drift versus distillation/generalization drift on common independent states."
   }
 }
