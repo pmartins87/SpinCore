@@ -4303,3 +4303,18 @@ teacher movement on weak preflop states. A seed-cross diagnostic is now frozen:
 rebuild the same 10315 teacher using the previously used 10115 data-seed family,
 then compare original-vs-seed-crossed 10315 on fresh seed 20261012. This
 separates rebuild/data-sampling variance from teacher progression.
+
+
+### 2026-10-01 — training-horizon vs benchmark-cadence correction
+
+The 10115->10315 result and subsequent variance diagnostics exposed a process
+mistake in interpretation: a short interval such as +200 online iterations
+(12800 roots here) can be useful for integrity/safety checks but should not be
+treated as if monotonic strength improvement must already be statistically
+resolved. Future frequent checkpoints are diagnostic/safety checkpoints; major
+strength/promotion decisions must use materially larger precommitted training
+horizons and fresh paired evidence, interpreted as a trajectory rather than a
+requirement that every later checkpoint beat the immediately previous one.
+
+This does not waive hard safety failures. It prevents noisy short-horizon EV
+comparisons from prematurely terminating a long training program.
