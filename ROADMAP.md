@@ -4234,3 +4234,69 @@ selection is allowed after 15315 is observed.
 
 This is parallel repository preparation only. It must not modify, restart, pull
 inside, or otherwise interfere with the active 10315->15315 Ryzen process.
+
+
+## DeepCrusher vs CrusherTBP scientific benchmark — fail-closed lane (2026-10-01)
+
+This lane is independent from SpinCore promotion. It exists to produce a direct,
+reproducible DeepCrusher-vs-CrusherTBP comparison.
+
+### DCTBP-G0 — source freeze — ACTIVE / BLOCKED
+- freeze corrected current DeepCrusher bytes + SHA256 + commit;
+- reconcile/freeze CrusherTBP bytes + SHA256 + commit;
+- pin OpenPPL library, OpenHoldem source/runtime and environment manifest;
+- record all external dependencies (PT, notes, chair lookups, aliases/state).
+
+Exit: immutable two-policy source manifest. No version-name-only identity.
+
+### DCTBP-G1 — transitive semantic closure — BLOCKED BY G0
+- generalize R8-specific closure tooling into a two-policy OpenPPL oracle;
+- trace all roots and reserved callbacks;
+- resolve every reachable library/native/environment/list/user/memory symbol;
+- unknown or approximated strategic dependency = hard FAIL.
+
+### DCTBP-G2 — exact action/autoplayer backend — BLOCKED BY G1
+- preserve each policy's f$betsize / fixed-code / RaiseTo / RaiseBy semantics;
+- reproduce exact OpenHoldem technical bet-pot factors;
+- reproduce f$allin_on_betsize_balance_ratio before final action;
+- preserve min/max raise, ncallbets, legal fallback and frozen rounding.
+
+### DCTBP-G3 — state/session lifecycle — BLOCKED BY G1
+- exact chair/position/pot/current-bet/stack/card/history view;
+- user/me memory lifetimes;
+- connection/startup/hand-reset/new-round/my-turn callback order;
+- prove no paired-replay contamination.
+
+### DCTBP-G4 — real OpenHoldem dual parity — BLOCKED BY G2/G3
+- deterministic fixtures for both policies;
+- HU + 3H and all streets;
+- action families, exact amounts, min/max, all-in-adjustment, fallback,
+  history and state-memory side effects;
+- any unexplained mismatch = hard FAIL.
+
+### DCTBP-G5 — paired mechanical smoke — BLOCKED BY G4
+- small traced development-only sample;
+- same deal/state; HU seat-swap; 3H six-game AAB/ABB;
+- exact zero-sum and exposure balance;
+- no strength claim.
+
+### DCTBP-G6 — worker equivalence/performance — BLOCKED BY G5
+- compare 1-worker reference against candidate layouts;
+- exact deterministic parity;
+- wall/RAM/RSS/swap profile;
+- freeze fastest exact-equivalent profile.
+
+### DCTBP-G7 — canonical preregistration and run — BLOCKED BY G6
+- freeze sign: EV_DeepCrusher - EV_CrusherTBP;
+- paired scenario-cluster estimator + IC95;
+- overall + HU + 3H;
+- fresh canonical seeds, disjoint from fixtures/development;
+- initial target >=100000 clusters;
+- any extension rule based only on preregistered precision/budget, never result direction.
+
+### DCTBP-G8 — post-result decomposition — BLOCKED BY G7
+- street, pot family, position, stack, hand class, action mix, sizing and pathology;
+- preregistered analyses remain confirmatory;
+- all newly discovered slices are labelled exploratory/post hoc.
+
+Current instruction: advance G0-G4 only. Do not launch a large simulation.
