@@ -33,6 +33,12 @@ def test_post15315_primary_ensemble_and_extension_are_frozen():
     assert agg["weight_by_fit_or_strength"] is False
     assert agg["drop_members_after_results"] is False
     assert agg["representative_policy_selection"] == "PROHIBITED_FOR_PRIMARY_PROMOTION"
+    carrier = agg["action_carrier"]
+    assert carrier["schema"] == "UNIVERSAL_10_SLOT_NETWORK_CARRIER"
+    assert carrier["active_legacy7_slots"] == [0, 1, 3, 5, 7, 8, 9]
+    assert carrier["dormant_slots"] == [2, 4, 6]
+    assert carrier["fold_slot"] == 0
+    assert carrier["all_in_slot"] == 9
 
 
 def test_post15315_eval_seeds_are_disjoint_from_rebuild_and_banned_seeds():
