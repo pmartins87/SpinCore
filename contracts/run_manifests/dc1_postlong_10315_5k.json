@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "DC1_POSTLONG_10315_FRESH_SEED_5K",
-  "status": "READY",
+  "status": "COMPLETE_FAIL",
   "runner": "tools/run_deepcrusher_dc1_semantic_postlong_10315_5k.sh",
   "runner_blob_sha": "e3e49fef8a75dce56932625dc5a3751a43d4f7ee",
   "contract_ids": [
@@ -61,7 +61,7 @@
     "selected_max_swap_used_gib": 0,
     "requirement": "Freeze the exact memory-safe target-Ryzen worker profile for the three-arm 5k benchmark before launch."
   },
-  "block_reason": null,
+  "block_reason": "Fresh-seed DC1 5k completed. The 10315 candidate retains a resolved improvement over frozen 10105, but fails the precommitted safety gate and shows NO_POSITIVE_INCREMENT versus accepted 10115. 10315 is not promoted; 10115 remains the accepted research architecture.",
   "upstream_postlong": {
     "status": "COMPLETE_PASS",
     "manifest": "contracts/run_manifests/postlong_10315.json",
@@ -79,5 +79,48 @@
     "tools/evaluate_deepcrusher_dc1_semantic_candidate_10315.py": "d1a5d33a7f721ba7282227a3b1fe497817c057b9",
     "tools/audit_benchmark_decisions.py": "e400d7034b2db0e04159db53d9da10cbdaeeeed5",
     "tools/test_deepcrusher_nouts_native_collision.py": "6432f0b4b3a08ae4bd2a2476c1957b0d757fc3dc"
+  },
+  "completion_evidence": {
+    "bundle_sha256": "a1aa6226a72164c037cd2755cac0438daa6a5f536e9f2080e52ff41c9e142e97",
+    "comparison_sha256": "6c17502d56e01d07091a8d651887fb50b11e4816ccf551e648bf725bc2ff04a9",
+    "seed": 20261001,
+    "scenarios": 5000,
+    "domain_counts": {
+      "THREE_HANDED": 2723,
+      "TRUE_HEADS_UP": 2277
+    },
+    "postlong_10315_5k_safety_pass": false,
+    "incremental_10315_vs_10115_status": "NO_POSITIVE_INCREMENT",
+    "hu_exact_scenario_margin_parity": true,
+    "delta_10315_minus_baseline_3h": {
+      "mean": 6.698412698412699,
+      "ci95_low": 2.2634954625694705,
+      "ci95_high": 11.133329934255926
+    },
+    "delta_10315_minus_10115_3h": {
+      "mean": -0.16754396702982818,
+      "ci95_low": -2.1327794746962105,
+      "ci95_high": 1.7976915406365543
+    },
+    "absolute_3h_vs_deepcrusher": {
+      "baseline_10105_mean": -13.70155465785286,
+      "specialist_10115_mean": -6.835597992410332,
+      "specialist_10315_mean": -7.00314195944016
+    },
+    "failed_precommitted_criteria": [
+      "10315_deep_72o_jam_no_more_than_10115_plus_1",
+      "no_unexpected_10315_sanity_codes"
+    ],
+    "pathology_counts_10115": {
+      "PREFLOP_DEEP_72O_JAM": 4,
+      "POSTFLOP_MONSTER_FOLD": 0
+    },
+    "pathology_counts_10315": {
+      "PREFLOP_DEEP_72O_JAM": 8,
+      "POSTFLOP_MONSTER_FOLD": 2
+    },
+    "promotion_authorized": false,
+    "accepted_research_architecture_remains": "specialist_10115",
+    "benchmark_data_isolation": "Do not train/select a replacement candidate on the observed seed 20261001 states, deals, sampled actions, or pathology examples without a new preregistered experiment."
   }
 }
