@@ -84,7 +84,25 @@
     "final_loss_exact": true,
     "member_metadata_exact": true,
     "max_resident_set_kib": 14881928,
-    "swaps": 0
+    "swaps": 0,
+    "evidence": {
+      "type": "INHERITED_IDENTICAL_EXECUTION_PATH",
+      "source_manifest": "contracts/run_manifests/semantic_long_10115_10315_parallel_resume.json",
+      "source_report_path": "runs/3h_semantic_long_10115_10315/parallel_fit_gate/semantic_parallel_fit_gate.json",
+      "source_gate_completed_iteration": 10222,
+      "source_profile": {
+        "concurrency": 4,
+        "threads_per_member": 8,
+        "declared_threads": 32
+      },
+      "production_fit_speedup": 1.6735746472781527,
+      "tensor_exact": true,
+      "final_loss_exact": true,
+      "member_metadata_exact": true,
+      "max_resident_set_kib": 14881928,
+      "swaps": 0,
+      "applicability": "Per-iteration collection, packed-reservoir transport, 8-member x 1600-step fit, concurrency/thread profile, and Ryzen host are unchanged; only start/target horizon changes."
+    }
   },
   "selected_profile": {
     "concurrency": 4,
