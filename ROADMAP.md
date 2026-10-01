@@ -4194,3 +4194,43 @@ running teacher, prepare in parallel:
 
 TRAIN-023 forbids interpreting absolute iteration labels as homogeneous
 percent-complete training counters across historical phases.
+
+### Post-15315 multi-rebuild stabilization preregistration — frozen 2026-10-01
+
+Before any teacher-15315 result is observed, freeze
+`contracts/post15315_multirebuild_preregistration.json` as the
+required deployable-policy bridge for VALID-035.
+
+Execution order after 15315:
+1. verify the macroblock final teacher/resume hashes and every 500-iteration
+   safety/integrity milestone;
+2. run a target-Ryzen performance/parity gate for the actual multi-rebuild
+   collection+fit path; do not assume the old Advantage 4x8 fitter automatically
+   certifies this different workload;
+3. build exactly K=8 independent AveragePolicy/fullpool/specialist members with
+   the already-frozen seeds and 10315-derived architecture/budgets;
+4. evaluate K=8 on the common fresh stability bank without any external strength
+   benchmark;
+5. if and only if the frozen stability gate fails with build/integrity otherwise
+   PASS, add exactly preregistered members 9-12 and rerun unchanged at K=12;
+6. aggregate every admitted member by uniform final action-probability mean
+   after member-local specialist routing; never choose or weight a member by
+   strength/pathology outcome;
+7. run the fresh aggregate quality gate, four-seed specialist confirmation and
+   fresh safety/pathology surfaces;
+8. only after stabilization may the fresh DC1 seed 153159301 be opened. Compare
+   the 15315 ensemble on the exact same 5,000 scenarios/deals with accepted
+   10115 and frozen 10105. 10315 single-rebuild evidence remains descriptive;
+9. DC0 real-OpenHoldem parity remains a prerequisite for a canonical
+   DeepCrusher strength claim. Only a clean fresh DC1 advancement gate plus DC0
+   PASS may open reserved DC2 seed 153159401 for >=100,000 states.
+
+Frozen stability ceilings at K=8 are broad split-half mean TV 0.03, broad p95
+TV 0.12, leave-one-out mean TV 0.01; 72o All-in mean/p95 deltas 0.025/0.12;
+trips-plus Fold 0.02/0.10; high-card/no-draw All-in 0.025/0.12. Surface coverage
+minima and every seed are machine-checked. No threshold relaxation, member
+dropping, seed replacement, benchmark-state training, or representative-policy
+selection is allowed after 15315 is observed.
+
+This is parallel repository preparation only. It must not modify, restart, pull
+inside, or otherwise interfere with the active 10315->15315 Ryzen process.

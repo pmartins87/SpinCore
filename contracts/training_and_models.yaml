@@ -234,3 +234,22 @@ invariants:
     provenance:
       - CURRENT_WORK.md
       - ROADMAP.md
+
+  - id: MODEL-025
+    status: ACTIVE
+    scope: POST_15315_MULTI_REBUILD_DEPLOYABLE_POLICY
+    statement: >
+      The primary deployable-policy candidate rebuilt from teacher 15315 is a
+      uniform probability ensemble of eight independently rebuilt
+      AveragePolicy/fullpool/specialist members under the frozen post-15315
+      preregistration. Each member applies the same fullpool/specialist route
+      before aggregation. Members may not be weighted, dropped, or selected by
+      observed fit, pathology, or strength outcomes. If the preregistered K=8
+      stability gate alone fails, exactly four already-seeded members may be
+      added for K=12 before any external strength benchmark is inspected. A
+      single representative or compressed policy is a separate future
+      deployment experiment and does not inherit ensemble validation.
+    provenance:
+      - contracts/post15315_multirebuild_preregistration.json
+      - ROADMAP.md
+      - CURRENT_WORK.md

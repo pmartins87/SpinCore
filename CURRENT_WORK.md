@@ -4372,3 +4372,67 @@ Expected runtime from the measured exact-parity 10223..10315 segment is about
 292.148 seconds per semantic iteration, implying roughly 405.8 compute-hours
 (~16.9 continuous days) for 5000 iterations before modest milestone/host
 variance. Treat 15-20 days as an operational planning range, not a deadline.
+
+### 2026-10-01 — post-15315 multi-rebuild protocol preregistered before teacher 15315
+
+The VALID-035 follow-up is now frozen while the 10315->15315 macrotrainer is
+still running. No 15315 teacher output, rebuild result, strength benchmark, DC1
+state, or pathology outcome was available when these choices were made.
+
+Primary rebuild design:
+- K=8 independent rebuilds from the same frozen teacher 15315;
+- each rebuild independently seeds ordinary target collection, strong
+  augmentation collection, specialist collection, and all three fit streams;
+- each rebuild retains the already-validated architecture/budgets:
+  8k ordinary teacher episodes + 500 tail steps; 180k novel-strong augmentation
+  + 500 fullpool steps; 300k specialist episodes + fixed STRATIFIED 25 steps;
+- the primary candidate is the uniform probability ensemble of all K members
+  after each member applies its own frozen fullpool/specialist route;
+- member weighting, member dropping, strength-based seed selection, and choosing
+  a convenient representative single policy are prohibited.
+
+Conditional stabilization branch is also frozen now:
+- only if all integrity/build gates pass but K=8 fails the rebuild-stability
+  thresholds, add exactly the preregistered members 9-12 and rerun the unchanged
+  gate at K=12;
+- no external strength benchmark may be inspected before that branch resolves;
+- if K=12 also fails, stop and report rebuild instability. Do not relax
+  thresholds or select a favorable subset.
+
+Fresh common-state stabilization is frozen at seed 153159001 with 80,000 forced
+3H episodes. It measures every member pair, all 35 balanced 4-vs-4 half splits,
+leave-one-out ensemble perturbation, argmax disagreement, and the known rare
+tails: 72o preflop All-in, trips-or-better Fold-legal, and postflop
+high-card/no-immediate-draw All-in-legal.
+
+Frozen K=8 stability bounds include:
+- worst split broad mean TV <= 0.03;
+- worst split broad statewise p95 TV <= 0.12;
+- worst leave-one-out mean TV <= 0.01;
+- 72o All-in split mean probability delta <= 0.025, p95 <= 0.12;
+- trips-plus Fold split mean delta <= 0.02, p95 <= 0.10;
+- high-card/no-draw All-in split mean delta <= 0.025, p95 <= 0.12.
+
+Evaluation/benchmark seeds are frozen and disjoint from rebuild seeds and from
+the already observed 20261001/20261007/20261012 evidence:
+- quality evaluation: 153159002;
+- specialist confirmation: 153159101..153159104, 120k episodes each;
+- safety/pathology: 153159201;
+- fresh DC1 5k: 153159301;
+- reserved DC2 >=100k: 153159401.
+
+Promotion sequence is fail-closed:
+teacher-15315 integrity/safety -> all rebuilds -> stability -> aggregate
+quality/specialist confirmation -> fresh pathology surfaces -> external
+strength. Accepted 10115 and frozen 10105 are the primary prior deployable
+comparators. The unstable single 10315 rebuild is descriptive only unless 10315
+is rebuilt under the same stabilization protocol. DC0 real-OpenHoldem parity is
+still required before a DeepCrusher result can support a canonical strength
+claim.
+
+Compute planning is explicit: K=8 requires 3,904,000 teacher collection episodes
+and 8,200 policy/specialist fit steps before shared evaluation; K=12 adds
+1,952,000 episodes and 4,100 fit steps. Production parallelization is blocked
+until a target-Ryzen parity/throughput/memory gate validates the actual
+multi-rebuild execution path. This preparation does not touch the active
+10315->15315 trainer.

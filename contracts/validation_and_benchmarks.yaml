@@ -472,3 +472,56 @@ invariants:
       - CURRENT_WORK.md
       - ROADMAP.md
       - contracts/run_manifests/dc1_postlong_10315_5k.json
+
+  - id: VALID-036
+    status: ACTIVE
+    scope: POST_15315_REBUILD_STABILIZATION
+    statement: >
+      Teacher 15315 may not enter a macro strength/promotion gate through one
+      arbitrary deployable rebuild. The primary stabilization gate uses exactly
+      eight independently seeded rebuilds frozen before teacher 15315 is
+      observed. Stability is measured on one common fresh state bank using all
+      member pairs, all balanced 4-vs-4 half-ensemble partitions, leave-one-out
+      ensemble perturbation, argmax disagreement, and predeclared rare-tail
+      surfaces. If K=8 fails only the stability thresholds after all integrity
+      gates pass, exactly the four preregistered extension members may be added
+      and the unchanged gate rerun at K=12 before any external strength result
+      is inspected.
+    provenance:
+      - contracts/post15315_multirebuild_preregistration.json
+      - CURRENT_WORK.md
+      - ROADMAP.md
+
+  - id: VALID-037
+    status: ACTIVE
+    scope: POST_15315_REBUILD_VARIANCE_RARE_TAILS
+    statement: >
+      Rebuild stability must be demonstrated both globally and on the rare
+      strategic tails already known to expose seed sensitivity: preflop 72o
+      All-in, postflop trips-or-better with Fold legal, and postflop
+      high-card/no-immediate-draw with All-in legal. The frozen thresholds,
+      minimum surface coverage, and full dispersion reporting in the
+      preregistration may not be relaxed after 15315. Sparse subsets below their
+      frozen coverage minima fail the stabilization gate rather than inviting a
+      post-hoc interpretation.
+    provenance:
+      - contracts/post15315_multirebuild_preregistration.json
+      - CURRENT_WORK.md
+
+  - id: VALID-038
+    status: ACTIVE
+    scope: POST_15315_PROMOTION_SEQUENCE
+    statement: >
+      Post-15315 promotion is sequential and fail-closed: teacher integrity and
+      safety, complete multi-rebuild construction, rebuild-stability PASS,
+      aggregate quality/specialist confirmation, fresh safety/pathology
+      surfaces, then a fresh-seed external-strength gate. The accepted 10115
+      specialist and frozen 10105 baseline are the primary previous deployable
+      comparators. The unstable single 10315 rebuild is descriptive only unless
+      10315 is itself rebuilt under the same stabilization protocol. DC0 real
+      OpenHoldem parity remains mandatory before any DeepCrusher result becomes
+      a canonical strength claim.
+    provenance:
+      - contracts/post15315_multirebuild_preregistration.json
+      - ROADMAP.md
+      - CURRENT_WORK.md
