@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "contracts" / "run_manifests" / "post15315_multirebuild_preregistration.json"
+MANIFEST = ROOT / "contracts" / "post15315_multirebuild_preregistration.json"
 
 EXPECTED_SCHEMA = "SPINCORE_POST15315_MULTIREBUILD_PREREG_V1"
 EXPECTED_STATUS = "PREREGISTERED_BLOCKED_TEACHER_15315_AND_PERFORMANCE_GATE"
