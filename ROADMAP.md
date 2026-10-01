@@ -4308,3 +4308,18 @@ All post-15315 rebuild aggregation and stability evidence uses the native
 0,1,3,5,7,8,9; dormant slots 2,4,6 must remain illegal/zero. FOLD is slot 0 and
 ALL_IN is slot 9. Do not compress to a seven-column evidence vector unless a
 separate transformation is explicitly proved lossless and preregistered.
+
+### Post-15315 member-builder preparation — before teacher 15315
+
+Use `tools/build_post15315_rebuild_member.py` as the canonical one-member
+construction primitive after the teacher and performance gates open. It must
+consume `tools/post15315_collection.py`, preserve ActionStrategySample lineage
+15315, use only the frozen per-member seeds, and emit
+BUILT_UNVALIDATED_NOT_PROMOTED artifacts. Frozen construction support minima are
+20,000 ordinary TRAIN decisions, 5,000 ordinary HOLD decisions, 700 novel
+strong augmentation states, and specialist 1,200 unique strong / 30 high / 10
+mid. A construction PASS is not a stability, quality, safety or strength PASS.
+
+Do not create a production fan-out/orchestrator until a reduced exact-workload
+Ryzen gate proves sample/order/model/report parity and acceptable memory/swap
+behavior. The active 10315->15315 trainer remains untouched.
