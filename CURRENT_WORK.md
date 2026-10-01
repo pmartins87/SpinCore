@@ -4346,3 +4346,29 @@ Next training horizon is frozen before any new strength result: 10315->15315,
 5000 additional iterations / 320000 roots, safety milestones every 500
 iterations, no comparative strength benchmark before 15315 unless a hard
 safety/integrity stop fires.
+
+
+### 2026-10-01 — iteration labels are lineage, not percent-complete counters
+
+The active 10315->15315 macroblock started successfully at iteration 10316 with
+the frozen 4x8 parallel profile.
+
+Important accounting correction: the absolute iteration number is a lineage
+identifier, not a homogeneous measure of cumulative training. The 10105 source
+checkpoint was produced by an earlier base-training phase. The semantic-online
+THREE_HANDED lane began only at 10106: ten iterations to 10115 and then two
+hundred more to 10315, for 210 semantic-online iterations / 13440 new roots so
+far. The active +5000 macroblock adds 320000 semantic-online roots, which is
+23.81x the prior semantic-online root count, but it is neither 48% of nor 23.81x
+the total historical SpinCore training because the earlier base phase is a
+different training process and each semantic iteration also fresh-fits the
+eight-member ensemble against the saturated reservoir.
+
+Planning and reporting must keep base-training exposure and semantic-online
+exposure separate. Do not use absolute iteration labels as percent-complete
+training estimates.
+
+Expected runtime from the measured exact-parity 10223..10315 segment is about
+292.148 seconds per semantic iteration, implying roughly 405.8 compute-hours
+(~16.9 continuous days) for 5000 iterations before modest milestone/host
+variance. Treat 15-20 days as an operational planning range, not a deadline.
