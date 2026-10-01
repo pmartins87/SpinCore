@@ -218,3 +218,19 @@ invariants:
     provenance:
       - ROADMAP.md
       - CURRENT_WORK.md
+
+  - id: TRAIN-023
+    status: ACTIVE
+    scope: ITERATION_COUNTER_SEMANTICS
+    statement: >
+      Absolute iteration labels across SpinCore phases are lineage identifiers,
+      not homogeneous units of training progress. The frozen 10105 source belongs
+      to the earlier base-training lineage; semantic online THREE_HANDED training
+      begins at 10106. Therefore 10315 does not mean 10315 comparable semantic
+      online iterations, and a later +5000 semantic macroblock must not be
+      described as roughly 50 percent of all previous training. Within the
+      homogeneous semantic-online phase, report both additional iterations and
+      new roots, while keeping earlier base-training exposure separate.
+    provenance:
+      - CURRENT_WORK.md
+      - ROADMAP.md
