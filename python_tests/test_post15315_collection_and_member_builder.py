@@ -171,3 +171,7 @@ def test_member_builder_uses_explicit_15315_collection_and_per_member_fit_seeds(
     assert 'seeds["specialist_fit_seed"]' in source
     assert "distill.MASTER_SEED" not in source
     assert "strength_benchmark_performed" in source
+    assert "protocol_sha256" in source
+    assert "mechanical rerun teacher SHA mismatch" in source
+    assert "mechanical rerun protocol SHA mismatch" in source
+    assert "mechanical rerun member-seed mismatch" in source
