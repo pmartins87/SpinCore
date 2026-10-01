@@ -4,7 +4,7 @@ from __future__ import annotations
 """Evaluate frozen post-15315 rebuild-seed stability from common-state predictions.
 
 Input NPZ contract:
-  probs: [K,N,7] final legal action-probability vectors, after member-local
+  probs: [K,N,10] native universal-carrier action-probability vectors, after member-local
          fullpool/specialist routing.
   legal: [N,7] bool legality mask.
   surface_72o: [N] bool, preflop 72o with ALL_IN legal.
@@ -31,14 +31,19 @@ MANIFEST = ROOT / "contracts" / "post15315_multirebuild_preregistration.json"
 ACTION_NAMES = (
     "FOLD",
     "CHECK_CALL",
+    "MIN_RAISE",
     "POT_33",
+    "POT_40",
     "POT_50",
+    "POT_66",
     "POT_75",
     "POT_100",
     "ALL_IN",
 )
+ACTIVE_SLOTS = (0, 1, 3, 5, 7, 8, 9)
+DORMANT_SLOTS = (2, 4, 6)
 FOLD = 0
-ALL_IN = 6
+ALL_IN = 9
 EPS = 1e-8
 
 
@@ -87,7 +92,9 @@ def _validate_input(
     if k not in (8, 12):
         raise ValueError(f"K must be 8 or 12, got {k}")
     if a != len(ACTION_NAMES):
-        raise ValueError(f"action dimension must be 7, got {a}")
+        raise ValueError(f"action dimension must be 10, got {a}")
+    if np.any(legal[:, np.asarray(DORMANT_SLOTS)]):
+        raise ValueError("dormant MIN_RAISE/POT_40/POT_66 slot marked legal")
     if legal.shape != (n, a):
         raise ValueError(f"legal shape mismatch: {legal.shape} vs {(n, a)}")
     if not np.isfinite(probs).all():
