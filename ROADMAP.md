@@ -4121,3 +4121,19 @@ Remaining sequence:
 The stage manifest is READY with the frozen profile and exact support hashes.
 Next action is the full postlong rebuild/validation. Only a complete scientific
 PASS unlocks the precommitted fresh-seed DC1 5k comparison.
+
+
+### 2026-10-01 — 10315 variance diagnosis: seed-cross next
+
+The fresh common-state diagnostic does not support a broad degradation of the
+10315 Advantage teacher. The main drift is concentrated in rare deployable
+policy tails, especially preflop 72o All-in, while the broad trips-plus Fold
+surface improved on average.
+
+Next gate: rebuild the same frozen 10315 teacher with the 10115 distillation
+data-seed family, leaving architecture, optimizer budgets and teacher unchanged.
+Evaluate original 10315, seed-crossed 10315 and accepted 10115 on a new frozen
+common-state bank (seed 20261012). If same-teacher original-vs-seed-cross policy
+distance is material relative to 10115-vs-original10315 distance, rebuild/data
+sampling variance is confirmed as an important contributor. This diagnostic
+does not promote a policy and does not reuse DC1 seed 20261001.
