@@ -4137,3 +4137,17 @@ common-state bank (seed 20261012). If same-teacher original-vs-seed-cross policy
 distance is material relative to 10115-vs-original10315 distance, rebuild/data
 sampling variance is confirmed as an important contributor. This diagnostic
 does not promote a policy and does not reuse DC1 seed 20261001.
+
+
+### Long-horizon training / sparse strength benchmarking — 2026-10-01
+
+Adopt VALID-034. Separate cadence by purpose:
+- frequent checkpoints: integrity, pathology/safety, resume, resource health;
+- sparse macro checkpoints: comparative policy-strength evidence;
+- no expectation of monotonic checkpoint-to-checkpoint EV over short intervals;
+- no early stop from one short-horizon inconclusive/mildly negative strength
+  result unless a frozen hard safety/integrity condition fails.
+
+After the active seed-cross diagnostic, choose the next long training horizon
+before inspecting any new strength benchmark. Do not tune that horizon from the
+seed-cross outcome.
