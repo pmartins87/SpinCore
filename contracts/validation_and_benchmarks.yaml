@@ -438,3 +438,22 @@ invariants:
     provenance:
       - validation/R9_STRATEGIC_AUDIT_GATE_DESIGN_20260812.md
       - docs/LT3_POST9105_DEVELOPMENT_BATTERY_PROTOCOL_20260922.md
+
+  - id: VALID-034
+    status: ACTIVE
+    scope: TRAINING_HORIZON_AND_BENCHMARK_CADENCE
+    statement: >
+      Short training intervals are not expected to yield monotonic policy-strength
+      improvement. Frequent milestone checks are for integrity, safety/pathology,
+      resource health, and catastrophic regression detection; they are not
+      promotion checkpoints unless explicitly preregistered as such. Comparative
+      strength benchmarks used for advancement decisions must be spaced at
+      materially larger precommitted training horizons, evaluated with fresh
+      paired evidence, and interpreted as a trajectory across checkpoints rather
+      than as proof that every later checkpoint must beat the immediately prior
+      one. A single short-horizon inconclusive or mildly negative comparison does
+      not by itself justify stopping a long training program unless a frozen
+      safety/integrity gate fails.
+    provenance:
+      - ROADMAP.md
+      - CURRENT_WORK.md
