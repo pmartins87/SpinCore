@@ -32,7 +32,7 @@ import audit_3h_fresh_semantic_strategy_distill_10105 as distill
 import audit_3h_fresh_semantic_strategy_independent500_10105 as confirm
 import audit_3h_semantic_stratified_specialist_moe_10115 as spec
 import audit_3h_semantic_tail_strong_hand_coverage_10115 as coverage
-import postlong_10315_collection as compact
+import post15315_collection as collect
 from audit_3h_average_policy_semantic_continuation_10105 import (
     semantic_vector_from_obs,
 )
@@ -218,14 +218,21 @@ def main() -> int:
         )
 
     # Ordinary fresh teacher-target stream.
-    distill.MASTER_SEED = int(seeds["base_collection_seed"])
-    base_train, base_discard, base_collection = distill.collect_fresh(
-        solver, teacher, base_episodes
+    base_train, base_holdout, base_collection_raw = collect.collect_fresh_split(
+        solver,
+        teacher,
+        base_episodes,
+        master_seed=int(seeds["base_collection_seed"]),
+        sample_iteration=FINAL_ITERATION,
+        progress_prefix=f"POST15315_MEMBER_{args.member:02d}_ORDINARY",
     )
-    if len(base_train) < 20000 or len(base_discard) < 5000:
+    min_train = int(avg["min_ordinary_train_samples"])
+    min_holdout = int(avg["min_ordinary_holdout_samples"])
+    if len(base_train) < min_train or len(base_holdout) < min_holdout:
         raise RuntimeError(
             "ordinary target support below frozen construction minimum: "
-            f"train={len(base_train)} discard={len(base_discard)}"
+            f"train={len(base_train)}/{min_train} "
+            f"holdout={len(base_holdout)}/{min_holdout}"
         )
 
     _, _, tail, tailopt = confirm.initial_policy_pair(d3, cfg)
@@ -245,11 +252,12 @@ def main() -> int:
     base_strong = [s for s in base_train if strong(s)]
     base_keys = {skey(s) for s in base_strong}
     torch.set_num_threads(int(args.collection_threads))
-    aug_train, aug_hold, augment_collection_raw = compact.collect_strong_split(
+    aug_train, aug_hold, augment_collection_raw = collect.collect_strong_split(
         solver,
         teacher,
         augment_episodes,
         master_seed=int(seeds["augment_collection_seed"]),
+        sample_iteration=FINAL_ITERATION,
         progress_prefix=f"POST15315_MEMBER_{args.member:02d}_AUGMENT",
     )
     seen = set()
@@ -260,9 +268,11 @@ def main() -> int:
             continue
         seen.add(key)
         novel.append(s)
-    if len(novel) < 700:
+    min_novel = int(avg["min_novel_strong_states"])
+    if len(novel) < min_novel:
         raise RuntimeError(
-            f"novel strong support below frozen construction minimum: {len(novel)}"
+            "novel strong support below frozen construction minimum: "
+            f"{len(novel)}/{min_novel}"
         )
 
     full_train = list(base_train) + novel
@@ -281,11 +291,12 @@ def main() -> int:
 
     # Frozen target-stratified specialist, no mode/step selection.
     torch.set_num_threads(int(args.collection_threads))
-    sp_train, sp_hold, specialist_collection_raw = compact.collect_strong_split(
+    sp_train, sp_hold, specialist_collection_raw = collect.collect_strong_split(
         solver,
         teacher,
         specialist_episodes,
         master_seed=int(seeds["specialist_collection_seed"]),
+        sample_iteration=FINAL_ITERATION,
         progress_prefix=f"POST15315_MEMBER_{args.member:02d}_SPECIALIST",
     )
     unique = spec.unique_strong(list(sp_train) + list(sp_hold))
@@ -352,6 +363,8 @@ def main() -> int:
         },
         fullpool_path,
     )
+    # Bind the specialist to the exact durable fullpool artifact on its first write.
+    fullpool_sha = distill.sha256(fullpool_path)
     atomic_torch_save(
         {
             "schema": SPECIALIST_SCHEMA,
@@ -361,7 +374,7 @@ def main() -> int:
             "specialist_train_episodes": specialist_episodes,
             "specialist_unique_strong_states": len(unique),
             "specialist_unique_strong_strata": strata,
-            "base_fullpool_sha256": None,
+            "base_fullpool_sha256": fullpool_sha,
             "route_contract": sp["route"],
             "model_state": {
                 k: v.detach().cpu() for k, v in specialist.state_dict().items()
@@ -370,35 +383,27 @@ def main() -> int:
         specialist_path,
     )
 
-    # Hash only after durable writes. Bind specialist to its exact fullpool file.
-    fullpool_sha = distill.sha256(fullpool_path)
-    specialist_payload = torch.load(
-        specialist_path, map_location="cpu", weights_only=False
-    )
-    specialist_payload["base_fullpool_sha256"] = fullpool_sha
-    atomic_torch_save(specialist_payload, specialist_path)
-
     report = {
         "schema": REPORT_SCHEMA,
         "scope": "POST15315_PREREGISTERED_MEMBER_CONSTRUCTION_ONLY",
         **common,
-        "ordinary_collection": base_collection,
+        "ordinary_collection": collect.canonical_collection_stats(base_collection_raw),
         "ordinary_train_samples": len(base_train),
-        "ordinary_discarded_samples": len(base_discard),
-        "ordinary_train_digest": compact.sample_digest(base_train),
-        "ordinary_discard_digest": compact.sample_digest(base_discard),
+        "ordinary_holdout_samples": len(base_holdout),
+        "ordinary_train_digest": collect.sample_digest(base_train),
+        "ordinary_holdout_digest": collect.sample_digest(base_holdout),
         "base_strong_states": len(base_strong),
-        "augmentation_collection": compact.canonical_collection_stats(
+        "augmentation_collection": collect.canonical_collection_stats(
             augment_collection_raw
         ),
         "novel_strong_states": len(novel),
-        "novel_strong_digest": compact.sample_digest(novel),
-        "specialist_collection": compact.canonical_collection_stats(
+        "novel_strong_digest": collect.sample_digest(novel),
+        "specialist_collection": collect.canonical_collection_stats(
             specialist_collection_raw
         ),
         "specialist_unique_strong_states": len(unique),
         "specialist_unique_strong_strata": strata,
-        "specialist_unique_digest": compact.sample_digest(unique),
+        "specialist_unique_digest": collect.sample_digest(unique),
         "tail_artifact": str(tail_path),
         "tail_sha256": distill.sha256(tail_path),
         "fullpool_artifact": str(fullpool_path),
