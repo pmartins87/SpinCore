@@ -216,6 +216,17 @@ def main() -> int:
             "use --rerun-identical-member only for a documented mechanical rerun: "
             + ", ".join(existing)
         )
+    protocol_sha = distill.sha256(args.protocol.resolve(strict=True))
+    if args.rerun_identical_member and report_path.exists():
+        prior = json.loads(report_path.read_text(encoding="utf-8"))
+        if int(prior.get("member", -1)) != int(args.member):
+            raise RuntimeError("mechanical rerun member mismatch")
+        if prior.get("teacher_sha256") != str(args.teacher_sha256):
+            raise RuntimeError("mechanical rerun teacher SHA mismatch")
+        if prior.get("protocol_sha256") != protocol_sha:
+            raise RuntimeError("mechanical rerun protocol SHA mismatch")
+        if dict(prior.get("member_seeds") or {}) != seeds:
+            raise RuntimeError("mechanical rerun member-seed mismatch")
 
     # Ordinary fresh teacher-target stream.
     base_train, base_holdout, base_collection_raw = collect.collect_fresh_split(
@@ -333,6 +344,7 @@ def main() -> int:
         "teacher_sha256": teacher_sha,
         "teacher_schema": teacher_payload.get("schema"),
         "semantic_completed_iteration": FINAL_ITERATION,
+        "protocol_sha256": protocol_sha,
         "member": int(args.member),
         "member_seeds": seeds,
         "collection_threads": int(args.collection_threads),
