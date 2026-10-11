@@ -3,22 +3,23 @@ set -euo pipefail
 
 # PROJECT_CONTRACT_IDS: DC-002,SAFE-001,TRAIN-022,VALID-001,VALID-003,VALID-025,VALID-031,VALID-034,RNG-001,RNG-002,RNG-003
 
-ROOT="${HOME}/spincore_lean_functional"
-cd "${ROOT}"
+CODE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ARTIFACT_ROOT="${SPINCORE_ACTIVE_ROOT:-${HOME}/spincore_lean_functional}"
+cd "${CODE_ROOT}"
 
-PY="${ROOT}/.venv_lean/bin/python"
-export PYTHONPATH="${ROOT}/python:${ROOT}/tools"
+PY="${ARTIFACT_ROOT}/.venv_lean/bin/python"
+export PYTHONPATH="${CODE_ROOT}/python:${CODE_ROOT}/tools"
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export SPINCORE_TORCH_THREADS=1
 
-SOLVER="${ROOT}/build/libspincore_solver_c.so"
-MANIFEST="${ROOT}/contracts/run_manifests/shadow_teacher_learning_10315_12815.json"
+SOLVER="${ARTIFACT_ROOT}/build/libspincore_solver_c.so"
+MANIFEST="${CODE_ROOT}/contracts/run_manifests/shadow_teacher_learning_10315_12815.json"
 RUNNER="tools/run_3h_teacher_shadow_learning_10315_12815.sh"
-OLD="${ROOT}/runs/3h_semantic_long_10115_10315/semantic_long_ensemble_final_10315.pt"
-NEW="${ROOT}/runs/3h_semantic_long_10315_15315/semantic_long_ensemble_12815.pt"
-OUTDIR="${ROOT}/runs/shadow_teacher_learning_10315_12815"
+OLD="${ARTIFACT_ROOT}/runs/3h_semantic_long_10115_10315/semantic_long_ensemble_final_10315.pt"
+NEW="${ARTIFACT_ROOT}/runs/3h_semantic_long_10315_15315/semantic_long_ensemble_12815.pt"
+OUTDIR="${CODE_ROOT}/runs/shadow_teacher_learning_10315_12815"
 REPORT="${OUTDIR}/shadow_teacher_learning_10315_12815.json"
 mkdir -p "${OUTDIR}"
 
