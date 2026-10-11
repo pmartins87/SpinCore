@@ -14,15 +14,19 @@ export OPENBLAS_NUM_THREADS=1
 export SPINCORE_TORCH_THREADS=1
 
 SOLVER="${ROOT}/build/libspincore_solver_c.so"
+MANIFEST="${ROOT}/contracts/run_manifests/shadow_teacher_learning_10315_12815.json"
+RUNNER="tools/run_3h_teacher_shadow_learning_10315_12815.sh"
 OLD="${ROOT}/runs/3h_semantic_long_10115_10315/semantic_long_ensemble_final_10315.pt"
 NEW="${ROOT}/runs/3h_semantic_long_10315_15315/semantic_long_ensemble_12815.pt"
 OUTDIR="${ROOT}/runs/shadow_teacher_learning_10315_12815"
 REPORT="${OUTDIR}/shadow_teacher_learning_10315_12815.json"
 mkdir -p "${OUTDIR}"
 
-for f in "${PY}" "${SOLVER}" "${OLD}" "${NEW}"; do
+for f in "${PY}" "${SOLVER}" "${OLD}" "${NEW}" "${MANIFEST}"; do
   [[ -e "${f}" ]] || { echo "ERROR: missing prerequisite: ${f}" >&2; exit 2; }
 done
+
+"${PY}" tools/check_stage_manifest.py --manifest "${MANIFEST}" --runner "${RUNNER}"
 
 "${PY}" -m py_compile tools/evaluate_3h_teacher_shadow_learning_10315_12815.py
 
