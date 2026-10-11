@@ -3,7 +3,7 @@
   "stage_id": "SHADOW_TEACHER_LEARNING_10315_12815",
   "status": "READY",
   "runner": "tools/run_3h_teacher_shadow_learning_10315_12815.sh",
-  "runner_blob_sha": "7076649393f6a788404ae01e766cfca0a506c229",
+  "runner_blob_sha": "c0442b31cdf81a81cc300413d66eddec033cbf96",
   "contract_ids": [
     "DC-002",
     "SAFE-001",
@@ -51,7 +51,8 @@
       "must not authorize promotion",
       "must not replace fresh 15315 strength evidence",
       "DC0 remains pending"
-    ]
+    ],
+    "isolation": "Run from a separate code clone/worktree; read milestone artifacts and solver/venv from the active training root through SPINCORE_ACTIVE_ROOT. The active training working tree is not pulled or modified."
   },
   "support_blob_shas": {
     "tools/evaluate_3h_teacher_shadow_learning_10315_12815.py": "256bec01ce2b795668bb7002c129b536046e2366",
