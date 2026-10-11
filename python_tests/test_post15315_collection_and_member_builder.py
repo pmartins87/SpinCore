@@ -49,6 +49,12 @@ class DummyState:
     def terminal(self):
         return self.inner.done
 
+    def universal_legal_actions(self, active):
+        return self.inner.universal_legal_actions(active)
+
+    def neural_bytes(self):
+        return self.inner.neural_bytes()
+
     def close(self):
         pass
 
