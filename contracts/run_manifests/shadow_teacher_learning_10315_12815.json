@@ -1,0 +1,68 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "SHADOW_TEACHER_LEARNING_10315_12815",
+  "status": "READY",
+  "runner": "tools/run_3h_teacher_shadow_learning_10315_12815.sh",
+  "runner_blob_sha": "9efb1f60cf26417bd666ef27319c8b2d7c90ab98",
+  "contract_ids": [
+    "DC-002",
+    "SAFE-001",
+    "TRAIN-022",
+    "VALID-001",
+    "VALID-003",
+    "VALID-025",
+    "VALID-031",
+    "VALID-034",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
+  ],
+  "affected_domains": [
+    "DC",
+    "SAFE",
+    "TRAIN",
+    "VALID",
+    "RNG"
+  ],
+  "duration_class": "SHORT_LT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS_LOW_PRIORITY_DIAGNOSTIC",
+  "scientific_plan": {
+    "scope": "CURIOSITY_DIAGNOSTIC_ONLY_NEVER_FOR_TRAINING_SELECTION_PROMOTION_OR_EARLY_STOP",
+    "old_teacher_iteration": 10315,
+    "new_teacher_iteration": 12815,
+    "scenarios": 1000,
+    "domain": "THREE_HANDED_ONLY",
+    "seed": 20261011,
+    "workers": 2,
+    "worker_threads": 1,
+    "scheduling": "nice 19; taskset CPUs 30,31 when available",
+    "pairing": "same empirical scenario, exact deal seed, balanced AAB/ABB lineups, same master RNG seed in both arms",
+    "opponent": "frozen DeepCrusher development opponent from existing DC1 infrastructure",
+    "primary_metric": "paired 12815-minus-10315 SpinCore chip EV per policy-seat-hand",
+    "status_rule": {
+      "positive_resolved": "CI95 low > 0",
+      "negative_resolved": "CI95 high < 0",
+      "otherwise": "INCONCLUSIVE"
+    },
+    "governance_exclusion": [
+      "must not stop or extend 10315->15315",
+      "must not select a checkpoint",
+      "must not tune architecture, hyperparameters, thresholds, or seeds",
+      "must not authorize promotion",
+      "must not replace fresh 15315 strength evidence",
+      "DC0 remains pending"
+    ]
+  },
+  "support_blob_shas": {
+    "tools/evaluate_3h_teacher_shadow_learning_10315_12815.py": "256bec01ce2b795668bb7002c129b536046e2366"
+  },
+  "authorization": {
+    "decision": "AUTHORIZED_NONDECISION_SHADOW_DIAGNOSTIC",
+    "conditions": [
+      "12815 milestone artifact exists and is read-only",
+      "active macrotrainer is not interrupted",
+      "diagnostic remains low priority and CPU-confined",
+      "result remains permanently excluded from training and promotion decisions"
+    ]
+  }
+}
