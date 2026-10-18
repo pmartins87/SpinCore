@@ -4,7 +4,7 @@ from __future__ import annotations
 """Shadow poker-learning diagnostic: 3H Advantage teacher 10315 vs 14815.
 
 PROJECT_CONTRACT_IDS:
-DC-002,SAFE-001,TRAIN-022,VALID-001,VALID-003,VALID-025,VALID-031,VALID-034,RNG-001,RNG-002,RNG-003
+DC-002,SAFE-001,TRAIN-022,VALID-001,VALID-003,VALID-025,VALID-031,VALID-034,VALID-039,RNG-001,RNG-002,RNG-003
 
 This is a precommitted travel-week continuation decision diagnostic. It may be
 used only to decide whether to extend training beyond 15315 for one unattended
@@ -250,7 +250,7 @@ def main():
         for a,b in zip(old,new)
     ]
     report={
-        "schema":"SPINCORE_3H_TEACHER_SHADOW_LEARNING_10315_14815_V1",
+        "schema":"SPINCORE_3H_TEACHER_TRAVEL_DECISION_10315_14815_V1",
         "scope":"TRAVEL_DECISION_DIAGNOSTIC_PRECOMMITTED_FOR_WEEK_CONTINUATION_ONLY",
         "canonical_quality_claim_authorized":False,
         "dc0_status":"PENDING_REAL_OPENHOLDEM_PARITY",
@@ -265,27 +265,30 @@ def main():
         "interpretation_contract":{
             "positive_resolved":"CI95 low > 0: fresh shadow evidence that teacher 14815 outperforms teacher 10315 on this diagnostic sample",
             "negative_resolved":"CI95 high < 0: fresh shadow evidence in the opposite direction on this diagnostic sample",
-            "otherwise":"INCONCLUSIVE",
+            "otherwise":"INCONCLUSIVE; operational continuation still follows the frozen sign-of-mean rule",
             "governance":"Result may be used only for the predeclared travel-week continuation decision after 15315. It remains excluded from checkpoint selection, rebuild selection, promotion thresholds, and final canonical strength evidence."
         }
     }
     d=report["paired_14815_minus_10315_spincore_chip_ev"]
     if d["ci95_low"] is not None and float(d["ci95_low"])>0:
-        report["shadow_learning_status"]="POSITIVE_RESOLVED"\n        report["travel_week_decision"]="CONTINUE_AFTER_15315"
+        report["shadow_learning_status"]="POSITIVE_RESOLVED"
+        report["travel_week_decision"]="CONTINUE_AFTER_15315"
     elif d["ci95_high"] is not None and float(d["ci95_high"])<0:
-        report["shadow_learning_status"]="NEGATIVE_RESOLVED"\n        report["travel_week_decision"]="STOP_AT_15315"
+        report["shadow_learning_status"]="NEGATIVE_RESOLVED"
+        report["travel_week_decision"]="STOP_AT_15315"
     else:
-        report["shadow_learning_status"]="INCONCLUSIVE"\n        report["travel_week_decision"]="CONTINUE_AFTER_15315_IF_MEAN_POSITIVE_OTHERWISE_STOP"
+        report["shadow_learning_status"]="INCONCLUSIVE"
+        report["travel_week_decision"]="CONTINUE_AFTER_15315" if float(d["mean"])>0.0 else "STOP_AT_15315"
 
     args.report.parent.mkdir(parents=True,exist_ok=True)
     args.report.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    print("=== 3H teacher shadow poker-learning diagnostic ===")
+    print("=== 3H teacher travel-week continuation diagnostic ===")
     print("teacher_10315="+json.dumps(report["teacher_10315"],sort_keys=True))
     print("teacher_14815="+json.dumps(report["teacher_14815"],sort_keys=True))
     print("paired_14815_minus_10315="+json.dumps(d,sort_keys=True))
     print("shadow_learning_status="+report["shadow_learning_status"])
     print(f"report={args.report.resolve()}")
-    print("SPINCORE_3H_TEACHER_SHADOW_LEARNING_10315_14815_COMPLETE")
+    print("SPINCORE_3H_TEACHER_TRAVEL_DECISION_10315_14815_COMPLETE")
     return 0
 
 if __name__=="__main__":
