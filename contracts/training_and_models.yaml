@@ -214,7 +214,9 @@ invariants:
       lean regret-matching with softmax fallback, frozen HU@10105, and no
       AveragePolicy or specialist training during the long phase. Safety/integrity
       milestones occur every 500 iterations; no comparative strength benchmark
-      is run before 15315 unless a hard safety/integrity stop fires.
+      is run before 15315 unless a hard safety/integrity stop fires, except the
+      single frozen VALID-039 travel-week continuation diagnostic, which cannot
+      select or promote a checkpoint and cannot modify the active macroblock.
     provenance:
       - ROADMAP.md
       - CURRENT_WORK.md
