@@ -221,6 +221,27 @@ invariants:
       - ROADMAP.md
       - CURRENT_WORK.md
 
+  - id: TRAIN-024
+    status: ACTIVE
+    scope: SEMANTIC_LONG_15315_17315_TRAVEL_WEEK
+    statement: >
+      If and only if the frozen VALID-039 travel diagnostic has positive paired
+      mean and the 10315->15315 macroblock finishes with PASS plus final safety
+      PASS, one unattended continuation from semantic iteration 15315 to 17315
+      is authorized for the user's travel week. The continuation preserves the
+      exact semantic-online algorithm: THREE_HANDED only, 64 roots per
+      iteration, eight Advantage members, 1600 fit steps per member, canonical
+      lean regret-matching with softmax fallback, HU frozen at 10105, no
+      AveragePolicy/specialist training, and safety milestones every 500
+      iterations. The 15315 source hashes are bound at runtime to the final
+      PASS report before continuation starts. This operational extension is
+      research-only and does not waive the frozen post-15315 stabilization,
+      DC0, or promotion gates.
+    provenance:
+      - contracts/run_manifests/teacher_travel_decision_10315_14815.json
+      - contracts/run_manifests/semantic_long_15315_17315.json
+      - tools/run_3h_semantic_long_15315_17315.py
+
   - id: TRAIN-023
     status: ACTIVE
     scope: ITERATION_COUNTER_SEMANTICS
