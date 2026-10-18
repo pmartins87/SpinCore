@@ -1,0 +1,73 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "TEACHER_TRAVEL_DECISION_10315_14815",
+  "status": "READY",
+  "runner": "tools/run_3h_teacher_travel_decision_10315_14815.sh",
+  "runner_blob_sha": "e02f0253444fc8403181daa33b1e52e85233ff78",
+  "contract_ids": [
+    "DC-002",
+    "SAFE-001",
+    "TRAIN-022",
+    "VALID-001",
+    "VALID-003",
+    "VALID-025",
+    "VALID-031",
+    "VALID-034",
+    "VALID-039",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
+  ],
+  "affected_domains": [
+    "DC",
+    "SAFE",
+    "TRAIN",
+    "VALID",
+    "RNG"
+  ],
+  "duration_class": "MEDIUM_DIAGNOSTIC",
+  "target_host_profile": "RYZEN_9_9950X_ACTIVE_MACROTRAINER_LOW_PRIORITY_8CPU",
+  "scientific_plan": {
+    "purpose": "Operational travel-week decision only: whether to extend semantic training beyond 15315 while the user is away.",
+    "baseline_teacher_iteration": 10315,
+    "candidate_teacher_iteration": 14815,
+    "scenarios": 5000,
+    "domain": "THREE_HANDED_ONLY",
+    "seed": 20261017,
+    "workers": 8,
+    "worker_threads": 1,
+    "scheduling": "nice 19 and taskset CPUs 24-31 when available",
+    "pairing": "same empirical scenario, exact deal seed, balanced AAB/ABB lineups, same master RNG seed in both teacher arms",
+    "opponent": "frozen DeepCrusher development opponent",
+    "primary_metric": "paired 14815-minus-10315 SpinCore chip EV per policy-seat-hand",
+    "confidence_label": {
+      "positive_resolved": "CI95 low > 0",
+      "negative_resolved": "CI95 high < 0",
+      "otherwise": "INCONCLUSIVE"
+    },
+    "operational_decision_rule": {
+      "continue_after_15315": "paired mean > 0 AND active macroblock safety/integrity remains PASS",
+      "stop_at_15315": "paired mean <= 0 OR active macroblock safety/integrity fails"
+    },
+    "exclusions": [
+      "no intermediate checkpoint selection",
+      "no architecture or hyperparameter tuning",
+      "no rebuild selection or promotion",
+      "no replacement of post15315 multi-rebuild protocol",
+      "no canonical strength claim before DC0"
+    ]
+  },
+  "support_blob_shas": {
+    "tools/evaluate_3h_teacher_travel_decision_10315_14815.py": "60b58876d6637b740b8abce5497b8924be3fbe9a",
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2"
+  },
+  "authorization": {
+    "decision": "AUTHORIZED_PRE15315_TRAVEL_CONTINUATION_DIAGNOSTIC",
+    "conditions": [
+      "14815 milestone artifact exists and validates completed_iteration=14815",
+      "active 10315->15315 trainer is not interrupted",
+      "diagnostic runs from isolated code clone and only reads active-run artifacts",
+      "result is used only for the frozen sign-of-mean travel continuation decision"
+    ]
+  }
+}
