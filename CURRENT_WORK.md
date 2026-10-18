@@ -4513,3 +4513,40 @@ tail/fullpool/specialist artifacts atomically as BUILT_UNVALIDATED_NOT_PROMOTED.
 This does not make the production rebuild runner ready. The multi-member
 production execution remains blocked on teacher 15315 completion and the
 target-Ryzen performance/parity gate.
+
+
+## 2026-10-17 — travel decision benchmark COMPLETE; conditional 15315->17315 continuation authorized
+
+The preregistered VALID-039 direct-teacher travel diagnostic completed on fresh
+seed 20261017 with 5,000 forced THREE_HANDED paired scenarios. Teacher 10315 and
+teacher 14815 were evaluated directly through their eight-member semantic
+Advantage ensembles against the same frozen DeepCrusher development opponent;
+AveragePolicy/specialist rebuild variance was intentionally excluded.
+
+Result:
+- teacher 10315 paired vs DeepCrusher mean: -10.1341777778;
+- teacher 14815 paired vs DeepCrusher mean: -9.6060888889;
+- paired SpinCore chip-EV delta 14815-minus-10315: +0.2640444444
+  chips/policy-seat-hand;
+- SEM 0.4532815856;
+- CI95 [-0.6243874634, +1.1524763523];
+- status: INCONCLUSIVE;
+- frozen travel decision: CONTINUE_AFTER_15315 because the preregistered
+  operational rule uses the sign of the paired mean, while CI95 is confidence
+  labeling only.
+
+This is not a canonical strength claim. Both teachers remain negative against
+the current development DeepCrusher oracle, DC0 remains pending, and the frozen
+post-15315 multi-rebuild/promotion lane remains mandatory after the unattended
+travel extension.
+
+Operationally, one exact-algorithm continuation 15315->17315 is now
+preauthorized iff the active 10315->15315 macroblock itself finishes PASS with
+final safety PASS. The continuation adds 2,000 semantic-online iterations
+(128,000 roots), keeps 4x8 parallel fitting, HU@10105 frozen, and has safety
+milestones at 15815/16315/16815/17315. Source hashes are bound at runtime to the
+final 15315 PASS report because those artifacts do not exist until completion.
+A fail-closed autochain waits for the current trainer, validates source report +
+hashes, fast-forwards main only after the trainer exits, then starts the
+continuation.
+
