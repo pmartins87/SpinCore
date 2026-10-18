@@ -16,7 +16,7 @@ export SPINCORE_TORCH_THREADS=1
 
 SOLVER="${ARTIFACT_ROOT}/build/libspincore_solver_c.so"
 MANIFEST="${CODE_ROOT}/contracts/run_manifests/teacher_travel_decision_10315_14815.json"
-RUNNER="tools/run_3h_teacher_shadow_learning_10315_14815.sh"
+RUNNER="tools/run_3h_teacher_travel_decision_10315_14815.sh"
 OLD="${ARTIFACT_ROOT}/runs/3h_semantic_long_10115_10315/semantic_long_ensemble_final_10315.pt"
 NEW="${ARTIFACT_ROOT}/runs/3h_semantic_long_10315_15315/semantic_long_ensemble_14815.pt"
 OUTDIR="${CODE_ROOT}/runs/teacher_travel_decision_10315_14815"
@@ -31,10 +31,10 @@ done
 
 "${PY}" -m py_compile tools/evaluate_3h_teacher_travel_decision_10315_14815.py
 
-# Read-only diagnostic. Keep it low priority and confined to two logical CPUs so
+# Read-only diagnostic. Keep it low priority and confined to eight logical CPUs so
 # the active 4x8 macrotrainer keeps scheduling priority.
 CMD=(
-  "${PY}" tools/evaluate_3h_teacher_shadow_learning_10315_14815.py
+  "${PY}" tools/evaluate_3h_teacher_travel_decision_10315_14815.py
   --solver "${SOLVER}"
   --teacher-10315 "${OLD}"
   --teacher-14815 "${NEW}"
