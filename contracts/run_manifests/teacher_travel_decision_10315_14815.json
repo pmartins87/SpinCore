@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "TEACHER_TRAVEL_DECISION_10315_14815",
-  "status": "READY",
+  "status": "COMPLETE_PASS",
   "runner": "tools/run_3h_teacher_travel_decision_10315_14815.sh",
   "runner_blob_sha": "e02f0253444fc8403181daa33b1e52e85233ff78",
   "contract_ids": [
@@ -62,12 +62,29 @@
     "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2"
   },
   "authorization": {
-    "decision": "AUTHORIZED_PRE15315_TRAVEL_CONTINUATION_DIAGNOSTIC",
+    "decision": "AUTHORIZED_WEEK_CONTINUATION_IF_15315_PASS",
     "conditions": [
-      "14815 milestone artifact exists and validates completed_iteration=14815",
-      "active 10315->15315 trainer is not interrupted",
-      "diagnostic runs from isolated code clone and only reads active-run artifacts",
-      "result is used only for the frozen sign-of-mean travel continuation decision"
+      "VALID-039 paired mean is positive",
+      "10315->15315 completes PASS with final safety/integrity PASS",
+      "continuation preserves the frozen semantic-online algorithm and does not alter HU@10105",
+      "continuation remains research-only and does not replace post15315 stabilization/promotion gates"
     ]
+  },
+  "validation_result": {
+    "report_sha256": "6cec8d98d1fe21e021b35ae4e4c198177f1b595d034def3b8bb1244d5e115f6e",
+    "scenarios": 5000,
+    "teacher_10315_paired_vs_deepcrusher_mean": -10.134177777777778,
+    "teacher_14815_paired_vs_deepcrusher_mean": -9.60608888888889,
+    "paired_14815_minus_10315_spincore_chip_ev": {
+      "mean": 0.2640444444444445,
+      "sem": 0.45328158561651677,
+      "ci95_low": -0.6243874633639284,
+      "ci95_high": 1.1524763522528174
+    },
+    "shadow_learning_status": "INCONCLUSIVE",
+    "travel_week_decision": "CONTINUE_AFTER_15315",
+    "decision_basis": "Frozen VALID-039 sign-of-mean operational rule: paired mean > 0; active macroblock safety/integrity must still PASS at 15315.",
+    "canonical_quality_claim_authorized": false,
+    "dc0_status": "PENDING_REAL_OPENHOLDEM_PARITY"
   }
 }
