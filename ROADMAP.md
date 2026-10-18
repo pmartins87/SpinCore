@@ -4323,3 +4323,21 @@ mid. A construction PASS is not a stability, quality, safety or strength PASS.
 Do not create a production fan-out/orchestrator until a reduced exact-workload
 Ryzen gate proves sample/order/model/report parity and acceptable memory/swap
 behavior. The active 10315->15315 trainer remains untouched.
+
+
+### 2026-10-17 — travel-week continuation decision and autochain
+
+VALID-039 travel evidence is now observed and frozen: teacher 14815 minus teacher
+10315 has paired mean +0.2640444444 chips/policy-seat-hand on 5,000 fresh 3H
+scenarios, SEM 0.4532815856, CI95 [-0.6243874634,+1.1524763523]. The evidence is
+statistically INCONCLUSIVE but the preregistered operational sign-of-mean rule
+authorizes unattended continuation if the active macroblock reaches 15315 with
+final safety PASS.
+
+TRAIN-024 therefore authorizes exactly one unchanged semantic-online block
+15315->17315 (+2,000 iterations / +128,000 roots), with 4x8 fitting, HU@10105
+frozen, no AveragePolicy/specialist work, and safety milestones every 500
+iterations. Runtime source binding must match the final 15315 PASS report hashes.
+The travel extension does not replace the post-15315 multi-rebuild stabilization,
+DC0, or canonical promotion sequence.
+
