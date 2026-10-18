@@ -6,8 +6,10 @@ from __future__ import annotations
 PROJECT_CONTRACT_IDS:
 DC-002,SAFE-001,TRAIN-022,VALID-001,VALID-003,VALID-025,VALID-031,VALID-034,RNG-001,RNG-002,RNG-003
 
-This is explicitly NON-DECISION diagnostic evidence. It may not stop, extend,
-select, promote, tune, or otherwise alter the active 10315->15315 macroblock.
+This is a precommitted travel-week continuation decision diagnostic. It may be
+used only to decide whether to extend training beyond 15315 for one unattended
+week. It may not select an intermediate checkpoint, tune hyperparameters,
+change rebuilds, authorize promotion, or replace the final 15315 strength gate.
 It evaluates the raw semantic-Advantage teachers directly, avoiding
 AveragePolicy/specialist rebuild variance.
 """
