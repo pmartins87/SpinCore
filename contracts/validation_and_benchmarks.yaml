@@ -622,3 +622,25 @@ invariants:
       labelled exploratory unless preregistered before the canonical run.
     provenance:
       - docs/DEEPCRUSHER_VS_CRUSHERTBP_BENCHMARK_CONTRACT_20261001.md
+
+  - id: VALID-039
+    status: ACTIVE
+    scope: TRAVEL_WEEK_PRE15315_CONTINUATION_DECISION
+    statement: >
+      One pre-15315 direct-teacher strength diagnostic is authorized solely to
+      decide whether the unattended Ryzen should continue semantic training for
+      approximately one additional week after 15315. The frozen comparison is
+      teacher 10315 versus milestone teacher 14815, THREE_HANDED only, exactly
+      5000 fresh paired scenarios, seed 20261017, identical scenarios/deals and
+      the same frozen DeepCrusher development opponent. AveragePolicy and
+      specialist rebuilds are excluded. This diagnostic does not select an
+      intermediate checkpoint, does not authorize promotion, does not modify
+      the active 10315->15315 macroblock, and does not replace the frozen
+      post-15315 stabilization or strength gates. Operational decision rule:
+      paired mean 14815-minus-10315 > 0 permits the one-week continuation if
+      the active macroblock safety/integrity gates remain PASS; paired mean <= 0
+      stops unattended extension at 15315. CI95 is reported as confidence
+      labeling (resolved/inconclusive) but does not alter this operational rule.
+    provenance:
+      - contracts/run_manifests/teacher_travel_decision_10315_14815.json
+      - CURRENT_WORK.md
