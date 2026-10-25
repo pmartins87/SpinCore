@@ -61,7 +61,7 @@ _ENGINE_SEED = None
 
 def street_from_state(state) -> int:
     payload = state.neural_bytes_v2()
-    if len(payload) != 830 or not payload.startswith(b"SPNNIV2\\x00"):
+    if len(payload) != 830 or not payload.startswith(b"SPNNIV2\x00"):
         raise RuntimeError("invalid SPNNIV2 state")
     street = int(payload[112])
     if street not in (0, 1, 2, 3):
