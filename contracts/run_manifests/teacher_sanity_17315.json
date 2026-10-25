@@ -1,0 +1,58 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "TEACHER_SANITY_17315",
+  "status": "READY",
+  "runner": "tools/run_3h_teacher_sanity_17315.sh",
+  "runner_blob_sha": "a704a7f979ce2d3203f9617de1cdebb794145f2b",
+  "contract_ids": [
+    "DC-002",
+    "SAFE-001",
+    "SAFE-011",
+    "VALID-025",
+    "VALID-031",
+    "VALID-040",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
+  ],
+  "affected_domains": ["DC", "SAFE", "VALID", "RNG"],
+  "duration_class": "MEDIUM_DIAGNOSTIC",
+  "target_host_profile": "RYZEN_9_9950X_FREE_16CPU",
+  "scientific_plan": {
+    "purpose": "Determine whether raw semantic teacher 17315 still emits gross or highly suspicious poker actions on fresh 3H scenarios.",
+    "teacher_iteration": 17315,
+    "teacher_sha256_expected": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "scenarios": 10000,
+    "domain": "THREE_HANDED_ONLY",
+    "seed": 20261025,
+    "workers": 16,
+    "worker_threads": 1,
+    "opponent": "frozen DeepCrusher development opponent",
+    "surfaces": [
+      "PREFLOP_AA_FOLD",
+      "PREFLOP_DEEP_72O_JAM",
+      "POSTFLOP_MONSTER_FOLD",
+      "POSTFLOP_TRIPS_PLUS_FOLD",
+      "POSTFLOP_TOP_PAIR_FOLD",
+      "POSTFLOP_DEEP_HIGH_CARD_JAM"
+    ],
+    "interpretation_rule": {
+      "critical": "Any AA preflop fold or full-house-plus postflop fold is a gross-error candidate and requires exact trace review.",
+      "high_review": "Any deep 72o jam or trips-plus fold requires exact trace review; the heuristic flag alone is not a poker-theory verdict.",
+      "review": "Top-pair folds and deep high-card jams are context-sensitive review surfaces, not automatic errors.",
+      "no_flag": "Absence of flags on this finite fresh sample supports sanity on these surfaces only; it does not prove globally sound poker."
+    },
+    "exclusions": [
+      "no model selection",
+      "no hyperparameter tuning",
+      "no promotion authorization",
+      "no replacement of post15315 multi-rebuild stabilization",
+      "no canonical DeepCrusher strength claim before DC0"
+    ]
+  },
+  "support_blob_shas": {
+    "tools/audit_3h_teacher_sanity_17315.py": "49f7d10a03dac937650141930559ef1d643aa3ce",
+    "tools/run_3h_teacher_sanity_17315.sh": "a704a7f979ce2d3203f9617de1cdebb794145f2b",
+    "python/spincore/decision_sanity.py": "4abcd3e7799dd026dfbcf023d55172971b7187be"
+  }
+}
