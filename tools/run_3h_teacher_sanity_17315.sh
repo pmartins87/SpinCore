@@ -30,6 +30,20 @@ done
 "${PY}" tools/check_stage_manifest.py --manifest "${MANIFEST}" --runner "${RUNNER}"
 "${PY}" -m py_compile tools/audit_3h_teacher_sanity_17315.py
 
+"${PY}" - <<'PY'
+import tools.audit_3h_teacher_sanity_17315 as audit
+
+class _SmokeState:
+    def neural_bytes_v2(self):
+        payload = bytearray(830)
+        payload[:8] = b"SPNNIV2" + bytes((0,))
+        payload[112] = 0
+        return bytes(payload)
+
+assert audit.street_from_state(_SmokeState()) == 0
+print("SPNNIV2_SANITY_SMOKE_PASS")
+PY
+
 echo "SPINCORE_3H_TEACHER_SANITY_17315_START"
 echo "code_root=${CODE_ROOT}"
 echo "artifact_root=${ARTIFACT_ROOT}"
