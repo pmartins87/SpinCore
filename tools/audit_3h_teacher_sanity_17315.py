@@ -52,6 +52,7 @@ from spincore.solver import SolverLibrary
 ENSEMBLE_SCHEMA = "SPINCORE_3H_SEMANTIC_LONG_ENSEMBLE_V1"
 DOMAIN = "THREE_HANDED"
 ITERATION = 17315
+SPNNIV2_MAGIC = b"SPNNIV2" + bytes((0,))
 
 _SOLVER = None
 _POLICY = None
@@ -61,7 +62,7 @@ _ENGINE_SEED = None
 
 def street_from_state(state) -> int:
     payload = state.neural_bytes_v2()
-    if len(payload) != 830 or not payload.startswith(b"SPNNIV2\x00"):
+    if len(payload) != 830 or not payload.startswith(SPNNIV2_MAGIC):
         raise RuntimeError("invalid SPNNIV2 state")
     street = int(payload[112])
     if street not in (0, 1, 2, 3):
