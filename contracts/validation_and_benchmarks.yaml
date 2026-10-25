@@ -643,4 +643,24 @@ invariants:
       labeling (resolved/inconclusive) but does not alter this operational rule.
     provenance:
       - contracts/run_manifests/teacher_travel_decision_10315_14815.json
-      - CURRENT_WORK.md
+      - CURRENT_WORK.md\n
+  - id: VALID-040
+    status: ACTIVE
+    scope: TEACHER_17315_STRATEGIC_SANITY
+    statement: >
+      The first post-travel raw-teacher sanity audit is frozen at semantic
+      iteration 17315 on exactly 10000 fresh THREE_HANDED scenarios using seed
+      20261025, balanced AAB/ABB exposure, exact-deal replay, and the frozen
+      DeepCrusher development opponent. It reports full contexts for every
+      decision-sanity flag plus opportunity-normalized rates where available.
+      AA preflop folds and full-house-or-better postflop folds are CRITICAL
+      gross-error candidates; deep 72o jams and trips-or-better folds are
+      HIGH_REVIEW and require exact betting-context inspection; top-pair folds
+      and deep high-card jams are REVIEW surfaces and are not automatically
+      errors. Absence of flags supports sanity only on these finite sampled
+      surfaces and cannot authorize promotion or a canonical DeepCrusher claim
+      while DC0 real-OpenHoldem parity remains pending.
+    provenance:
+      - contracts/run_manifests/teacher_sanity_17315.json
+      - tools/audit_3h_teacher_sanity_17315.py
+      - python/spincore/decision_sanity.py
