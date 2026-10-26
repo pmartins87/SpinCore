@@ -497,11 +497,6 @@ def main() -> int:
             ):
                 break
 
-    covered_decision_families = sorted({
-        str(action.decision_family)
-        for case in manifest["cases"]
-        for action in []
-    })
     # Recompute from serialized hero actions so the manifest remains the single
     # evidence carrier even if RenderedAction storage changes later.
     covered_decision_families = sorted({
