@@ -93,7 +93,7 @@ def public():
 
 def test_policy_replays_startup_newround_myturn_before_primary_callback():
     p = fake_policy()
-    episode = SimpleNamespace(big_blind=20)
+    episode = SimpleNamespace(big_blind=20, small_blind=10)
     lineup = SimpleNamespace(seats=("DEEPCRUSHER", "SPINCORE", "DEAD"))
     p.begin_hand(
         episode=episode,
@@ -124,7 +124,7 @@ def test_policy_replays_startup_newround_myturn_before_primary_callback():
 
 def test_begin_hand_isolates_openppl_memory_between_paired_replays():
     p = fake_policy()
-    episode = SimpleNamespace(big_blind=20)
+    episode = SimpleNamespace(big_blind=20, small_blind=10)
     lineup = SimpleNamespace(seats=("DEEPCRUSHER", "SPINCORE", "DEAD"))
     p.begin_hand(
         episode=episode,
@@ -146,7 +146,7 @@ def test_begin_hand_isolates_openppl_memory_between_paired_replays():
 
 def test_policy_evaluates_allin_adjustment_before_final_action_translation():
     p = fake_policy(allin_ratio=0.10)
-    episode = SimpleNamespace(big_blind=20)
+    episode = SimpleNamespace(big_blind=20, small_blind=10)
     lineup = SimpleNamespace(seats=("DEEPCRUSHER", "SPINCORE", "DEAD"))
     p.begin_hand(
         episode=episode,
