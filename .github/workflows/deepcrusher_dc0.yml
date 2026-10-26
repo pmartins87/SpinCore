@@ -42,6 +42,7 @@ on:
       - 'CMakeLists.txt'
       - 'fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt'
       - 'fixtures/deepcrusher_openholdem_parity_v1/**'
+      - 'fixtures/deepcrusher_openholdem_real_parity_v1/**'
       - 'fixtures/deepcrusher_r8_v22/preflop_range_equity_class_v1.tsv'
   workflow_dispatch:
 
@@ -223,11 +224,20 @@ jobs:
           echo "DEEPC_RUSHER_OPENHOLDEM_SEMANTIC_SENTINEL_SEARCH_PASS"
 
 
-      - name: Generate real OpenHoldem parity packet preview
+      - name: Validate frozen real OpenHoldem parity packet
         env:
           PYTHONPATH: ${{ github.workspace }}/python
         run: |
           python tools/generate_deepcrusher_real_openholdem_parity_packet.py \
             --solver build/libspincore_solver_c.so \
             --output-dir /tmp/deepcrusher_real_openholdem_parity
-          echo "DEEPC_RUSHER_REAL_OPENHOLDEM_PARITY_PACKET_PREVIEW_PASS"
+          diff -u \
+            fixtures/deepcrusher_openholdem_real_parity_v1/manifest.json \
+            /tmp/deepcrusher_real_openholdem_parity/manifest.json
+          diff -u \
+            fixtures/deepcrusher_openholdem_real_parity_v1/deepcrusher_dc0_real_parity.tc \
+            /tmp/deepcrusher_real_openholdem_parity/deepcrusher_dc0_real_parity.tc
+          for f in fixtures/deepcrusher_openholdem_real_parity_v1/dc0_real_*.txt; do
+            diff -u "$f" "/tmp/deepcrusher_real_openholdem_parity/$(basename "$f")"
+          done
+          echo "DEEPC_RUSHER_REAL_OPENHOLDEM_PARITY_PACKET_FROZEN_PASS"
