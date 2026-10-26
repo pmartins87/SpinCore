@@ -1,0 +1,20 @@
+; generated parity case dc0_real_allin_adjusted
+[table]
+sblind = 10
+bblind = 20
+gtype = NL
+network = ggpoker
+tournament = true
+balances = Bot 160,P1 160,P2 160
+
+[preflop]
+Hand = 2d, Ks
+Actions = Bot S,P1 B,P2 C,Bot can FCRA do C,P1 K
+
+[flop]
+Cards = Kd, 8d, 5c
+Actions = Bot can KRA do R 45,P1 C,P2 C
+
+[turn]
+Card = 2c
+Actions = Bot can KRA do A,P1 C,P2 C
