@@ -189,6 +189,30 @@ def passive_action(public) -> ExternalExactAction:
     raise RuntimeError("passive opponent has no legal action")
 
 
+def min_aggressive_action(public) -> ExternalExactAction:
+    if public.legal_raise:
+        return ExternalExactAction(4, int(public.min_raise_to))
+    if public.legal_bet:
+        return ExternalExactAction(3, int(public.min_raise_to))
+    return passive_action(public)
+
+
+def allin_pressure_action(public) -> ExternalExactAction:
+    if public.legal_all_in:
+        return ExternalExactAction(5)
+    return min_aggressive_action(public)
+
+
+def opponent_action(public, style: str) -> ExternalExactAction:
+    if style == "PASSIVE":
+        return passive_action(public)
+    if style == "MIN_AGGRO":
+        return min_aggressive_action(public)
+    if style == "ALLIN_PRESSURE":
+        return allin_pressure_action(public)
+    raise ValueError(f"unknown opponent style: {style}")
+
+
 def blind_seats(episode: Episode) -> tuple[int, int]:
     live = [seat for seat, stack in enumerate(episode.stacks) if int(stack) > 0]
     dealer = int(episode.dealer_id)
@@ -301,6 +325,7 @@ def play_candidate(
     hero_seat: int,
     deal_seed: int,
     case_index: int,
+    opponent_style: str = "PASSIVE",
 ):
     lineup = ["PASSIVE", "PASSIVE", "DEAD" if episode.game_is_hu else "PASSIVE"]
     lineup[hero_seat] = policy.policy_id
@@ -346,7 +371,7 @@ def play_candidate(
                     )
                 )
             else:
-                action = passive_action(public)
+                action = opponent_action(public, opponent_style)
                 rendered.append(
                     RenderedAction(
                         street=int(public.street),
@@ -362,25 +387,32 @@ def play_candidate(
         state.close()
 
 
-def make_episode(domain: str, dealer: int) -> Episode:
+def make_episode(
+    domain: str,
+    dealer: int,
+    *,
+    stack_chips: int | None = None,
+) -> Episode:
     if domain == "THREE_HANDED":
+        stack = 500 if stack_chips is None else int(stack_chips)
         return Episode(
-            total_chips=1500,
+            total_chips=3 * stack,
             game_is_hu=False,
             blind_index=0,
             small_blind=10,
             big_blind=20,
-            stacks=(500, 500, 500),
+            stacks=(stack, stack, stack),
             dealer_id=dealer,
         )
     # Keep the dead seat fixed at 2 for simpler TestSuite2 rendering.
+    stack = 750 if stack_chips is None else int(stack_chips)
     return Episode(
-        total_chips=1500,
+        total_chips=2 * stack,
         game_is_hu=True,
         blind_index=0,
         small_blind=10,
         big_blind=20,
-        stacks=(750, 750, 0),
+        stacks=(stack, stack, 0),
         dealer_id=dealer,
         dead_players=(2,),
     )
@@ -425,12 +457,36 @@ def main() -> int:
 
     for domain in ("THREE_HANDED", "TRUE_HEADS_UP"):
         for attempt in range(int(args.max_search)):
-            dealer = attempt % (3 if domain == "THREE_HANDED" else 2)
-            episode = make_episode(domain, dealer)
+            dealer_cycle = 3 if domain == "THREE_HANDED" else 2
+            dealer = attempt % dealer_cycle
+            opponent_style = "PASSIVE"
+            stack_chips = None
+            if args.require_semantic_sentinels:
+                # Sentinel search deliberately spans both deep and shallow
+                # geometries plus passive/aggressive histories. This is a
+                # deterministic fixture-discovery lane, not benchmark sampling.
+                contexts = (
+                    (500 if domain == "THREE_HANDED" else 750, "PASSIVE"),
+                    (240, "PASSIVE"),
+                    (160, "PASSIVE"),
+                    (120, "PASSIVE"),
+                    (500 if domain == "THREE_HANDED" else 750, "MIN_AGGRO"),
+                    (240, "MIN_AGGRO"),
+                    (160, "MIN_AGGRO"),
+                    (120, "ALLIN_PRESSURE"),
+                )
+                context_index = (attempt // dealer_cycle) % len(contexts)
+                stack_chips, opponent_style = contexts[context_index]
+            episode = make_episode(
+                domain,
+                dealer,
+                stack_chips=stack_chips,
+            )
             live = [seat for seat, stack in enumerate(episode.stacks) if stack > 0]
             # Cycle the DeepCrusher seat so position is not accidentally fixed.
             hero_seat = live[
-                (attempt // (3 if domain == "THREE_HANDED" else 2)) % len(live)
+                (attempt // (dealer_cycle * (8 if args.require_semantic_sentinels else 1)))
+                % len(live)
             ]
             deal_seed = int(
                 args.seed
@@ -445,6 +501,7 @@ def main() -> int:
                 hero_seat=hero_seat,
                 deal_seed=deal_seed,
                 case_index=attempt,
+                opponent_style=opponent_style,
             )
             hero_rows = [a for a in actions if a.hero]
             hero_action_letters = {
@@ -457,10 +514,11 @@ def main() -> int:
 
             adds_action = bool(hero_action_letters - covered_actions)
             adds_street = bool(hero_streets - covered_streets[domain])
-            adds_semantic_sentinel = bool(
+            new_semantic_sentinels = (
                 (hero_decision_families & required_decision_families)
                 - covered_decision_families
             )
+            adds_semantic_sentinel = bool(new_semantic_sentinels)
             needs_full_street = (
                 is_full_street
                 and full_street_counts[domain] < int(args.cases_per_domain)
@@ -472,6 +530,16 @@ def main() -> int:
                 or adds_semantic_sentinel
             ):
                 continue
+
+            if new_semantic_sentinels:
+                for family in sorted(new_semantic_sentinels):
+                    print(
+                        "OPENHOLDEM_SEMANTIC_SENTINEL_FOUND "
+                        f"family={family} domain={domain} attempt={attempt} "
+                        f"deal_seed={deal_seed} stack={stack_chips or 'default'} "
+                        f"opponent_style={opponent_style}",
+                        flush=True,
+                    )
 
             serial = case_serial[domain]
             case_serial[domain] += 1
@@ -504,6 +572,8 @@ def main() -> int:
                     "dealer": int(episode.dealer_id),
                     "hero_seat": int(hero_seat),
                     "deal_seed": int(deal_seed),
+                    "stack_chips": int(max(episode.stacks)),
+                    "opponent_style": opponent_style,
                     "full_street_case": bool(is_full_street),
                     "hero_actions": hero_actions,
                 }
