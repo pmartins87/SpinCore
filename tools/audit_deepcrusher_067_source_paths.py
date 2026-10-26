@@ -52,6 +52,34 @@ def previous_executable_rules(
     return candidates[-limit:]
 
 
+def executable_context(
+    rows: list[tuple[int, str, int, str]],
+    *,
+    target_line: int,
+    section: str,
+    before: int = 24,
+    after: int = 12,
+) -> list[dict[str, object]]:
+    same_section = [
+        (lineno, section_line, line.strip())
+        for lineno, row_section, section_line, line in rows
+        if row_section == section
+        and line.strip()
+        and not line.strip().startswith("//")
+        and line.strip().lower().startswith("when ")
+    ]
+    positions = [i for i, (lineno, _, _) in enumerate(same_section) if lineno == target_line]
+    if not positions:
+        return []
+    i = positions[0]
+    return [
+        {"line": lineno, "section_line": section_line, "text": line}
+        for lineno, section_line, line in same_section[
+            max(0, i - before): min(len(same_section), i + after + 1)
+        ]
+    ]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", type=Path, required=True)
@@ -134,13 +162,28 @@ def main() -> int:
         for name in competing_flags
     }
 
+    target_setter_contexts: dict[str, list[dict[str, object]]] = {}
+    for name in ("user_river66", "user_rivercbet60", "user_turnprobeopportunity"):
+        contexts = []
+        for setter in setters.get(name, []):
+            contexts.append({
+                "setter": setter,
+                "executable_context": executable_context(
+                    rows,
+                    target_line=int(setter["line"]),
+                    section=str(setter["section"]),
+                ),
+            })
+        target_setter_contexts[name] = contexts
+
     payload = {
-        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V5",
+        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V6",
         "source": str(args.source),
         "bet_two_third_consumers": consumers,
         "consumer_count": len(consumers),
         "sizing_hotspots": sizing_hotspots,
         "competing_flag_setters": competing_flag_setters,
+        "target_setter_contexts": target_setter_contexts,
         "user_dependencies_with_no_setter": sorted(
             {
                 d["name"]
