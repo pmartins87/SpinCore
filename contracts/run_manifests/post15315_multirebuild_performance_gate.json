@@ -1,0 +1,97 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_MULTIREBUILD_TARGET_RYZEN_PERFORMANCE_GATE",
+  "status": "READY",
+  "runner": "tools/run_post15315_multirebuild_performance_gate.sh",
+  "runner_blob_sha": "e2cea7604434aa14d2731f692be65115be11035a",
+  "contract_ids": [
+    "PERF-001",
+    "PERF-002",
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "RNG-013",
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "CKPT-001",
+    "ART-001"
+  ],
+  "affected_domains": [
+    "PERF",
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "VALID",
+    "SAFE",
+    "CKPT",
+    "ART"
+  ],
+  "duration_class": "MEDIUM_PERFORMANCE_GATE",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "teacher_iteration": 15315,
+    "teacher_sha256": "ac49b77c8ec3204e07f6d44d3718c68880e60675c5521f538438a3fa3ceae746",
+    "source_checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "protocol": "contracts/post15315_multirebuild_preregistration.json",
+    "protocol_status": "PREREGISTERED_BLOCKED_TEACHER_15315_AND_PERFORMANCE_GATE"
+  },
+  "performance_plan": {
+    "purpose": "Validate an exact, memory-safe process-parallel collection profile before the frozen K=8 post-15315 rebuild is allowed to run at production scale.",
+    "reduced_workload_scale": 40,
+    "reduced_member_collection": {
+      "ordinary_episodes": 200,
+      "augmentation_episodes": 4500,
+      "specialist_episodes": 7500
+    },
+    "thread_profiles": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "parallel_probe_members": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "parallel_workers": 4,
+    "canonical_fit_threads": 8,
+    "mini_fit_steps": 25,
+    "frozen_pass_requirements": [
+      "All tested collection thread profiles reproduce the canonical 8-thread sample identities/order and collection reports exactly.",
+      "Four-process member-shaped collection reproduces serial sample identities/order and reports exactly.",
+      "Repeated canonical mini-fit reproduces collection, loss sequence digest, and final model tensor digest exactly.",
+      "Actual parallel collection speedup is at least 1.25x.",
+      "Projected end-to-end speedup including unchanged fit cost is at least 1.25x.",
+      "Projected net savings for K=8 are at least 1800 seconds.",
+      "Minimum MemAvailable is at least 4 GiB.",
+      "Maximum swap used is at most 1 GiB.",
+      "Collection workers never deserialize the multi-GB 10105 checkpoint."
+    ],
+    "authorization_if_pass": "Implement the K=8 production runner with the selected exact collection thread profile, four independent collection workers, canonical 8-thread fits, the frozen member seeds, and no scientific threshold change.",
+    "exclusions": [
+      "No rebuild member is admitted by this performance PASS.",
+      "No strength benchmark is authorized.",
+      "No K=8/K=12 rule is changed.",
+      "No member weighting, dropping, reseeding, or post-hoc selection is allowed."
+    ]
+  },
+  "support_blob_shas": {
+    "tools/benchmark_post15315_multirebuild_performance.py": "95180c74b1e2484c8f2e60014f255cd04b8e8b63",
+    "tools/run_post15315_multirebuild_performance_gate.sh": "e2cea7604434aa14d2731f692be65115be11035a",
+    "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
+    "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee"
+  }
+}
