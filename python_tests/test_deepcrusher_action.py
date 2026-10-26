@@ -18,6 +18,7 @@ def snap(**overrides):
         pot=100,
         to_call=20,
         street_commitments=(20, 40, 0),
+        stacks=(280, 260, 0),
     )
     data.update(overrides)
     return SimpleNamespace(**data)
@@ -178,3 +179,73 @@ def test_history_origin_tracks_executed_passive_backup():
     )
     assert action.action_type == 2
     assert openppl_history_origin(decision, action) == "call"
+
+
+def test_technical_betpot_factors_use_openholdem_literal_constants():
+    third = translate_openppl_decision(
+        ReturnValue(-1000004),
+        public=snap(
+            min_raise_to=1,
+            max_raise_to=2000,
+            pot=1001,
+            to_call=0,
+            street_commitments=(0, 0, 0),
+        ),
+        actor=0,
+        big_blind_chips=20,
+    )
+    two_thirds = translate_openppl_decision(
+        ReturnValue(-1000006),
+        public=snap(
+            min_raise_to=1,
+            max_raise_to=2000,
+            pot=1001,
+            to_call=0,
+            street_commitments=(0, 0, 0),
+        ),
+        actor=0,
+        big_blind_chips=20,
+    )
+    # OpenHoldem BetPotFactor uses literal 0.333 / 0.667, not exact 1/3 / 2/3.
+    assert (third.action_type, third.amount_to) == (4, 333)
+    assert (two_thirds.action_type, two_thirds.amount_to) == (4, 668)
+
+
+def test_allin_adjustment_converts_f_betsize_at_critical_ratio():
+    action = translate_openppl_decision(
+        ReturnValue(5.0),
+        public=snap(stacks=(180, 260, 0)),
+        actor=0,
+        big_blind_chips=20,
+        allin_adjustment_ratio=0.50,
+    )
+    # currentbet 20 + balance 180 = 200; critical = 100; raw target = 100.
+    assert (action.action_type, action.amount_to) == (5, 0)
+
+
+def test_allin_adjustment_preserves_openholdem_currentbet_safety_cancel():
+    action = translate_openppl_decision(
+        ReturnValue(10.0),
+        public=snap(
+            street_commitments=(120, 40, 0),
+            stacks=(80, 260, 0),
+            max_raise_to=200,
+        ),
+        actor=0,
+        big_blind_chips=20,
+        allin_adjustment_ratio=0.50,
+    )
+    # critical = 100, but currentbet is already 120, so OpenHoldem cancels
+    # the conversion instead of forcing all-in.
+    assert (action.action_type, action.amount_to) == (4, 200)
+
+
+def test_allin_adjustment_does_not_apply_to_elementary_raise_button():
+    action = translate_openppl_decision(
+        DirectAction("RaiseMin"),
+        public=snap(),
+        actor=0,
+        big_blind_chips=20,
+        allin_adjustment_ratio=0.001,
+    )
+    assert (action.action_type, action.amount_to) == (4, 80)

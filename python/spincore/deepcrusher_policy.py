@@ -27,7 +27,7 @@ from spincore.deepcrusher_state import (
     STREET_TURN,
     state_view,
 )
-from spincore.openppl_program import OpenPPLProgram, OpenPPLSession
+from spincore.openppl_program import OpenPPLProgram, OpenPPLSession, ReturnValue
 
 
 _IDENTIFIER = re.compile(r"(?<![A-Za-z0-9_$])([A-Za-z_][A-Za-z0-9_$]*)(?![A-Za-z0-9_$])")
@@ -41,6 +41,7 @@ _INIT_STARTUP = "f$ini_function_on_startup"
 _INIT_HANDRESET = "f$ini_function_on_handreset"
 _INIT_NEW_ROUND = "f$ini_function_on_new_round"
 _INIT_MY_TURN = "f$ini_function_on_my_turn"
+_ALLIN_ADJUSTMENT = "f$allin_on_betsize_balance_ratio"
 
 
 class DeepCrusherR8Policy:
@@ -245,12 +246,26 @@ class DeepCrusherR8Policy:
             provider,
             hand_class=hand_class,
         )
+        allin_adjustment_ratio: float | None = None
+        if self.program.has_function(_ALLIN_ADJUSTMENT):
+            allin_result = session.evaluate(
+                _ALLIN_ADJUSTMENT,
+                provider,
+                hand_class=hand_class,
+            )
+            if not isinstance(allin_result, ReturnValue):
+                raise RuntimeError(
+                    "f$allin_on_betsize_balance_ratio returned a poker action"
+                )
+            allin_adjustment_ratio = float(allin_result.value)
+
         public = state.public_snapshot()
         action = translate_openppl_decision(
             decision,
             public=public,
             actor=int(seat),
             big_blind_chips=int(self._big_blind_chips),
+            allin_adjustment_ratio=allin_adjustment_ratio,
         )
         history_origin = openppl_history_origin(decision, action)
         self._action_origins.setdefault(int(seat), []).append(history_origin)
@@ -262,6 +277,7 @@ class DeepCrusherR8Policy:
             "translated_action_type": int(action.action_type),
             "translated_amount_to": int(action.amount_to),
             "openholdem_history_origin": history_origin,
+            "allin_adjustment_ratio": allin_adjustment_ratio,
         }
         if hasattr(decision, "name"):
             detail.update(

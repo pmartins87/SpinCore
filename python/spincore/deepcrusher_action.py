@@ -14,6 +14,8 @@ The rules mirror the OpenHoldem sources preserved in pmartins87/myoh_private:
   - RaiseBy N: ncallbets + N big blinds;
   - RaiseBy X%: ncallbets + X% of pot-after-call.
 * OpenPPL backup actions degrade unavailable aggression to call/check/fold.
+* AllinAdjustment::ChangeBetsizeToAllin converts f$betsize / technical bet-pot
+  actions to all-in using f$allin_on_betsize_balance_ratio before casino entry.
 
 Casino text-entry rounding is not part of poker strategy. The offline simulator has
 integer chips, so fractional chip targets use deterministic half-up rounding and
@@ -52,12 +54,12 @@ FIXED_ACTION_CODES = {
 _POT_FRACTION_BY_NAME = {
     "betfourthpot": 0.25,
     "raisefourthpot": 0.25,
-    "betthirdpot": 1.0 / 3.0,
-    "raisethirdpot": 1.0 / 3.0,
+    "betthirdpot": 0.333,
+    "raisethirdpot": 0.333,
     "bethalfpot": 0.50,
     "raisehalfpot": 0.50,
-    "bettwothirdpot": 2.0 / 3.0,
-    "raisetwothirdpot": 2.0 / 3.0,
+    "bettwothirdpot": 0.667,
+    "raisetwothirdpot": 0.667,
     "betthreefourthpot": 0.75,
     "raisethreefourthpot": 0.75,
     "betpot": 1.0,
@@ -149,7 +151,60 @@ def _allin_with_backup(public, actor: int) -> ExternalExactAction:
     return _call_with_backup(public)
 
 
-def _fixed_action(name: str, public, actor: int) -> ExternalExactAction:
+def _change_betsize_to_allin(
+    public,
+    actor: int,
+    target_chips: float,
+    ratio: float | None,
+) -> bool:
+    """Mirror OpenHoldem AllinAdjustment::ChangeBetsizeToAllin.
+
+    OpenHoldem compares the raw pre-casino betsize against
+    f$allin_on_betsize_balance_ratio * (currentbet + remaining balance).
+    It deliberately cancels the conversion when currentbet is already at or
+    above the critical threshold, treating that state conservatively.
+    """
+    if ratio is None or float(ratio) <= 0.0:
+        return False
+    if not math.isfinite(float(ratio)):
+        raise DeepCrusherActionTranslationError(
+            f"non-finite allin_on_betsize_balance_ratio: {ratio!r}"
+        )
+    try:
+        balance = float(public.stacks[int(actor)])
+        current_bet = float(public.street_commitments[int(actor)])
+    except (AttributeError, IndexError, TypeError) as exc:
+        raise DeepCrusherActionTranslationError(
+            "all-in adjustment requires public stacks and street_commitments"
+        ) from exc
+    if balance <= 0.0:
+        return False
+    total_balance = current_bet + balance
+    if total_balance <= 0.0:
+        return False
+    critical_betsize = float(ratio) * total_balance
+    if current_bet >= critical_betsize:
+        return False
+    return float(target_chips) >= critical_betsize
+
+
+def _adjusted_sized_aggression(
+    public,
+    actor: int,
+    target_chips: float,
+    ratio: float | None,
+) -> ExternalExactAction:
+    if _change_betsize_to_allin(public, actor, target_chips, ratio):
+        return _allin_with_backup(public, actor)
+    return _sized_aggression(public, target_chips)
+
+
+def _fixed_action(
+    name: str,
+    public,
+    actor: int,
+    allin_adjustment_ratio: float | None = None,
+) -> ExternalExactAction:
     low = str(name).lower()
 
     if low in {"allin", "betmax", "raisemax"}:
@@ -174,7 +229,12 @@ def _fixed_action(name: str, public, actor: int) -> ExternalExactAction:
         return _fallback_passive(public)
     if low in _POT_FRACTION_BY_NAME:
         target = _pot_fraction_target(public, actor, _POT_FRACTION_BY_NAME[low])
-        return _sized_aggression(public, target)
+        return _adjusted_sized_aggression(
+            public,
+            actor,
+            target,
+            allin_adjustment_ratio,
+        )
 
     raise DeepCrusherActionTranslationError(f"unsupported fixed OpenPPL action: {name!r}")
 
@@ -235,6 +295,7 @@ def translate_openppl_decision(
     public,
     actor: int,
     big_blind_chips: int,
+    allin_adjustment_ratio: float | None = None,
 ) -> ExternalExactAction:
     """Translate one OpenPPL main-callback result to one exact simulator action."""
     bb = int(big_blind_chips)
@@ -247,7 +308,13 @@ def translate_openppl_decision(
         if low == "raiseto":
             if decision.amount is None or decision.amount_kind != "bb_expression":
                 raise DeepCrusherActionTranslationError("RaiseTo missing BB expression")
-            return _sized_aggression(public, float(decision.amount) * bb)
+            target = float(decision.amount) * bb
+            return _adjusted_sized_aggression(
+                public,
+                actor,
+                target,
+                allin_adjustment_ratio,
+            )
         if low == "raiseby":
             if decision.amount is None:
                 raise DeepCrusherActionTranslationError("RaiseBy missing amount")
@@ -262,8 +329,18 @@ def translate_openppl_decision(
                 raise DeepCrusherActionTranslationError(
                     f"unsupported RaiseBy amount kind: {decision.amount_kind!r}"
                 )
-            return _sized_aggression(public, target)
-        return _fixed_action(name, public, actor)
+            return _adjusted_sized_aggression(
+                public,
+                actor,
+                target,
+                allin_adjustment_ratio,
+            )
+        return _fixed_action(
+            name,
+            public,
+            actor,
+            allin_adjustment_ratio,
+        )
 
     if not isinstance(decision, ReturnValue):
         raise DeepCrusherActionTranslationError(
@@ -277,12 +354,23 @@ def translate_openppl_decision(
     if value > 0:
         # TranslateOpenPPLDecisionToAutoplayerFunctions: positive values are
         # final f$betsize values in big blinds.
-        return _sized_aggression(public, value * bb)
+        target = value * bb
+        return _adjusted_sized_aggression(
+            public,
+            actor,
+            target,
+            allin_adjustment_ratio,
+        )
 
     if -1000.0 <= value < 0.0:
         # Small negative encoding: -0.50 means 50% pot.
         target = _pot_fraction_target(public, actor, -value)
-        return _sized_aggression(public, target)
+        return _adjusted_sized_aggression(
+            public,
+            actor,
+            target,
+            allin_adjustment_ratio,
+        )
 
     if value == 0.0:
         return _check_fold(public)
@@ -292,4 +380,9 @@ def translate_openppl_decision(
         raise DeepCrusherActionTranslationError(
             f"unknown fixed OpenPPL action code: {value}"
         )
-    return _fixed_action(FIXED_ACTION_CODES[rounded], public, actor)
+    return _fixed_action(
+        FIXED_ACTION_CODES[rounded],
+        public,
+        actor,
+        allin_adjustment_ratio,
+    )

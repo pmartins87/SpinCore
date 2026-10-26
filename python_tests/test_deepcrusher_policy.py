@@ -37,18 +37,20 @@ def simple_view():
     )
 
 
-def fake_policy():
+def fake_policy(allin_ratio: float = 0.90):
     p = DeepCrusherR8Policy.__new__(DeepCrusherR8Policy)
     p.source_path = None
     p.library_paths = ()
     p.source_metadata = {}
-    p.program = OpenPPLProgram.from_text("""
+    p.program = OpenPPLProgram.from_text(f"""
 ##f$ini_function_on_startup##
 me_st_X_1
 ##f$ini_function_on_new_round##
 me_inc_X
 ##f$ini_function_on_my_turn##
 When Others Set user_seen
+##f$allin_on_betsize_balance_ratio##
+When Others Return {allin_ratio} Force
 ##f$preflop##
 When user_seen && me_re_X = 2 Return 3 Force
 When Others Fold Force
@@ -85,6 +87,7 @@ def public():
         pot=30,
         to_call=10,
         street_commitments=(10, 20, 0),
+        stacks=(490, 480, 0),
     )
 
 
@@ -116,6 +119,7 @@ def test_policy_replays_startup_newround_myturn_before_primary_callback():
     assert "user_seen" in p._sessions[0].user_variables
     assert p._action_origins[0] == ["betsize", "betsize"]
     assert p.decision_metadata(seat=0)["openholdem_history_origin"] == "betsize"
+    assert p.decision_metadata(seat=0)["allin_adjustment_ratio"] == 0.90
 
 
 def test_begin_hand_isolates_openppl_memory_between_paired_replays():
@@ -138,3 +142,27 @@ def test_begin_hand_isolates_openppl_memory_between_paired_replays():
         deal_seed=123,
     )
     assert p._sessions[0].memory_symbols == {}
+
+
+def test_policy_evaluates_allin_adjustment_before_final_action_translation():
+    p = fake_policy(allin_ratio=0.001)
+    episode = SimpleNamespace(big_blind=20)
+    lineup = SimpleNamespace(seats=("DEEPCRUSHER", "SPINCORE", "DEAD"))
+    p.begin_hand(
+        episode=episode,
+        lineup=lineup,
+        scenario_index=1,
+        lineup_index=0,
+        deal_seed=123,
+    )
+    state = SimpleNamespace(
+        owner=SimpleNamespace(explicit_deal_available=True),
+        public_snapshot=public,
+    )
+
+    with patch("spincore.deepcrusher_policy.state_view", return_value=simple_view()):
+        action = p.choose_exact(state, seat=0, rng=None)
+
+    assert (action.action_type, action.amount_to) == (5, 0)
+    assert p._action_origins[0] == ["allin"]
+    assert p.decision_metadata(seat=0)["allin_adjustment_ratio"] == 0.001
