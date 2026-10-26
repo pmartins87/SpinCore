@@ -176,14 +176,52 @@ def main() -> int:
             })
         target_setter_contexts[name] = contexts
 
+    supersession_requirements = {
+        "hsub_tp_75_75": [
+            "Standard TP+ plan is 75/75.",
+            "When f$game_HUSB && user_CF8_HUSB_TP_TurnBarrel75 Set user_River75",
+        ],
+        "hubb_air_probe_50_50": [
+            "HUBB air probe: 50 + 50 pressure line.",
+            "When user_DC10_HUBB_AirProbe50_River50 && f$NoMadeHand Set user_River50",
+        ],
+        "hubb_draw_probe_source_first": [
+            "R8/R7-05 SOURCE-FIRST: HUBB draw-probe river sizing belongs to the TURN",
+            "When user_DC10_HUBB_DrawProbe_nCPL Set user_River50",
+            "When user_DC10_HUBB_DrawProbe_CPL Set user_River125",
+        ],
+    }
+    supersession_evidence = {
+        name: {
+            "required_fragments": fragments,
+            "all_present": all(fragment in text for fragment in fragments),
+        }
+        for name, fragments in supersession_requirements.items()
+    }
+    supersession_proven = all(
+        row["all_present"] for row in supersession_evidence.values()
+    )
+    if not supersession_proven:
+        raise SystemExit(
+            "2/3 source-supersession evidence changed; re-audit dynamic sentinel contract"
+        )
+
     payload = {
-        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V6",
+        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V7",
         "source": str(args.source),
         "bet_two_third_consumers": consumers,
         "consumer_count": len(consumers),
         "sizing_hotspots": sizing_hotspots,
         "competing_flag_setters": competing_flag_setters,
         "target_setter_contexts": target_setter_contexts,
+        "dynamic_067_verdict": {
+            "status": "SOURCE_SUPERSEDED_NOT_DYNAMIC_SENTINEL",
+            "reason": (
+                "All settable historical 2/3 paths are superseded by source-first "
+                "R8 sizing plans; remaining 2/3 dependencies without setters are legacy."
+            ),
+            "supersession_evidence": supersession_evidence,
+        },
         "user_dependencies_with_no_setter": sorted(
             {
                 d["name"]
