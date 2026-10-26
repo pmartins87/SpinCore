@@ -228,15 +228,21 @@ def main() -> int:
         if dict(prior.get("member_seeds") or {}) != seeds:
             raise RuntimeError("mechanical rerun member-seed mismatch")
 
-    # Ordinary fresh teacher-target stream.
-    base_train, base_holdout, base_collection_raw = collect.collect_fresh_split(
-        solver,
-        teacher,
-        base_episodes,
-        master_seed=int(seeds["base_collection_seed"]),
-        sample_iteration=FINAL_ITERATION,
-        progress_prefix=f"POST15315_MEMBER_{args.member:02d}_ORDINARY",
-    )
+    # Ordinary fresh teacher-target stream.  Production may supply an exact
+    # digest-validated cache produced by the Ryzen-approved parallel collector.
+    if cache_payload is None:
+        base_train, base_holdout, base_collection_raw = collect.collect_fresh_split(
+            solver,
+            teacher,
+            base_episodes,
+            master_seed=int(seeds["base_collection_seed"]),
+            sample_iteration=FINAL_ITERATION,
+            progress_prefix=f"POST15315_MEMBER_{args.member:02d}_ORDINARY",
+        )
+    else:
+        base_train = list(cache_payload["ordinary"]["train"])
+        base_holdout = list(cache_payload["ordinary"]["holdout"])
+        base_collection_raw = dict(cache_payload["ordinary"]["stats"])
     min_train = int(avg["min_ordinary_train_samples"])
     min_holdout = int(avg["min_ordinary_holdout_samples"])
     if len(base_train) < min_train or len(base_holdout) < min_holdout:
@@ -263,14 +269,19 @@ def main() -> int:
     base_strong = [s for s in base_train if strong(s)]
     base_keys = {skey(s) for s in base_strong}
     torch.set_num_threads(int(args.collection_threads))
-    aug_train, aug_hold, augment_collection_raw = collect.collect_strong_split(
-        solver,
-        teacher,
-        augment_episodes,
-        master_seed=int(seeds["augment_collection_seed"]),
-        sample_iteration=FINAL_ITERATION,
-        progress_prefix=f"POST15315_MEMBER_{args.member:02d}_AUGMENT",
-    )
+    if cache_payload is None:
+        aug_train, aug_hold, augment_collection_raw = collect.collect_strong_split(
+            solver,
+            teacher,
+            augment_episodes,
+            master_seed=int(seeds["augment_collection_seed"]),
+            sample_iteration=FINAL_ITERATION,
+            progress_prefix=f"POST15315_MEMBER_{args.member:02d}_AUGMENT",
+        )
+    else:
+        aug_train = list(cache_payload["augmentation"]["train"])
+        aug_hold = list(cache_payload["augmentation"]["holdout"])
+        augment_collection_raw = dict(cache_payload["augmentation"]["stats"])
     seen = set()
     novel = []
     for s in list(aug_train) + list(aug_hold):
@@ -302,14 +313,19 @@ def main() -> int:
 
     # Frozen target-stratified specialist, no mode/step selection.
     torch.set_num_threads(int(args.collection_threads))
-    sp_train, sp_hold, specialist_collection_raw = collect.collect_strong_split(
-        solver,
-        teacher,
-        specialist_episodes,
-        master_seed=int(seeds["specialist_collection_seed"]),
-        sample_iteration=FINAL_ITERATION,
-        progress_prefix=f"POST15315_MEMBER_{args.member:02d}_SPECIALIST",
-    )
+    if cache_payload is None:
+        sp_train, sp_hold, specialist_collection_raw = collect.collect_strong_split(
+            solver,
+            teacher,
+            specialist_episodes,
+            master_seed=int(seeds["specialist_collection_seed"]),
+            sample_iteration=FINAL_ITERATION,
+            progress_prefix=f"POST15315_MEMBER_{args.member:02d}_SPECIALIST",
+        )
+    else:
+        sp_train = list(cache_payload["specialist"]["train"])
+        sp_hold = list(cache_payload["specialist"]["holdout"])
+        specialist_collection_raw = dict(cache_payload["specialist"]["stats"])
     unique = spec.unique_strong(list(sp_train) + list(sp_hold))
     strata = spec.stratum_counts(unique)
     if len(unique) < int(sp["min_unique_strong_states"]):
@@ -349,6 +365,7 @@ def main() -> int:
         "member_seeds": seeds,
         "collection_threads": int(args.collection_threads),
         "fit_threads": int(args.fit_threads),
+        "collection_cache_sha256": collection_cache_sha,
         "production_status": "BUILT_UNVALIDATED_NOT_PROMOTED",
     }
 
