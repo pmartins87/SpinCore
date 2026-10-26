@@ -1,8 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "POST15315_MULTIREBUILD_K8_PRODUCTION_CONSTRUCTION",
-  "status": "BLOCKED_AWAITING_PERFORMANCE_REPORT_SHA",
-  "block_reason": "The target-Ryzen gate passed on the user's host, but the exact SHA256 of post15315_multirebuild_performance_gate.json has not yet been frozen into this manifest.",
+  "status": "READY",
   "runner": "tools/run_post15315_multirebuild_production.sh",
   "runner_blob_sha": "49bee843e49473a84874e822eb71dcd1cdc360d2",
   "contract_ids": [
@@ -48,9 +47,9 @@
     "primary_rebuild_count": 8
   },
   "performance_gate": {
-    "status": "PASS_AWAITING_SHA_BINDING",
+    "status": "PASS",
     "evidence": "runs/post15315_multirebuild_performance_gate/post15315_multirebuild_performance_gate.json",
-    "evidence_sha256": null,
+    "evidence_sha256": "4f724458cc5304caf95842e32b3a010178042494b15045d08d9b9bb3eaacbc48",
     "observed_on_target_host": {
       "selected_collection_threads": 2,
       "parallel_collection_workers": 4,
