@@ -533,6 +533,16 @@ def main() -> int:
     required_actions = {"F", "C", "K", "R", "A"}
     covered_actions: set[str] = set()
     covered_decision_families: set[str] = set()
+    observed_067_state_flags: set[str] = set()
+    diagnostic_067_flags = {
+        "user_turnprobeopportunity",
+        "user_turn50",
+        "user_turn75",
+        "user_river50",
+        "user_river75",
+        "user_river66",
+        "user_rivercbet60",
+    }
     required_decision_families = (
         {"ALLIN_ADJUSTED", "TECH_BETPOT_033", "TECH_BETPOT_067"}
         if args.require_semantic_sentinels
@@ -647,6 +657,24 @@ def main() -> int:
                 explicit_board=explicit_board,
             )
             hero_rows = [a for a in actions if a.hero]
+            for row in hero_rows:
+                metadata = row.decision_metadata or {}
+                active = {
+                    str(name).lower()
+                    for name in metadata.get("openppl_user_variables", [])
+                }
+                newly_observed = (
+                    active & diagnostic_067_flags
+                ) - observed_067_state_flags
+                for flag in sorted(newly_observed):
+                    print(
+                        "OPENHOLDEM_067_STATE_FLAG_FOUND "
+                        f"flag={flag} domain={domain} attempt={attempt} "
+                        f"street={int(row.street)} family={row.decision_family} "
+                        f"active_067_flags={sorted(active & diagnostic_067_flags)}",
+                        flush=True,
+                    )
+                observed_067_state_flags.update(newly_observed)
             if explicit_holes is not None:
                 trace_rows = [
                     {
