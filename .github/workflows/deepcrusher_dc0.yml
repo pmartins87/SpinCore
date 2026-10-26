@@ -188,3 +188,22 @@ jobs:
             fixtures/deepcrusher_openholdem_parity_v1/deepcrusher_dc0_parity.tc \
             /tmp/deepcrusher_openholdem_parity/deepcrusher_dc0_parity.tc
           echo "DEEPC_RUSHER_OPENHOLDEM_PARITY_FIXTURES_FROZEN_PASS"
+
+      - name: Search OpenHoldem semantic sentinel parity cases
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          python tools/generate_deepcrusher_openholdem_testsuite.py \
+            --solver build/libspincore_solver_c.so \
+            --output-dir /tmp/deepcrusher_openholdem_semantic_sentinels \
+            --cases-per-domain 1 \
+            --max-search 2000 \
+            --require-semantic-sentinels
+          cat /tmp/deepcrusher_openholdem_semantic_sentinels/manifest.json
+          cat /tmp/deepcrusher_openholdem_semantic_sentinels/deepcrusher_dc0_parity.tc
+          for f in /tmp/deepcrusher_openholdem_semantic_sentinels/dc0_*.txt; do
+            echo "=== SENTINEL_CASE_BEGIN:$(basename "$f") ==="
+            cat "$f"
+            echo "=== SENTINEL_CASE_END:$(basename "$f") ==="
+          done
+          echo "DEEPC_RUSHER_OPENHOLDEM_SEMANTIC_SENTINEL_SEARCH_PASS"

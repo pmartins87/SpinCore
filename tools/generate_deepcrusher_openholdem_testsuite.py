@@ -144,6 +144,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--cases-per-domain", type=int, default=4)
     p.add_argument("--seed", type=int, default=20260923)
     p.add_argument("--max-search", type=int, default=400)
+    p.add_argument(
+        "--require-semantic-sentinels",
+        action="store_true",
+        help=(
+            "continue deterministic search until adjusted-allin and literal "
+            "33.3%/66.7% technical bet-pot decision families are captured"
+        ),
+    )
     return p.parse_args()
 
 
@@ -396,6 +404,12 @@ def main() -> int:
 
     required_actions = {"F", "C", "K", "R", "A"}
     covered_actions: set[str] = set()
+    covered_decision_families: set[str] = set()
+    required_decision_families = (
+        {"ALLIN_ADJUSTED", "TECH_BETPOT_033", "TECH_BETPOT_067"}
+        if args.require_semantic_sentinels
+        else set()
+    )
     covered_streets = {
         "THREE_HANDED": set(),
         "TRUE_HEADS_UP": set(),
@@ -436,15 +450,27 @@ def main() -> int:
             hero_action_letters = {
                 ACTION_TEXT[int(a.action_type)] for a in hero_rows
             }
+            hero_decision_families = {
+                str(a.decision_family) for a in hero_rows
+            }
             is_full_street = hero_streets == {0, 1, 2, 3}
 
             adds_action = bool(hero_action_letters - covered_actions)
             adds_street = bool(hero_streets - covered_streets[domain])
+            adds_semantic_sentinel = bool(
+                (hero_decision_families & required_decision_families)
+                - covered_decision_families
+            )
             needs_full_street = (
                 is_full_street
                 and full_street_counts[domain] < int(args.cases_per_domain)
             )
-            if not (adds_action or adds_street or needs_full_street):
+            if not (
+                adds_action
+                or adds_street
+                or needs_full_street
+                or adds_semantic_sentinel
+            ):
                 continue
 
             serial = case_serial[domain]
@@ -483,10 +509,15 @@ def main() -> int:
                 }
             )
             covered_actions.update(hero_action_letters)
+            covered_decision_families.update(hero_decision_families)
             covered_streets[domain].update(hero_streets)
             if needs_full_street:
                 full_street_counts[domain] += 1
 
+            semantic_done = (
+                not required_decision_families
+                or required_decision_families <= covered_decision_families
+            )
             if (
                 full_street_counts[domain] >= int(args.cases_per_domain)
                 and covered_streets[domain] == {0, 1, 2, 3}
@@ -494,12 +525,16 @@ def main() -> int:
                     domain != "TRUE_HEADS_UP"
                     or covered_actions >= required_actions
                 )
+                and (
+                    not args.require_semantic_sentinels
+                    or semantic_done
+                )
             ):
                 break
 
     # Recompute from serialized hero actions so the manifest remains the single
     # evidence carrier even if RenderedAction storage changes later.
-    covered_decision_families = sorted({
+    covered_decision_families_serialized = sorted({
         str(action.get("decision_family", "UNKNOWN"))
         for case in manifest["cases"]
         for action in case.get("hero_actions", [])
@@ -516,12 +551,16 @@ def main() -> int:
         for domain, count in full_street_counts.items()
         if count < int(args.cases_per_domain)
     }
-    if missing_actions or missing_streets or missing_full:
+    missing_semantic = sorted(
+        required_decision_families - covered_decision_families
+    )
+    if missing_actions or missing_streets or missing_full or missing_semantic:
         raise RuntimeError(
             "parity pack search incomplete: "
             f"missing_actions={missing_actions} "
             f"missing_streets={missing_streets} "
-            f"missing_full_street_cases={missing_full}"
+            f"missing_full_street_cases={missing_full} "
+            f"missing_semantic_sentinels={missing_semantic}"
         )
 
     manifest["coverage"] = {
@@ -532,7 +571,8 @@ def main() -> int:
             for domain, values in covered_streets.items()
         },
         "full_street_cases_by_domain": dict(full_street_counts),
-        "decision_families": covered_decision_families,
+        "decision_families": covered_decision_families_serialized,
+        "required_decision_families": sorted(required_decision_families),
         "semantic_sentinels": {
             "allin_adjusted_present": "ALLIN_ADJUSTED" in covered_decision_families,
             "tech_betpot_033_present": "TECH_BETPOT_033" in covered_decision_families,
