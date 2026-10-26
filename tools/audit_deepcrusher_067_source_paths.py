@@ -101,11 +101,31 @@ def main() -> int:
             }
         )
 
+    hotspot_ranges = {
+        "f$BetsizeTurnHeadsup": (40, 55),
+        "f$BetsizeRiverHeadsup": (20, 35),
+    }
+    sizing_hotspots: dict[str, list[dict[str, object]]] = {}
+    for hotspot_section, (lo, hi) in hotspot_ranges.items():
+        sizing_hotspots[hotspot_section] = [
+            {
+                "line": lineno,
+                "section_line": section_line,
+                "text": line.strip(),
+            }
+            for lineno, section, section_line, line in rows
+            if section == hotspot_section
+            and lo <= section_line <= hi
+            and line.strip()
+            and not line.strip().startswith("//")
+        ]
+
     payload = {
-        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V3",
+        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V4",
         "source": str(args.source),
         "bet_two_third_consumers": consumers,
         "consumer_count": len(consumers),
+        "sizing_hotspots": sizing_hotspots,
         "user_dependencies_with_no_setter": sorted(
             {
                 d["name"]
