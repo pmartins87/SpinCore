@@ -1,0 +1,91 @@
+{
+  "canonical_parity_pass": false,
+  "cases": [
+    {
+      "attempt": 1,
+      "deal_seed": 20260924,
+      "dealer": 1,
+      "domain": "THREE_HANDED",
+      "family": "TECH_BETPOT_075",
+      "file": "dc0_real_075.txt",
+      "hero_seat": 0,
+      "id": "dc0_real_075",
+      "opponent_style": "PASSIVE",
+      "stack_chips": 500,
+      "target_rows": [
+        {
+          "action": "R",
+          "allin_adjustment_ratio": 0.5,
+          "amount_to": 45,
+          "decision_family": "TECH_BETPOT_075",
+          "hand_class": "T3o",
+          "legal_buttons": "KRA",
+          "openppl_main": "f$river",
+          "street": 3
+        }
+      ]
+    },
+    {
+      "attempt": 8,
+      "deal_seed": 20260931,
+      "dealer": 2,
+      "domain": "THREE_HANDED",
+      "family": "ALLIN_ADJUSTED",
+      "file": "dc0_real_allin_adjusted.txt",
+      "hero_seat": 0,
+      "id": "dc0_real_allin_adjusted",
+      "opponent_style": "PASSIVE",
+      "stack_chips": 160,
+      "target_rows": [
+        {
+          "action": "A",
+          "allin_adjustment_ratio": 0.001,
+          "amount_to": 0,
+          "decision_family": "ALLIN_ADJUSTED",
+          "hand_class": "K2o",
+          "legal_buttons": "KRA",
+          "openppl_main": "f$turn",
+          "street": 2
+        }
+      ]
+    },
+    {
+      "attempt": 72,
+      "deal_seed": 20260995,
+      "dealer": 0,
+      "domain": "THREE_HANDED",
+      "family": "TECH_BETPOT_033",
+      "file": "dc0_real_033.txt",
+      "hero_seat": 0,
+      "id": "dc0_real_033",
+      "opponent_style": "PASSIVE",
+      "stack_chips": 500,
+      "target_rows": [
+        {
+          "action": "R",
+          "allin_adjustment_ratio": 0.5,
+          "amount_to": 40,
+          "decision_family": "TECH_BETPOT_033",
+          "hand_class": "KK",
+          "legal_buttons": "KRA",
+          "openppl_main": "f$flop",
+          "street": 1
+        },
+        {
+          "action": "R",
+          "allin_adjustment_ratio": 0.5,
+          "amount_to": 80,
+          "decision_family": "TECH_BETPOT_033",
+          "hand_class": "KK",
+          "legal_buttons": "KRA",
+          "openppl_main": "f$turn",
+          "street": 2
+        }
+      ]
+    }
+  ],
+  "required_next_system": "REAL_OPENHOLDEM_MANUALMODE_TESTSUITE2",
+  "schema": "SPINCORE_DEEPCRUSHER_REAL_OPENHOLDEM_PARITY_V1",
+  "source_generator_seed": 20260923,
+  "status": "FROZEN_OFFLINE_EXPECTATIONS_PENDING_REAL_OPENHOLDEM"
+}
