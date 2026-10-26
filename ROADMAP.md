@@ -4452,10 +4452,10 @@ Implementation status:
 2. original member builder remains byte-frozen to the performance-gate evidence; a separate production cached-builder path with digest revalidation is implemented;
 3. fail-closed K=8 production orchestrator: implemented;
 4. guarded shell runner + stage manifest: implemented;
-5. exact PASS-report SHA binding: **still pending**;
-6. production manifest stays BLOCKED until that SHA is frozen and CI passes.
+5. exact PASS-report SHA binding: **PASS** — `4f724458cc5304caf95842e32b3a010178042494b15045d08d9b9bb3eaacbc48`;
+6. production manifest: **READY**, bound to that exact target-Ryzen evidence.
 
-Do not launch K=8 before item 5 is closed and the production manifest becomes READY.
+K=8 construction may now be launched only through the guarded production runner and only while the manifest/support/evidence bindings remain exact.
 
 Once K=8 construction PASS is obtained, stop and run the preregistered stability
 stage on fresh seed 153159001. Only a mechanically clean K=8 stability failure may
