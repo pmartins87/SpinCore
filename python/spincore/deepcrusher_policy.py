@@ -289,6 +289,10 @@ class DeepCrusherR8Policy:
             "translated_amount_to": int(action.amount_to),
             "openholdem_history_origin": history_origin,
             "allin_adjustment_ratio": allin_adjustment_ratio,
+            # Diagnostic provenance only: OpenHoldem user variables are hand-lifetime
+            # state. Recording the active set here lets parity-fixture discovery prove
+            # whether a source setter was actually reached before sizing.
+            "openppl_user_variables": sorted(session.user_variables),
         }
         if hasattr(decision, "name"):
             detail.update(
