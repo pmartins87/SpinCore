@@ -35,6 +35,7 @@ on:
       - 'tools/export_spincore_hybrid_inference.py'
       - 'tools/smoke_deepcrusher_oracle_solver.py'
       - 'tools/generate_deepcrusher_openholdem_testsuite.py'
+      - 'tools/generate_deepcrusher_real_openholdem_parity_packet.py'
       - 'tools/audit_deepcrusher_067_source_paths.py'
       - 'include/spincore/solver_c_api.h'
       - 'src/solver_c_api.cpp'
@@ -92,6 +93,7 @@ jobs:
             tools/export_spincore_hybrid_inference.py \
             tools/smoke_deepcrusher_oracle_solver.py \
             tools/generate_deepcrusher_openholdem_testsuite.py \
+            tools/generate_deepcrusher_real_openholdem_parity_packet.py \
             tools/audit_deepcrusher_067_source_paths.py
       - name: Expression semantics
         env:
@@ -219,3 +221,13 @@ jobs:
             echo "=== SENTINEL_CASE_END:$(basename "$f") ==="
           done
           echo "DEEPC_RUSHER_OPENHOLDEM_SEMANTIC_SENTINEL_SEARCH_PASS"
+
+
+      - name: Generate real OpenHoldem parity packet preview
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          python tools/generate_deepcrusher_real_openholdem_parity_packet.py \
+            --solver build/libspincore_solver_c.so \
+            --output-dir /tmp/deepcrusher_real_openholdem_parity
+          echo "DEEPC_RUSHER_REAL_OPENHOLDEM_PARITY_PACKET_PREVIEW_PASS"
