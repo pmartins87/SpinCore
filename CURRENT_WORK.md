@@ -4692,7 +4692,7 @@ raise-to mismatches are hard FAIL; no large DeepCrusher-vs-CrusherTBP benchmark
 is authorized before this gate closes.
 
 
-## 2026-10-26 — post-15315 target-Ryzen K=8 performance gate PASS; production runner prepared but SHA-bound
+## 2026-10-26 — post-15315 target-Ryzen K=8 performance gate PASS; production runner SHA-bound and READY
 
 The required target-host performance/parity gate has now completed on the Ryzen host with final runner PASS.
 
@@ -4723,16 +4723,16 @@ Repository implementation now prepared:
   members 1-8 under the approved 4x2 collection / sequential-8-thread fit shape,
   supports fail-closed resume, and stops after K=8 construction;
 - `tools/run_post15315_multirebuild_production.sh` is the guarded host runner;
-- `contracts/run_manifests/post15315_multirebuild_production.json` intentionally
-  remains BLOCKED_AWAITING_PERFORMANCE_REPORT_SHA.
+- `contracts/run_manifests/post15315_multirebuild_production.json` is now READY and
+  bound to the exact target-host PASS artifact SHA256
+  `4f724458cc5304caf95842e32b3a010178042494b15045d08d9b9bb3eaacbc48`.
 
-The production stage is not yet authorized to start. The pasted terminal output
-does not contain the SHA256 of the complete
-`post15315_multirebuild_performance_gate.json` artifact, so the stage manifest
-cannot honestly bind to the exact PASS evidence yet. The next action is to obtain
-that one SHA256, freeze it into the manifest, require project-contract/main
-regression PASS on the bound runner, and only then mark the K=8 construction
-stage READY.
+The production construction stage is authorized only under that exact evidence
+binding and the frozen execution profile: four collection workers x two threads,
+no 10105 checkpoint fan-out into collection workers, and sequential eight-thread
+member fits. The runner must still fail closed on any repository/support/evidence
+drift. K=8 construction is a construction gate only; it does not itself establish
+stability or strength.
 
 After K=8 construction completes, stop. The next scientific gate is the frozen
 fresh rebuild-stability bank at seed 153159001. K=12 remains conditional only on
