@@ -10,15 +10,46 @@ SET_RE = re.compile(r"\bSet\s+(user_[A-Za-z0-9_]+)\b", re.IGNORECASE)
 SECTION_RE = re.compile(r"^##([^#]+)##\s*$")
 
 
-def annotated_lines(text: str) -> list[tuple[int, str, str]]:
-    out: list[tuple[int, str, str]] = []
+def annotated_lines(text: str) -> list[tuple[int, str, int, str]]:
+    out: list[tuple[int, str, int, str]] = []
     section = ""
+    section_line = 0
     for lineno, line in enumerate(text.splitlines(), 1):
         m = SECTION_RE.match(line.strip())
         if m:
             section = m.group(1).strip()
-        out.append((lineno, section, line))
+            section_line = 0
+            out.append((lineno, section, section_line, line))
+            continue
+        section_line += 1
+        out.append((lineno, section, section_line, line))
     return out
+
+
+def previous_executable_rules(
+    rows: list[tuple[int, str, int, str]],
+    *,
+    target_line: int,
+    section: str,
+    limit: int = 14,
+) -> list[dict[str, object]]:
+    candidates = []
+    for lineno, row_section, section_line, line in rows:
+        if lineno >= target_line:
+            break
+        clean = line.strip()
+        if (
+            row_section == section
+            and clean
+            and not clean.startswith("//")
+            and clean.lower().startswith("when ")
+        ):
+            candidates.append({
+                "line": lineno,
+                "section_line": section_line,
+                "text": clean,
+            })
+    return candidates[-limit:]
 
 
 def main() -> int:
@@ -31,15 +62,20 @@ def main() -> int:
     rows = annotated_lines(text)
 
     setters: dict[str, list[dict[str, object]]] = {}
-    for lineno, section, line in rows:
+    for lineno, section, section_line, line in rows:
         for m in SET_RE.finditer(line):
             key = m.group(1).lower()
             setters.setdefault(key, []).append(
-                {"line": lineno, "section": section, "text": line.strip()}
+                {
+                    "line": lineno,
+                    "section": section,
+                    "section_line": section_line,
+                    "text": line.strip(),
+                }
             )
 
     consumers: list[dict[str, object]] = []
-    for lineno, section, line in rows:
+    for lineno, section, section_line, line in rows:
         if "bettwothirdpot" not in line.lower():
             continue
         users = sorted({x.lower() for x in USER_RE.findall(line)})
@@ -47,7 +83,13 @@ def main() -> int:
             {
                 "line": lineno,
                 "section": section,
+                "section_line": section_line,
                 "text": line.strip(),
+                "previous_executable_rules": previous_executable_rules(
+                    rows,
+                    target_line=lineno,
+                    section=section,
+                ),
                 "user_dependencies": [
                     {
                         "name": u,
@@ -60,7 +102,7 @@ def main() -> int:
         )
 
     payload = {
-        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V2",
+        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V3",
         "source": str(args.source),
         "bet_two_third_consumers": consumers,
         "consumer_count": len(consumers),
