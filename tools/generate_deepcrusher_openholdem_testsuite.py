@@ -196,6 +196,35 @@ def explicit_husb_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tu
     return out
 
 
+def explicit_husb_river_improve_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tuple[int, ...]]]:
+    """Directed HUSB probes that make top pair only on the river.
+
+    These deliberately avoid carrying a flop/turn top-pair value-barrel state
+    into the river.  The target is the reviewed HUSB baseline:
+      !river_Paired && TopPairOrBetter && !river_Completed -> user_River66.
+    """
+    raw = [
+        (("As", "9c"), ("Kh", "Jd"), ("Qs", "7h", "2d", "4c", "9s")),
+        (("Ah", "8c"), ("Kh", "Jd"), ("Qs", "7h", "2d", "4c", "8s")),
+        (("Ks", "9c"), ("Ah", "Jd"), ("Qs", "7h", "2d", "4c", "9d")),
+        (("Kh", "8c"), ("As", "Jd"), ("Qs", "7h", "2d", "4c", "8d")),
+        (("Qs", "9c"), ("Ah", "Kd"), ("Js", "7h", "2d", "4c", "9d")),
+        (("Qh", "8c"), ("As", "Kd"), ("Js", "7h", "2d", "4c", "8d")),
+        (("Js", "9c"), ("Ah", "Kd"), ("Qs", "7h", "2d", "4c", "9d")),
+        (("Jh", "8c"), ("As", "Kd"), ("Qs", "7h", "2d", "4c", "8d")),
+    ]
+    out = []
+    for hero, villain, board in raw:
+        holes = (
+            tuple(card_id(x) for x in hero),
+            tuple(card_id(x) for x in villain),
+            (-1, -1),
+        )
+        board_ids = tuple(card_id(x) for x in board)
+        out.append((holes, board_ids))
+    return out
+
+
 def explicit_hubb_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tuple[int, ...]]]:
     """Directed HU/BB limp-check-check probes for user_TurnProbeOpportunity."""
     raw = [
@@ -567,6 +596,10 @@ def main() -> int:
             directed_067.extend(
                 (0, 0, holes, board, "HUSB_RIVER_TP")
                 for holes, board in explicit_husb_067_candidates()
+            )
+            directed_067.extend(
+                (0, 0, holes, board, "HUSB_RIVER_IMPROVE_TP")
+                for holes, board in explicit_husb_river_improve_067_candidates()
             )
             directed_067.extend(
                 (0, 1, holes, board, "HUBB_LIMP_TURN_PROBE")
