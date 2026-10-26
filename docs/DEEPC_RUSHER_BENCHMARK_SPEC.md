@@ -232,11 +232,12 @@ Current DC0 implementation state:
 
 - transitive Hold'em native/OpenPPL closure: **PASS, 0 unresolved leaves**;
 - frozen optional environment/PokerTracker/network profile: **PASS**;
-- exact action/sizing translation into simulator exact actions: **PASS mechanically**;
+- exact action/sizing translation into simulator exact actions: **PASS mechanically**, including OpenHoldem literal technical pot factors 0.333/0.667 and `f$allin_on_betsize_balance_ratio` conversion/safety semantics as of commits `4e9199a` + `616a04d`;
 - executable `DeepCrusherR8Policy` over complete simulated hands: **PASS mechanically**;
 - OpenHoldem action-origin provenance (`didrais` vs `didbetsize`, including prevaction 2 vs 3): **implemented and CI-covered**;
 - SpinCore benchmark candidate semantics: compact hybrid bundle using **3H finalized AveragePolicy + HU matched current ENS8 sidecar**;
-- broad real-OpenHoldem parity fixtures across preflop/flop/turn/river with exact bet/raise amounts: **still required for canonical DC0 parity**.
+- deterministic parity-pack provenance for adjusted-all-in and technical 33.3%/66.7% paths: **in progress**;
+- broad real-OpenHoldem parity fixtures across preflop/flop/turn/river with exact bet/raise amounts, including those sentinel paths: **still required for canonical DC0 parity**.
 
 Therefore DC1 may run now as a DEVELOPMENT_ONLY mechanical/strategic-diagnostic smoke, but no pre-parity result is a canonical strength claim. The prior R8 v22 live smoke remains useful evidence that the frozen formula itself is operational; its original five logs are not committed as machine-readable parity fixtures.
 

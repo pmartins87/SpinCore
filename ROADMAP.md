@@ -4341,3 +4341,26 @@ iterations. Runtime source binding must match the final 15315 PASS report hashes
 The travel extension does not replace the post-15315 multi-rebuild stabilization,
 DC0, or canonical promotion sequence.
 
+### 2026-10-26 — DC0 action backend implementation checkpoint
+
+The shared action backend now mechanically implements the two OpenHoldem
+semantics previously listed as A-001/A-002:
+- technical third/two-thirds pot buttons use literal `0.333/0.667`;
+- `f$allin_on_betsize_balance_ratio` is evaluated and its
+  `ChangeBetsizeToAllin` threshold/safety rule is applied before final
+  f$betsize/technical-pot execution.
+
+Both changes are regression-tested and the dedicated DeepCrusher DC0 workflow
+passes. This advances engineering only; it does **not** waive the DC0/DCTBP-G4
+real-runtime parity gate.
+
+Next gate:
+1. record decision provenance in the deterministic OpenHoldem parity pack;
+2. require explicit fixture coverage for adjusted all-in plus technical 33.3%
+   and 66.7% pot paths, adding directed cases if the existing pack misses them;
+3. execute those cases in real OpenHoldem and compare final action + exact
+   amount;
+4. only then consider DC0 action parity closed.
+
+The active long trainer and the preregistered post-15315/15315->17315 lanes are
+unchanged and must not be restarted or modified by this work.

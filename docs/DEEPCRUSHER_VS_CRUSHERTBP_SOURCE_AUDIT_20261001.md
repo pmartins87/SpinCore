@@ -96,23 +96,23 @@ The SpinCore DeepCrusher benchmark line contains valuable generic components:
 
 ## 3. Hard semantic blockers discovered in this audit
 
-### A-001 — missing autoplayer all-in-adjustment parity
+### A-001 — autoplayer all-in-adjustment parity
 
-The current portable DeepCrusher action bridge translates OpenPPL decisions to exact simulator actions, but it does not yet reproduce the complete OpenHoldem autoplayer conversion through `f$allin_on_betsize_balance_ratio`.
+At the time of the 2026-10-01 audit, the portable DeepCrusher action bridge did not reproduce the complete OpenHoldem autoplayer conversion through `f$allin_on_betsize_balance_ratio`.
 
-OpenHoldem evaluates this callback against the planned bet/raise and may replace an otherwise ordinary f$betsize or bet-pot action with all-in before execution.
+OpenHoldem evaluates this callback against the planned bet/raise and may replace an otherwise ordinary f$betsize or bet-pot action with all-in before execution. Commit `4e9199a3a1c13d915ee3368bceb40eacd91395a0` now reproduces that conversion, including the conservative current-bet safety cancellation; the corrected integration fixture is `616a04d558150c0ae050a6a763c05ca9b1fe012a`.
 
-CrusherTBP has its own executable `f$allin_on_betsize_balance_ratio`, so omitting this layer can change final actions materially.
+CrusherTBP has its own executable `f$allin_on_betsize_balance_ratio`, so the shared implementation must still be revalidated on the frozen CrusherTBP source and against real OpenHoldem.
 
-**Disposition: HARD BLOCKER.**
+**Disposition: MECHANICALLY IMPLEMENTED IN SHARED BACKEND / REAL-OPENHOLDEM PARITY STILL REQUIRED.**
 
 ### A-002 — exact technical bet-pot factors
 
-OpenHoldem technical bet-pot buttons use their own literal factors, including 0.333 and 0.667. The current portable map uses mathematical 1/3 and 2/3 for named pot-size actions.
+OpenHoldem technical bet-pot buttons use their own literal factors, including 0.333 and 0.667. The 2026-10-01 portable map used mathematical 1/3 and 2/3 for named pot-size actions.
 
-These are normally close but are not byte/mechanically equivalent once chip rounding, minimum raises, maximum raises, or the all-in-adjustment threshold is involved.
+Commit `4e9199a3a1c13d915ee3368bceb40eacd91395a0` now preserves literal 0.333/0.667 for the technical buttons while leaving arbitrary percentage-pot numeric decisions on their own exact percentage path. Regression coverage includes a chip-rounding case where the literal factor differs from mathematical 1/3 or 2/3.
 
-**Disposition: HARD BLOCKER until the action backend distinguishes exact OpenHoldem technical-button factors from arbitrary percentage-pot numeric decisions.**
+**Disposition: MECHANICALLY IMPLEMENTED IN SHARED BACKEND / REAL-OPENHOLDEM PARITY STILL REQUIRED.**
 
 ### L-001 — connection lifecycle
 
@@ -161,3 +161,10 @@ No DeepCrusher-vs-CrusherTBP EV run is scientifically valid until:
 5. both policies independently pass real OpenHoldem parity fixtures.
 
 Until then, engineering smoke tests are allowed only when labelled mechanical/development evidence and may not be interpreted as strategy strength.
+
+## 6. 2026-10-26 implementation status
+
+A-001 and A-002 no longer block because of absent shared-backend code. They
+remain inside the G4 evidence boundary until deterministic real-OpenHoldem
+fixtures explicitly exercise and match those paths. L-001, S-001 and S-002 are
+unchanged. This update does not authorize a large DeepCrusher-vs-CrusherTBP run.

@@ -4550,3 +4550,40 @@ A fail-closed autochain waits for the current trainer, validates source report +
 hashes, fast-forwards main only after the trainer exits, then starts the
 continuation.
 
+## 2026-10-26 — OpenHoldem action backend A-001/A-002 mechanically closed; real parity still pending
+
+The shared portable OpenPPL/OpenHoldem action bridge was corrected against the
+preserved OpenHoldem implementation before any new canonical strength run.
+
+Implemented on main:
+- commit `4e9199a3a1c13d915ee3368bceb40eacd91395a0` reproduces the literal
+  technical bet-pot factors `0.333` and `0.667` instead of mathematical
+  `1/3` and `2/3`;
+- the same commit evaluates `f$allin_on_betsize_balance_ratio` and applies the
+  OpenHoldem `ChangeBetsizeToAllin` threshold/safety behavior to f$betsize and
+  technical pot-size paths before the final simulator action;
+- commit `616a04d558150c0ae050a6a763c05ca9b1fe012a` corrects the integration
+  fixture so it respects OpenHoldem's conservative current-bet safety guard.
+
+Validation:
+- full project/main regression after the corrected integration fixture: PASS;
+- dedicated DeepCrusher DC0 workflow: PASS, including source compile, native
+  closure, action/policy tests, exact-action solver build, runtime oracle smoke
+  and parity-pack regeneration against the frozen testcase files;
+- no strategy/trainer artifact, long-training state or post-15315 contract was
+  changed.
+
+Interpretation:
+- A-001 and A-002 are no longer missing implementation in the shared action
+  backend;
+- they are **not canonical parity PASS** yet. The frozen parity pack is being
+  instrumented with decision provenance so we can prove whether real-OpenHoldem
+  fixtures explicitly exercise adjusted all-in and technical 33.3%/66.7% paths;
+- DC0 remains pending until the relevant deterministic cases are executed in
+  real OpenHoldem with matching final action/amount;
+- the separate DeepCrusher-vs-CrusherTBP lane remains blocked on its source
+  freeze/semantic/lifecycle gates and requires dual-policy real-OpenHoldem
+  parity before any large simulation.
+
+Operational rule remains unchanged: do not interrupt or modify the active
+SpinCore long-training macroblock for this repository-engineering work.
