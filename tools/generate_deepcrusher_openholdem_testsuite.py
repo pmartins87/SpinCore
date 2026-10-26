@@ -576,7 +576,7 @@ def main() -> int:
         "user_rivercbet60",
     }
     required_decision_families = (
-        {"ALLIN_ADJUSTED", "TECH_BETPOT_033", "TECH_BETPOT_067"}
+        {"ALLIN_ADJUSTED", "TECH_BETPOT_033", "TECH_BETPOT_075"}
         if args.require_semantic_sentinels
         else set()
     )
