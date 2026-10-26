@@ -220,6 +220,30 @@ def explicit_hubb_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tu
     return out
 
 
+def explicit_hubb_villain_init_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tuple[int, ...]]]:
+    """HU/BB probes: villain min-raises preflop then checks back the flop."""
+    raw = [
+        (("As", "Kh"), ("Jc", "8c"), ("Qs", "7h", "3d", "5c", "2s")),
+        (("Ah", "Kd"), ("Tc", "8c"), ("Qs", "7h", "3d", "5c", "2s")),
+        (("As", "Qh"), ("9c", "8c"), ("Ks", "Qd", "3h", "5c", "2s")),
+        (("Ah", "Qd"), ("Jc", "9c"), ("Ks", "8d", "3h", "5c", "2s")),
+        (("As", "Jh"), ("Qc", "9c"), ("Ks", "8d", "3h", "5c", "2s")),
+        (("Ah", "Jd"), ("Tc", "9c"), ("Ks", "7d", "3h", "5c", "2s")),
+        (("As", "Kh"), ("Jd", "Td"), ("Qs", "8h", "3c", "5d", "2s")),
+        (("Ah", "Kd"), ("9d", "7d"), ("Ks", "Qh", "3c", "5d", "2s")),
+    ]
+    out = []
+    for villain, hero, board in raw:
+        holes = (
+            tuple(card_id(x) for x in villain),
+            tuple(card_id(x) for x in hero),
+            (-1, -1),
+        )
+        board_ids = tuple(card_id(x) for x in board)
+        out.append((holes, board_ids))
+    return out
+
+
 def buttons(public) -> str:
     out = []
     if public.legal_fold:
@@ -266,6 +290,12 @@ def opponent_action(public, style: str) -> ExternalExactAction:
         return passive_action(public)
     if style == "MIN_AGGRO":
         return min_aggressive_action(public)
+    if style == "PREFLOP_MIN_THEN_PASSIVE":
+        return (
+            min_aggressive_action(public)
+            if int(public.street) == 0
+            else passive_action(public)
+        )
     if style == "ALLIN_PRESSURE":
         return allin_pressure_action(public)
     raise ValueError(f"unknown opponent style: {style}")
@@ -532,6 +562,10 @@ def main() -> int:
                 (0, 1, holes, board, "HUBB_LIMP_TURN_PROBE")
                 for holes, board in explicit_hubb_067_candidates()
             )
+            directed_067.extend(
+                (0, 1, holes, board, "HUBB_VILLAIN_INIT_TURN_PROBE")
+                for holes, board in explicit_hubb_villain_init_067_candidates()
+            )
         for attempt in range(int(args.max_search)):
             dealer_cycle = 3 if domain == "THREE_HANDED" else 2
             dealer = attempt % dealer_cycle
@@ -553,6 +587,8 @@ def main() -> int:
                     explicit_label,
                 ) = directed_067[attempt]
                 stack_chips = 750
+                if explicit_label == "HUBB_VILLAIN_INIT_TURN_PROBE":
+                    opponent_style = "PREFLOP_MIN_THEN_PASSIVE"
             else:
                 if args.require_semantic_sentinels:
                     # Sentinel search deliberately spans both deep and shallow
