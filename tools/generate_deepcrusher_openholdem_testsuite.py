@@ -576,6 +576,39 @@ def main() -> int:
                 explicit_board=explicit_board,
             )
             hero_rows = [a for a in actions if a.hero]
+            if explicit_holes is not None:
+                trace_rows = [
+                    {
+                        "street": int(a.street),
+                        "family": str(a.decision_family),
+                        "action": ACTION_TEXT[int(a.action_type)],
+                        "amount_to": int(a.amount_to),
+                        "hand_class": (
+                            None
+                            if a.decision_metadata is None
+                            else a.decision_metadata.get("hand_class")
+                        ),
+                        "return_value": (
+                            None
+                            if a.decision_metadata is None
+                            else a.decision_metadata.get("openppl_return_value")
+                        ),
+                        "action_name": (
+                            None
+                            if a.decision_metadata is None
+                            else a.decision_metadata.get("openppl_action_name")
+                        ),
+                    }
+                    for a in hero_rows
+                ]
+                print(
+                    "OPENHOLDEM_DIRECTED_067_TRACE "
+                    f"attempt={attempt} hero={card_text(deal.holes[hero_seat][0])}"
+                    f"{card_text(deal.holes[hero_seat][1])} "
+                    f"board={''.join(card_text(x) for x in deal.board)} "
+                    f"rows={json.dumps(trace_rows, sort_keys=True)}",
+                    flush=True,
+                )
             hero_action_letters = {
                 ACTION_TEXT[int(a.action_type)] for a in hero_rows
             }

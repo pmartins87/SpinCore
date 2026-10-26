@@ -197,7 +197,7 @@ jobs:
             --solver build/libspincore_solver_c.so \
             --output-dir /tmp/deepcrusher_openholdem_semantic_sentinels \
             --cases-per-domain 1 \
-            --max-search 400 \
+            --max-search 100 \
             --require-semantic-sentinels
           cat /tmp/deepcrusher_openholdem_semantic_sentinels/manifest.json
           cat /tmp/deepcrusher_openholdem_semantic_sentinels/deepcrusher_dc0_parity.tc
