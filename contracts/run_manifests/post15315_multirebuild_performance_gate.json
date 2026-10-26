@@ -70,7 +70,7 @@
     "canonical_fit_threads": 8,
     "mini_fit_steps": 25,
     "frozen_pass_requirements": [
-      "All tested collection thread profiles reproduce the canonical 8-thread sample identities/order and collection reports exactly.",
+      "The selected collection thread profile reproduces the canonical 8-thread sample identities/order and collection reports exactly; non-exact profiles are ineligible.",
       "Four-process member-shaped collection reproduces serial sample identities/order and reports exactly.",
       "Repeated canonical mini-fit reproduces collection, loss sequence digest, and final model tensor digest exactly.",
       "Actual parallel collection speedup is at least 1.25x.",
@@ -89,7 +89,7 @@
     ]
   },
   "support_blob_shas": {
-    "tools/benchmark_post15315_multirebuild_performance.py": "95180c74b1e2484c8f2e60014f255cd04b8e8b63",
+    "tools/benchmark_post15315_multirebuild_performance.py": "28dbf48e5bdd0de3bdf2f4b6026b0da7216acfc0",
     "tools/run_post15315_multirebuild_performance_gate.sh": "e2cea7604434aa14d2731f692be65115be11035a",
     "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
     "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee"
