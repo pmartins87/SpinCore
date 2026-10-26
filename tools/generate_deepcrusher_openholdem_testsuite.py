@@ -679,6 +679,10 @@ def main() -> int:
                                 )
                                 if str(name).lower() in {
                                     "user_turnprobeopportunity",
+                                    "user_turn50",
+                                    "user_turn75",
+                                    "user_river50",
+                                    "user_river75",
                                     "user_river66",
                                     "user_rivercbet60",
                                     "user_flop66",
