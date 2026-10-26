@@ -255,6 +255,7 @@ class DeepCrusherR8Policy:
             provider,
             hand_class=hand_class,
         )
+        main_openppl_trace = [dict(row) for row in session.last_trace]
         allin_adjustment_ratio: float | None = None
         if self.program.has_function(_ALLIN_ADJUSTMENT):
             allin_result = session.evaluate(
@@ -293,6 +294,7 @@ class DeepCrusherR8Policy:
             # state. Recording the active set here lets parity-fixture discovery prove
             # whether a source setter was actually reached before sizing.
             "openppl_user_variables": sorted(session.user_variables),
+            "openppl_main_trace": main_openppl_trace,
         }
         if hasattr(decision, "name"):
             detail.update(
