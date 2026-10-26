@@ -4449,7 +4449,7 @@ Frozen production execution shape from the PASS evidence:
 
 Implementation status:
 1. exact durable per-member collection cache: implemented;
-2. member builder cache-consumption path with digest revalidation: implemented;
+2. original member builder remains byte-frozen to the performance-gate evidence; a separate production cached-builder path with digest revalidation is implemented;
 3. fail-closed K=8 production orchestrator: implemented;
 4. guarded shell runner + stage manifest: implemented;
 5. exact PASS-report SHA binding: **still pending**;
