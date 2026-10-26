@@ -4616,3 +4616,48 @@ Interpretation / next gate:
 - only after `TECH_BETPOT_067` has a genuine deterministic fixture should the selected adjusted-allin/33.3/66.7 cases be executed in real OpenHoldem for final DC0 parity.
 
 The active long trainer and post-15315/travel pathways remain untouched.
+
+
+## 2026-10-26 — DC0 2/3 reachability resolved; dynamic sentinel contract corrected
+
+The prior `TECH_BETPOT_067` investigation is now closed by source and runtime
+evidence. This is a change in recommendation caused by new evidence, not a
+relaxation of a failing gate.
+
+Evidence:
+- six historical 2/3 dependencies in frozen R8 have no setter at all;
+- the settable HUSB `user_River66` baseline is superseded by the earlier
+  SOURCE-FIDELITY RETRO03 contract, whose current HUSB TP+ plan is explicitly
+  75/75;
+- the settable HUBB turn-probe 2/3 branch is preempted by the current
+  `user_Turn50` sizing path;
+- the historical HUBB `user_RiverCbet60` continuation is preempted by current
+  SOURCE-FIRST DC10 rules: air probe is 50+50, draw-probe nCPL is River50 and
+  CPL is River125;
+- decision/rule provenance confirms the actual winning rules:
+  `user_DC10_HUBB_AirProbe50_River50 -> user_River50 -> BetHalfPot` and the
+  source-fidelity HUSB 75% paths;
+- a one-time 2,000-state deterministic search had already failed to find a
+  genuine 66.7% decision.
+
+The static audit `tools/audit_deepcrusher_067_source_paths.py` now codifies
+this verdict as `SOURCE_SUPERSEDED_NOT_DYNAMIC_SENTINEL` and fails if the
+source-first supersession evidence changes. Thus 2/3 remains guarded as a
+source-reachability contract instead of being silently ignored.
+
+The dynamic OpenHoldem sentinel contract is now:
+- `ALLIN_ADJUSTED`;
+- `TECH_BETPOT_033`;
+- `TECH_BETPOT_075`.
+
+Dedicated DeepCrusher DC0 workflow on commit
+`7d40aa6d920ecd8e7d58d0ebb8ef6a4aaa72f36d`: PASS, including frozen R8
+compile, native closure, runtime oracle smoke, frozen parity-pack smoke,
+2/3 supersession audit and dynamic semantic-sentinel search. Project contract
+also PASSed on that commit. No trainer/post-15315 artifact was changed.
+
+DC0 is still not canonical real-runtime parity PASS. The next action is to
+freeze representative adjusted-all-in, 33.3% and 75% deterministic cases and
+execute them in real OpenHoldem/TestSuite2, comparing final action and exact
+raise-to amount. The obsolete 66.7% branch is not to be manufactured for that
+test.
