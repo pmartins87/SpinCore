@@ -1,0 +1,24 @@
+; generated parity case dc0_real_033
+[table]
+sblind = 10
+bblind = 20
+gtype = NL
+network = ggpoker
+tournament = true
+balances = Bot 500,P1 500,P2 500
+
+[preflop]
+Hand = Ks, Kc
+Actions = P1 S,P2 B,Bot can FCRA do R 40,P1 C,P2 C
+
+[flop]
+Cards = 4c, Qs, Ad
+Actions = P1 K,P2 K,Bot can KRA do R 40,P1 C,P2 C
+
+[turn]
+Card = 9c
+Actions = P1 K,P2 K,Bot can KRA do R 80,P1 C,P2 C
+
+[river]
+Card = 8c
+Actions = P1 K,P2 K,Bot can KRA do K
