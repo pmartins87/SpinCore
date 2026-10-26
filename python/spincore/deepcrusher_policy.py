@@ -94,6 +94,9 @@ class DeepCrusherR8Policy:
         self._last_metadata: dict[int, dict[str, object]] = {}
         self._action_origins: dict[int, list[str]] = {}
         self._big_blind_chips: int | None = None
+        self._small_blind_chips: int | None = None
+        # DeepCrusher benchmark episodes are Spin&Go tournament hands.
+        self._is_tournament = True
         self._hand_serial = 0
 
     @classmethod
@@ -135,9 +138,11 @@ class DeepCrusherR8Policy:
         """
         del scenario_index, lineup_index, deal_seed
         bb = int(episode.big_blind)
-        if bb <= 0:
-            raise ValueError("episode big blind must be positive")
+        sb = int(episode.small_blind)
+        if bb <= 0 or sb <= 0:
+            raise ValueError("episode blinds must be positive")
         self._big_blind_chips = bb
+        self._small_blind_chips = sb
         self._hand_serial += 1
 
         seats = tuple(
@@ -211,7 +216,7 @@ class DeepCrusherR8Policy:
         rng: random.Random,
     ) -> ExternalExactAction:
         del rng  # R8 is deterministic under the frozen no-random benchmark profile.
-        if self._big_blind_chips is None:
+        if self._big_blind_chips is None or self._small_blind_chips is None:
             raise RuntimeError("DeepCrusher choose_exact called before begin_hand")
         if not getattr(state.owner, "explicit_deal_available", False):
             raise RuntimeError(
@@ -265,6 +270,8 @@ class DeepCrusherR8Policy:
             public=public,
             actor=int(seat),
             big_blind_chips=int(self._big_blind_chips),
+            small_blind_chips=int(self._small_blind_chips),
+            is_tournament=bool(self._is_tournament),
             allin_adjustment_ratio=allin_adjustment_ratio,
         )
         history_origin = openppl_history_origin(decision, action)

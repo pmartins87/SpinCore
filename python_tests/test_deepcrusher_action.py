@@ -185,30 +185,72 @@ def test_technical_betpot_factors_use_openholdem_literal_constants():
     third = translate_openppl_decision(
         ReturnValue(-1000004),
         public=snap(
-            min_raise_to=1,
-            max_raise_to=2000,
-            pot=1001,
+            min_raise_to=2,
+            max_raise_to=10000,
+            pot=503,
             to_call=0,
             street_commitments=(0, 0, 0),
+            stacks=(10000, 10000, 0),
         ),
         actor=0,
-        big_blind_chips=20,
+        big_blind_chips=1,
+        small_blind_chips=1,
     )
     two_thirds = translate_openppl_decision(
         ReturnValue(-1000006),
         public=snap(
-            min_raise_to=1,
-            max_raise_to=2000,
-            pot=1001,
+            min_raise_to=2,
+            max_raise_to=10000,
+            pot=1506,
             to_call=0,
             street_commitments=(0, 0, 0),
+            stacks=(10000, 10000, 0),
+        ),
+        actor=0,
+        big_blind_chips=1,
+        small_blind_chips=1,
+    )
+    # These pots deliberately distinguish literal 0.333/0.667 from exact
+    # 1/3 and 2/3 even after OpenHoldem's beautiful-number adjustment.
+    assert (third.action_type, third.amount_to) == (4, 167)
+    assert (two_thirds.action_type, two_thirds.amount_to) == (4, 1010)
+
+
+def test_openholdem_beautiful_betsize_adjustment_precedes_tournament_entry():
+    third = translate_openppl_decision(
+        ReturnValue(-1000004),
+        public=snap(
+            min_raise_to=20,
+            max_raise_to=750,
+            pot=80,
+            to_call=0,
+            street_commitments=(0, 0, 0),
+            stacks=(750, 750, 0),
         ),
         actor=0,
         big_blind_chips=20,
+        small_blind_chips=10,
+        is_tournament=True,
     )
-    # OpenHoldem BetPotFactor uses literal 0.333 / 0.667, not exact 1/3 / 2/3.
-    assert (third.action_type, third.amount_to) == (4, 333)
-    assert (two_thirds.action_type, two_thirds.amount_to) == (4, 668)
+    two_thirds = translate_openppl_decision(
+        ReturnValue(-1000006),
+        public=snap(
+            min_raise_to=20,
+            max_raise_to=750,
+            pot=80,
+            to_call=0,
+            street_commitments=(0, 0, 0),
+            stacks=(750, 750, 0),
+        ),
+        actor=0,
+        big_blind_chips=20,
+        small_blind_chips=10,
+        is_tournament=True,
+    )
+    # Raw targets are 26.64 and 53.36. OpenHoldem produces 27 and 50:
+    # 53.36 is above 2.6bb and below 10sb, so it rounds to a 10-chip SB multiple.
+    assert (third.action_type, third.amount_to) == (4, 27)
+    assert (two_thirds.action_type, two_thirds.amount_to) == (4, 50)
 
 
 def test_allin_adjustment_converts_f_betsize_at_critical_ratio():

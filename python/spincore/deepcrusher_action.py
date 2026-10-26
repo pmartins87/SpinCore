@@ -17,10 +17,11 @@ The rules mirror the OpenHoldem sources preserved in pmartins87/myoh_private:
 * AllinAdjustment::ChangeBetsizeToAllin converts f$betsize / technical bet-pot
   actions to all-in using f$allin_on_betsize_balance_ratio before casino entry.
 
-Casino text-entry rounding is not part of poker strategy. The offline simulator has
-integer chips, so fractional chip targets use deterministic half-up rounding and
-are then clamped to the simulator's exact legal min/max interval. Real OpenHoldem
-parity fixtures remain the final gate for this rounding convention.
+The exact benchmark also mirrors the OpenHoldem SWAG amount-to adjustment that
+precedes casino entry: RoundToBeautifulBetsize, legal min/max clamping and
+tournament full-chip truncation. The benchmark uses raise-to semantics (the
+ManualMode parity tablemap uses betsizeinterpretationmethod=3), so casino-specific
+text interpretation is intentionally not applied to the simulator action.
 """
 
 from decimal import Decimal, ROUND_HALF_UP
@@ -117,18 +118,147 @@ def _aggressive_kind(public) -> int | None:
     return None
 
 
-def _sized_aggression(public, target_chips: float) -> ExternalExactAction:
-    kind = _aggressive_kind(public)
-    if kind is None:
-        return _call_with_backup(public)
+def _openholdem_round(value: float, unit: float = 1.0) -> float:
+    """Mirror NumericalFunctions::Rounding for non-negative bet sizes."""
+    value = float(value)
+    unit = float(unit)
+    if not math.isfinite(value) or not math.isfinite(unit):
+        raise DeepCrusherActionTranslationError(
+            f"non-finite OpenHoldem rounding input: value={value!r} unit={unit!r}"
+        )
+    if value < 0.0 or unit <= 0.0:
+        raise DeepCrusherActionTranslationError(
+            f"invalid OpenHoldem rounding input: value={value!r} unit={unit!r}"
+        )
+    return float(int((value + 0.5 * unit) / unit)) * unit
 
+
+def _maximum_balance_raise_to(public, actor: int) -> float:
+    try:
+        current_bet = float(public.street_commitments[int(actor)])
+        balance = float(public.stacks[int(actor)])
+    except (AttributeError, IndexError, TypeError) as exc:
+        raise DeepCrusherActionTranslationError(
+            "OpenHoldem betsize adjustment requires stacks and street_commitments"
+        ) from exc
+    return current_bet + balance
+
+
+def _round_to_beautiful_betsize(
+    target_chips: float,
+    *,
+    public,
+    actor: int,
+    small_blind_chips: int,
+    big_blind_chips: int,
+) -> float:
+    """Mirror SwagAdjustment::RoundToBeautifulBetsize."""
+    value = float(target_chips)
+    sb = float(small_blind_chips)
+    bb = float(big_blind_chips)
+    if not math.isfinite(value) or value < 0.0:
+        raise DeepCrusherActionTranslationError(
+            f"invalid raw betsize: {target_chips!r}"
+        )
+    if sb <= 0.0 or bb <= 0.0:
+        raise DeepCrusherActionTranslationError(
+            f"invalid blinds for betsize adjustment: sb={sb} bb={bb}"
+        )
+
+    maximum_balance = _maximum_balance_raise_to(public, actor)
+    if maximum_balance > 0.0 and value >= maximum_balance:
+        result = value
+    elif value < 2.6 * bb:
+        result = value
+    elif value == _openholdem_round(value, bb):
+        result = value
+    elif value < 10.0 * sb:
+        result = _openholdem_round(value, sb)
+    else:
+        result = _openholdem_round(value, bb)
+
+    if result > 25000.0:
+        result = _openholdem_round(result, 1000.0)
+    elif result > 2500.0:
+        result = _openholdem_round(result, 100.0)
+    elif result > 250.0:
+        result = _openholdem_round(result, 10.0)
+    elif result > 20.0:
+        result = _openholdem_round(result, 1.0)
+    elif result > 0.90 and abs(result - int(result)) < 0.10:
+        result = _openholdem_round(result, 1.0)
+
+    return float(result)
+
+
+def _openholdem_adjusted_raise_to(
+    target_chips: float,
+    *,
+    public,
+    actor: int,
+    small_blind_chips: int,
+    big_blind_chips: int,
+    is_tournament: bool,
+) -> int:
+    """Return the final raise-to amount OpenHoldem would enter in ManualMode.
+
+    This stops before SwagAmountAjustedToCasino because the exact simulator
+    stores actual raise-to amounts. The canonical ManualMode tablemap uses
+    betsizeinterpretationmethod=3, where the entered value is already raise-to.
+    """
     low = int(public.min_raise_to)
     high = int(public.max_raise_to)
     if high <= 0 or low <= 0 or high < low:
         raise DeepCrusherActionTranslationError(
             f"invalid exact raise bounds: min={low} max={high}"
         )
-    target = max(low, min(high, _round_chip(target_chips)))
+
+    adjusted = _round_to_beautiful_betsize(
+        target_chips,
+        public=public,
+        actor=actor,
+        small_blind_chips=small_blind_chips,
+        big_blind_chips=big_blind_chips,
+    )
+    adjusted = max(float(low), min(float(high), adjusted))
+
+    if bool(is_tournament):
+        maximum_balance = _maximum_balance_raise_to(public, actor)
+        if maximum_balance <= 0.0:
+            raise DeepCrusherActionTranslationError(
+                "invalid maximum balance for tournament betsize adjustment"
+            )
+        if adjusted < maximum_balance:
+            # RoundedBetsizeForTournaments truncates, then
+            # AdaptValueToMinMaxRange can only move the value downward.
+            adjusted = float(int(adjusted))
+
+    # Solver exact actions are integer-chip raise-to values.
+    target = _round_chip(adjusted)
+    return max(low, min(high, target))
+
+
+def _sized_aggression(
+    public,
+    actor: int,
+    target_chips: float,
+    *,
+    small_blind_chips: int,
+    big_blind_chips: int,
+    is_tournament: bool,
+) -> ExternalExactAction:
+    kind = _aggressive_kind(public)
+    if kind is None:
+        return _call_with_backup(public)
+
+    target = _openholdem_adjusted_raise_to(
+        target_chips,
+        public=public,
+        actor=actor,
+        small_blind_chips=small_blind_chips,
+        big_blind_chips=big_blind_chips,
+        is_tournament=is_tournament,
+    )
     return ExternalExactAction(kind, target)
 
 
@@ -193,10 +323,22 @@ def _adjusted_sized_aggression(
     actor: int,
     target_chips: float,
     ratio: float | None,
+    *,
+    small_blind_chips: int,
+    big_blind_chips: int,
+    is_tournament: bool,
 ) -> ExternalExactAction:
+    # AllinAdjustment happens before SWAG/beautiful-number adjustment.
     if _change_betsize_to_allin(public, actor, target_chips, ratio):
         return _allin_with_backup(public, actor)
-    return _sized_aggression(public, target_chips)
+    return _sized_aggression(
+        public,
+        actor,
+        target_chips,
+        small_blind_chips=small_blind_chips,
+        big_blind_chips=big_blind_chips,
+        is_tournament=is_tournament,
+    )
 
 
 def _fixed_action(
@@ -204,6 +346,10 @@ def _fixed_action(
     public,
     actor: int,
     allin_adjustment_ratio: float | None = None,
+    *,
+    small_blind_chips: int,
+    big_blind_chips: int,
+    is_tournament: bool,
 ) -> ExternalExactAction:
     low = str(name).lower()
 
@@ -234,6 +380,9 @@ def _fixed_action(
             actor,
             target,
             allin_adjustment_ratio,
+            small_blind_chips=small_blind_chips,
+            big_blind_chips=big_blind_chips,
+            is_tournament=is_tournament,
         )
 
     raise DeepCrusherActionTranslationError(f"unsupported fixed OpenPPL action: {name!r}")
@@ -295,12 +444,17 @@ def translate_openppl_decision(
     public,
     actor: int,
     big_blind_chips: int,
+    small_blind_chips: int | None = None,
+    is_tournament: bool = True,
     allin_adjustment_ratio: float | None = None,
 ) -> ExternalExactAction:
     """Translate one OpenPPL main-callback result to one exact simulator action."""
     bb = int(big_blind_chips)
     if bb <= 0:
         raise DeepCrusherActionTranslationError("big_blind_chips must be positive")
+    sb = int(small_blind_chips) if small_blind_chips is not None else max(1, bb // 2)
+    if sb <= 0:
+        raise DeepCrusherActionTranslationError("small_blind_chips must be positive")
 
     if isinstance(decision, DirectAction):
         name = str(decision.name)
@@ -314,6 +468,9 @@ def translate_openppl_decision(
                 actor,
                 target,
                 allin_adjustment_ratio,
+                small_blind_chips=sb,
+                big_blind_chips=bb,
+                is_tournament=is_tournament,
             )
         if low == "raiseby":
             if decision.amount is None:
@@ -334,12 +491,18 @@ def translate_openppl_decision(
                 actor,
                 target,
                 allin_adjustment_ratio,
+                small_blind_chips=sb,
+                big_blind_chips=bb,
+                is_tournament=is_tournament,
             )
         return _fixed_action(
             name,
             public,
             actor,
             allin_adjustment_ratio,
+            small_blind_chips=sb,
+            big_blind_chips=bb,
+            is_tournament=is_tournament,
         )
 
     if not isinstance(decision, ReturnValue):
@@ -385,4 +548,7 @@ def translate_openppl_decision(
         public,
         actor,
         allin_adjustment_ratio,
+        small_blind_chips=sb,
+        big_blind_chips=bb,
+        is_tournament=is_tournament,
     )
