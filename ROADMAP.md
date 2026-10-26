@@ -4430,3 +4430,35 @@ Next and only DC0 action before canonical closure: run the frozen
 and compare actual button/action plus exact raise-to amounts. Any unexplained
 mismatch blocks DC0. If all three pass, update the manifest/status and promote
 the DC0 action-sizing subgate to canonical real-runtime PASS.
+
+
+### 2026-10-26 — post-15315 K=8 production execution profile validated on target Ryzen
+
+The prerequisite performance/parity gate for the actual post-15315 multi-rebuild workload is now PASS on the target Ryzen host.
+
+Frozen production execution shape from the PASS evidence:
+- collection: 4 independent processes x 2 threads;
+- checkpoint fan-out into collection workers: prohibited;
+- fitting: canonical 8 threads, sequential/non-fanned across members;
+- primary member set: frozen members 1-8;
+- measured collection speedup: 3.7297603523936638x;
+- projected end-to-end speedup: 3.6661471749893555x;
+- projected net savings: 29016.176757359986 seconds;
+- swap count: 0;
+- all performance, exactness and memory criteria: PASS.
+
+Implementation status:
+1. exact durable per-member collection cache: implemented;
+2. member builder cache-consumption path with digest revalidation: implemented;
+3. fail-closed K=8 production orchestrator: implemented;
+4. guarded shell runner + stage manifest: implemented;
+5. exact PASS-report SHA binding: **still pending**;
+6. production manifest stays BLOCKED until that SHA is frozen and CI passes.
+
+Do not launch K=8 before item 5 is closed and the production manifest becomes READY.
+
+Once K=8 construction PASS is obtained, stop and run the preregistered stability
+stage on fresh seed 153159001. Only a mechanically clean K=8 stability failure may
+activate members 9-12. No member may be dropped, reweighted, reseeded or selected
+from results, and no external strength benchmark may be opened before the
+stabilization branch resolves.
