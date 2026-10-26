@@ -4383,3 +4383,30 @@ Required sequence:
 
 Stop condition:
 - if the source audit shows that all 66.7% consumers are unreachable under the benchmark/OpenHoldem lifecycle, stop fixture construction and classify the issue as a source/runtime reachability defect for explicit resolution.
+
+
+### 2026-10-26 — DC0 66.7% stop condition triggered; real-runtime gate now uses reachable R8 actions
+
+The preregistered 66.7% stop condition has been reached. Source audit plus
+decision provenance proves that frozen R8's historical two-thirds consumers are
+either setter-less legacy or superseded by earlier source-first sizing rules:
+HUSB TP+ is 75/75; HUBB air probe is 50+50; HUBB draw-probe is River50 (nCPL)
+or River125 (CPL). The old TurnProbe 2/3 path is likewise preempted by
+`user_Turn50`.
+
+Governance consequence:
+1. keep `tools/audit_deepcrusher_067_source_paths.py` as a fail-closed static
+   reachability/supersession gate for historical 2/3 logic;
+2. dynamic semantic coverage must require the current reachable families
+   `ALLIN_ADJUSTED`, `TECH_BETPOT_033`, and `TECH_BETPOT_075`;
+3. do not synthesize `TECH_BETPOT_067`, inject a user variable, or reorder the
+   R8 strategy merely to satisfy a stale benchmark expectation;
+4. freeze one deterministic fixture for each of the three current dynamic
+   families;
+5. run those fixtures in real OpenHoldem/TestSuite2 and compare final action
+   plus exact raise-to amount;
+6. only after those real-runtime comparisons pass may the DC0 action-sizing
+   parity subgate be marked canonical PASS.
+
+The dedicated DC0 workflow passes with this evidence-backed contract. The
+active long trainer and post-15315/travel lanes remain untouched.
