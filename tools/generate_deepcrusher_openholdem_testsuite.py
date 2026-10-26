@@ -48,6 +48,93 @@ class RenderedAction:
     action_type: int
     amount_to: int
     legal_buttons: str = ""
+    decision_family: str = ""
+    decision_metadata: dict[str, object] | None = None
+
+
+_FIXED_RETURN_FAMILY = {
+    -1000001: "FOLD",
+    -1000003: "TECH_BETPOT_025",
+    -1000004: "TECH_BETPOT_033",
+    -1000005: "TECH_BETPOT_050",
+    -1000006: "TECH_BETPOT_067",
+    -1000007: "TECH_BETPOT_075",
+    -1000008: "TECH_BETPOT_100",
+    -1000009: "DIRECT_ALLIN",
+    -1000010: "CALL",
+    -1000012: "MIN_RAISE",
+}
+
+
+def classify_decision_family(
+    metadata: dict[str, object] | None,
+    action: ExternalExactAction,
+) -> str:
+    """Describe the OpenPPL/autoplayer path that produced the executed action.
+
+    The label is evidence metadata only. It does not participate in policy
+    selection or testcase rendering.
+    """
+    if metadata is None:
+        return "UNKNOWN"
+
+    kind = str(metadata.get("openppl_result_kind", ""))
+    actual = int(action.action_type)
+
+    if kind == "DirectAction":
+        name = str(metadata.get("openppl_action_name", "")).lower()
+        if actual == 5 and name not in {"allin", "betmax", "raisemax"}:
+            return "ALLIN_ADJUSTED"
+        if name in {"allin", "betmax", "raisemax"}:
+            return "DIRECT_ALLIN"
+        if name == "raiseto":
+            return "RAISETO_BB"
+        if name == "raiseby":
+            amount_kind = str(metadata.get("openppl_action_amount_kind", ""))
+            return (
+                "RAISEBY_POT"
+                if amount_kind == "pot_fraction"
+                else "RAISEBY_BB"
+            )
+        named = {
+            "betfourthpot": "TECH_BETPOT_025",
+            "raisefourthpot": "TECH_BETPOT_025",
+            "betthirdpot": "TECH_BETPOT_033",
+            "raisethirdpot": "TECH_BETPOT_033",
+            "bethalfpot": "TECH_BETPOT_050",
+            "raisehalfpot": "TECH_BETPOT_050",
+            "bettwothirdpot": "TECH_BETPOT_067",
+            "raisetwothirdpot": "TECH_BETPOT_067",
+            "betthreefourthpot": "TECH_BETPOT_075",
+            "raisethreefourthpot": "TECH_BETPOT_075",
+            "betpot": "TECH_BETPOT_100",
+            "raisepot": "TECH_BETPOT_100",
+            "betmin": "MIN_RAISE",
+            "raisemin": "MIN_RAISE",
+            "bet": "MIN_RAISE",
+            "raise": "MIN_RAISE",
+            "fold": "FOLD",
+            "call": "CALL",
+            "check": "CHECK",
+        }
+        return named.get(name, "DIRECT_" + name.upper())
+
+    if kind == "ReturnValue":
+        value = float(metadata.get("openppl_return_value", 0.0))
+        if actual == 5 and abs(value - (-1000009.0)) > 1.0e-9:
+            return "ALLIN_ADJUSTED"
+        if value > 0.0:
+            return "F_BETSIZE_BB"
+        if -1000.0 <= value < 0.0:
+            return "F_BETSIZE_PERCENT"
+        rounded = int(round(value))
+        if abs(value - rounded) <= 1.0e-9 and rounded in _FIXED_RETURN_FAMILY:
+            return _FIXED_RETURN_FAMILY[rounded]
+        if value == 0.0:
+            return "CHECK_FOLD"
+        return "RETURN_OTHER"
+
+    return "UNKNOWN"
 
 
 def parse_args() -> argparse.Namespace:
@@ -236,6 +323,7 @@ def play_candidate(
                     seat=actor,
                     rng=random.Random(deal_seed ^ steps),
                 )
+                metadata = policy.decision_metadata(seat=actor)
                 hero_streets.add(int(public.street))
                 rendered.append(
                     RenderedAction(
@@ -245,6 +333,8 @@ def play_candidate(
                         action_type=int(action.action_type),
                         amount_to=int(action.amount_to),
                         legal_buttons=buttons(public),
+                        decision_family=classify_decision_family(metadata, action),
+                        decision_metadata=metadata,
                     )
                 )
             else:
@@ -375,6 +465,8 @@ def main() -> int:
                     "action": ACTION_TEXT[int(a.action_type)],
                     "amount_to": int(a.amount_to),
                     "legal_buttons": a.legal_buttons,
+                    "decision_family": a.decision_family,
+                    "decision_metadata": a.decision_metadata,
                 }
                 for a in hero_rows
             ]
@@ -405,6 +497,19 @@ def main() -> int:
             ):
                 break
 
+    covered_decision_families = sorted({
+        str(action.decision_family)
+        for case in manifest["cases"]
+        for action in []
+    })
+    # Recompute from serialized hero actions so the manifest remains the single
+    # evidence carrier even if RenderedAction storage changes later.
+    covered_decision_families = sorted({
+        str(action.get("decision_family", "UNKNOWN"))
+        for case in manifest["cases"]
+        for action in case.get("hero_actions", [])
+    })
+
     missing_actions = sorted(required_actions - covered_actions)
     missing_streets = {
         domain: sorted({0, 1, 2, 3} - values)
@@ -432,6 +537,12 @@ def main() -> int:
             for domain, values in covered_streets.items()
         },
         "full_street_cases_by_domain": dict(full_street_counts),
+        "decision_families": covered_decision_families,
+        "semantic_sentinels": {
+            "allin_adjusted_present": "ALLIN_ADJUSTED" in covered_decision_families,
+            "tech_betpot_033_present": "TECH_BETPOT_033" in covered_decision_families,
+            "tech_betpot_067_present": "TECH_BETPOT_067" in covered_decision_families,
+        },
         "note": (
             "R means exact NL raise/betsize is also checked by TestSuite2; "
             "F/C/K/A cover fold/call/check/all-in buttons."
