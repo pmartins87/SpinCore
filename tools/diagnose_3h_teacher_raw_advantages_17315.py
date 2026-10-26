@@ -39,6 +39,7 @@ from spincore.deepcrusher_benchmark import (
     OfflineHeadToHeadEngine,
 )
 from spincore.deepcrusher_policy import DeepCrusherR8Policy
+from spincore.decision_sanity import effective_stack_bb
 from spincore.legacy_scenario import LegacyScenarioConfig, LegacyScenarioSampler
 from spincore.lean_action_policy import lean_regret_matching_policy
 from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
@@ -220,10 +221,7 @@ def worker(task):
                 "board": list(trace.board or ()),
                 "pot": int(trace.pot),
                 "to_call": int(trace.to_call),
-                "effective_stack_bb": float(
-                    min(trace.stack_before, trace.opponent_stack_before)
-                    / float(trace.big_blind)
-                ) if trace.big_blind else None,
+                "effective_stack_bb": float(effective_stack_bb(trace)),
                 "policy_detail": detail,
             }
         )
