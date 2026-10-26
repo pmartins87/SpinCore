@@ -148,8 +148,8 @@ def parse_args() -> argparse.Namespace:
         "--require-semantic-sentinels",
         action="store_true",
         help=(
-            "continue deterministic search until adjusted-allin and literal "
-            "33.3%/66.7% technical bet-pot decision families are captured"
+            "continue deterministic search until adjusted-allin and current reachable "
+            "33.3%/75% technical bet-pot decision families are captured"
         ),
     )
     return p.parse_args()
@@ -951,7 +951,7 @@ def main() -> int:
         "semantic_sentinels": {
             "allin_adjusted_present": "ALLIN_ADJUSTED" in covered_decision_families,
             "tech_betpot_033_present": "TECH_BETPOT_033" in covered_decision_families,
-            "tech_betpot_067_present": "TECH_BETPOT_067" in covered_decision_families,
+            "tech_betpot_075_present": "TECH_BETPOT_075" in covered_decision_families,
         },
         "note": (
             "R means exact NL raise/betsize is also checked by TestSuite2; "
