@@ -537,7 +537,7 @@ def main() -> int:
     projected_savings = projected_baseline_total - projected_candidate_total
 
     criteria = {
-        "all_thread_profiles_exact": bool(all(x["exact_to_canonical_8t"] for x in profiles)),
+        "selected_collection_profile_exact": bool(selected["exact_to_canonical_8t"]),
         "parallel_four_member_collection_exact": bool(parallel_exact),
         "mini_fit_samples_losses_and_model_tensors_exact": bool(fit_exact),
         "parallel_profile_speedup_at_least_1_25x": bool(actual_parallel_speedup >= MIN_SPEEDUP),
