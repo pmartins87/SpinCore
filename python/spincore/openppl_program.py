@@ -356,6 +356,7 @@ class ProgramContext:
         hand_class: str | None = None,
         user_variables: set[str] | None = None,
         memory_symbols: dict[str, float] | None = None,
+        trace_events: list[dict[str, object]] | None = None,
     ):
         self.program = program
         self.external = external
@@ -364,6 +365,7 @@ class ProgramContext:
         self.memory_symbols = memory_symbols if memory_symbols is not None else {}
         self.cache: dict[str, float] = {}
         self.in_progress: set[str] = set()
+        self.trace_events = trace_events if trace_events is not None else []
 
     def _external_value(self, name: str) -> float:
         if callable(self.external):
@@ -608,6 +610,7 @@ class OpenPPLSession:
         self.program = program
         self.user_variables: set[str] = set()
         self.memory_symbols: dict[str, float] = {}
+        self.last_trace: list[dict[str, object]] = []
 
     def reset_connection(self) -> None:
         self.user_variables.clear()
@@ -623,17 +626,21 @@ class OpenPPLSession:
         *,
         hand_class: str | None = None,
     ) -> ReturnValue | DirectAction:
+        trace_events: list[dict[str, object]] = []
         ctx = ProgramContext(
             self.program,
             external,
             hand_class=hand_class,
             user_variables=self.user_variables,
             memory_symbols=self.memory_symbols,
+            trace_events=trace_events,
         )
-        return self.program._evaluate_compiled(
+        result = self.program._evaluate_compiled(
             self.program.functions[self.program.canonical_name(name)],
             ctx,
         )
+        self.last_trace = trace_events
+        return result
 
     def run_initialization(
         self,
@@ -787,7 +794,14 @@ class OpenPPLProgram:
     ) -> ReturnValue | DirectAction:
         if not fn.is_when_function:
             assert fn.expression is not None
-            return ReturnValue(float(fn.expression.eval(ctx.resolve)))
+            value = float(fn.expression.eval(ctx.resolve))
+            ctx.trace_events.append({
+                "function": fn.name,
+                "source_line": 0,
+                "action_kind": "expression",
+                "value": value,
+            })
+            return ReturnValue(value)
 
         index: int | None = 0
         while index is not None:
@@ -800,18 +814,39 @@ class OpenPPLProgram:
                 if node.action_kind == "set":
                     assert node.action_name is not None
                     ctx.set_symbol(node.action_name)
+                    ctx.trace_events.append({
+                        "function": fn.name,
+                        "source_line": int(node.source_line),
+                        "action_kind": "set",
+                        "action_name": node.action_name,
+                    })
                     # OpenHoldem's EvaluateTernaryExpression explicitly falls
                     # through to the third sibling after SET.
                     index = node.else_index
                     continue
                 if node.action_kind == "return":
                     assert node.action_expr is not None
-                    return ReturnValue(float(node.action_expr.eval(ctx.resolve)))
+                    value = float(node.action_expr.eval(ctx.resolve))
+                    ctx.trace_events.append({
+                        "function": fn.name,
+                        "source_line": int(node.source_line),
+                        "action_kind": "return",
+                        "value": value,
+                    })
+                    return ReturnValue(value)
                 if node.action_kind == "direct":
                     assert node.action_name is not None
                     amount = None
                     if node.action_expr is not None:
                         amount = float(node.action_expr.eval(ctx.resolve))
+                    ctx.trace_events.append({
+                        "function": fn.name,
+                        "source_line": int(node.source_line),
+                        "action_kind": "direct",
+                        "action_name": node.action_name,
+                        "amount": amount,
+                        "amount_kind": node.action_amount_kind,
+                    })
                     return DirectAction(node.action_name, amount, node.action_amount_kind)
                 raise AssertionError(node.action_kind)
             index = node.else_index
