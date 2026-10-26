@@ -143,6 +143,10 @@ class DeepCrusherR8Policy:
             raise ValueError("episode blinds must be positive")
         self._big_blind_chips = bb
         self._small_blind_chips = sb
+        # Canonical DeepCrusher benchmark episodes are Spin&Go tournament hands.
+        # Set this per hand as part of lifecycle state so test-constructed policy
+        # instances and normal __init__ instances have identical sizing semantics.
+        self._is_tournament = True
         self._hand_serial += 1
 
         seats = tuple(
