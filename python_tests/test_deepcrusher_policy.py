@@ -69,6 +69,8 @@ When Others Fold Force
     p._last_metadata = {}
     p._action_origins = {}
     p._big_blind_chips = None
+    p._small_blind_chips = None
+    p._is_tournament = True
     p._hand_serial = 0
     return p
 
