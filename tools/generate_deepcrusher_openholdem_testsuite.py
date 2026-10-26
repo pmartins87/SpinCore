@@ -669,6 +669,27 @@ def main() -> int:
                             if a.decision_metadata is None
                             else a.decision_metadata.get("openppl_action_name")
                         ),
+                        "user_flags_067": (
+                            []
+                            if a.decision_metadata is None
+                            else [
+                                name
+                                for name in a.decision_metadata.get(
+                                    "openppl_user_variables", []
+                                )
+                                if str(name).lower() in {
+                                    "user_turnprobeopportunity",
+                                    "user_river66",
+                                    "user_rivercbet60",
+                                    "user_flop66",
+                                    "user_turn66",
+                                    "user_66turn75orguriver",
+                                    "user_66turn75river",
+                                    "user_diddonkonturn",
+                                    "user_rivervaluedb",
+                                }
+                            ]
+                        ),
                     }
                     for a in hero_rows
                 ]
