@@ -523,6 +523,9 @@ def translate_openppl_decision(
             actor,
             target,
             allin_adjustment_ratio,
+            small_blind_chips=sb,
+            big_blind_chips=bb,
+            is_tournament=is_tournament,
         )
 
     if -1000.0 <= value < 0.0:
@@ -533,6 +536,9 @@ def translate_openppl_decision(
             actor,
             target,
             allin_adjustment_ratio,
+            small_blind_chips=sb,
+            big_blind_chips=bb,
+            is_tournament=is_tournament,
         )
 
     if value == 0.0:
