@@ -4587,3 +4587,32 @@ Interpretation:
 
 Operational rule remains unchanged: do not interrupt or modify the active
 SpinCore long-training macroblock for this repository-engineering work.
+
+
+## 2026-10-26 — DC0 OpenHoldem parity sentinel investigation: 2/3 remains unresolved
+
+The action/lifecycle lane advanced without changing any SpinCore trainer artifact.
+
+Completed in this checkpoint:
+- OpenHoldem tournament betsize adjustment was extended through the shared action bridge, including small-blind/big-blind inputs and RoundToBeautifulBetsize/tournament adjustment semantics;
+- DeepCrusher policy lifecycle now carries the required blind/tournament sizing state per hand;
+- affected policy-test mocks were updated to explicit SB=10 / BB=20 rather than weakening production code with a fallback;
+- frozen OpenHoldem parity fixture `dc0_true_heads_up_00.txt` was refreshed for the corrected OpenHoldem rounding path: turn raise-to 108 -> 100 and river 270 -> 260;
+- DC0 workflow now triggers on changes under `fixtures/deepcrusher_openholdem_parity_v1/**`, so the frozen parity pack can no longer change without the dedicated gate;
+- a source audit `tools/audit_deepcrusher_067_source_paths.py` now enumerates every frozen-R8 `BetTwoThirdPot` consumer and its `user_*` setter evidence before semantic-sentinel search.
+
+Semantic sentinel result:
+- `ALLIN_ADJUSTED`: found;
+- `TECH_BETPOT_033`: found deterministically (THREE_HANDED attempt 72 in the current search lane);
+- `TECH_BETPOT_067`: still not found;
+- a one-time deterministic expansion from 100 to 2000 searched states also found no `TECH_BETPOT_067`, so the routine CI bound was restored to 100 rather than paying repeated compute for an already-negative broad search;
+- existing directed HUSB/HUBB probes reached 50%/75% paths, not 66.7%.
+
+Interpretation / next gate:
+- do not relax the semantic-sentinel requirement and do not relabel 60%/75% as 66.7%;
+- do not keep increasing random search;
+- use the frozen-source 2/3 audit to identify a real setter/consumer chain that is reachable, then add one source-derived directed fixture;
+- if every 2/3 consumer depends on an unreachable/dead state under the benchmark lifecycle, record that as a source/runtime reachability defect instead of manufacturing a PASS;
+- only after `TECH_BETPOT_067` has a genuine deterministic fixture should the selected adjusted-allin/33.3/66.7 cases be executed in real OpenHoldem for final DC0 parity.
+
+The active long trainer and post-15315/travel pathways remain untouched.
