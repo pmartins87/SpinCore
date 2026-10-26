@@ -7,6 +7,18 @@ from pathlib import Path
 
 USER_RE = re.compile(r"\buser_[A-Za-z0-9_]+\b", re.IGNORECASE)
 SET_RE = re.compile(r"\bSet\s+(user_[A-Za-z0-9_]+)\b", re.IGNORECASE)
+SECTION_RE = re.compile(r"^##([^#]+)##\s*$")
+
+
+def annotated_lines(text: str) -> list[tuple[int, str, str]]:
+    out: list[tuple[int, str, str]] = []
+    section = ""
+    for lineno, line in enumerate(text.splitlines(), 1):
+        m = SECTION_RE.match(line.strip())
+        if m:
+            section = m.group(1).strip()
+        out.append((lineno, section, line))
+    return out
 
 
 def main() -> int:
@@ -16,22 +28,25 @@ def main() -> int:
     args = ap.parse_args()
 
     text = args.source.read_text(encoding="utf-8", errors="replace")
-    lines = text.splitlines()
+    rows = annotated_lines(text)
 
     setters: dict[str, list[dict[str, object]]] = {}
-    for lineno, line in enumerate(lines, 1):
+    for lineno, section, line in rows:
         for m in SET_RE.finditer(line):
             key = m.group(1).lower()
-            setters.setdefault(key, []).append({"line": lineno, "text": line.strip()})
+            setters.setdefault(key, []).append(
+                {"line": lineno, "section": section, "text": line.strip()}
+            )
 
     consumers: list[dict[str, object]] = []
-    for lineno, line in enumerate(lines, 1):
+    for lineno, section, line in rows:
         if "bettwothirdpot" not in line.lower():
             continue
         users = sorted({x.lower() for x in USER_RE.findall(line)})
         consumers.append(
             {
                 "line": lineno,
+                "section": section,
                 "text": line.strip(),
                 "user_dependencies": [
                     {
@@ -45,7 +60,7 @@ def main() -> int:
         )
 
     payload = {
-        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V1",
+        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V2",
         "source": str(args.source),
         "bet_two_third_consumers": consumers,
         "consumer_count": len(consumers),
