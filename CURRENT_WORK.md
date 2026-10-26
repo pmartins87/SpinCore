@@ -4717,8 +4717,8 @@ Technical consequence:
 Repository implementation now prepared:
 - `tools/post15315_member_cache.py` atomically persists each member's exact
   collection streams and revalidates sample identity/order by digest on reload;
-- `tools/build_post15315_rebuild_member.py` can consume that validated cache
-  without changing frozen seeds, budgets, support minima or fitting semantics;
+- the performance-gate-frozen `tools/build_post15315_rebuild_member.py` remains byte-identical to the code audited by that PASS;
+- `tools/build_post15315_rebuild_member_cached.py` is the separate production-only cache consumer, preserving the frozen builder rather than retroactively changing performance-gate evidence;
 - `tools/run_post15315_multirebuild_production.py` orchestrates the frozen
   members 1-8 under the approved 4x2 collection / sequential-8-thread fit shape,
   supports fail-closed resume, and stops after K=8 construction;
