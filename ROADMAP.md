@@ -4410,3 +4410,23 @@ Governance consequence:
 
 The dedicated DC0 workflow passes with this evidence-backed contract. The
 active long trainer and post-15315/travel lanes remain untouched.
+
+
+### 2026-10-26 — DC0 real-runtime fixture packet READY
+
+The real-runtime DC0 packet is frozen and CI-reproducible:
+`fixtures/deepcrusher_openholdem_real_parity_v1/`.
+
+Required real OpenHoldem/TestSuite2 cases:
+1. 75% sentinel: river raise-to 45;
+2. all-in-adjustment sentinel: turn all-in;
+3. 33.3% sentinel: flop raise-to 40 and turn raise-to 80.
+
+CI regeneration/diff gate: PASS on commit
+`6358f251740cb0b146f976e10b7ba7421c49154b`.
+
+Next and only DC0 action before canonical closure: run the frozen
+`deepcrusher_dc0_real_parity.tc` in real OpenHoldem with the frozen R8 formula
+and compare actual button/action plus exact raise-to amounts. Any unexplained
+mismatch blocks DC0. If all three pass, update the manifest/status and promote
+the DC0 action-sizing subgate to canonical real-runtime PASS.
