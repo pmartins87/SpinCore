@@ -145,7 +145,7 @@ def test_begin_hand_isolates_openppl_memory_between_paired_replays():
 
 
 def test_policy_evaluates_allin_adjustment_before_final_action_translation():
-    p = fake_policy(allin_ratio=0.001)
+    p = fake_policy(allin_ratio=0.10)
     episode = SimpleNamespace(big_blind=20)
     lineup = SimpleNamespace(seats=("DEEPCRUSHER", "SPINCORE", "DEAD"))
     p.begin_hand(
@@ -165,4 +165,4 @@ def test_policy_evaluates_allin_adjustment_before_final_action_translation():
 
     assert (action.action_type, action.amount_to) == (5, 0)
     assert p._action_origins[0] == ["allin"]
-    assert p.decision_metadata(seat=0)["allin_adjustment_ratio"] == 0.001
+    assert p.decision_metadata(seat=0)["allin_adjustment_ratio"] == 0.10
