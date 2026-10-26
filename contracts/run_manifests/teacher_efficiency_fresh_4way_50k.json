@@ -1,0 +1,75 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "TEACHER_EFFICIENCY_FRESH_4WAY_50K",
+  "status": "READY",
+  "runner": "tools/run_3h_teacher_efficiency_fresh_4way_50k.sh",
+  "runner_blob_sha": "3c91df2aac6bd9657ebe13d9af590fdaf391394b",
+  "contract_ids": [
+    "DC-002",
+    "SAFE-001",
+    "SAFE-011",
+    "VALID-025",
+    "VALID-031",
+    "VALID-034",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
+  ],
+  "affected_domains": [
+    "DC",
+    "SAFE",
+    "VALID",
+    "RNG"
+  ],
+  "duration_class": "LONG_DIAGNOSTIC",
+  "target_host_profile": "RYZEN_9_9950X_FREE_16CPU",
+  "scientific_plan": {
+    "purpose": "Unbiased go/no-go test for whether the unchanged semantic-online training recipe remains efficient enough to justify a long unattended continuation.",
+    "checkpoints": [
+      10315,
+      14815,
+      15315,
+      17315
+    ],
+    "primary_contrast": "17315_minus_15315",
+    "secondary_contrasts": [
+      "14815_minus_10315",
+      "15315_minus_14815",
+      "17315_minus_10315"
+    ],
+    "scenarios": 50000,
+    "balanced_games_per_arm": 300000,
+    "domain": "THREE_HANDED_ONLY",
+    "seed": 20261027,
+    "workers": 16,
+    "worker_threads": 1,
+    "pairing": "Identical fresh scenario/deal stream and master RNG seed in all four raw-teacher arms, with balanced AAB/ABB exposure against the frozen DeepCrusher development opponent.",
+    "health_metrics": [
+      "softmax fallback rate across all SpinCore decisions",
+      "near-uniform-under-1pp rate across all SpinCore decisions",
+      "AA preflop fold rate per opportunity",
+      "deep 72o jam rate per opportunity",
+      "trips-plus fold rate per opportunity",
+      "full-house-plus fold rate per opportunity",
+      "deep high-card jam rate per opportunity",
+      "deep high-card no-immediate-draw jam rate per opportunity"
+    ],
+    "frozen_decision_rule": {
+      "GREEN": "17315-minus-15315 paired EV CI95 low > 0 AND fallback-rate delta <= +3 percentage points AND near-uniform delta <= +3 percentage points.",
+      "RED": "17315-minus-15315 paired EV CI95 high < 0 OR fallback-rate delta > +5 percentage points OR near-uniform delta > +5 percentage points.",
+      "YELLOW": "Anything else. Blind three-month same-recipe training is not authorized; only short autonomous macroblocks with repeated gates.",
+      "high_card_note": "High-card jam, including no-immediate-draw jam, is a review surface and is not automatically classified as a poker error because pure bluffs may be correct."
+    },
+    "exclusions": [
+      "development-only while DC0 real-OpenHoldem parity is pending",
+      "no checkpoint/model selection from this run",
+      "no hyperparameter tuning after seeing this run",
+      "no canonical promotion authorization",
+      "no silent reinterpretation of post15315 multi-rebuild stabilization"
+    ]
+  },
+  "support_blob_shas": {
+    "tools/evaluate_3h_teacher_efficiency_fresh_4way.py": "75a5382ccd655ed8d80e8f9bbd5cb087abdf503e",
+    "tools/run_3h_teacher_efficiency_fresh_4way_50k.sh": "3c91df2aac6bd9657ebe13d9af590fdaf391394b"
+  }
+}
