@@ -49,6 +49,7 @@ bash tools/run_post15315_multirebuild_preregistration_check.sh
   tools/post15315_collection.py \
   tools/post15315_member_cache.py \
   tools/build_post15315_rebuild_member.py \
+  tools/build_post15315_rebuild_member_cached.py \
   tools/run_post15315_multirebuild_production.py
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
