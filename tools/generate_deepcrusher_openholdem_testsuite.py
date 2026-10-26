@@ -196,6 +196,30 @@ def explicit_husb_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tu
     return out
 
 
+def explicit_hubb_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tuple[int, ...]]]:
+    """Directed HU/BB limp-check-check probes for user_TurnProbeOpportunity."""
+    raw = [
+        (("As", "Kh"), ("7c", "2d"), ("Qs", "8h", "3d", "5c", "9s")),
+        (("Ah", "Kd"), ("7c", "2s"), ("Ks", "8h", "3d", "5c", "9s")),
+        (("As", "Qh"), ("6c", "2h"), ("Js", "8d", "3h", "5c", "9s")),
+        (("Ah", "Qd"), ("Jc", "2h"), ("Ks", "8d", "3h", "5c", "9s")),
+        (("As", "Kd"), ("Tc", "4h"), ("Qs", "8d", "3h", "6c", "9s")),
+        (("Ah", "Qd"), ("9c", "2h"), ("Ks", "Qs", "3h", "5c", "7d")),
+        (("As", "Jh"), ("8c", "2d"), ("Qs", "7h", "3d", "5c", "Ts")),
+        (("Ah", "Jd"), ("7s", "3c"), ("Ks", "9h", "4d", "2c", "Qd")),
+    ]
+    out = []
+    for villain, hero, board in raw:
+        holes = (
+            tuple(card_id(x) for x in villain),
+            tuple(card_id(x) for x in hero),
+            (-1, -1),
+        )
+        board_ids = tuple(card_id(x) for x in board)
+        out.append((holes, board_ids))
+    return out
+
+
 def buttons(public) -> str:
     out = []
     if public.legal_fold:
@@ -498,11 +522,16 @@ def main() -> int:
     }
 
     for domain in ("THREE_HANDED", "TRUE_HEADS_UP"):
-        directed_067 = (
-            explicit_husb_067_candidates()
-            if args.require_semantic_sentinels and domain == "TRUE_HEADS_UP"
-            else []
-        )
+        directed_067 = []
+        if args.require_semantic_sentinels and domain == "TRUE_HEADS_UP":
+            directed_067.extend(
+                (0, 0, holes, board, "HUSB_RIVER_TP")
+                for holes, board in explicit_husb_067_candidates()
+            )
+            directed_067.extend(
+                (0, 1, holes, board, "HUBB_LIMP_TURN_PROBE")
+                for holes, board in explicit_hubb_067_candidates()
+            )
         for attempt in range(int(args.max_search)):
             dealer_cycle = 3 if domain == "THREE_HANDED" else 2
             dealer = attempt % dealer_cycle
@@ -511,13 +540,19 @@ def main() -> int:
             explicit_holes = None
             explicit_board = None
 
+            explicit_label = ""
             if attempt < len(directed_067):
-                # Deterministic HUSB/dealer-SB probes aimed specifically at the
-                # source-owned user_River66 -> BetTwoThirdPot branch.
-                dealer = 0
-                hero_seat = 0
+                # Small source-directed fixtures. HUSB probes target the
+                # historical river-value branch; HUBB probes target the
+                # limp/check/check turn-probe branch.
+                (
+                    dealer,
+                    hero_seat,
+                    explicit_holes,
+                    explicit_board,
+                    explicit_label,
+                ) = directed_067[attempt]
                 stack_chips = 750
-                explicit_holes, explicit_board = directed_067[attempt]
             else:
                 if args.require_semantic_sentinels:
                     # Sentinel search deliberately spans both deep and shallow
@@ -606,6 +641,7 @@ def main() -> int:
                     f"attempt={attempt} hero={card_text(deal.holes[hero_seat][0])}"
                     f"{card_text(deal.holes[hero_seat][1])} "
                     f"board={''.join(card_text(x) for x in deal.board)} "
+                    f"label={explicit_label} "
                     f"rows={json.dumps(trace_rows, sort_keys=True)}",
                     flush=True,
                 )
@@ -681,6 +717,7 @@ def main() -> int:
                     "stack_chips": int(max(episode.stacks)),
                     "opponent_style": opponent_style,
                     "explicit_deal": bool(explicit_holes is not None),
+                    "explicit_label": explicit_label,
                     "full_street_case": bool(is_full_street),
                     "hero_actions": hero_actions,
                 }
