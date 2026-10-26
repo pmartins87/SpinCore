@@ -120,12 +120,27 @@ def main() -> int:
             and not line.strip().startswith("//")
         ]
 
+    competing_flags = [
+        "user_turn50",
+        "user_turn75",
+        "user_river50",
+        "user_river75",
+        "user_turnprobeopportunity",
+        "user_river66",
+        "user_rivercbet60",
+    ]
+    competing_flag_setters = {
+        name: setters.get(name, [])
+        for name in competing_flags
+    }
+
     payload = {
-        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V4",
+        "schema": "SPINCORE_DEEPCRUSHER_067_SOURCE_AUDIT_V5",
         "source": str(args.source),
         "bet_two_third_consumers": consumers,
         "consumer_count": len(consumers),
         "sizing_hotspots": sizing_hotspots,
+        "competing_flag_setters": competing_flag_setters,
         "user_dependencies_with_no_setter": sorted(
             {
                 d["name"]
