@@ -90,7 +90,8 @@ jobs:
             tools/evaluate_deepcrusher_dc1.py \
             tools/export_spincore_hybrid_inference.py \
             tools/smoke_deepcrusher_oracle_solver.py \
-            tools/generate_deepcrusher_openholdem_testsuite.py
+            tools/generate_deepcrusher_openholdem_testsuite.py \
+            tools/audit_deepcrusher_067_source_paths.py
       - name: Expression semantics
         env:
           PYTHONPATH: ${{ github.workspace }}/python
@@ -189,6 +190,15 @@ jobs:
             fixtures/deepcrusher_openholdem_parity_v1/deepcrusher_dc0_parity.tc \
             /tmp/deepcrusher_openholdem_parity/deepcrusher_dc0_parity.tc
           echo "DEEPC_RUSHER_OPENHOLDEM_PARITY_FIXTURES_FROZEN_PASS"
+
+      - name: Audit frozen 2/3 source paths
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: |
+          python tools/audit_deepcrusher_067_source_paths.py \
+            --source fixtures/deepcrusher_r8_v22/DeepCrusher_R8_v22_CANDIDATE_OPENHOLDEM_ASCII_20260914.txt \
+            --report /tmp/deepcrusher_067_source_paths.json
+          cat /tmp/deepcrusher_067_source_paths.json
 
       - name: Search OpenHoldem semantic sentinel parity cases
         env:
