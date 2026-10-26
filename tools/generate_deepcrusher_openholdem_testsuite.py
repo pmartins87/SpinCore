@@ -162,6 +162,40 @@ def card_text(card_id: int) -> str:
     return RANKS[value // 4] + SUITS[value % 4]
 
 
+def card_id(text: str) -> int:
+    raw = str(text)
+    if len(raw) != 2 or raw[0] not in RANKS or raw[1] not in SUITS:
+        raise ValueError(f"invalid card text: {text!r}")
+    return RANKS.index(raw[0]) * 4 + SUITS.index(raw[1])
+
+
+def explicit_husb_067_candidates() -> list[tuple[tuple[tuple[int, int], ...], tuple[int, ...]]]:
+    """Small directed HUSB river-value probes for the 66.7% technical path.
+
+    Hero is seat 0 / dealer-SB.  Every board is unpaired and deliberately
+    non-four-flush/non-four-straight so a surviving top pair should reach the
+    HUSB river-value branch that sets user_River66 before f$BestBetsize.
+    """
+    raw = [
+        (("As", "Kc"), ("Qh", "Jd"), ("Ks", "7h", "2d", "4c", "9s")),
+        (("Ah", "Qc"), ("Kh", "Jd"), ("Qs", "8h", "3d", "5c", "Ts")),
+        (("Ks", "Qc"), ("Ah", "Jd"), ("Kd", "8s", "3h", "5c", "9d")),
+        (("Qs", "Jc"), ("Ah", "Td"), ("Qd", "8s", "3h", "5c", "9d")),
+        (("As", "Jc"), ("Kh", "Qd"), ("Js", "8h", "3d", "5c", "9s")),
+        (("Kc", "Qh"), ("As", "Jd"), ("Kh", "8s", "2d", "4c", "Ts")),
+    ]
+    out = []
+    for hero, villain, board in raw:
+        holes = (
+            tuple(card_id(x) for x in hero),
+            tuple(card_id(x) for x in villain),
+            (-1, -1),
+        )
+        board_ids = tuple(card_id(x) for x in board)
+        out.append((holes, board_ids))
+    return out
+
+
 def buttons(public) -> str:
     out = []
     if public.legal_fold:
@@ -326,6 +360,8 @@ def play_candidate(
     deal_seed: int,
     case_index: int,
     opponent_style: str = "PASSIVE",
+    explicit_holes: tuple[tuple[int, int], ...] | None = None,
+    explicit_board: tuple[int, ...] | None = None,
 ):
     lineup = ["PASSIVE", "PASSIVE", "DEAD" if episode.game_is_hu else "PASSIVE"]
     lineup[hero_seat] = policy.policy_id
@@ -338,7 +374,13 @@ def play_candidate(
         deal_seed=deal_seed,
     )
 
-    state = solver.create(episode, deal_seed)
+    if (explicit_holes is None) != (explicit_board is None):
+        raise ValueError("explicit_holes and explicit_board must be provided together")
+    state = (
+        solver.create(episode, deal_seed)
+        if explicit_holes is None
+        else solver.create_with_deal(episode, explicit_holes, explicit_board)
+    )
     rendered: list[RenderedAction] = []
     deal = state.deal_snapshot()
     hero_streets: set[int] = set()
@@ -456,38 +498,66 @@ def main() -> int:
     }
 
     for domain in ("THREE_HANDED", "TRUE_HEADS_UP"):
+        directed_067 = (
+            explicit_husb_067_candidates()
+            if args.require_semantic_sentinels and domain == "TRUE_HEADS_UP"
+            else []
+        )
         for attempt in range(int(args.max_search)):
             dealer_cycle = 3 if domain == "THREE_HANDED" else 2
             dealer = attempt % dealer_cycle
             opponent_style = "PASSIVE"
             stack_chips = None
-            if args.require_semantic_sentinels:
-                # Sentinel search deliberately spans both deep and shallow
-                # geometries plus passive/aggressive histories. This is a
-                # deterministic fixture-discovery lane, not benchmark sampling.
-                contexts = (
-                    (500 if domain == "THREE_HANDED" else 750, "PASSIVE"),
-                    (240, "PASSIVE"),
-                    (160, "PASSIVE"),
-                    (120, "PASSIVE"),
-                    (500 if domain == "THREE_HANDED" else 750, "MIN_AGGRO"),
-                    (240, "MIN_AGGRO"),
-                    (160, "MIN_AGGRO"),
-                    (120, "ALLIN_PRESSURE"),
+            explicit_holes = None
+            explicit_board = None
+
+            if attempt < len(directed_067):
+                # Deterministic HUSB/dealer-SB probes aimed specifically at the
+                # source-owned user_River66 -> BetTwoThirdPot branch.
+                dealer = 0
+                hero_seat = 0
+                stack_chips = 750
+                explicit_holes, explicit_board = directed_067[attempt]
+            else:
+                if args.require_semantic_sentinels:
+                    # Sentinel search deliberately spans both deep and shallow
+                    # geometries plus passive/aggressive histories. This is a
+                    # deterministic fixture-discovery lane, not benchmark sampling.
+                    contexts = (
+                        (500 if domain == "THREE_HANDED" else 750, "PASSIVE"),
+                        (240, "PASSIVE"),
+                        (160, "PASSIVE"),
+                        (120, "PASSIVE"),
+                        (500 if domain == "THREE_HANDED" else 750, "MIN_AGGRO"),
+                        (240, "MIN_AGGRO"),
+                        (160, "MIN_AGGRO"),
+                        (120, "ALLIN_PRESSURE"),
+                    )
+                    context_index = (attempt // dealer_cycle) % len(contexts)
+                    stack_chips, opponent_style = contexts[context_index]
+                episode_probe = make_episode(
+                    domain,
+                    dealer,
+                    stack_chips=stack_chips,
                 )
-                context_index = (attempt // dealer_cycle) % len(contexts)
-                stack_chips, opponent_style = contexts[context_index]
+                live_probe = [
+                    seat for seat, stack in enumerate(episode_probe.stacks)
+                    if stack > 0
+                ]
+                # Cycle the DeepCrusher seat so position is not accidentally fixed.
+                hero_seat = live_probe[
+                    (attempt // (
+                        dealer_cycle
+                        * (8 if args.require_semantic_sentinels else 1)
+                    ))
+                    % len(live_probe)
+                ]
+
             episode = make_episode(
                 domain,
                 dealer,
                 stack_chips=stack_chips,
             )
-            live = [seat for seat, stack in enumerate(episode.stacks) if stack > 0]
-            # Cycle the DeepCrusher seat so position is not accidentally fixed.
-            hero_seat = live[
-                (attempt // (dealer_cycle * (8 if args.require_semantic_sentinels else 1)))
-                % len(live)
-            ]
             deal_seed = int(
                 args.seed
                 + 100000 * (0 if domain == "THREE_HANDED" else 1)
@@ -502,6 +572,8 @@ def main() -> int:
                 deal_seed=deal_seed,
                 case_index=attempt,
                 opponent_style=opponent_style,
+                explicit_holes=explicit_holes,
+                explicit_board=explicit_board,
             )
             hero_rows = [a for a in actions if a.hero]
             hero_action_letters = {
@@ -537,7 +609,8 @@ def main() -> int:
                         "OPENHOLDEM_SEMANTIC_SENTINEL_FOUND "
                         f"family={family} domain={domain} attempt={attempt} "
                         f"deal_seed={deal_seed} stack={stack_chips or 'default'} "
-                        f"opponent_style={opponent_style}",
+                        f"opponent_style={opponent_style} "
+                        f"explicit={explicit_holes is not None}",
                         flush=True,
                     )
 
@@ -574,6 +647,7 @@ def main() -> int:
                     "deal_seed": int(deal_seed),
                     "stack_chips": int(max(episode.stacks)),
                     "opponent_style": opponent_style,
+                    "explicit_deal": bool(explicit_holes is not None),
                     "full_street_case": bool(is_full_street),
                     "hero_actions": hero_actions,
                 }
