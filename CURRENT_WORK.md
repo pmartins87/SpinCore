@@ -4690,3 +4690,51 @@ runtime parity yet. Next gate is external and narrow: execute
 OpenHoldem ManualMode/TestSuite2 and return the result/log. Exact action and
 raise-to mismatches are hard FAIL; no large DeepCrusher-vs-CrusherTBP benchmark
 is authorized before this gate closes.
+
+
+## 2026-10-26 — post-15315 target-Ryzen K=8 performance gate PASS; production runner prepared but SHA-bound
+
+The required target-host performance/parity gate has now completed on the Ryzen host with final runner PASS.
+
+Observed frozen execution evidence:
+- selected collection threads per worker: 2;
+- four-worker collection exact to serial: PASS;
+- measured four-worker collection speedup: 3.7297603523936638x;
+- mini-fit sample/loss/tensor parity: exact PASS;
+- projected end-to-end K=8 speedup: 3.6661471749893555x;
+- projected net savings: 29016.176757359986 seconds;
+- peak process RSS reported by /usr/bin/time: 14863340 KiB;
+- swaps: 0;
+- every preregistered performance/memory criterion: true.
+
+Technical consequence:
+- the prior target-Ryzen performance blocker is closed;
+- production must use exactly four process-parallel collection workers with two
+  threads each and must not fan the multi-GB 10105 checkpoint into those workers;
+- canonical member fits remain sequential/non-fanned at eight threads. Running
+  multiple eight-thread member fits concurrently is not authorized by this gate.
+
+Repository implementation now prepared:
+- `tools/post15315_member_cache.py` atomically persists each member's exact
+  collection streams and revalidates sample identity/order by digest on reload;
+- `tools/build_post15315_rebuild_member.py` can consume that validated cache
+  without changing frozen seeds, budgets, support minima or fitting semantics;
+- `tools/run_post15315_multirebuild_production.py` orchestrates the frozen
+  members 1-8 under the approved 4x2 collection / sequential-8-thread fit shape,
+  supports fail-closed resume, and stops after K=8 construction;
+- `tools/run_post15315_multirebuild_production.sh` is the guarded host runner;
+- `contracts/run_manifests/post15315_multirebuild_production.json` intentionally
+  remains BLOCKED_AWAITING_PERFORMANCE_REPORT_SHA.
+
+The production stage is not yet authorized to start. The pasted terminal output
+does not contain the SHA256 of the complete
+`post15315_multirebuild_performance_gate.json` artifact, so the stage manifest
+cannot honestly bind to the exact PASS evidence yet. The next action is to obtain
+that one SHA256, freeze it into the manifest, require project-contract/main
+regression PASS on the bound runner, and only then mark the K=8 construction
+stage READY.
+
+After K=8 construction completes, stop. The next scientific gate is the frozen
+fresh rebuild-stability bank at seed 153159001. K=12 remains conditional only on
+the preregistered K=8 stability failure rule; no strength benchmark is opened by
+the performance PASS or by construction PASS.
