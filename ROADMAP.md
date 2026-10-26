@@ -4364,3 +4364,22 @@ Next gate:
 
 The active long trainer and the preregistered post-15315/15315->17315 lanes are
 unchanged and must not be restarted or modified by this work.
+
+
+### 2026-10-26 — DC0 parity subgate: source-derived 66.7% reachability
+
+Current mechanical status:
+- adjusted-all-in provenance is covered;
+- technical 33.3% provenance is covered;
+- technical 66.7% provenance is not yet covered by a genuine deterministic policy path;
+- a one-time 2000-state deterministic search was negative, so further broad/random search is not authorized.
+
+Required sequence:
+1. Inspect `tools/audit_deepcrusher_067_source_paths.py` output against frozen R8 and identify a concrete `BetTwoThirdPot` consumer with a real reachable setter chain.
+2. Add a directed fixture derived from that source path; do not fake a user variable, relabel another sizing, or weaken the sentinel.
+3. Re-run the dedicated DC0 workflow; require all three semantic sentinels.
+4. Execute the selected adjusted-all-in, 33.3% and 66.7% fixtures in real OpenHoldem and compare final action plus exact raise-to amount.
+5. Only then mark the action-sizing part of DC0 canonical parity PASS.
+
+Stop condition:
+- if the source audit shows that all 66.7% consumers are unreachable under the benchmark/OpenHoldem lifecycle, stop fixture construction and classify the issue as a source/runtime reachability defect for explicit resolution.
