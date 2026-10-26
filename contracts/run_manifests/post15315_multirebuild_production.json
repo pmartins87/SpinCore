@@ -4,7 +4,7 @@
   "status": "BLOCKED_AWAITING_PERFORMANCE_REPORT_SHA",
   "block_reason": "The target-Ryzen gate passed on the user's host, but the exact SHA256 of post15315_multirebuild_performance_gate.json has not yet been frozen into this manifest.",
   "runner": "tools/run_post15315_multirebuild_production.sh",
-  "runner_blob_sha": "eb1f36ce1f83e4b83e787b3045e00db5b8c7eaf3",
+  "runner_blob_sha": "49bee843e49473a84874e822eb71dcd1cdc360d2",
   "contract_ids": [
     "PERF-001",
     "PERF-002",
@@ -76,9 +76,10 @@
     "stop_after": "Stop after all frozen members 1-8 have construction PASS. Do not automatically run K=8 stability, K=12 extension, pathology, DC1/DC2, or any strength benchmark."
   },
   "support_blob_shas": {
-    "tools/run_post15315_multirebuild_production.py": "c5ae278833092962b7b986ef5d14bc61423b0b0a",
+    "tools/run_post15315_multirebuild_production.py": "b4c1fcb9043a9e4c131ed02d80b751287c47e3ce",
     "tools/post15315_member_cache.py": "3f1d8737a99481212534ef7f88fb74b6f8fb6673",
-    "tools/build_post15315_rebuild_member.py": "b0a7785ea031aa8cf587729c8219e2c0332a040c",
+    "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee",
+    "tools/build_post15315_rebuild_member_cached.py": "488cb25ea4df4096d8be3fce0bcff2c534298aef",
     "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
     "python_tests/test_post15315_multirebuild_production.py": "c3903a2f66710f816d005208e32970eff01bd0c8"
   }
