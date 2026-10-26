@@ -313,7 +313,7 @@ def main() -> int:
         cache = Path(cache_rows[member]["cache"]).resolve(strict=True)
         cmd = [
             sys.executable,
-            str(ROOT / "tools" / "build_post15315_rebuild_member.py"),
+            str(ROOT / "tools" / "build_post15315_rebuild_member_cached.py"),
             "--member", str(member),
             "--protocol", str(protocol_path),
             "--checkpoint", str(checkpoint),
