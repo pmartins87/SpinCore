@@ -775,6 +775,25 @@ def main() -> int:
                                 }
                             ]
                         ),
+                        "river_strategy_trace": (
+                            []
+                            if a.decision_metadata is None
+                            else [
+                                row
+                                for row in a.decision_metadata.get(
+                                    "openppl_main_trace", []
+                                )
+                                if str(row.get("function", "")).lower()
+                                in {
+                                    "f$river",
+                                    "f$river_raise",
+                                    "f$move_river_cbet",
+                                    "f$move_river_bet",
+                                    "f$hand_river_cbet",
+                                    "f$bestbetsize",
+                                }
+                            ]
+                        ),
                     }
                     for a in hero_rows
                 ]
