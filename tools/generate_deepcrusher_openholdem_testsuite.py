@@ -690,6 +690,23 @@ def main() -> int:
                                 }
                             ]
                         ),
+                        "sizing_trace": (
+                            []
+                            if a.decision_metadata is None
+                            else [
+                                row
+                                for row in a.decision_metadata.get(
+                                    "openppl_main_trace", []
+                                )
+                                if "betsize" in str(row.get("function", "")).lower()
+                                or str(row.get("action_name", "")).lower()
+                                in {
+                                    "bettwothirdpot",
+                                    "bethalfpot",
+                                    "betthreefourthpot",
+                                }
+                            ]
+                        ),
                     }
                     for a in hero_rows
                 ]
