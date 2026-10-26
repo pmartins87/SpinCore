@@ -204,14 +204,17 @@ def explicit_husb_river_improve_067_candidates() -> list[tuple[tuple[tuple[int, 
       !river_Paired && TopPairOrBetter && !river_Completed -> user_River66.
     """
     raw = [
-        (("As", "9c"), ("Kh", "Jd"), ("Qs", "7h", "2d", "4c", "9s")),
-        (("Ah", "8c"), ("Kh", "Jd"), ("Qs", "7h", "2d", "4c", "8s")),
-        (("Ks", "9c"), ("Ah", "Jd"), ("Qs", "7h", "2d", "4c", "9d")),
-        (("Kh", "8c"), ("As", "Jd"), ("Qs", "7h", "2d", "4c", "8d")),
-        (("Qs", "9c"), ("Ah", "Kd"), ("Js", "7h", "2d", "4c", "9d")),
-        (("Qh", "8c"), ("As", "Kd"), ("Js", "7h", "2d", "4c", "8d")),
-        (("Js", "9c"), ("Ah", "Kd"), ("Qs", "7h", "2d", "4c", "9d")),
-        (("Jh", "8c"), ("As", "Kd"), ("Qs", "7h", "2d", "4c", "8d")),
+        # River pairs the Hero's lower hole card AND becomes the top board rank.
+        # This is the literal HUSB baseline TopPairOrBetter condition while
+        # keeping the Hero unpaired through the turn.
+        (("As", "9c"), ("Kh", "Jd"), ("7h", "4d", "2c", "3s", "9h")),
+        (("Ah", "8c"), ("Kh", "Jd"), ("7h", "4d", "2c", "3s", "8h")),
+        (("Ks", "9c"), ("Ah", "Jd"), ("7d", "4s", "2h", "3c", "9d")),
+        (("Kh", "8c"), ("As", "Jd"), ("7d", "4s", "2h", "3c", "8d")),
+        (("Qs", "9c"), ("Ah", "Kd"), ("7s", "4h", "2d", "3c", "9d")),
+        (("Qh", "8c"), ("As", "Kd"), ("7s", "4h", "2d", "3c", "8d")),
+        (("Js", "9c"), ("Ah", "Kd"), ("7c", "4h", "2d", "3s", "9d")),
+        (("Jh", "8c"), ("As", "Kd"), ("7c", "4h", "2d", "3s", "8d")),
     ]
     out = []
     for hero, villain, board in raw:
