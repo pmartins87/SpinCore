@@ -1,0 +1,85 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_MULTIREBUILD_K8_PRODUCTION_CONSTRUCTION",
+  "status": "BLOCKED_AWAITING_PERFORMANCE_REPORT_SHA",
+  "block_reason": "The target-Ryzen gate passed on the user's host, but the exact SHA256 of post15315_multirebuild_performance_gate.json has not yet been frozen into this manifest.",
+  "runner": "tools/run_post15315_multirebuild_production.sh",
+  "runner_blob_sha": "eb1f36ce1f83e4b83e787b3045e00db5b8c7eaf3",
+  "contract_ids": [
+    "PERF-001",
+    "PERF-002",
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "RNG-013",
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "CKPT-001",
+    "ART-001"
+  ],
+  "affected_domains": [
+    "PERF",
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "VALID",
+    "SAFE",
+    "CKPT",
+    "ART"
+  ],
+  "duration_class": "LONG_GT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "teacher_iteration": 15315,
+    "teacher_sha256": "ac49b77c8ec3204e07f6d44d3718c68880e60675c5521f538438a3fa3ceae746",
+    "source_checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "protocol": "contracts/post15315_multirebuild_preregistration.json",
+    "primary_rebuild_count": 8
+  },
+  "performance_gate": {
+    "status": "PASS_AWAITING_SHA_BINDING",
+    "evidence": "runs/post15315_multirebuild_performance_gate/post15315_multirebuild_performance_gate.json",
+    "evidence_sha256": null,
+    "observed_on_target_host": {
+      "selected_collection_threads": 2,
+      "parallel_collection_workers": 4,
+      "parallel_collection_speedup": 3.7297603523936638,
+      "projected_end_to_end_speedup": 3.6661471749893555,
+      "projected_net_savings_seconds": 29016.176757359986,
+      "maximum_resident_set_size_kib": 14863340,
+      "swap_count": 0
+    },
+    "required_production_profile": {
+      "collection_workers": 4,
+      "collection_threads_per_worker": 2,
+      "fit_threads": 8,
+      "checkpoint_fanout_to_collection_workers": false,
+      "member_seed_set": "FROZEN_MEMBERS_1_TO_8"
+    }
+  },
+  "execution_contract": {
+    "collection": "At most four independent member collection workers run concurrently. Each worker uses exactly two threads and never deserializes the multi-GB 10105 checkpoint.",
+    "persistence": "Each member collection is atomically cached with teacher/protocol/seed/thread metadata and train/holdout digests. The builder revalidates every digest after reload before fitting.",
+    "fitting": "Member fits are sequential/non-fanned and each uses exactly eight threads. Concurrent eight-thread member fits are not authorized by the performance evidence.",
+    "resume": "A durable construction PASS may be reused only when member id, teacher SHA, protocol SHA, frozen member seeds, execution profile and all output artifact hashes match exactly.",
+    "stop_after": "Stop after all frozen members 1-8 have construction PASS. Do not automatically run K=8 stability, K=12 extension, pathology, DC1/DC2, or any strength benchmark."
+  },
+  "support_blob_shas": {
+    "tools/run_post15315_multirebuild_production.py": "c5ae278833092962b7b986ef5d14bc61423b0b0a",
+    "tools/post15315_member_cache.py": "3f1d8737a99481212534ef7f88fb74b6f8fb6673",
+    "tools/build_post15315_rebuild_member.py": "b0a7785ea031aa8cf587729c8219e2c0332a040c",
+    "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
+    "python_tests/test_post15315_multirebuild_production.py": "c3903a2f66710f816d005208e32970eff01bd0c8"
+  }
+}
