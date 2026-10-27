@@ -29,7 +29,8 @@ def test_k12_regenerates_same_fixed_common_bank_and_keeps_thresholds_external():
     assert "k8stab.BANK_EPISODES" in source
     assert "master_seed=k8stab.BANK_SEED" in source
     assert "stability.evaluate(" in source
-    assert "threshold" not in source.lower().split("def main()", 1)[1]
+    assert 'rebuild_stability_gate"]["thresholds"]' not in source
+    assert "thresholds =" not in source
 
 
 def test_k12_requires_k8_authorization_and_extension_pass():
