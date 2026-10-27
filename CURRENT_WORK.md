@@ -4738,3 +4738,22 @@ After K=8 construction completes, stop. The next scientific gate is the frozen
 fresh rebuild-stability bank at seed 153159001. K=12 remains conditional only on
 the preregistered K=8 stability failure rule; no strength benchmark is opened by
 the performance PASS or by construction PASS.
+
+## 2026-10-27 — post-15315 K=8 first production attempt: cache wiring incident repaired
+
+The first guarded K=8 production attempt reached the frozen collection stage successfully:
+- all members 1-8 completed ordinary, 180k augmentation, and 300k specialist collection;
+- the eight collection caches were written under the approved 4x2 profile;
+- the process stopped before member-1 fitting because the isolated production cached builder rejected the orchestrator's `--collection-cache` argument.
+
+This was a mechanical integration defect in the new cached-builder path, not a scientific result and not a teacher/training mutation. The frozen original member builder remains unchanged.
+
+Repair:
+- `tools/build_post15315_rebuild_member_cached.py` now requires `--collection-cache`;
+- it imports and calls `post15315_member_cache.load_member_cache`;
+- cache member, teacher SHA, protocol SHA, frozen member seeds, two-thread collection profile, and all stored train/holdout digests are revalidated before any fit;
+- the exact cache SHA is bound into each produced member artifact/report;
+- a regression test now guards this wiring.
+
+Resume policy: do not delete or recollect the existing caches. The guarded production runner must resume from them only if every fail-closed cache check passes. Fits remain sequential at eight threads. Stop after K=8 construction; stability is still the next scientific gate.
+
