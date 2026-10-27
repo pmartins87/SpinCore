@@ -4757,3 +4757,31 @@ Repair:
 
 Resume policy: do not delete or recollect the existing caches. The guarded production runner must resume from them only if every fail-closed cache check passes. Fits remain sequential at eight threads. Stop after K=8 construction; stability is still the next scientific gate.
 
+## 2026-10-27 — post-15315 K=8 construction PASS; frozen stability stage prepared
+
+The repaired production resume completed the entire preregistered K=8 construction:
+- members 1-8 each reached durable construction PASS;
+- the second launch correctly reused the previously validated collection caches instead of recollecting them;
+- all tail/fullpool fits completed under the frozen sequential 8-thread profile;
+- final construction runner status: PASS / exit status 0;
+- no swap was observed;
+- no stability, K=12, or external-strength evidence was opened by construction.
+
+This closes construction only. It does not establish that K=8 is stable or strong.
+
+The next stage is now implemented and frozen before inspecting any K=8 stability result:
+- runner: `tools/run_post15315_rebuild_stability_k8.sh`;
+- common-state bank seed: 153159001;
+- exactly 80,000 forced THREE_HANDED episodes;
+- bank generator: frozen teacher-15315 rollout through the canonical post15315 collection path;
+- all eight rebuilds are evaluated on the exact same states;
+- each member applies its own frozen fullpool/specialist route before comparison;
+- bank generation is independent of rebuild-policy behavior;
+- the existing frozen `evaluate_post15315_rebuild_stability.py` computes all 28 member pairs, all 35 balanced 4-vs-4 splits, leave-one-out perturbation, argmax disagreement, and rare-tail criteria.
+
+Branch handling is fail-closed:
+- K=8 PASS -> do not build members 9-12; proceed to frozen aggregate quality/specialist-confirmation/safety gates;
+- mechanically clean K=8 stability FAIL -> authorize exactly members 9-12 using already-frozen seeds, then rerun the unchanged K=12 stability gate;
+- runtime/integrity/coverage failure -> stop; it does not authorize K=12;
+- no external strength benchmark is opened until the stabilization branch resolves.
+
