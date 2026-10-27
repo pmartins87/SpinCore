@@ -4785,3 +4785,24 @@ Branch handling is fail-closed:
 - runtime/integrity/coverage failure -> stop; it does not authorize K=12;
 - no external strength benchmark is opened until the stabilization branch resolves.
 
+## 2026-10-27 — K=8 stability bank 80k coverage insufficiency; 100k coverage-only adjudication frozen
+
+The first stability-bank execution completed the exact preregistered 80,000 forced THREE_HANDED episodes at seed 153159001 and collected 333,454 decision states, but stopped before any rebuild member probability was evaluated because the rare strong surface failed its frozen support minimum:
+- postflop trips-or-better with Fold legal: 1,136 observed / 1,200 required.
+
+This is not a K=8 rebuild-stability FAIL and does not authorize K=12. The runner correctly failed before the member-evaluation loop, so no pairwise/split-half/leave-one-out or rare-tail probability result has been observed.
+
+Do not lower the 1,200 support minimum, reseed the bank, or classify the coverage miss as scientific instability. Repeating the same 80k deterministic bank would reproduce the same insufficiency.
+
+A separate coverage-only adjudication is now frozen in
+`contracts/post15315_stability_coverage_adjudication_v1.json` without rewriting the original preregistration:
+- preserve seed 153159001;
+- preserve the frozen teacher-15315 state generator;
+- preserve every rare-surface definition/minimum and every K=8 stability threshold;
+- regenerate from episode 0 and use exactly 100,000 forced THREE_HANDED episodes;
+- always use the full 100k bank; do not stop when a support minimum is first reached;
+- only after the complete 100k bank passes all original coverage minima may member probabilities be evaluated;
+- if 100k still misses coverage, stop for new adjudication; no adaptive extension and no K=12 authorization.
+
+This amendment is based solely on evaluation-support sufficiency observed before any rebuild stability output and therefore does not use member performance to choose the larger bank.
+
