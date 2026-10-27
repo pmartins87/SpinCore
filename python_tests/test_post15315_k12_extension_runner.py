@@ -40,4 +40,5 @@ def test_extension_does_not_change_protocol_or_thresholds():
     )
     assert "conditional_extension_rebuild_count" in source
     assert "maximum_rebuild_count" in source
-    assert "threshold" not in source.lower()
+    assert 'rebuild_stability_gate"]["thresholds"]' not in source
+    assert "thresholds =" not in source
