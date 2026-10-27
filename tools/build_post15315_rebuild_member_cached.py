@@ -33,6 +33,7 @@ import audit_3h_fresh_semantic_strategy_independent500_10105 as confirm
 import audit_3h_semantic_stratified_specialist_moe_10115 as spec
 import audit_3h_semantic_tail_strong_hand_coverage_10115 as coverage
 import post15315_collection as collect
+import post15315_member_cache as member_cache
 from audit_3h_average_policy_semantic_continuation_10105 import (
     semantic_vector_from_obs,
 )
@@ -164,6 +165,12 @@ def main() -> int:
     ap.add_argument("--collection-threads", type=int, default=1)
     ap.add_argument("--fit-threads", type=int, default=8)
     ap.add_argument(
+        "--collection-cache",
+        type=Path,
+        required=True,
+        help="Exact digest-validated collection cache produced by the guarded production collector.",
+    )
+    ap.add_argument(
         "--rerun-identical-member",
         action="store_true",
         help="Allow replacement only for an explicitly identical-seed mechanical rerun.",
@@ -217,6 +224,16 @@ def main() -> int:
             + ", ".join(existing)
         )
     protocol_sha = distill.sha256(args.protocol.resolve(strict=True))
+    cache_path = args.collection_cache.resolve(strict=True)
+    cache_payload = member_cache.load_member_cache(
+        cache_path,
+        expected_member=int(args.member),
+        expected_teacher_sha256=teacher_sha,
+        expected_protocol_sha256=protocol_sha,
+        expected_member_seeds=seeds,
+        expected_collection_threads=int(args.collection_threads),
+    )
+    collection_cache_sha = distill.sha256(cache_path)
     if args.rerun_identical_member and report_path.exists():
         prior = json.loads(report_path.read_text(encoding="utf-8"))
         if int(prior.get("member", -1)) != int(args.member):
