@@ -3,10 +3,10 @@ from __future__ import annotations
 
 """Research-only shared-corpus variance attribution after closed K=12 FAIL.
 
-The experiment pools the already-created member collection caches into one
+The experiment fixes the exact original-size member-01 collection cache as a
 common teacher-target corpus, then trains eight independent fit replicas on the
 exact same ordered corpus. The original closed-branch 12 policies and the
-shared-corpus 8 replicas are evaluated on one fresh research-only common bank.
+fixed-corpus 8 replicas are evaluated on one fresh research-only common bank.
 
 This cannot promote or reopen the failed K=12 candidate and opens no external
 strength evidence.
@@ -41,8 +41,8 @@ import run_post15315_rebuild_stability_k8 as k8stab
 from audit_3h_average_policy_semantic_continuation_10105 import semantic_vector_from_obs
 from spincore.solver import SolverLibrary
 
-PILOT_SCHEMA = "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_RESULT_V1"
-PREREG_SCHEMA = "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_V1"
+PILOT_SCHEMA = "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_RESULT_V2"
+PREREG_SCHEMA = "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_V2"
 EXPECTED_PROTOCOL_SHA = "5fd7667926c6112310fe5eca61afff396ad218de"
 EXPECTED_TEACHER_SHA = "ac49b77c8ec3204e07f6d44d3718c68880e60675c5521f538438a3fa3ceae746"
 EXPECTED_CHECKPOINT_SHA = "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0"
@@ -176,75 +176,55 @@ def original_member_rows(protocol: dict, protocol_sha: str, k8_dir: Path, ext_di
     return rows
 
 
-def load_shared_corpus(
+def load_fixed_corpus(
     protocol: dict,
     protocol_sha: str,
     k8_dir: Path,
-    ext_dir: Path,
-) -> tuple[list, list, list, dict]:
-    ordinary: list = []
-    ordinary_seen: dict = {}
-    augmentation_raw: list = []
-    augmentation_seen: dict = {}
-    specialist_raw: list = []
-    specialist_seen: dict = {}
-    cache_rows = []
+) -> tuple[list, list, dict]:
+    member = 1
+    cp = member_cache.cache_path(k8_dir, member)
+    seeds = builder.member_spec(protocol, member)
+    payload = member_cache.load_member_cache(
+        cp,
+        expected_member=member,
+        expected_teacher_sha256=EXPECTED_TEACHER_SHA,
+        expected_protocol_sha256=protocol_sha,
+        expected_member_seeds=seeds,
+        expected_collection_threads=2,
+    )
 
-    for member in range(1, 13):
-        base = k8_dir if member <= 8 else ext_dir
-        cp = member_cache.cache_path(base, member)
-        seeds = builder.member_spec(protocol, member)
-        payload = member_cache.load_member_cache(
-            cp,
-            expected_member=member,
-            expected_teacher_sha256=EXPECTED_TEACHER_SHA,
-            expected_protocol_sha256=protocol_sha,
-            expected_member_seeds=seeds,
-            expected_collection_threads=2,
-        )
-        ordinary_added = dedup_extend(
-            ordinary, ordinary_seen, list(payload["ordinary"]["train"])
-        )
-        augmentation_added = dedup_extend(
-            augmentation_raw,
-            augmentation_seen,
-            list(payload["augmentation"]["train"]) + list(payload["augmentation"]["holdout"]),
-        )
-        specialist_added = dedup_extend(
-            specialist_raw,
-            specialist_seen,
-            list(payload["specialist"]["train"]) + list(payload["specialist"]["holdout"]),
-        )
-        cache_rows.append(
-            {
-                "member": member,
-                "path": str(cp.resolve()),
-                "sha256": sha256(cp),
-                "ordinary_unique_added": ordinary_added,
-                "augmentation_unique_added": augmentation_added,
-                "specialist_unique_added": specialist_added,
-            }
-        )
-        del payload
-        gc.collect()
+    ordinary = list(payload["ordinary"]["train"])
+    base_strong = [sample for sample in ordinary if builder.strong(sample)]
+    base_keys = {sample_key(sample) for sample in base_strong}
 
-    ordinary_strong_keys = {sample_key(s) for s in ordinary if builder.strong(s)}
-    novel = [s for s in augmentation_raw if sample_key(s) not in ordinary_strong_keys]
+    seen = set()
+    novel = []
+    for sample in list(payload["augmentation"]["train"]) + list(payload["augmentation"]["holdout"]):
+        key = sample_key(sample)
+        if key in base_keys or key in seen:
+            continue
+        seen.add(key)
+        novel.append(sample)
+
     full_train = list(ordinary) + novel
-    specialist_unique = builder.spec.unique_strong(specialist_raw)
+    specialist_unique = builder.spec.unique_strong(
+        list(payload["specialist"]["train"]) + list(payload["specialist"]["holdout"])
+    )
 
     if len(ordinary) < 20000:
-        raise RuntimeError("pooled ordinary support unexpectedly small")
+        raise RuntimeError("fixed member-01 ordinary support unexpectedly small")
     if len(novel) < 700:
-        raise RuntimeError("pooled novel strong support unexpectedly small")
+        raise RuntimeError("fixed member-01 novel strong support unexpectedly small")
     if len(specialist_unique) < 1200:
-        raise RuntimeError("pooled specialist support unexpectedly small")
+        raise RuntimeError("fixed member-01 specialist support unexpectedly small")
 
     meta = {
-        "cache_rows": cache_rows,
-        "ordinary_unique_train_samples": len(ordinary),
-        "ordinary_strong_keys": len(ordinary_strong_keys),
-        "augmentation_unique_raw": len(augmentation_raw),
+        "anchor_member": 1,
+        "anchor_selection_rule": "lowest_member_id_independent_of_diagnostic_ranking",
+        "cache_path": str(cp.resolve()),
+        "cache_sha256": sha256(cp),
+        "ordinary_train_samples": len(ordinary),
+        "base_strong_states": len(base_strong),
         "novel_strong_states": len(novel),
         "fullpool_train_samples": len(full_train),
         "specialist_unique_strong_states": len(specialist_unique),
@@ -252,8 +232,7 @@ def load_shared_corpus(
         "novel_digest": collect.sample_digest(novel),
         "specialist_digest": collect.sample_digest(specialist_unique),
     }
-    return ordinary, full_train, specialist_unique, meta
-
+    return full_train, specialist_unique, meta
 
 def save_pilot_member(
     out: Path,
@@ -289,7 +268,7 @@ def save_pilot_member(
             "schema": builder.FULLPOOL_SCHEMA,
             **common,
             "selected_steps": 500,
-            "ordinary_train_samples": int(corpus_meta["ordinary_unique_train_samples"]),
+            "ordinary_train_samples": int(corpus_meta["ordinary_train_samples"]),
             "extra_unique_strong_states": int(corpus_meta["novel_strong_states"]),
             "model_state": {k: v.detach().cpu() for k, v in fullpool.state_dict().items()},
         },
@@ -456,15 +435,15 @@ def main() -> int:
     closed = validate_closed_k12(k12_dir)
     original_rows = original_member_rows(protocol, EXPECTED_PROTOCOL_SHA, k8_dir, ext_dir)
 
-    print("POST15315_SHARED_CORPUS_POOL_BEGIN", flush=True)
-    _ordinary, full_train, specialist_unique, corpus_meta = load_shared_corpus(
-        protocol, EXPECTED_PROTOCOL_SHA, k8_dir, ext_dir
+    print("POST15315_FIXED_CORPUS_LOAD_BEGIN", flush=True)
+    full_train, specialist_unique, corpus_meta = load_fixed_corpus(
+        protocol, EXPECTED_PROTOCOL_SHA, k8_dir
     )
     print(
-        "POST15315_SHARED_CORPUS_POOL_PASS "
+        "POST15315_FIXED_CORPUS_LOAD_PASS "
         + json.dumps(
             {
-                "ordinary": corpus_meta["ordinary_unique_train_samples"],
+                "ordinary": corpus_meta["ordinary_train_samples"],
                 "fullpool": corpus_meta["fullpool_train_samples"],
                 "specialist": corpus_meta["specialist_unique_strong_states"],
             },
@@ -560,10 +539,10 @@ def main() -> int:
         float(osum["leave_one_out_worst_mean_tv"]),
     )
     if ratio_mean <= 0.70 and ratio_p95 <= 0.70:
-        attribution = "CORPUS_SUPPORT_DOMINANT_HYPOTHESIS_SUPPORTED"
+        attribution = "COLLECTION_CORPUS_HETEROGENEITY_LIKELY_DOMINANT"
         next_branch = (
-            "Design a separate preregistered shared-corpus candidate using fresh training "
-            "seeds and a never-observed promotion bank."
+            "Require the preregistered second fixed-corpus anchor confirmation before "
+            "designing any candidate."
         )
     elif ratio_mean >= 0.90 and ratio_p95 >= 0.90:
         attribution = "FIT_ARCHITECTURE_DOMINANT"
@@ -603,7 +582,7 @@ def main() -> int:
         "pilot_preregistration": str(pilot_prereg_path),
         "pilot_preregistration_sha256": sha256(pilot_prereg_path),
         "closed_k12_evidence": closed,
-        "shared_corpus": corpus_meta,
+        "fixed_corpus": corpus_meta,
         "shared_replicas": shared_rows,
         "research_bank": {
             "seed": int(bank["seed"]),
@@ -627,7 +606,8 @@ def main() -> int:
         "prediction_archive_sha256": sha256(pred_path),
         "interpretation": (
             "This development-only experiment compares combined corpus+fit variance of the "
-            "closed original rebuilds with fit-only variance under a common pooled corpus. "
+            "closed original rebuilds with fit-only variance on one exact original-size "
+            "fixed member-01 corpus. "
             "It cannot promote any policy. Any future candidate requires separate preregistration "
             "and a never-observed validation bank."
         ),
