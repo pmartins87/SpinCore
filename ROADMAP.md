@@ -4505,3 +4505,27 @@ Coverage-only adjudication, frozen before member predictions:
 7. only a complete, coverage-valid 100k bank may enter K=8 stability evaluation;
 8. if the 100k bank still fails coverage, stop for adjudication rather than extending adaptively or opening K=12.
 
+### 2026-10-27 — K=8 stability FAIL activates exact K=12 extension
+
+The coverage-valid fixed 100k K=8 bank produced a scientific stability FAIL, not a runtime failure.
+
+Failed frozen metrics:
+- broad worst 4-vs-4 split mean TV 0.046200 > 0.03;
+- broad worst split p95 TV 0.156628 > 0.12;
+- trips-plus Fold split mean probability delta 0.024866 > 0.02;
+- trips-plus Fold split p95 probability delta 0.135404 > 0.10.
+
+Passed:
+- leave-one-out worst mean TV 0.008468 <= 0.01;
+- both 72o All-in metrics;
+- both high-card/no-draw All-in metrics;
+- all surface-coverage minima.
+
+Therefore execute exactly the already-preregistered conditional branch:
+1. build members 9-12 only, with their frozen seeds and unchanged construction budgets;
+2. use the already-validated 4x2 collection / sequential 8-thread fit execution shape;
+3. after all four construction PASS, regenerate the exact fixed seed-153159001 100k bank;
+4. evaluate all 12 members with the unchanged evaluator and thresholds;
+5. K=12 PASS -> aggregate quality/specialist-confirmation/safety gates;
+6. K=12 FAIL -> final rebuild-instability stop; no K>12, threshold relaxation, member selection, or strength benchmark.
+
