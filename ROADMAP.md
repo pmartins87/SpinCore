@@ -4553,3 +4553,16 @@ All coverage minima, leave-one-out, 72o All-in, and high-card/no-draw criteria p
 
 This branch is closed as rebuild instability. Do not continue to K>12, alter thresholds/seeds, select or weight members, or inspect external strength for promotion. Next work, if pursued, must begin as a new research branch with fresh preregistration, using the failed K=12 artifacts only for descriptive root-cause analysis and hypothesis generation.
 
+### 2026-10-27 — next research lane: shared-corpus variance attribution
+
+The closed K=12 diagnosis indicates broad state-dependent variance concentrated in CHECK_CALL / ALL_IN / FOLD rather than a single outlier member or a bet-sizing slot. Original members 1-8 versus extension members 9-12 also differ at roughly the failed-gate scale.
+
+Next research step is not another candidate and not K>12. Run the preregistered shared-corpus attribution pilot:
+1. pool the existing exact collection caches from all 12 failed rebuild members;
+2. fit eight independent replicas on the identical pooled corpus;
+3. compare original-12 combined corpus+fit variance against shared-8 fit-only variance on fresh seed 153159501 / 40000 episodes;
+4. classify as corpus-support dominant (both broad ratios <=0.70), fit/architecture dominant (both >=0.90), or mixed;
+5. only after that result design the next candidate architecture.
+
+No external strength or promotion evidence is permitted in this lane.
+
