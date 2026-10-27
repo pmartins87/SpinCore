@@ -4475,3 +4475,17 @@ The repair is mechanical and preserves the preregistered experiment:
 5. K=8 construction still stops before stability/strength;
 6. K=12 remains conditional only on the frozen K=8 stability rule.
 
+### 2026-10-27 — K=8 construction PASS; stability gate is next
+
+The resumed post-15315 production construction completed members 1-8 with durable PASS and exit status 0. Existing exact collection caches were reused after validation; no recollection or seed change occurred.
+
+Next frozen stage:
+1. generate the shared evaluation-only bank from seed 153159001 over exactly 80,000 forced THREE_HANDED episodes;
+2. use the frozen teacher-15315 rollout to generate states, independent of rebuild behavior;
+3. evaluate all eight rebuilt policies on every common state after member-local fullpool/specialist routing;
+4. run the unchanged preregistered K=8 stability evaluator;
+5. if PASS, keep K=8 and advance to aggregate quality/specialist-confirmation/safety;
+6. if and only if a mechanically clean stability FAIL occurs, build exactly members 9-12 and rerun the unchanged gate at K=12;
+7. mechanical, integrity, or surface-coverage failure does not authorize K=12;
+8. external strength remains closed until this branch resolves.
+
