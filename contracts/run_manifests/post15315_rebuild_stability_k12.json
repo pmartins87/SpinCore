@@ -1,7 +1,7 @@
 {
   "schema": "SPINCORE_STAGE_MANIFEST_V1",
   "stage_id": "POST15315_REBUILD_STABILITY_K12",
-  "status": "READY_AFTER_EXTENSION_PASS",
+  "status": "READY",
   "runner": "tools/run_post15315_rebuild_stability_k12.sh",
   "runner_blob_sha": "6e54412bf3751f7f757510b48afc3e35a2914fb1",
   "contract_ids": [
@@ -46,7 +46,20 @@
   },
   "scientific_plan": {
     "rebuild_count": 12,
-    "member_set": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "member_set": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
     "state_bank_seed": 153159001,
     "forced_three_handed_episodes": 100000,
     "state_bank_rule": "Regenerate the same fixed coverage-adjudicated teacher-15315 bank from episode 0; use the full 100000 episodes and evaluate every member on every common state.",
@@ -73,5 +86,9 @@
     "contracts/post15315_multirebuild_preregistration.json": "5fd7667926c6112310fe5eca61afff396ad218de",
     "contracts/post15315_stability_coverage_adjudication_v1.json": "ce0b9f42688873c72348de09982d08f2ac117d60",
     "python_tests/test_post15315_k12_stability_runner.py": "1550bfb70386207ec884683f6ad892ee81721efc"
+  },
+  "activation": {
+    "reason": "The conditional extension stage has now completed locally with durable PASS for exact members 9-12. The runner itself still fail-closes by validating the local extension construction report and the prior K=8 scientific FAIL before any K=12 bank generation.",
+    "activated_on": "2026-10-27"
   }
 }
