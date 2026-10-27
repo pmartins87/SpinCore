@@ -14,6 +14,7 @@ TEACHER="${ROOT}/runs/3h_semantic_long_10315_15315/semantic_long_ensemble_final_
 CONSTRUCTION="${ROOT}/runs/post15315_multirebuild_k8"
 CONSTRUCTION_REPORT="${CONSTRUCTION}/post15315_multirebuild_k8_construction.json"
 PROTOCOL="${ROOT}/contracts/post15315_multirebuild_preregistration.json"
+ADJUDICATION="${ROOT}/contracts/post15315_stability_coverage_adjudication_v1.json"
 MANIFEST="${ROOT}/contracts/run_manifests/post15315_rebuild_stability_k8.json"
 WORK="${ROOT}/runs/post15315_rebuild_stability_k8"
 REPORT="${WORK}/post15315_k8_stability_report.json"
@@ -21,7 +22,7 @@ GATE="${WORK}/post15315_k8_stability_gate.json"
 META="${WORK}/post15315_k8_stability_bank_meta.json"
 LOG="${WORK}/post15315_k8_stability.log"
 
-for f in "${PY}" "${SOLVER}" "${TEACHER}" "${CONSTRUCTION_REPORT}" "${PROTOCOL}" "${MANIFEST}"; do
+for f in "${PY}" "${SOLVER}" "${TEACHER}" "${CONSTRUCTION_REPORT}" "${PROTOCOL}" "${ADJUDICATION}" "${MANIFEST}"; do
   [[ -e "${f}" ]] || { echo "ERROR: missing prerequisite: ${f}" >&2; exit 2; }
 done
 
@@ -55,7 +56,7 @@ cmake --build build -j 8 --target spincore_solver_c
 mkdir -p "${WORK}"
 
 echo "=== SpinCore post-15315 K=8 rebuild stability ==="
-echo "seed=153159001 forced_three_handed_episodes=80000"
+echo "seed=153159001 forced_three_handed_episodes=100000 coverage_only_adjudication=true"
 echo "member_set=1..8 common_state_bank=true"
 echo "No training, member selection, K=12 construction, or strength benchmark is executed by this runner."
 
@@ -65,6 +66,7 @@ set +e
   --teacher "${TEACHER}" \
   --construction-dir "${CONSTRUCTION}" \
   --protocol "${PROTOCOL}" \
+  --coverage-adjudication "${ADJUDICATION}" \
   --out-dir "${WORK}" \
   --threads 8 \
   --batch-size 4096 \
