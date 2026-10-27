@@ -1,0 +1,47 @@
+{
+  "schema": "SPINCORE_POST15315_STABILITY_COVERAGE_ADJUDICATION_V1",
+  "adjudication_id": "POST15315_K8_STABILITY_COVERAGE_ONLY_100K_V1",
+  "date": "2026-10-27",
+  "status": "FROZEN_BEFORE_ANY_REBUILD_STABILITY_PREDICTIONS",
+  "original_preregistration": {
+    "path": "contracts/post15315_multirebuild_preregistration.json",
+    "blob_sha": "5fd7667926c6112310fe5eca61afff396ad218de",
+    "state_bank_seed": 153159001,
+    "forced_three_handed_episodes": 80000,
+    "required_surfaces": {
+      "preflop_72o_allin_opportunities": 1500,
+      "postflop_trips_plus_fold_legal": 1200,
+      "postflop_high_card_no_immediate_draw_allin_legal": 5000
+    }
+  },
+  "observed_execution_fact": {
+    "episodes_completed": 80000,
+    "decisions_collected": 333454,
+    "postflop_trips_plus_fold_legal": 1136,
+    "required_postflop_trips_plus_fold_legal": 1200,
+    "member_probability_evaluation_started": false,
+    "stability_metrics_observed": false,
+    "k12_authorized_by_this_failure": false
+  },
+  "adjudication": {
+    "reason": "The preregistered deterministic bank failed its own rare-surface support minimum before any rebuild member was evaluated. Repeating the identical 80k seed would deterministically reproduce the same insufficiency. Lowering the support minimum, changing the seed, or treating coverage failure as K=8 instability would be scientifically invalid.",
+    "replacement_bank_rule": "Regenerate the same deterministic seed-153159001 bank from episode 0 and use exactly 100000 forced THREE_HANDED episodes. This is a fixed 25 percent coverage-only enlargement. It is not threshold-sequential stopping: all 100000 episodes are always included.",
+    "unchanged": [
+      "teacher 15315 identity and SHA",
+      "state-bank seed 153159001",
+      "state generator and rollout policy",
+      "all three rare-surface definitions",
+      "all rare-surface minimum counts",
+      "all K=8 stability thresholds",
+      "all eight rebuild members and member artifacts",
+      "member-local fullpool/specialist routing",
+      "K=8 versus K=12 branch rule",
+      "prohibition on member dropping, weighting, reseeding, threshold relaxation, and external-strength inspection"
+    ],
+    "fail_closed": [
+      "If the exact 100k bank still misses any frozen surface minimum, stop for a new coverage adjudication; do not extend adaptively and do not authorize K=12.",
+      "A runtime, integrity, or coverage failure never counts as a scientific K=8 stability FAIL.",
+      "Only after the complete 100k bank passes coverage may member probabilities be evaluated."
+    ]
+  }
+}
