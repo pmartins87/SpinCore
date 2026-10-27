@@ -3,7 +3,7 @@
   "stage_id": "POST15315_REBUILD_STABILITY_K8",
   "status": "READY",
   "runner": "tools/run_post15315_rebuild_stability_k8.sh",
-  "runner_blob_sha": "84243ad45485a9a233e1d649d376f01a9c888413",
+  "runner_blob_sha": "ef94d255b084b156cccac8b52b2a9226c057f1fd",
   "contract_ids": [
     "TRAIN-022",
     "TRAIN-023",
@@ -43,14 +43,16 @@
     "protocol": "contracts/post15315_multirebuild_preregistration.json",
     "protocol_blob_sha": "5fd7667926c6112310fe5eca61afff396ad218de",
     "construction_report": "runs/post15315_multirebuild_k8/post15315_multirebuild_k8_construction.json",
-    "construction_requirement": "Durable K=8 PASS with members 1-8 and exact artifact/report SHA revalidation at runtime."
+    "construction_requirement": "Durable K=8 PASS with members 1-8 and exact artifact/report SHA revalidation at runtime.",
+    "coverage_adjudication": "contracts/post15315_stability_coverage_adjudication_v1.json",
+    "coverage_adjudication_blob_sha": "ce0b9f42688873c72348de09982d08f2ac117d60"
   },
   "scientific_plan": {
     "scope": "POLICY_REBUILD_VARIANCE_ONLY_NOT_STRENGTH",
     "rebuild_count": 8,
     "state_bank_seed": 153159001,
-    "forced_three_handed_episodes": 80000,
-    "state_generator": "Frozen 15315 semantic-Advantage teacher rollout; all eight rebuild members are evaluated on the exact same resulting decision states and do not influence bank generation.",
+    "forced_three_handed_episodes": 100000,
+    "state_generator": "Frozen 15315 semantic-Advantage teacher rollout; exact seed 153159001; fixed 100000-episode bank under the coverage-only adjudication; all eight rebuild members are evaluated on the exact same resulting decision states and do not influence bank generation.",
     "member_route": "For each member independently, use specialist only on postflop made_category>=TRIPS with FOLD legal; otherwise use that member fullpool general model.",
     "required_surfaces": {
       "preflop_72o_allin_opportunities": 1500,
@@ -78,11 +80,13 @@
         "No K=12 launch from a mechanical/runtime/coverage failure.",
         "No external strength benchmark before the K=8/K=12 stabilization branch resolves."
       ]
-    }
+    },
+    "original_preregistered_forced_three_handed_episodes": 80000,
+    "coverage_only_adjudication": "Same seed 153159001, same generator, same surface minima and same stability thresholds; exact fixed 100k bank after the original 80k bank produced only 1136/1200 trips-plus/Fold-legal opportunities before any member probability was evaluated."
   },
   "support_blob_shas": {
-    "tools/run_post15315_rebuild_stability_k8.py": "59441218e8ea3b7eb1482f907d8d2df178fac490",
-    "tools/run_post15315_rebuild_stability_k8.sh": "84243ad45485a9a233e1d649d376f01a9c888413",
+    "tools/run_post15315_rebuild_stability_k8.py": "fdcbe57e2c38acf75447a1df3881f9db3a25c1c4",
+    "tools/run_post15315_rebuild_stability_k8.sh": "ef94d255b084b156cccac8b52b2a9226c057f1fd",
     "tools/evaluate_post15315_rebuild_stability.py": "bd2543d745ab0f309622549edd423a415bcd175f",
     "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
     "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee",
@@ -90,6 +94,7 @@
     "tools/audit_3h_average_policy_semantic_continuation_10105.py": "2947466d1edd8087ea5572ae424d0556c57cf7bf",
     "python/spincore/decision_sanity.py": "4abcd3e7799dd026dfbcf023d55172971b7187be",
     "python_tests/test_post15315_rebuild_stability.py": "3843447f066ee6cdd8f505c6bd55da8a8ec91249",
-    "python_tests/test_post15315_stability_bank_runner.py": "2424b9ca7c4a3392f5e739ce8790ef013094378d"
+    "python_tests/test_post15315_stability_bank_runner.py": "6cfe5ee6edb23ff764b97e9bc02b63bdbdaf07f5",
+    "contracts/post15315_stability_coverage_adjudication_v1.json": "ce0b9f42688873c72348de09982d08f2ac117d60"
   }
 }
