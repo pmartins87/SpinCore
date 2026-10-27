@@ -4529,3 +4529,15 @@ Therefore execute exactly the already-preregistered conditional branch:
 5. K=12 PASS -> aggregate quality/specialist-confirmation/safety gates;
 6. K=12 FAIL -> final rebuild-instability stop; no K>12, threshold relaxation, member selection, or strength benchmark.
 
+### 2026-10-27 — conditional members 9-12 construction PASS
+
+The preregistered K=12 extension completed exactly members 9-12 with durable construction PASS, exit status 0 and no swap. No K=12 stability result or external-strength evidence was opened.
+
+Next:
+1. regenerate the exact fixed seed-153159001 100k common bank from episode 0;
+2. combine the already-frozen members 1-8 with new members 9-12;
+3. evaluate all 12 on every common state with member-local fullpool/specialist routing;
+4. run the unchanged stability evaluator and thresholds;
+5. PASS -> aggregate quality/specialist-confirmation/safety;
+6. FAIL -> final rebuild-instability stop; no K>12 or threshold/member/seed manipulation.
+
