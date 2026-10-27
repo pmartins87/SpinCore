@@ -1,0 +1,60 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_K12_INSTABILITY_DIAGNOSTIC",
+  "status": "READY",
+  "runner": "tools/run_post15315_k12_instability_diagnostic.sh",
+  "runner_blob_sha": "25cde8b31429d0bc9ac2db1c67c7df971490614d",
+  "contract_ids": [
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "ART-001"
+  ],
+  "affected_domains": [
+    "VALID",
+    "SAFE",
+    "ART"
+  ],
+  "duration_class": "SHORT_INTERNAL_DIAGNOSTIC",
+  "prerequisites": {
+    "k12_gate": "runs/post15315_rebuild_stability_k12/post15315_k12_stability_gate.json",
+    "requirement": "mechanically clean K=12 scientific FAIL with aggregate_quality_authorized=false",
+    "k12_bank": "runs/post15315_rebuild_stability_k12/post15315_k12_stability_bank.npz",
+    "k8_bank": "runs/post15315_rebuild_stability_k8/post15315_k8_stability_bank.npz"
+  },
+  "scientific_plan": {
+    "purpose": "descriptive root-cause hypothesis generation only",
+    "immutable_result": "The recorded K=12 stability FAIL cannot be changed by this diagnostic.",
+    "analyses": [
+      "member-to-K12-ensemble dispersion",
+      "action-slot contribution to total dispersion",
+      "statewise dispersion concentration",
+      "top pairwise member disagreements",
+      "worst frozen balanced splits for broad TV and trips+ Fold",
+      "K=8 ensemble to K=12 ensemble shift on the exact common bank",
+      "original members 1-8 versus extension members 9-12 descriptive difference"
+    ],
+    "exclusions": [
+      "No training.",
+      "No external strength benchmark.",
+      "No member dropping, subset selection, or weighting.",
+      "No threshold or seed changes.",
+      "No promotion decision.",
+      "No K>12."
+    ]
+  },
+  "support_blob_shas": {
+    "tools/diagnose_post15315_k12_instability.py": "b4791df70aefc7ff30da63b9868cc069b723d7b8",
+    "tools/run_post15315_k12_instability_diagnostic.sh": "25cde8b31429d0bc9ac2db1c67c7df971490614d",
+    "tools/evaluate_post15315_rebuild_stability.py": "bd2543d745ab0f309622549edd423a415bcd175f",
+    "python_tests/test_post15315_k12_instability_diagnostic.py": "87b9b663f20e0c2a8e3ffa4551ef7e74e5138e26"
+  }
+}
