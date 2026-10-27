@@ -4851,3 +4851,22 @@ Prepared:
 - `contracts/run_manifests/post15315_rebuild_stability_k12.json`;
 - regression tests for both stages.
 
+## 2026-10-27 — K=12 extension construction PASS; final rebuild-stability gate next
+
+The preregistered conditional extension completed cleanly after the valid K=8 stability FAIL:
+- exactly members 9-12 were constructed;
+- all four ordinary, augmentation, and specialist collection streams completed;
+- each member 9-12 reached durable construction PASS;
+- execution reused the frozen target-Ryzen shape: four collection workers x two threads, sequential eight-thread fits;
+- final extension construction status: PASS / exit status 0;
+- maximum resident set size: 14,882,308 KiB;
+- swaps: 0;
+- no K=12 stability or external-strength evidence was opened by construction.
+
+The stabilization branch now has all 12 preregistered members. The next and final rebuild-stability gate is already frozen:
+- regenerate the same fixed seed-153159001 coverage-adjudicated 100,000-episode common bank from episode 0;
+- evaluate members 1-12 on every common state after member-local fullpool/specialist routing;
+- use the unchanged evaluator and unchanged thresholds;
+- K=12 PASS -> proceed to aggregate quality, specialist confirmation, and safety/pathology;
+- K=12 FAIL -> stop and report rebuild instability; no K>12, threshold relaxation, member dropping/weighting, reseeding, or external-strength benchmark.
+
