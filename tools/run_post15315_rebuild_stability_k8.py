@@ -4,7 +4,7 @@ from __future__ import annotations
 """Run the frozen post-15315 K=8 common-state rebuild-stability gate.
 
 This stage is evaluation-only. It validates the completed K=8 construction,
-creates the preregistered 80,000-episode forced-THREE_HANDED common-state bank
+creates the coverage-adjudicated 100,000-episode forced-THREE_HANDED common-state bank
 with seed 153159001 under the frozen teacher rollout, evaluates all eight
 rebuild members on exactly those same states after each member applies the
 frozen fullpool/specialist route, and delegates the stability decision to
@@ -58,7 +58,9 @@ K = 8
 FOLD = 0
 ALL_IN = 9
 BANK_SEED = 153159001
-BANK_EPISODES = 80000
+ORIGINAL_BANK_EPISODES = 80000
+BANK_EPISODES = 100000
+ADJUDICATION_SCHEMA = "SPINCORE_POST15315_STABILITY_COVERAGE_ADJUDICATION_V1"
 BANK_SCHEMA = "SPINCORE_POST15315_K8_STABILITY_BANK_META_V1"
 GATE_SCHEMA = "SPINCORE_POST15315_K8_STABILITY_GATE_V1"
 
@@ -110,9 +112,35 @@ def validate_protocol(path: Path) -> tuple[dict, str]:
     bank = p["shared_fresh_evaluation"]["stability_state_bank"]
     if int(bank["seed"]) != BANK_SEED:
         raise RuntimeError("stability bank seed drift")
-    if int(bank["forced_three_handed_episodes"]) != BANK_EPISODES:
-        raise RuntimeError("stability bank episode budget drift")
+    if int(bank["forced_three_handed_episodes"]) != ORIGINAL_BANK_EPISODES:
+        raise RuntimeError("original stability bank episode budget drift")
     return p, sha256(path)
+
+
+def validate_coverage_adjudication(path: Path, *, protocol_blob_sha: str) -> tuple[dict, str]:
+    a = json.loads(path.read_text(encoding="utf-8"))
+    if a.get("schema") != ADJUDICATION_SCHEMA:
+        raise RuntimeError("wrong stability coverage adjudication schema")
+    if a.get("status") != "FROZEN_BEFORE_ANY_REBUILD_STABILITY_PREDICTIONS":
+        raise RuntimeError("coverage adjudication status drift")
+    original = dict(a.get("original_preregistration") or {})
+    if str(original.get("blob_sha")) != str(protocol_blob_sha):
+        raise RuntimeError("coverage adjudication original-protocol blob drift")
+    if int(original.get("state_bank_seed", -1)) != BANK_SEED:
+        raise RuntimeError("coverage adjudication seed drift")
+    if int(original.get("forced_three_handed_episodes", -1)) != ORIGINAL_BANK_EPISODES:
+        raise RuntimeError("coverage adjudication original episode budget drift")
+    rule = str((a.get("adjudication") or {}).get("replacement_bank_rule") or "")
+    if "exactly 100000" not in rule or "seed-153159001" not in rule:
+        raise RuntimeError("coverage adjudication replacement-bank rule drift")
+    observed = dict(a.get("observed_execution_fact") or {})
+    if bool(observed.get("member_probability_evaluation_started")):
+        raise RuntimeError("coverage adjudication claims member evaluation had already started")
+    if bool(observed.get("stability_metrics_observed")):
+        raise RuntimeError("coverage adjudication claims stability metrics were already observed")
+    if bool(observed.get("k12_authorized_by_this_failure")):
+        raise RuntimeError("coverage adjudication incorrectly authorizes K=12")
+    return a, sha256(path)
 
 
 def validate_construction(
@@ -355,6 +383,7 @@ def main() -> int:
     ap.add_argument("--teacher", type=Path, required=True)
     ap.add_argument("--construction-dir", type=Path, required=True)
     ap.add_argument("--protocol", type=Path, required=True)
+    ap.add_argument("--coverage-adjudication", type=Path, required=True)
     ap.add_argument("--out-dir", type=Path, required=True)
     ap.add_argument("--threads", type=int, default=8)
     ap.add_argument("--batch-size", type=int, default=4096)
@@ -366,6 +395,10 @@ def main() -> int:
 
     protocol_path = args.protocol.resolve(strict=True)
     protocol, protocol_sha = validate_protocol(protocol_path)
+    adjudication_path = args.coverage_adjudication.resolve(strict=True)
+    _adjudication, adjudication_sha = validate_coverage_adjudication(
+        adjudication_path, protocol_blob_sha="5fd7667926c6112310fe5eca61afff396ad218de"
+    )
     construction_run, members = validate_construction(
         args.construction_dir,
         protocol_sha=protocol_sha,
@@ -436,6 +469,9 @@ def main() -> int:
         "status": "PASS",
         "protocol": str(protocol_path),
         "protocol_sha256": protocol_sha,
+        "coverage_adjudication": str(adjudication_path),
+        "coverage_adjudication_sha256": adjudication_sha,
+        "original_preregistered_episode_budget": ORIGINAL_BANK_EPISODES,
         "teacher_iteration": TARGET_ITERATION,
         "teacher": str(teacher_path),
         "teacher_sha256": EXPECTED_TEACHER_SHA,
@@ -477,6 +513,7 @@ def main() -> int:
         "status": "PASS",
         "mechanically_clean": True,
         "protocol_sha256": protocol_sha,
+        "coverage_adjudication_sha256": adjudication_sha,
         "teacher_sha256": EXPECTED_TEACHER_SHA,
         "construction_report_sha256": construction_run["sha256"],
         "bank_sha256": bank_sha,
