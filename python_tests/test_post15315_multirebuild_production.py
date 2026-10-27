@@ -151,3 +151,19 @@ def test_production_source_keeps_collection_parallel_and_fit_nonfanned():
     assert "evaluate_post15315_rebuild_stability" in source
     assert "stability_evaluation_performed" in source
     assert "strength_benchmark_performed" in source
+
+def test_cached_builder_requires_and_validates_collection_cache():
+    source = (ROOT / "tools" / "build_post15315_rebuild_member_cached.py").read_text(
+        encoding="utf-8"
+    )
+    assert "import post15315_member_cache as member_cache" in source
+    assert '"--collection-cache"' in source
+    assert "required=True" in source
+    assert "cache_payload = member_cache.load_member_cache(" in source
+    assert "expected_member=int(args.member)" in source
+    assert "expected_teacher_sha256=teacher_sha" in source
+    assert "expected_protocol_sha256=protocol_sha" in source
+    assert "expected_member_seeds=seeds" in source
+    assert "expected_collection_threads=int(args.collection_threads)" in source
+    assert "collection_cache_sha = distill.sha256(cache_path)" in source
+
