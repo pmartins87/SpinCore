@@ -1,0 +1,97 @@
+{
+  "schema": "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_V1",
+  "protocol_id": "POST15315_SHARED_CORPUS_VARIANCE_ATTRIBUTION_V1",
+  "frozen_on": "2026-10-27",
+  "status": "PREREGISTERED_RESEARCH_ONLY_NOT_PROMOTIONAL",
+  "purpose": "Attribute the closed K=12 rebuild instability between independent-corpus variance and fit/architecture variance without reopening promotion or external-strength evidence.",
+  "source_evidence": {
+    "k12_result": "FINAL_FAIL_IMMUTABLE",
+    "diagnostic": "runs/post15315_rebuild_stability_k12/post15315_k12_instability_diagnostic.json",
+    "allowed_use": "hypothesis generation only"
+  },
+  "training_data": {
+    "source": "Exact durable collection caches of failed rebuild members 1-12 only; no stability-bank state is training data.",
+    "k8_cache_dir": "runs/post15315_multirebuild_k8",
+    "extension_cache_dir": "runs/post15315_multirebuild_k12_extension",
+    "ordinary_pool": "All ordinary.train samples from members 1-12, exact-state deduplicated in member/sample order.",
+    "augmentation_pool": "All augmentation.train + augmentation.holdout samples from members 1-12, exact-state deduplicated and excluding ordinary strong-state keys.",
+    "specialist_pool": "All specialist.train + specialist.holdout samples from members 1-12, canonical unique-strong deduplication.",
+    "common_corpus_rule": "Every pilot fit replica receives the exact same ordered ordinary/fullpool/specialist training corpora.",
+    "teacher_sha256": "ac49b77c8ec3204e07f6d44d3718c68880e60675c5521f538438a3fa3ceae746",
+    "source_checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0"
+  },
+  "fit_design": {
+    "replicas": 8,
+    "start_state": "FROZEN_FINALIZED_10105_AVERAGE_POLICY_AND_OPTIMIZER",
+    "fullpool_fit_steps": 500,
+    "specialist_fit_steps": 25,
+    "tail_fit": "OMITTED_IN_PILOT_BECAUSE_TAIL_ARTIFACT_IS_NOT_IN_FINAL_FULLPOOL_SPECIALIST_ROUTE",
+    "fullpool_fit_seeds": [
+      153160001,
+      153160002,
+      153160003,
+      153160004,
+      153160005,
+      153160006,
+      153160007,
+      153160008
+    ],
+    "specialist_fit_seeds": [
+      153161001,
+      153161002,
+      153161003,
+      153161004,
+      153161005,
+      153161006,
+      153161007,
+      153161008
+    ],
+    "route": "postflop made_category>=TRIPS AND FOLD legal -> specialist; otherwise fullpool",
+    "fit_threads": 8,
+    "execution": "Sequential fits; no fit fanout."
+  },
+  "fresh_research_bank": {
+    "seed": 153159501,
+    "forced_three_handed_episodes": 40000,
+    "lineage_iteration": 15315,
+    "use": "RESEARCH_ATTRIBUTION_ONLY_NOT_PROMOTION",
+    "evaluation_groups": [
+      "The original closed-branch members 1-12.",
+      "The eight shared-corpus fit replicas."
+    ],
+    "identical_states_required": true
+  },
+  "attribution_rule": {
+    "primary_metrics": [
+      "broad_worst_split_mean_tv",
+      "broad_worst_split_statewise_p95_tv",
+      "leave_one_out_worst_mean_tv"
+    ],
+    "secondary_metrics": [
+      "preflop_72o_allin split deltas",
+      "trips_plus_fold split deltas",
+      "high_card_no_draw_allin split deltas",
+      "per-action member dispersion"
+    ],
+    "interpretation": {
+      "corpus_support_dominant": "Shared-corpus broad mean-TV AND broad p95-TV are each at most 70% of the original-12 values on the identical fresh research bank.",
+      "fit_architecture_dominant": "Shared-corpus broad mean-TV AND broad p95-TV are each at least 90% of the original-12 values on the identical fresh research bank.",
+      "mixed": "Any other result."
+    },
+    "note": "These 70%/90% attribution bands are research heuristics frozen before pilot results; they are not promotion thresholds."
+  },
+  "next_branch_rule": {
+    "corpus_support_dominant": "Design a new separately preregistered shared-corpus candidate with fresh training seeds and a never-observed promotion bank.",
+    "fit_architecture_dominant": "Do not scale collection; investigate optimization/model/loss stability before another candidate.",
+    "mixed": "Run a second factorial research pilot separating corpus and fit components before candidate construction."
+  },
+  "exclusions": [
+    "No external strength benchmark.",
+    "No K=12 promotion or reconsideration.",
+    "No member selection, dropping, or weighting.",
+    "No use of K=12 stability-bank states for training.",
+    "No threshold relaxation.",
+    "No K>12.",
+    "No claim that this research pilot is a deployable policy."
+  ]
+}
