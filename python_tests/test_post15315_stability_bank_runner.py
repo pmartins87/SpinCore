@@ -12,7 +12,8 @@ import run_post15315_rebuild_stability_k8 as runner
 def test_k8_stability_bank_contract_is_frozen():
     assert runner.K == 8
     assert runner.BANK_SEED == 153159001
-    assert runner.BANK_EPISODES == 80000
+    assert runner.ORIGINAL_BANK_EPISODES == 80000
+    assert runner.BANK_EPISODES == 100000
     assert runner.TARGET_ITERATION == 15315
 
 
@@ -49,3 +50,14 @@ def test_stability_runner_applies_frozen_member_specialist_route():
     assert "surface_trips_fold" in source
     assert "np.where(use_sp, sp, fp)" in source
     assert "base_fullpool_sha256" in source
+
+
+def test_coverage_adjudication_is_required_before_member_evaluation(tmp_path):
+    source = (ROOT / "tools" / "run_post15315_rebuild_stability_k8.py").read_text(
+        encoding="utf-8"
+    )
+    assert '"--coverage-adjudication"' in source
+    assert "validate_coverage_adjudication(" in source
+    assert "ORIGINAL_BANK_EPISODES = 80000" in source
+    assert "BANK_EPISODES = 100000" in source
+    assert source.index("validate_surface_coverage(") < source.index("POST15315_K8_STABILITY_MEMBER_")
