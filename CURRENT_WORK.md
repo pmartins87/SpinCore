@@ -4806,3 +4806,48 @@ A separate coverage-only adjudication is now frozen in
 
 This amendment is based solely on evaluation-support sufficiency observed before any rebuild stability output and therefore does not use member performance to choose the larger bank.
 
+## 2026-10-27 — K=8 rebuild stability scientific FAIL; preregistered K=12 branch activated
+
+The fixed 100,000-episode coverage-adjudicated stability bank completed cleanly:
+- seed: 153159001;
+- decision states: 416,463;
+- preflop 72o / ALL_IN-legal coverage: 2,264;
+- postflop trips-or-better / Fold-legal coverage: 1,453;
+- postflop high-card/no-immediate-draw / ALL_IN-legal coverage: 31,253;
+- all frozen surface minima passed;
+- members 1-8 all evaluated on the exact same bank;
+- runner exit status 0, no swap, no strength evidence opened.
+
+K=8 stability is a valid scientific FAIL under the frozen thresholds.
+
+PASS criteria:
+- leave-one-out worst mean TV: 0.008468 <= 0.01;
+- 72o All-in split mean delta: 0.008864 <= 0.025;
+- 72o All-in split p95 delta: 0.069378 <= 0.12;
+- high-card/no-draw All-in split mean delta: 0.016277 <= 0.025;
+- high-card/no-draw All-in split p95 delta: 0.073243 <= 0.12.
+
+FAIL criteria:
+- broad worst split mean TV: 0.046200 > 0.03;
+- broad worst split statewise p95 TV: 0.156628 > 0.12;
+- trips-plus Fold worst split mean probability delta: 0.024866 > 0.02;
+- trips-plus Fold worst split p95 probability delta: 0.135404 > 0.10.
+
+Interpretation is limited to rebuild-seed stability. The leave-one-out PASS means no single member alone dominates the K=8 aggregate, while the split-half failures show materially different seed groups. The rare strong-hand Fold surface is also unstable. This does not establish strategic weakness or strength.
+
+The preregistered conditional branch is now active:
+- construct exactly members 9-12 using frozen seeds 153151009..012 through 153156009..012;
+- reuse the validated target-Ryzen shape: four collection workers x two threads, sequential eight-thread fits;
+- do not rebuild or drop members 1-8;
+- do not change thresholds, route, training budgets, seeds, or surface definitions;
+- after construction PASS, regenerate the exact fixed seed-153159001 100k bank and evaluate all 12 with the unchanged evaluator;
+- K=12 PASS advances only to aggregate quality/specialist/safety;
+- K=12 FAIL ends the stabilization branch as rebuild instability. No K>12 and no external strength.
+
+Prepared:
+- `tools/run_post15315_multirebuild_k12_extension.py/.sh`;
+- `contracts/run_manifests/post15315_multirebuild_k12_extension.json`;
+- `tools/run_post15315_rebuild_stability_k12.py/.sh`;
+- `contracts/run_manifests/post15315_rebuild_stability_k12.json`;
+- regression tests for both stages.
+
