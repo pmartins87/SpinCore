@@ -1,0 +1,95 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_REBUILD_STABILITY_K8",
+  "status": "READY",
+  "runner": "tools/run_post15315_rebuild_stability_k8.sh",
+  "runner_blob_sha": "84243ad45485a9a233e1d649d376f01a9c888413",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "RNG-013",
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "CKPT-001",
+    "ART-001"
+  ],
+  "affected_domains": [
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "VALID",
+    "SAFE",
+    "CKPT",
+    "ART"
+  ],
+  "duration_class": "LONG_VALIDATION",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "teacher_iteration": 15315,
+    "teacher_sha256": "ac49b77c8ec3204e07f6d44d3718c68880e60675c5521f538438a3fa3ceae746",
+    "source_checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "protocol": "contracts/post15315_multirebuild_preregistration.json",
+    "protocol_blob_sha": "5fd7667926c6112310fe5eca61afff396ad218de",
+    "construction_report": "runs/post15315_multirebuild_k8/post15315_multirebuild_k8_construction.json",
+    "construction_requirement": "Durable K=8 PASS with members 1-8 and exact artifact/report SHA revalidation at runtime."
+  },
+  "scientific_plan": {
+    "scope": "POLICY_REBUILD_VARIANCE_ONLY_NOT_STRENGTH",
+    "rebuild_count": 8,
+    "state_bank_seed": 153159001,
+    "forced_three_handed_episodes": 80000,
+    "state_generator": "Frozen 15315 semantic-Advantage teacher rollout; all eight rebuild members are evaluated on the exact same resulting decision states and do not influence bank generation.",
+    "member_route": "For each member independently, use specialist only on postflop made_category>=TRIPS with FOLD legal; otherwise use that member fullpool general model.",
+    "required_surfaces": {
+      "preflop_72o_allin_opportunities": 1500,
+      "postflop_trips_plus_fold_legal": 1200,
+      "postflop_high_card_no_immediate_draw_allin_legal": 5000
+    },
+    "frozen_thresholds": {
+      "broad_worst_split_mean_tv_max": 0.03,
+      "broad_worst_split_statewise_p95_tv_max": 0.12,
+      "leave_one_out_worst_mean_tv_max": 0.01,
+      "preflop_72o_allin_worst_split_mean_probability_delta_max": 0.025,
+      "preflop_72o_allin_worst_split_statewise_p95_probability_delta_max": 0.12,
+      "trips_plus_fold_worst_split_mean_probability_delta_max": 0.02,
+      "trips_plus_fold_worst_split_statewise_p95_probability_delta_max": 0.1,
+      "high_card_no_draw_allin_worst_split_mean_probability_delta_max": 0.025,
+      "high_card_no_draw_allin_worst_split_statewise_p95_probability_delta_max": 0.12
+    },
+    "branch_rule": {
+      "PASS": "K=8 stabilization branch resolves; do not build members 9-12. Proceed next to frozen aggregate quality/specialist-confirmation/safety gates.",
+      "FAIL": "Only a mechanically clean evaluator FAIL with all bank coverage/integrity checks passed authorizes exactly members 9-12 with their already-frozen seeds, followed by the unchanged K=12 stability gate.",
+      "prohibited": [
+        "No member dropping or weighting.",
+        "No reseeding.",
+        "No threshold relaxation.",
+        "No K=12 launch from a mechanical/runtime/coverage failure.",
+        "No external strength benchmark before the K=8/K=12 stabilization branch resolves."
+      ]
+    }
+  },
+  "support_blob_shas": {
+    "tools/run_post15315_rebuild_stability_k8.py": "59441218e8ea3b7eb1482f907d8d2df178fac490",
+    "tools/run_post15315_rebuild_stability_k8.sh": "84243ad45485a9a233e1d649d376f01a9c888413",
+    "tools/evaluate_post15315_rebuild_stability.py": "bd2543d745ab0f309622549edd423a415bcd175f",
+    "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
+    "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee",
+    "tools/audit_3h_semantic_sidecar_attribution_10105.py": "54b1e203ac7e738d3fc657bc324ed811bd68a903",
+    "tools/audit_3h_average_policy_semantic_continuation_10105.py": "2947466d1edd8087ea5572ae424d0556c57cf7bf",
+    "python/spincore/decision_sanity.py": "4abcd3e7799dd026dfbcf023d55172971b7187be",
+    "python_tests/test_post15315_rebuild_stability.py": "3843447f066ee6cdd8f505c6bd55da8a8ec91249",
+    "python_tests/test_post15315_stability_bank_runner.py": "2424b9ca7c4a3392f5e739ce8790ef013094378d"
+  }
+}
