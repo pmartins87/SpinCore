@@ -27,7 +27,7 @@ mkdir -p runs/post15315_shared_corpus_variance_pilot
   --teacher runs/3h_semantic_long_10315_15315/semantic_long_ensemble_final_15315.pt \
   --solver build/libspincore_solver_c.so \
   --protocol contracts/post15315_multirebuild_preregistration.json \
-  --pilot-prereg contracts/post15315_shared_corpus_variance_pilot_v1.json \
+  --pilot-prereg contracts/post15315_shared_corpus_variance_pilot_v2.json \
   --k8-dir runs/post15315_multirebuild_k8 \
   --extension-dir runs/post15315_multirebuild_k12_extension \
   --k12-dir runs/post15315_rebuild_stability_k12 \
