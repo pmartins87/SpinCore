@@ -4489,3 +4489,19 @@ Next frozen stage:
 7. mechanical, integrity, or surface-coverage failure does not authorize K=12;
 8. external strength remains closed until this branch resolves.
 
+### 2026-10-27 — stability-bank coverage adjudication: 80k -> fixed 100k, same seed
+
+The first exact seed-153159001 bank completed all 80,000 preregistered forced 3H episodes (333,454 decision states) but produced only 1,136 postflop trips-plus/Fold-legal opportunities versus the frozen minimum of 1,200.
+
+The process stopped before evaluating any K=8 member, so no stability outcome was observed and K=12 is not authorized.
+
+Coverage-only adjudication, frozen before member predictions:
+1. keep the original preregistration unchanged as historical evidence;
+2. keep seed 153159001 and the exact teacher-15315 rollout generator;
+3. keep the 1,200 trips-plus minimum and every other surface minimum unchanged;
+4. keep all stability thresholds unchanged;
+5. regenerate exactly 100,000 forced 3H episodes from episode 0 and use the full bank;
+6. no threshold-sequential stopping, reseeding, member filtering, or external strength evidence;
+7. only a complete, coverage-valid 100k bank may enter K=8 stability evaluation;
+8. if the 100k bank still fails coverage, stop for adjudication rather than extending adaptively or opening K=12.
+
