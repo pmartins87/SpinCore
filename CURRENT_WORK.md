@@ -4924,3 +4924,19 @@ A separate research-only attribution pilot is preregistered before results:
 
 This pilot cannot promote K=12, open external strength, select/drop/weight members, relax thresholds, or train on the prior stability bank.
 
+### 2026-10-27 — method correction before pilot execution: fixed-size common corpus V2
+
+Before any shared-corpus pilot was executed or any pilot result observed, methodological review found a confound in V1: pooling all 12 caches would change corpus size as well as corpus identity. V1 was therefore superseded before execution.
+
+V2 keeps corpus size/origin fixed:
+- exact member-01 cache is the neutral anchor because it is the lowest member id, not chosen from diagnostic ranking;
+- reconstruct exactly the member-01 final fullpool/specialist training corpora;
+- no pooling and no training-data enlargement;
+- eight replicas receive the identical fixed corpus and differ only in frozen fit seeds;
+- original closed members 1-12 and the eight fixed-corpus replicas are evaluated on the same fresh research-only seed-153159501 / 40000-episode bank;
+- ratios <=0.70 for both broad mean and broad p95 support collection/corpus heterogeneity as likely dominant, but require a second predeclared anchor confirmation before any candidate;
+- ratios >=0.90 for both support fit/architecture dominance;
+- otherwise classify mixed and run a fuller factorial pilot.
+
+The K=12 FAIL remains immutable and no strength/promotion evidence is opened.
+
