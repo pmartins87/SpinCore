@@ -4541,3 +4541,15 @@ Next:
 5. PASS -> aggregate quality/specialist-confirmation/safety;
 6. FAIL -> final rebuild-instability stop; no K>12 or threshold/member/seed manipulation.
 
+### 2026-10-27 — K=12 stability FINAL FAIL: close rebuild-stabilization branch
+
+Final preregistered K=12 gate completed on the exact fixed 100k bank and failed four unchanged criteria despite improvement over K=8:
+- broad mean TV 0.0398662 > 0.03;
+- broad statewise p95 TV 0.131602 > 0.12;
+- trips+ Fold mean delta 0.0208430 > 0.02;
+- trips+ Fold p95 delta 0.114316 > 0.10.
+
+All coverage minima, leave-one-out, 72o All-in, and high-card/no-draw criteria passed.
+
+This branch is closed as rebuild instability. Do not continue to K>12, alter thresholds/seeds, select or weight members, or inspect external strength for promotion. Next work, if pursued, must begin as a new research branch with fresh preregistration, using the failed K=12 artifacts only for descriptive root-cause analysis and hypothesis generation.
+
