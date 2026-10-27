@@ -1,0 +1,77 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_REBUILD_STABILITY_K12",
+  "status": "READY_AFTER_EXTENSION_PASS",
+  "runner": "tools/run_post15315_rebuild_stability_k12.sh",
+  "runner_blob_sha": "edcb6389015684afb06cd6bf849ebec4cc546cb3",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "RNG-013",
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "CKPT-001",
+    "ART-001"
+  ],
+  "affected_domains": [
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "VALID",
+    "SAFE",
+    "CKPT",
+    "ART"
+  ],
+  "duration_class": "LONG_FINAL_STABILIZATION",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "k8_stability_gate": "runs/post15315_rebuild_stability_k8/post15315_k8_stability_gate.json",
+    "k8_requirement": "mechanically clean scientific FAIL with k12_extension_authorized=true",
+    "k12_extension_report": "runs/post15315_multirebuild_k12_extension/post15315_multirebuild_k12_extension_construction.json",
+    "k12_extension_requirement": "durable PASS with exact members 9-12",
+    "protocol_blob_sha": "5fd7667926c6112310fe5eca61afff396ad218de",
+    "coverage_adjudication_blob_sha": "ce0b9f42688873c72348de09982d08f2ac117d60"
+  },
+  "scientific_plan": {
+    "rebuild_count": 12,
+    "member_set": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "state_bank_seed": 153159001,
+    "forced_three_handed_episodes": 100000,
+    "state_bank_rule": "Regenerate the same fixed coverage-adjudicated teacher-15315 bank from episode 0; use the full 100000 episodes and evaluate every member on every common state.",
+    "balanced_split_rule": "Use the preregistered evaluator's deterministic 100 balanced 6-vs-6 splits selected with seed 153159011.",
+    "threshold_rule": "Use exactly the original frozen K=8 thresholds unchanged at K=12.",
+    "branch_rule": {
+      "PASS": "Stabilization branch resolves PASS; proceed to aggregate quality, specialist confirmation, and safety/pathology gates. Strength remains separately gated.",
+      "FAIL": "Stop and report rebuild instability. No K>12, threshold relaxation, seed replacement, member dropping/weighting, or external strength inspection."
+    },
+    "exclusions": [
+      "No training is performed by this stage.",
+      "No member selection or weighting.",
+      "No stability threshold changes.",
+      "No new seed or adaptive bank enlargement.",
+      "No external strength benchmark."
+    ]
+  },
+  "support_blob_shas": {
+    "tools/run_post15315_rebuild_stability_k12.py": "127c4d57d548a804e8f3aeef714a296e711bca8f",
+    "tools/run_post15315_rebuild_stability_k12.sh": "edcb6389015684afb06cd6bf849ebec4cc546cb3",
+    "tools/evaluate_post15315_rebuild_stability.py": "bd2543d745ab0f309622549edd423a415bcd175f",
+    "tools/run_post15315_rebuild_stability_k8.py": "fdcbe57e2c38acf75447a1df3881f9db3a25c1c4",
+    "tools/run_post15315_multirebuild_k12_extension.py": "90f673a535e32481ebd09579ac04b9fe6daec66a",
+    "contracts/post15315_multirebuild_preregistration.json": "5fd7667926c6112310fe5eca61afff396ad218de",
+    "contracts/post15315_stability_coverage_adjudication_v1.json": "ce0b9f42688873c72348de09982d08f2ac117d60",
+    "python_tests/test_post15315_k12_stability_runner.py": "03c77f8cf18c0883197f097a6d139d9a465791e2"
+  }
+}
