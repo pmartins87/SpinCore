@@ -4462,3 +4462,16 @@ stage on fresh seed 153159001. Only a mechanically clean K=8 stability failure m
 activate members 9-12. No member may be dropped, reweighted, reseeded or selected
 from results, and no external strength benchmark may be opened before the
 stabilization branch resolves.
+
+### 2026-10-27 — K=8 resume after mechanical cache-wiring stop
+
+First production launch completed all eight frozen collection caches but stopped before the first fit because the separate cached builder lacked its `--collection-cache` CLI/load wiring.
+
+The repair is mechanical and preserves the preregistered experiment:
+1. original performance-gate-frozen member builder remains byte-frozen;
+2. cached production builder now requires and validates the exact existing cache;
+3. no recollection is authorized when the existing cache validates;
+4. sequential 8-thread fits resume member 1 through 8;
+5. K=8 construction still stops before stability/strength;
+6. K=12 remains conditional only on the frozen K=8 stability rule.
+
