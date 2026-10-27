@@ -4566,3 +4566,9 @@ Next research step is not another candidate and not K>12. Run the preregistered 
 
 No external strength or promotion evidence is permitted in this lane.
 
+#### Method correction before execution: V2 fixed-size anchor
+
+The initially preregistered pooled-cache pilot was superseded before execution because pooling all 12 caches would confound common-corpus effects with increased training-data volume. V2 uses only the exact member-01 original-size corpus for all eight fit replicas. This isolates fit-only variance much more cleanly.
+
+If the V2 fixed-corpus replicas reduce both broad metrics to <=70% of original-12 on the same fresh bank, do not jump directly to a candidate: require a second predeclared anchor confirmation first.
+
