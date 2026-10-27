@@ -71,15 +71,23 @@
     "collection": "At most four independent member collection workers run concurrently. Each worker uses exactly two threads and never deserializes the multi-GB 10105 checkpoint.",
     "persistence": "Each member collection is atomically cached with teacher/protocol/seed/thread metadata and train/holdout digests. The builder revalidates every digest after reload before fitting.",
     "fitting": "Member fits are sequential/non-fanned and each uses exactly eight threads. Concurrent eight-thread member fits are not authorized by the performance evidence.",
-    "resume": "A durable construction PASS may be reused only when member id, teacher SHA, protocol SHA, frozen member seeds, execution profile and all output artifact hashes match exactly.",
+    "resume": "A durable collection cache may be reused only after exact member, teacher SHA, protocol SHA, frozen member seeds, two-thread collection profile, and stored train/holdout digests revalidate. A durable construction PASS may be reused only when member id, teacher SHA, protocol SHA, frozen member seeds, execution profile and all output artifact hashes match exactly.",
     "stop_after": "Stop after all frozen members 1-8 have construction PASS. Do not automatically run K=8 stability, K=12 extension, pathology, DC1/DC2, or any strength benchmark."
   },
   "support_blob_shas": {
     "tools/run_post15315_multirebuild_production.py": "b4c1fcb9043a9e4c131ed02d80b751287c47e3ce",
     "tools/post15315_member_cache.py": "3f1d8737a99481212534ef7f88fb74b6f8fb6673",
     "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee",
-    "tools/build_post15315_rebuild_member_cached.py": "488cb25ea4df4096d8be3fce0bcff2c534298aef",
+    "tools/build_post15315_rebuild_member_cached.py": "e658439723b65fcd682815c70b88b023fb360502",
     "tools/post15315_collection.py": "a288cf1d3cbc025b03ea0a29b21cd8ac47102535",
-    "python_tests/test_post15315_multirebuild_production.py": "c3903a2f66710f816d005208e32970eff01bd0c8"
-  }
+    "python_tests/test_post15315_multirebuild_production.py": "05c49c0406160870c68408010e85509ccab03c82"
+  },
+  "repair_history": [
+    {
+      "date": "2026-10-27",
+      "incident": "First K=8 production attempt completed all eight frozen collection caches, then stopped before member-1 fit because the isolated cached builder had not wired its --collection-cache CLI/load path.",
+      "disposition": "Mechanical runner wiring defect only; no teacher/training artifact was modified, no fit completed, and the already-written caches remain eligible only through the fail-closed cache validator.",
+      "repair": "Cached builder now requires --collection-cache, loads it through post15315_member_cache.load_member_cache, revalidates member/teacher/protocol/seeds/thread profile/sample digests, and binds the cache SHA into member artifacts/reports."
+    }
+  ]
 }
