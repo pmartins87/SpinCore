@@ -4897,3 +4897,30 @@ Frozen stop rule is now active:
 
 Any continuation must be a new, explicitly separated research branch. Descriptive diagnosis of the failed K=12 evidence is allowed only if it cannot retroactively promote this candidate.
 
+## 2026-10-27 — K=12 instability diagnosis: state-dependent action variance; shared-corpus attribution pilot preregistered
+
+Closed-branch diagnostic over the exact K=12 bank shows:
+- CHECK_CALL contributes 39.12% of total absolute member probability dispersion;
+- ALL_IN contributes 25.64%;
+- FOLD contributes 18.61%;
+- these three actions together explain 83.37% of total absolute dispersion;
+- member 6 is the largest overall deviation from the K=12 ensemble, but member-to-ensemble dispersion is broadly distributed rather than isolated to one bad member;
+- member 6 appears in 7 of the top 15 pairwise disagreements; members 11, 7, and 12 also recur;
+- original members 1-8 versus extension members 9-12 differ by mean TV 0.0356842 and p95 TV 0.1232705 on the exact common K=12 bank;
+- adding members 9-12 moves the aggregate K=8 -> K=12 by only mean TV 0.0118947, showing ensemble averaging partially cancels but does not eliminate rebuild variance;
+- statewise dispersion is broad rather than a tiny pathological tail: median 0.04805, p95 0.16389; top 10% of states account for 31.53% of total dispersion;
+- trips+ Fold differences are state-dependent rather than a simple global Fold calibration shift.
+
+Primary hypothesis: independent per-member teacher-rollout corpora are a major driver of rebuild variance. Each member sees different sampled scenarios/chance/actions even though the teacher target for a given state is deterministic.
+
+A separate research-only attribution pilot is preregistered before results:
+- pool exact durable training caches from members 1-12 into one common corpus;
+- train 8 replicas on the exact same corpus, varying only frozen fit seeds;
+- omit the unused tail artifact in this pilot because it does not feed the final fullpool/specialist route;
+- evaluate the original 12 and shared-corpus 8 on a fresh research-only bank, seed 153159501, 40000 episodes;
+- if shared/original broad mean-TV and p95-TV ratios are both <=0.70: corpus-support-dominant hypothesis supported;
+- if both are >=0.90: fit/architecture dominant;
+- otherwise: mixed variance and a second factorial pilot is required.
+
+This pilot cannot promote K=12, open external strength, select/drop/weight members, relax thresholds, or train on the prior stability bank.
+
