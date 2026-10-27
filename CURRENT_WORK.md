@@ -4870,3 +4870,30 @@ The stabilization branch now has all 12 preregistered members. The next and fina
 - K=12 PASS -> proceed to aggregate quality, specialist confirmation, and safety/pathology;
 - K=12 FAIL -> stop and report rebuild instability; no K>12, threshold relaxation, member dropping/weighting, reseeding, or external-strength benchmark.
 
+## 2026-10-27 — K=12 rebuild stability FINAL FAIL; rebuild branch closed
+
+The preregistered final K=12 rebuild-stability gate completed mechanically clean on the exact fixed seed-153159001 100k common bank:
+- 100000 episodes -> 416463 common decisions;
+- all members 1-12 evaluated successfully;
+- coverage minima passed: 72o All-in=2264, trips+ Fold=1453, high-card/no-immediate-draw All-in=31253;
+- broad worst split mean TV = 0.039866229505001495 (FAIL vs <=0.03);
+- broad worst split statewise p95 TV = 0.13160193402145523 (FAIL vs <=0.12);
+- leave-one-out worst mean TV = 0.005557365960033288 (PASS vs <=0.01);
+- preflop 72o All-in worst split mean delta = 0.00689496490761829 (PASS);
+- preflop 72o All-in worst split p95 delta = 0.0531581679669519 (PASS);
+- high-card/no-immediate-draw All-in worst split mean delta = 0.013354267383996225 (PASS);
+- high-card/no-immediate-draw All-in worst split p95 delta = 0.05817313985899089 (PASS);
+- trips+ Fold worst split mean delta = 0.02084301256637563 (FAIL vs <=0.02);
+- trips+ Fold worst split p95 delta = 0.11431592764953762 (FAIL vs <=0.10).
+
+Relative to K=8, K=12 improved every reported instability magnitude, but four frozen criteria remain outside contract. Therefore the preregistered branch outcome is FINAL FAIL / rebuild instability.
+
+Frozen stop rule is now active:
+- no K>12;
+- no threshold relaxation;
+- no member dropping, subset selection, or post-hoc weighting;
+- no seed replacement or adaptive bank changes;
+- no external-strength benchmark for this failed candidate.
+
+Any continuation must be a new, explicitly separated research branch. Descriptive diagnosis of the failed K=12 evidence is allowed only if it cannot retroactively promote this candidate.
+
