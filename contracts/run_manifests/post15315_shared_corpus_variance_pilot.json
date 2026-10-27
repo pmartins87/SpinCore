@@ -1,0 +1,72 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_SHARED_CORPUS_VARIANCE_PILOT",
+  "status": "READY",
+  "runner": "tools/run_post15315_shared_corpus_variance_pilot.sh",
+  "runner_blob_sha": "976e8b3bc2d576d137a2362100a14c066eb28d68",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "RNG-013",
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "CKPT-001",
+    "ART-001"
+  ],
+  "affected_domains": [
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "VALID",
+    "SAFE",
+    "CKPT",
+    "ART"
+  ],
+  "duration_class": "RESEARCH_PILOT",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "immutable_k12_final_fail": "runs/post15315_rebuild_stability_k12/post15315_k12_stability_gate.json",
+    "instability_diagnostic": "runs/post15315_rebuild_stability_k12/post15315_k12_instability_diagnostic.json",
+    "exact_collection_caches": "members 1-8 in runs/post15315_multirebuild_k8 and members 9-12 in runs/post15315_multirebuild_k12_extension",
+    "preregistration": "contracts/post15315_shared_corpus_variance_pilot_v1.json"
+  },
+  "scientific_plan": {
+    "experiment": "Pool all existing rebuild collection caches into one exact common corpus, fit eight replicas differing only by frozen fit seeds, and compare their internal stability with the original closed-branch 12 rebuilds on one fresh 40k research-only common bank.",
+    "fresh_research_bank_seed": 153159501,
+    "fresh_research_bank_episodes": 40000,
+    "shared_replicas": 8,
+    "interpretation_bands": {
+      "corpus_support_dominant": "shared/original broad mean and p95 ratios <= 0.70",
+      "fit_architecture_dominant": "shared/original broad mean and p95 ratios >= 0.90",
+      "mixed": "otherwise"
+    },
+    "exclusions": [
+      "No promotion decision.",
+      "No external strength benchmark.",
+      "No member selection or weighting.",
+      "No K>12.",
+      "No use of stability-bank states for training."
+    ]
+  },
+  "support_blob_shas": {
+    "contracts/post15315_shared_corpus_variance_pilot_v1.json": "92fcb82d6db3ff6d6261baa65f89e5f33d01187d",
+    "tools/run_post15315_shared_corpus_variance_pilot.py": "312c9f3bd4da35f9dcb34b04d7d5740e59f33322",
+    "tools/run_post15315_shared_corpus_variance_pilot.sh": "976e8b3bc2d576d137a2362100a14c066eb28d68",
+    "python_tests/test_post15315_shared_corpus_variance_pilot.py": "c2c393c1250934fbfefbd3e0c171b6c2affcbfe7",
+    "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee",
+    "tools/evaluate_post15315_rebuild_stability.py": "bd2543d745ab0f309622549edd423a415bcd175f",
+    "tools/post15315_member_cache.py": "3f1d8737a99481212534ef7f88fb74b6f8fb6673"
+  }
+}
