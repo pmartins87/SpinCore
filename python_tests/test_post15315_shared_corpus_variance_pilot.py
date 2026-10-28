@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / "tools" / "run_post15315_shared_corpus_variance_pilot.py").read_text(encoding="utf-8")
 PREREG = (ROOT / "contracts" / "post15315_shared_corpus_variance_pilot_v2.json").read_text(encoding="utf-8")
+ORIGINAL_PROTOCOL_PATH = ROOT / "contracts" / "post15315_multirebuild_preregistration.json"
 
 
 def test_pilot_is_research_only_and_preserves_closed_fail():
@@ -41,3 +43,15 @@ def test_attribution_bands_are_frozen_before_results():
     assert '"PREREGISTERED_RESEARCH_ONLY_NOT_PROMOTIONAL"' in PREREG
     assert '"seed": 153159501' in PREREG
     assert '"forced_three_handed_episodes": 40000' in PREREG
+
+
+def test_original_protocol_identity_keeps_git_blob_and_sha256_distinct():
+    data = ORIGINAL_PROTOCOL_PATH.read_bytes()
+    git_blob_sha = hashlib.sha1(f"blob {len(data)}\0".encode("ascii") + data).hexdigest()
+    assert git_blob_sha == "5fd7667926c6112310fe5eca61afff396ad218de"
+    assert 'EXPECTED_PROTOCOL_BLOB_SHA = "5fd7667926c6112310fe5eca61afff396ad218de"' in SOURCE
+    assert "if git_blob_sha1(protocol_path) != EXPECTED_PROTOCOL_BLOB_SHA:" in SOURCE
+    assert "protocol_sha = sha256(protocol_path)" in SOURCE
+    assert "sha256(protocol_path) != EXPECTED_PROTOCOL" not in SOURCE
+    assert '"original_protocol_sha256": protocol_sha' in SOURCE
+    assert '"original_protocol_git_blob_sha1": EXPECTED_PROTOCOL_BLOB_SHA' in SOURCE
