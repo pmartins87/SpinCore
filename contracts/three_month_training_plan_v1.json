@@ -1,0 +1,264 @@
+{
+  "schema": "SPINCORE_THREE_MONTH_TRAINING_PLAN_V1",
+  "status": "READY_AFTER_CURRENT_HU_PASS",
+  "frozen_on": "2026-10-28",
+  "purpose": "Alternating long-horizon direct Semantic ENS8 teacher training for HU and 3H using durable fixed-root blocks. The plan begins only after the already-running HU migration/+469 block completes PASS.",
+  "scheduling": {
+    "policy": "ALTERNATE_ONE_FIXED_ROOT_BLOCK_PER_DOMAIN",
+    "concurrency": "ONE_HEAVY_TRAINER_AT_A_TIME",
+    "calendar_rule": "COMPUTE_BUDGET_NOT_WALL_CLOCK_STOP",
+    "restart_rule": "RERUN_ORCHESTRATOR; REVALIDATE COMPLETED PASS STAGES; RESUME FIRST INCOMPLETE STAGE",
+    "stop_rule": "STOP_ONLY_ON_HARD_INTEGRITY_SAFETY_RUNTIME_FAILURE_OR_MANUAL_USER_STOP",
+    "strength_selection_during_plan": false
+  },
+  "current_prerequisite": {
+    "domain": "HU",
+    "stage": "HU semantic migration + first 469-update block",
+    "cumulative_updates_at_pass": 469,
+    "new_roots": 128037,
+    "required_status": "PASS",
+    "path": "runs/hu_semantic_ens8_continuation_10105_plus469"
+  },
+  "initial_3h_endpoint": {
+    "iteration": 17315,
+    "required_status": "PASS",
+    "path": "runs/3h_semantic_long_15315_17315"
+  },
+  "block_contracts": {
+    "HU": {
+      "architecture": "V1+30-semantic direct Advantage ENS8",
+      "updates_per_block": 469,
+      "roots_per_update": 273,
+      "roots_per_block": 128037,
+      "members": 8,
+      "member_steps": 1600,
+      "average_policy_training": false
+    },
+    "3H": {
+      "architecture": "V1+30-semantic direct Advantage ENS8",
+      "iterations_per_block": 2000,
+      "roots_per_iteration": 64,
+      "roots_per_block": 128000,
+      "members": 8,
+      "member_steps": 1600,
+      "safety_milestone_every_iterations": 500,
+      "average_policy_training": false
+    }
+  },
+  "target_compute_budget": {
+    "hu_blocks_including_current_prerequisite": 11,
+    "hu_cumulative_updates_at_end": 5159,
+    "hu_new_roots_total_since_10105": 1408407,
+    "hu_virtual_seed_iteration_end": 15264,
+    "three_handed_blocks": 11,
+    "three_handed_additional_iterations": 22000,
+    "three_handed_new_roots": 1408000,
+    "three_handed_iteration_end": 39315,
+    "orchestrated_stages_after_current_hu": 21,
+    "interpretation": "Designed as an approximately three-month continuous Ryzen compute budget using measured block costs. Completion is block-budget based; actual calendar duration may be shorter or longer."
+  },
+  "stages": [
+    {
+      "id": "3h_block_01",
+      "cycle": 1,
+      "domain": "3H",
+      "start": 17315,
+      "target": 19315,
+      "roots": 128000,
+      "mode": "specific"
+    },
+    {
+      "id": "hu_block_02",
+      "cycle": 2,
+      "domain": "HU",
+      "start": 469,
+      "target": 938,
+      "roots": 128037,
+      "mode": "specific"
+    },
+    {
+      "id": "3h_block_02",
+      "cycle": 2,
+      "domain": "3H",
+      "start": 19315,
+      "target": 21315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_03",
+      "cycle": 3,
+      "domain": "HU",
+      "start": 938,
+      "target": 1407,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_03",
+      "cycle": 3,
+      "domain": "3H",
+      "start": 21315,
+      "target": 23315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_04",
+      "cycle": 4,
+      "domain": "HU",
+      "start": 1407,
+      "target": 1876,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_04",
+      "cycle": 4,
+      "domain": "3H",
+      "start": 23315,
+      "target": 25315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_05",
+      "cycle": 5,
+      "domain": "HU",
+      "start": 1876,
+      "target": 2345,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_05",
+      "cycle": 5,
+      "domain": "3H",
+      "start": 25315,
+      "target": 27315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_06",
+      "cycle": 6,
+      "domain": "HU",
+      "start": 2345,
+      "target": 2814,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_06",
+      "cycle": 6,
+      "domain": "3H",
+      "start": 27315,
+      "target": 29315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_07",
+      "cycle": 7,
+      "domain": "HU",
+      "start": 2814,
+      "target": 3283,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_07",
+      "cycle": 7,
+      "domain": "3H",
+      "start": 29315,
+      "target": 31315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_08",
+      "cycle": 8,
+      "domain": "HU",
+      "start": 3283,
+      "target": 3752,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_08",
+      "cycle": 8,
+      "domain": "3H",
+      "start": 31315,
+      "target": 33315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_09",
+      "cycle": 9,
+      "domain": "HU",
+      "start": 3752,
+      "target": 4221,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_09",
+      "cycle": 9,
+      "domain": "3H",
+      "start": 33315,
+      "target": 35315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_10",
+      "cycle": 10,
+      "domain": "HU",
+      "start": 4221,
+      "target": 4690,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_10",
+      "cycle": 10,
+      "domain": "3H",
+      "start": 35315,
+      "target": 37315,
+      "roots": 128000,
+      "mode": "generic"
+    },
+    {
+      "id": "hu_block_11",
+      "cycle": 11,
+      "domain": "HU",
+      "start": 4690,
+      "target": 5159,
+      "roots": 128037,
+      "mode": "generic"
+    },
+    {
+      "id": "3h_block_11",
+      "cycle": 11,
+      "domain": "3H",
+      "start": 37315,
+      "target": 39315,
+      "roots": 128000,
+      "mode": "generic"
+    }
+  ],
+  "support_blob_shas": {
+    "tools/run_three_month_training_v1.py": "9867b902f877d0edf2aba5d7735fff28a9e8d973",
+    "tools/run_3h_semantic_long_block.py": "3f662b61fb6c506bede45b79411f1e23dcf62a54",
+    "tools/run_3h_semantic_long_block_parallel.py": "bb506ce5137ac8d5a3026a14b5dffea0a7d496d1",
+    "tools/run_hu_semantic_ens8_long_block.py": "8dde1781581f70154a8b73895ac06fd26f5fe93a",
+    "tools/run_3h_semantic_long_17315_19315.sh": "eebeb33af5e1f7634c288cc4d0c416d95964d694",
+    "tools/run_hu_semantic_ens8_long_cum469_938.sh": "d32ed69e60d0e7e4e0c378885c8eeeb82bb9178c",
+    "tools/run_3h_semantic_long_15315_17315.py": "fd2526ac1646f9bab57d645c0ab5e5313e65e5d7",
+    "tools/run_hu_semantic_ens8_continuation_10105_plus469.py": "0f5dabd4191aa64a76f3ef89096ed3c69e8a8afc",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
+    "python/spincore/semantic_parallel.py": "903ee34024d30e99f40a1057eea0176ad5f7f8b8",
+    "python/spincore_nn/semantic_v1.py": "f95caf41ed98305940fa4d15d4cb397f0b9143c6"
+  }
+}
