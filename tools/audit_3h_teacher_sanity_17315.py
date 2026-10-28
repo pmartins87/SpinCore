@@ -37,6 +37,7 @@ from spincore.deepcrusher_benchmark import (
 )
 from spincore.deepcrusher_policy import DeepCrusherR8Policy
 from spincore.decision_sanity import (
+    card_rank,
     effective_stack_bb,
     evaluate_visible_hand,
     flag_to_dict,
@@ -181,15 +182,128 @@ def _opportunity_codes(trace) -> list[str]:
         return out
 
     category, _ = evaluate_visible_hand(hole, trace.board)
+    board_ranks = [card_rank(x) for x in trace.board]
+    hole_ranks = [card_rank(x) for x in hole]
+    just_top_pair = (
+        category == 1
+        and bool(board_ranks)
+        and max(board_ranks) in hole_ranks
+        and board_ranks.count(max(board_ranks)) == 1
+    )
     if "FOLD" in legal:
         if category >= 6:
             out.append("POSTFLOP_MONSTER_FOLD")
         if category >= 3:
             out.append("POSTFLOP_TRIPS_PLUS_FOLD")
+        if just_top_pair:
+            out.append("POSTFLOP_TOP_PAIR_FOLD")
     if category == 0 and effective_stack_bb(trace) >= 10.0 and "ALL_IN" in legal:
         out.append("POSTFLOP_DEEP_HIGH_CARD_JAM")
     return out
 
+
+
+def _target_action_for_opportunity(code: str) -> str:
+    if code in {
+        "PREFLOP_AA_FOLD",
+        "POSTFLOP_MONSTER_FOLD",
+        "POSTFLOP_TRIPS_PLUS_FOLD",
+        "POSTFLOP_TOP_PAIR_FOLD",
+    }:
+        return "FOLD"
+    if code in {
+        "PREFLOP_DEEP_72O_JAM",
+        "POSTFLOP_DEEP_HIGH_CARD_JAM",
+    }:
+        return "ALL_IN"
+    raise RuntimeError(f"unknown sanity opportunity code: {code}")
+
+
+def _policy_probability(trace, action_name: str) -> float:
+    rows = (trace.policy_detail or {}).get("legal_actions") or []
+    for row in rows:
+        if str(row.get("name")) == str(action_name):
+            return float(row.get("probability", 0.0))
+    raise RuntimeError(
+        f"target action {action_name} absent from declared legal actions"
+    )
+
+
+def _opportunity_policy_row(trace, code: str, probability: float) -> dict[str, Any]:
+    return {
+        "code": str(code),
+        "target_action": _target_action_for_opportunity(code),
+        "target_probability": float(probability),
+        "lineup_index": int(trace.lineup_index),
+        "decision_index": int(trace.decision_index),
+        "street": int(trace.street),
+        "hole": list(trace.hole_cards or ()),
+        "board": list(trace.board or ()),
+        "pot": int(trace.pot),
+        "to_call": int(trace.to_call),
+        "effective_stack_bb": float(effective_stack_bb(trace)),
+        "selected_slot_name": _selected_slot_name(trace),
+    }
+
+
+def _merge_opportunity_policy(rows) -> dict[str, Any]:
+    merged: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        for code, data in row["opportunity_policy"].items():
+            dst = merged.setdefault(
+                str(code),
+                {
+                    "opportunities": 0,
+                    "probability_sum": 0.0,
+                    "probability_max": 0.0,
+                    "ge_50pct": 0,
+                    "ge_80pct": 0,
+                    "ge_95pct": 0,
+                    "top_probability_rows": [],
+                },
+            )
+            dst["opportunities"] += int(data["opportunities"])
+            dst["probability_sum"] += float(data["probability_sum"])
+            dst["probability_max"] = max(
+                float(dst["probability_max"]),
+                float(data["probability_max"]),
+            )
+            dst["ge_50pct"] += int(data["ge_50pct"])
+            dst["ge_80pct"] += int(data["ge_80pct"])
+            dst["ge_95pct"] += int(data["ge_95pct"])
+            dst["top_probability_rows"].extend(
+                list(data.get("top_probability_rows") or [])
+            )
+            dst["top_probability_rows"].sort(
+                key=lambda x: float(x["target_probability"]),
+                reverse=True,
+            )
+            dst["top_probability_rows"] = dst["top_probability_rows"][:20]
+
+    out: dict[str, Any] = {}
+    for code, data in sorted(merged.items()):
+        n = int(data["opportunities"])
+        out[code] = {
+            "opportunities": n,
+            "mean_target_probability": (
+                None if n == 0 else float(data["probability_sum"]) / float(n)
+            ),
+            "max_target_probability": float(data["probability_max"]),
+            "ge_50pct_count": int(data["ge_50pct"]),
+            "ge_80pct_count": int(data["ge_80pct"]),
+            "ge_95pct_count": int(data["ge_95pct"]),
+            "ge_50pct_fraction": (
+                None if n == 0 else int(data["ge_50pct"]) / float(n)
+            ),
+            "ge_80pct_fraction": (
+                None if n == 0 else int(data["ge_80pct"]) / float(n)
+            ),
+            "ge_95pct_fraction": (
+                None if n == 0 else int(data["ge_95pct"]) / float(n)
+            ),
+            "top_probability_rows": list(data["top_probability_rows"]),
+        }
+    return out
 
 def worker(task):
     index, episode, deal_seed, max_decisions = task
@@ -212,6 +326,7 @@ def worker(task):
     flag_counts: dict[str, int] = {}
     deliberate_flag_counts: dict[str, int] = {}
     opportunities: dict[str, int] = {}
+    opportunity_policy: dict[str, dict[str, Any]] = {}
     flagged: list[dict[str, Any]] = []
     spin_decisions = 0
 
@@ -222,6 +337,36 @@ def worker(task):
 
         for code in _opportunity_codes(trace):
             opportunities[code] = opportunities.get(code, 0) + 1
+            action_name = _target_action_for_opportunity(code)
+            probability = _policy_probability(trace, action_name)
+            stats = opportunity_policy.setdefault(
+                code,
+                {
+                    "opportunities": 0,
+                    "probability_sum": 0.0,
+                    "probability_max": 0.0,
+                    "ge_50pct": 0,
+                    "ge_80pct": 0,
+                    "ge_95pct": 0,
+                    "top_probability_rows": [],
+                },
+            )
+            stats["opportunities"] += 1
+            stats["probability_sum"] += float(probability)
+            stats["probability_max"] = max(
+                float(stats["probability_max"]), float(probability)
+            )
+            stats["ge_50pct"] += int(probability >= 0.50)
+            stats["ge_80pct"] += int(probability >= 0.80)
+            stats["ge_95pct"] += int(probability >= 0.95)
+            stats["top_probability_rows"].append(
+                _opportunity_policy_row(trace, code, probability)
+            )
+            stats["top_probability_rows"].sort(
+                key=lambda x: float(x["target_probability"]),
+                reverse=True,
+            )
+            stats["top_probability_rows"] = stats["top_probability_rows"][:5]
 
         for flag in sanity_flags(trace):
             code = str(flag.code)
@@ -247,6 +392,7 @@ def worker(task):
         "flag_counts": flag_counts,
         "deliberate_flag_counts": deliberate_flag_counts,
         "opportunities": opportunities,
+        "opportunity_policy": opportunity_policy,
         "flagged": flagged,
     }
 
@@ -312,6 +458,7 @@ def main() -> int:
     flag_counts = _merge_counts(rows, "flag_counts")
     deliberate_flag_counts = _merge_counts(rows, "deliberate_flag_counts")
     opportunities = _merge_counts(rows, "opportunities")
+    opportunity_policy = _merge_opportunity_policy(rows)
     flagged = [item for row in rows for item in row["flagged"]]
     spin_decisions = sum(int(row["spin_decisions"]) for row in rows)
 
@@ -360,6 +507,7 @@ def main() -> int:
         "flag_counts": flag_counts,
         "deliberate_allin_slot_flag_counts": deliberate_flag_counts,
         "opportunity_counts": opportunities,
+        "opportunity_policy": opportunity_policy,
         "rates": rates,
         "flagged_decisions": flagged,
         "interpretation": {
@@ -374,6 +522,12 @@ def main() -> int:
             "review": (
                 "Top-pair folds and deep high-card jams are context-sensitive review "
                 "surfaces and are not automatically errors."
+            ),
+            "policy_surface": (
+                "opportunity_policy measures the teacher's target-action probability "
+                "on every eligible state, independent of which action RNG sampled. "
+                "This distinguishes rare sampled anomalies from systematic high-probability "
+                "pathology."
             ),
             "scope": (
                 "Development-only raw-teacher sanity evidence. This does not measure "
@@ -394,6 +548,7 @@ def main() -> int:
     print("flag_counts=" + json.dumps(flag_counts, sort_keys=True))
     print("opportunities=" + json.dumps(opportunities, sort_keys=True))
     print("rates=" + json.dumps(rates, sort_keys=True))
+    print("opportunity_policy=" + json.dumps(opportunity_policy, sort_keys=True))
     important = [
         item for item in flagged
         if item["flag"]["code"] in (critical_codes | high_review_codes)
