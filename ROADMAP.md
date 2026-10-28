@@ -4607,3 +4607,21 @@ Roadmap consequence:
 The next research gate is now frozen as a 4 corpus-anchor x 4 matched-fit-seed crossed design (16 cells) on fresh seed 153159502 / 40k episodes. It directly compares within-corpus fit variance with across-corpus matched-seed variance and reports a two-way corpus/fit/interaction decomposition.
 
 Classification is frozen before results: both corpus/fit mean+p95 ratios >=1.25 -> corpus-conditioned larger; both <=0.80 -> fit-seed larger; otherwise MIXED_INTERACTION. This remains research-only and cannot reopen the failed K=12 candidate or open strength evidence.
+
+
+
+### 2026-10-28 — factorial result and canonical corpus stabilization pilot READY
+
+The crossed 4x4 attribution pilot returned CORPUS_CONDITIONED_LARGER:
+- corpus/fit mean-TV ratio 1.34305;
+- corpus/fit p95-TV ratio 1.35911;
+- variance decomposition: corpus 51.12%, fit seed 11.96%, interaction 36.92%.
+
+Roadmap consequence: standardize teacher-target corpus construction before another candidate. The next research gate is frozen as three matched eight-replica groups on fresh seed 153159503 / 100k episodes:
+1. existing V2 member-01 control8, reused without refit;
+2. deterministic four-anchor canonical corpus at exactly the control corpus size;
+3. expanded all-unique version of the same canonical corpus.
+
+Both new treatments reuse the exact eight V2 fit-seed pairs. The unchanged original K=8 stability evaluator and thresholds are applied separately to all three groups after original rare-surface coverage minima pass.
+
+Frozen branches: control PASS -> bank-sensitivity stop; control FAIL + fixed PASS -> standardization sufficient; control FAIL + fixed FAIL + expanded PASS -> expansion required; all canonical FAIL -> corpus-only intervention insufficient. No result in this stage promotes a policy or opens strength.
