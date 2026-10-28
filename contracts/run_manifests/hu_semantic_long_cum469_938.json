@@ -1,0 +1,81 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "HU_SEMANTIC_LONG_CUM469_938",
+  "status": "READY",
+  "runner": "tools/run_hu_semantic_ens8_long_cum469_938.sh",
+  "runner_blob_sha": "d32ed69e60d0e7e4e0c378885c8eeeb82bb9178c",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "VALID-025",
+    "VALID-034",
+    "VALID-035",
+    "SAFE-001",
+    "SAFE-010",
+    "CKPT-001",
+    "ART-001",
+    "PERF-001",
+    "PERF-002"
+  ],
+  "affected_domains": ["TRAIN","MODEL","RNG","VALID","SAFE","CKPT","ART","PERF"],
+  "duration_class": "LONG_TRAINING_BLOCK",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "source_stage": {
+    "stage_id": "HU_SEMANTIC_ENS8_CONTINUATION_10105_PLUS469",
+    "required_status": "PASS",
+    "required_cumulative_updates": 469,
+    "source_binding": "RUNTIME_BIND_TO_PASS_REPORT_SHA_FIELDS",
+    "rationale": "The source endpoint is being produced on the training host. The shell and generic runner bind resume and final ensemble to the completed PASS report before any new root is collected."
+  },
+  "scientific_plan": {
+    "source_cumulative_updates": 469,
+    "target_cumulative_updates": 938,
+    "additional_updates": 469,
+    "roots_per_update": 273,
+    "expected_new_hu_roots": 128037,
+    "cumulative_hu_roots_since_10105_at_target": 256074,
+    "ensemble_size": 8,
+    "member_steps": 1600,
+    "semantic_dim": 30,
+    "architecture_change": false,
+    "migration_repeated": false,
+    "three_handed_training": false,
+    "average_policy_training": false,
+    "strategy_reservoir_collection": false,
+    "sealed_holdout": false,
+    "strength_benchmark": false
+  },
+  "execution": {
+    "root_workers": 31,
+    "fit_concurrency": 4,
+    "threads_per_member": 8,
+    "resume_checkpoint_every_block_updates": 25,
+    "ensemble_snapshot_every_block_updates": 50,
+    "simultaneous_3h_trainer_forbidden": true
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/run_hu_semantic_ens8_long_block.py": "8dde1781581f70154a8b73895ac06fd26f5fe93a",
+    "tools/run_hu_semantic_ens8_long_cum469_938.sh": "d32ed69e60d0e7e4e0c378885c8eeeb82bb9178c",
+    "tools/run_hu_semantic_ens8_continuation_10105_plus469.py": "0f5dabd4191aa64a76f3ef89096ed3c69e8a8afc",
+    "python/spincore/semantic_parallel.py": "903ee34024d30e99f40a1057eea0176ad5f7f8b8",
+    "python/spincore_nn/semantic_v1.py": "f95caf41ed98305940fa4d15d4cb397f0b9143c6",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
+    "python_tests/test_hu_semantic_ens8_long_block.py": "2fb1a88752a3aee7b97e72444ae2b80e91e2ca76"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "PREPARED_FOR_LONG_HORIZON_ALTERNATING_TRAINING",
+    "conditions": [
+      "current HU semantic +469 block completes PASS",
+      "source resume/final-ensemble hashes match its PASS report",
+      "main project-contract and main-regression CI PASS",
+      "stage manifest and support blob hashes match main",
+      "no HU or 3H semantic trainer is already running",
+      "WSL memory preflight passes"
+    ]
+  }
+}
