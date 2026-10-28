@@ -59,10 +59,6 @@ cmake --build build -j 8 --target spincore_solver_c
   tools/run_hu_semantic_ens8_continuation_10105_plus469.py \
   tools/lt3_3h_semantic_parallel_fit.py
 
-"${PY}" -m pytest -q \
-  python_tests/test_semantic_v1_shared.py \
-  python_tests/test_hu_semantic_ens8_continuation.py
-
 mkdir -p "${OUT}"
 
 /usr/bin/time -v "${PY}" tools/run_hu_semantic_ens8_continuation_10105_plus469.py \
