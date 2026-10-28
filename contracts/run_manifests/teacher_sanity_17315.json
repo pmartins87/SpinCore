@@ -39,7 +39,8 @@
       "POSTFLOP_MONSTER_FOLD",
       "POSTFLOP_TRIPS_PLUS_FOLD",
       "POSTFLOP_TOP_PAIR_FOLD",
-      "POSTFLOP_DEEP_HIGH_CARD_JAM"
+      "POSTFLOP_DEEP_HIGH_CARD_JAM",
+      "POSTFLOP_DEEP_HIGH_CARD_JAM_NO_DRAW"
     ],
     "interpretation_rule": {
       "critical": "Any AA preflop fold or full-house-plus postflop fold is a gross-error candidate and requires exact trace review.",
@@ -53,7 +54,17 @@
       "no promotion authorization",
       "no replacement of post15315 multi-rebuild stabilization",
       "no canonical DeepCrusher strength claim before DC0"
-    ]
+    ],
+    "policy_surface_analysis": {
+      "enabled": true,
+      "purpose": "Measure target-action probability on every eligible sanity opportunity independent of sampled action RNG.",
+      "thresholds": [
+        0.5,
+        0.8,
+        0.95
+      ],
+      "top_probability_rows_per_surface": 20
+    }
   },
   "support_blob_shas": {
     "tools/audit_3h_teacher_sanity_17315.py": "1e14446f0f9a31c53a67f8ede2dd61b174db8109",
