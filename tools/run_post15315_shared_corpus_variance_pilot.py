@@ -43,7 +43,7 @@ from spincore.solver import SolverLibrary
 
 PILOT_SCHEMA = "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_RESULT_V2"
 PREREG_SCHEMA = "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_V2"
-EXPECTED_PROTOCOL_SHA = "5fd7667926c6112310fe5eca61afff396ad218de"
+EXPECTED_PROTOCOL_BLOB_SHA = "5fd7667926c6112310fe5eca61afff396ad218de"
 EXPECTED_TEACHER_SHA = "ac49b77c8ec3204e07f6d44d3718c68880e60675c5521f538438a3fa3ceae746"
 EXPECTED_CHECKPOINT_SHA = "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0"
 FINAL_ITERATION = 15315
@@ -56,6 +56,12 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def git_blob_sha1(path: Path) -> str:
+    data = Path(path).read_bytes()
+    header = f"blob {len(data)}\0".encode("ascii")
+    return hashlib.sha1(header + data).hexdigest()
 
 
 def atomic_json(payload: dict, path: Path) -> None:
@@ -427,17 +433,18 @@ def main() -> int:
         raise RuntimeError("source checkpoint SHA mismatch")
     if sha256(teacher_path) != EXPECTED_TEACHER_SHA:
         raise RuntimeError("teacher SHA mismatch")
-    if sha256(protocol_path) != EXPECTED_PROTOCOL_SHA:
-        raise RuntimeError("original post15315 protocol SHA mismatch")
+    if git_blob_sha1(protocol_path) != EXPECTED_PROTOCOL_BLOB_SHA:
+        raise RuntimeError("original post15315 protocol Git blob SHA mismatch")
+    protocol_sha = sha256(protocol_path)
 
     protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
     prereg = validate_prereg(pilot_prereg_path)
     closed = validate_closed_k12(k12_dir)
-    original_rows = original_member_rows(protocol, EXPECTED_PROTOCOL_SHA, k8_dir, ext_dir)
+    original_rows = original_member_rows(protocol, protocol_sha, k8_dir, ext_dir)
 
     print("POST15315_FIXED_CORPUS_LOAD_BEGIN", flush=True)
     full_train, specialist_unique, corpus_meta = load_fixed_corpus(
-        protocol, EXPECTED_PROTOCOL_SHA, k8_dir
+        protocol, protocol_sha, k8_dir
     )
     print(
         "POST15315_FIXED_CORPUS_LOAD_PASS "
@@ -454,7 +461,7 @@ def main() -> int:
 
     shared_rows = train_shared_replicas(
         checkpoint,
-        EXPECTED_PROTOCOL_SHA,
+        protocol_sha,
         prereg,
         full_train,
         specialist_unique,
@@ -500,7 +507,7 @@ def main() -> int:
             fullpool_path=Path(row["fullpool_path"]),
             specialist_path=Path(row["specialist_path"]),
             member=member,
-            protocol_sha=EXPECTED_PROTOCOL_SHA,
+            protocol_sha=protocol_sha,
             batch_size=int(args.batch_size),
         )
         print(f"POST15315_ORIGINAL12_RESEARCH_EVAL_{member:02d}_PASS", flush=True)
@@ -516,7 +523,7 @@ def main() -> int:
             fullpool_path=Path(row["fullpool_path"]),
             specialist_path=Path(row["specialist_path"]),
             member=member,
-            protocol_sha=EXPECTED_PROTOCOL_SHA,
+            protocol_sha=protocol_sha,
             batch_size=int(args.batch_size),
         )
         print(f"POST15315_SHARED8_RESEARCH_EVAL_{member:02d}_PASS", flush=True)
@@ -578,7 +585,8 @@ def main() -> int:
         "member_selection_performed": False,
         "member_weighting_performed": False,
         "k_greater_than_12_performed": False,
-        "original_protocol_sha256": EXPECTED_PROTOCOL_SHA,
+        "original_protocol_sha256": protocol_sha,
+        "original_protocol_git_blob_sha1": EXPECTED_PROTOCOL_BLOB_SHA,
         "pilot_preregistration": str(pilot_prereg_path),
         "pilot_preregistration_sha256": sha256(pilot_prereg_path),
         "closed_k12_evidence": closed,
