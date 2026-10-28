@@ -1,0 +1,109 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "SEMANTIC_LONG_17315_19315_THREE_MONTH_BLOCK_A",
+  "status": "READY",
+  "runner": "tools/run_3h_semantic_long_17315_19315.sh",
+  "runner_blob_sha": "eebeb33af5e1f7634c288cc4d0c416d95964d694",
+  "contract_ids": [
+    "GOV-023",
+    "GOV-024",
+    "PERF-001",
+    "PERF-002",
+    "PERF-010",
+    "PERF-011",
+    "PERF-012",
+    "PERF-013",
+    "PERF-014",
+    "PERF-015",
+    "PERF-016",
+    "PERF-017",
+    "PERF-019",
+    "PERF-020",
+    "TRAIN-020",
+    "TRAIN-022",
+    "TRAIN-024",
+    "MODEL-020",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003",
+    "CKPT-004",
+    "SAFE-002",
+    "VALID-034",
+    "VALID-035",
+    "ART-015"
+  ],
+  "affected_domains": [
+    "GOV",
+    "TRAIN",
+    "MODEL",
+    "RNG",
+    "PERF",
+    "CKPT",
+    "SAFE",
+    "VALID",
+    "ART"
+  ],
+  "duration_class": "LONG_GT_60M",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "source_stage": {
+    "stage_id": "SEMANTIC_LONG_15315_17315_TRAVEL_WEEK",
+    "required_status": "PASS",
+    "required_completed_iteration": 17315,
+    "source_binding": "RUNTIME_BIND_TO_FINAL_PASS_REPORT_SHA_FIELDS",
+    "required_final_safety_guard_pass": true,
+    "rationale": "The 17315 artifacts live on the training host. The runner hashes the final ensemble/resume and requires both to match the immutable PASS report before continuing."
+  },
+  "scientific_plan": {
+    "start_iteration": 17315,
+    "target_iteration": 19315,
+    "additional_iterations": 2000,
+    "roots_per_iteration": 64,
+    "expected_new_roots": 128000,
+    "ensemble_size": 8,
+    "member_steps": 1600,
+    "milestones": [17815, 18315, 18815, 19315],
+    "milestone_purpose": "SAFETY_INTEGRITY_ONLY_NOT_STRENGTH_SELECTION",
+    "architecture_change": false,
+    "algorithm_change": false,
+    "hu_training_performed": false,
+    "average_policy_training": false,
+    "strength_benchmark_inside_block": false
+  },
+  "performance_gate": {
+    "status": "PASS",
+    "mode": "INHERITED_EXACT_EXECUTION_PROFILE",
+    "source_manifest": "contracts/run_manifests/semantic_long_15315_17315.json",
+    "rationale": "Only the source endpoint and target horizon change. Per-iteration collection, packed reservoir transport, eight-member fresh1600 fitter, 4x8 execution profile, solver and target Ryzen host remain unchanged.",
+    "tensor_exact": true,
+    "final_loss_exact": true,
+    "member_metadata_exact": true
+  },
+  "selected_profile": {
+    "concurrency": 4,
+    "threads_per_member": 8,
+    "declared_threads": 32,
+    "selection_reason": "Inherited exact-parity Ryzen profile from the existing 3H semantic long trainer."
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/run_3h_semantic_long_17315_19315.py": "7f4947c7121557492600a1c8d8b27f65e471515a",
+    "tools/run_3h_semantic_long_17315_19315_parallel.py": "b1cd9ca4eff00c71ed8e41fb97c0af7ba57abfcb",
+    "tools/run_3h_semantic_long_17315_19315.sh": "eebeb33af5e1f7634c288cc4d0c416d95964d694",
+    "tools/run_3h_semantic_long_15315_17315.py": "fd2526ac1646f9bab57d645c0ab5e5313e65e5d7",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
+    "tools/selftest_3h_semantic_parallel_fit.py": "dbb31f5aeed111ad1736c9b14b7301a35cbb9413"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "PREPARED_FOR_LONG_HORIZON_ALTERNATING_TRAINING",
+    "conditions": [
+      "17315 source report status PASS and final_safety_guard_pass true",
+      "17315 resume/final-ensemble hashes match the PASS report at runtime",
+      "main project-contract and main-regression CI PASS",
+      "stage manifest and frozen support blob hashes match main",
+      "no HU or 3H semantic trainer is already running",
+      "WSL memory preflight passes",
+      "parallel fitter selftest passes"
+    ]
+  }
+}
