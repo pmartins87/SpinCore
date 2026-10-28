@@ -242,9 +242,15 @@ def semantic_vector_from_observation(obs: bytes) -> np.ndarray:
 
 
 class V1SemanticAdvantageNet(nn.Module):
-    def __init__(self, cfg: ActionNetworkConfigV1 | None = None):
+    def __init__(
+        self,
+        cfg: ActionNetworkConfigV1 | None = None,
+        *,
+        legacy_exact_zero_mode: bool = False,
+    ):
         super().__init__()
         self.cfg = cfg or ActionNetworkConfigV1()
+        self.legacy_exact_zero_mode = bool(legacy_exact_zero_mode)
         c = self.cfg
         self.card_emb = nn.Embedding(53, c.card_emb, padding_idx=0)
         self.cat_emb = nn.Embedding(32, c.cat_emb)
@@ -264,23 +270,49 @@ class V1SemanticAdvantageNet(nn.Module):
         categorical = self.cat_emb(batch["categorical"].clamp(0, 31)).flatten(1)
         history = self.hist_emb(batch["history"].clamp(0, 63))
         _, hidden = self.gru(history)
-        x = torch.cat(
+        legacy_x = torch.cat(
             [
                 cards,
                 categorical,
                 batch["numeric"],
                 hidden[-1],
-                batch["semantic"],
             ],
             dim=1,
         )
+        if self.legacy_exact_zero_mode:
+            first = self.body[0]
+            legacy_width = legacy_x.shape[1]
+            semantic_weight = first.weight[:, legacy_width:]
+            if torch.count_nonzero(semantic_weight).item() != 0:
+                raise RuntimeError(
+                    "legacy_exact_zero_mode requires exact-zero semantic columns"
+                )
+            x = torch.nn.functional.linear(
+                legacy_x,
+                first.weight[:, :legacy_width],
+                first.bias,
+            )
+            x = self.body[1](x)
+            x = self.body[2](x)
+            x = self.body[3](x)
+            return self.head(x)
+
+        x = torch.cat([legacy_x, batch["semantic"]], dim=1)
         return self.head(self.body(x))
 
 
-def make_semantic_advantage_model(seed: int, cfg: ActionNetworkConfigV1 | None = None):
+def make_semantic_advantage_model(
+    seed: int,
+    cfg: ActionNetworkConfigV1 | None = None,
+    *,
+    legacy_exact_zero_mode: bool = False,
+):
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(int(seed))
-        return V1SemanticAdvantageNet(cfg)
+        return V1SemanticAdvantageNet(
+            cfg,
+            legacy_exact_zero_mode=legacy_exact_zero_mode,
+        )
 
 
 def expand_v1_state_with_zero_semantics(v1_state: dict[str, torch.Tensor]):
