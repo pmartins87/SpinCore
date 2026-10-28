@@ -5110,3 +5110,41 @@ Runner: `tools/run_hu_ens8_continuation_10105_plus469.sh`.
 Stage manifest: `contracts/run_manifests/hu_ens8_continuation_10105_plus469.json`.
 
 This is the first production-shaped validation of the new dual-domain training-first schedule. A clean PASS yields a new HU teacher endpoint; it does not by itself claim HU strength improvement.
+
+
+### 2026-10-28 — HU Semantic ENS8 migration/continuation READY
+
+The previously prepared HU-only V1 continuation has been superseded before any
+execution. Its preregistration and stage manifest are explicitly marked
+SUPERSEDED/DO_NOT_RUN.
+
+The authorized HU path now uses the same V1+30 semantic Advantage architecture
+validated in the 3H semantic lane:
+- the 30 semantic features are domain-agnostic card/hand/board features and are
+  now factored into shared module `python/spincore_nn/semantic_v1.py`;
+- a dedicated semantic parallel root collector was added without modifying the
+  frozen V1 root collector;
+- source is still the frozen finalized 10105 checkpoint plus matched HU ENS8
+  sidecar, both read-only;
+- migration first embeds each HU V1 member into the semantic network by copying
+  all legacy weights and appending 30 exact-zero columns to the first body layer;
+- deterministic 20k HU reservoir states must pass raw-output and final-policy
+  parity at <=2e-6 with zero argmax mismatches;
+- after parity, the first semantic HU ENS8 is fit fresh1600 from the existing HU
+  Advantage reservoir, excluding a fixed 50k diagnostic index set;
+- no new root is collected until this initial semantic ENS8 exists;
+- online continuation then uses semantic ENS8 behavior directly, 273 HU roots
+  per update, followed by eight fresh1600 semantic fits;
+- first block remains 469 updates = 128,037 new HU roots;
+- no THREE_HANDED roots/fits, no AveragePolicy, no strategy-reservoir collection,
+  no sealed holdout, and no strength benchmark occur in the block;
+- resume state every 25 updates; ensemble snapshot every 50.
+
+Runner:
+`tools/run_hu_semantic_ens8_continuation_10105_plus469.sh`
+
+Stage manifest:
+`contracts/run_manifests/hu_semantic_ens8_continuation_10105_plus469.json`
+
+A clean PASS yields a HU Semantic ENS8 teacher endpoint. It is training/integrity
+evidence only, not a strength or promotion claim.
