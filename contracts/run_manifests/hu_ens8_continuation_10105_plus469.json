@@ -1,0 +1,57 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "HU_ENS8_CONTINUATION_10105_PLUS469",
+  "status": "READY",
+  "runner": "tools/run_hu_ens8_continuation_10105_plus469.sh",
+  "runner_blob_sha": "8f6df6af14c114c48fe006746ee1c357f9bdd090",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "VALID-025",
+    "VALID-034",
+    "VALID-035",
+    "SAFE-001",
+    "SAFE-010",
+    "CKPT-001",
+    "ART-001",
+    "PERF-001",
+    "PERF-002"
+  ],
+  "affected_domains": ["TRAIN","MODEL","RNG","VALID","SAFE","CKPT","ART","PERF"],
+  "duration_class": "LONG_TRAINING_BLOCK",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "source_checkpoint": "runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt",
+    "source_checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "source_hu_ensemble": "runs/lt3_parallel_9105_10105/20260922_132104/hu_ensemble_state.pt",
+    "source_hu_ensemble_sha256": "8d11cb6bce172e24e903ced650c7a7d82aeb2b251c71c3cfc28e37d873ddb62d",
+    "preregistration": "contracts/hu_ens8_continuation_10105_plus469_v1.json"
+  },
+  "scientific_plan": {
+    "domain": "TRUE_HEADS_UP only",
+    "architecture": "Validated V1 ENS8 fresh400; raw-output mean then unchanged lean regret matching.",
+    "updates": 469,
+    "roots_per_update": 273,
+    "new_hu_roots": 128037,
+    "three_handed_training": false,
+    "average_policy_training": false,
+    "strategy_reservoir_collection": false,
+    "strength_benchmark": false,
+    "sealed_holdout": false,
+    "resume_checkpoint_every_updates": 50,
+    "ensemble_snapshot_every_updates": 100
+  },
+  "support_blob_shas": {
+    "contracts/hu_ens8_continuation_10105_plus469_v1.json": "5c1824d2ae767e16e1634b89c8dbde1bee774016",
+    "tools/run_hu_ens8_continuation_10105_plus469.py": "8ed992bc62c85cfa07806594fceca8e2ebfadb0b",
+    "tools/run_hu_ens8_continuation_10105_plus469.sh": "8f6df6af14c114c48fe006746ee1c357f9bdd090",
+    "python_tests/test_hu_ens8_continuation_10105_plus469.py": "9b764953ba2898e2f574f52f68a4b7dc4e7c67b4",
+    "tools/lt3_hu_ens8_parallel_fit.py": "996fc039480f1cf8c952acb9b57d4bd0eaef4e13",
+    "tools/lt3_parallel_continuation_core.py": "9f3c4e3ee14fc1bf73e5435bdee9c55f4a81f683",
+    "python/spincore/lean_functional_training.py": "86a282994295b7d460121bb07ca89c50dfc2c7b8",
+    "python/spincore/lean_parallel.py": "f2e0d0caed54308c67edbca7fac6770a344bcdfe"
+  }
+}
