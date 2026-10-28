@@ -4585,3 +4585,17 @@ The runner now:
 4. keeps the V2 research design and closed K=12 FAIL unchanged.
 
 Next roadmap step remains the same V2 fixed-corpus attribution pilot; no new branch or strategy change is authorized by this incident.
+
+
+### 2026-10-28 — shared-corpus V2 result: MIXED_VARIANCE
+
+The fixed member-01 corpus pilot completed PASS as a research diagnostic. Broad split mean/p95 instability fell to 82.44% / 86.28% of the original-12 levels, while leave-one-out rose to 108.68%. Trips-plus Fold instability did not improve. The preregistered result is therefore MIXED_VARIANCE, not corpus-dominant and not fit-dominant.
+
+Roadmap consequence:
+1. keep the original K=12 FINAL FAIL immutable;
+2. do not scale K, relax thresholds, select members, or open external strength;
+3. do not build a shared-corpus candidate from this one-anchor result;
+4. predeclare a crossed factorial research pilot with multiple deterministic corpus anchors and matched fit seeds;
+5. use a fresh research-only bank not previously inspected;
+6. compare within-corpus fit variance with across-corpus matched-seed variance and quantify interaction;
+7. only then choose whether the next intervention targets collection/corpus standardization, fit/optimization/model stability, or both.
