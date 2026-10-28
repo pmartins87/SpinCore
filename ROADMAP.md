@@ -4656,3 +4656,17 @@ Next engineering task is a dedicated HU-only resumable continuation path from
 the frozen 10105 ENS8 source, followed by a dual-lane block scheduler. It must
 reuse the existing fresh400 ensemble semantics rather than silently training the
 obsolete 3H V1 lane.
+
+
+### 2026-10-28 — HU-only continuation implementation READY
+
+The first continued-HU block is implemented from the frozen 10105 ENS8 source.
+It adds 128,037 HU-only roots (469 updates x273 roots) while preserving the exact
+validated fresh400 eight-member fit semantics and direct raw-output-mean regret-
+matching behavior.
+
+The block intentionally performs zero 3H training and zero AveragePolicy work.
+A clean PASS establishes the resumable HU-only training primitive needed by the
+dual-domain scheduler; it is not a strength claim. After this primitive is
+validated, alternate it with unchanged 3H semantic blocks rather than running
+both heavy trainers concurrently.
