@@ -1,0 +1,60 @@
+{
+  "schema": "SPINCORE_HU_ENS8_CONTINUATION_PREREG_V1",
+  "protocol_id": "HU_ENS8_TEACHER_ONLY_10105_PLUS_469_V1",
+  "frozen_on": "2026-10-28",
+  "status": "PREREGISTERED_RESEARCH_TRAINING_NOT_PROMOTIONAL",
+  "purpose": "Resume TRUE_HEADS_UP learning from the frozen 10105 ENS8 source without touching the divergent 3H semantic lane, using the already-validated HU fresh400 ensemble semantics.",
+  "source": {
+    "checkpoint": "runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt",
+    "checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "hu_ensemble": "runs/lt3_parallel_9105_10105/20260922_132104/hu_ensemble_state.pt",
+    "hu_ensemble_sha256": "8d11cb6bce172e24e903ced650c7a7d82aeb2b251c71c3cfc28e37d873ddb62d",
+    "source_iteration": 10105,
+    "source_artifacts_read_only": true
+  },
+  "training": {
+    "domain": "TRUE_HEADS_UP",
+    "teacher_route": "Eight independent V1 Advantage members -> mean raw outputs -> unchanged lean regret matching.",
+    "ensemble_size": 8,
+    "member_fit_steps": 400,
+    "fit_seed_contract": "Reuse the already-validated fixed HU ENS8 init/batch seeds from lt3_hu_ens8_parallel_fit.py on every update.",
+    "root_behavior": "Current HU ENS8 raw-output mean followed by unchanged lean regret matching.",
+    "roots_per_update": 273,
+    "roots_basis": "Historical HU share round(600 * 0.4548) from the validated mixed LT3 trainer.",
+    "updates_in_block": 469,
+    "new_hu_roots": 128037,
+    "virtual_seed_iteration_start": 10106,
+    "virtual_seed_iteration_end": 10574,
+    "virtual_seed_iteration_note": "Used only to preserve deterministic root deck/policy seed construction; it is not a shared global 3H/HU training iteration.",
+    "sampler": "Resume the frozen 10105 sampler RNG state, then draw TRUE_HEADS_UP episodes only.",
+    "average_policy_training": false,
+    "strategy_reservoir_collection": false,
+    "three_handed_training": false
+  },
+  "execution": {
+    "root_workers": 31,
+    "fit_concurrency": 4,
+    "threads_per_member": 8,
+    "fit_execution": "4 concurrent member processes x 8 Torch threads",
+    "concurrent_with_3h_trainer": false,
+    "resume_checkpoint_every_updates": 50,
+    "ensemble_snapshot_every_updates": 100,
+    "target_host": "Ryzen 9 9950X / 32 logical threads"
+  },
+  "hard_stop_conditions": [
+    "Source checkpoint or source HU ensemble hash drift.",
+    "Any non-finite fit loss or non-finite model tensor.",
+    "Root collection count or domain mismatch.",
+    "Any mutation of frozen source artifacts.",
+    "Any THREE_HANDED training or reservoir mutation.",
+    "Runtime exception, worker failure, or failed resume integrity validation."
+  ],
+  "non_goals": [
+    "No strength benchmark during the training block.",
+    "No sealed holdout access.",
+    "No AveragePolicy or distillation work.",
+    "No HU semantic-architecture experiment in this block.",
+    "No promotion decision."
+  ],
+  "result": "A completed block freezes a new research-only HU ENS8 teacher endpoint. It does not by itself establish strength improvement."
+}
