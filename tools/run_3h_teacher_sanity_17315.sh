@@ -15,7 +15,9 @@ export OPENBLAS_NUM_THREADS=1
 export SPINCORE_TORCH_THREADS=1
 
 SOLVER="${ARTIFACT_ROOT}/build/libspincore_solver_c.so"
-TEACHER="${ARTIFACT_ROOT}/runs/3h_semantic_long_15315_17315/semantic_long_ensemble_final_17315.pt"
+TEACHER_DIR="${ARTIFACT_ROOT}/runs/3h_semantic_long_15315_17315"
+TEACHER="${TEACHER_DIR}/semantic_long_ensemble_final_17315.pt"
+TEACHER_REPORT="${TEACHER_DIR}/3h_semantic_long_15315_17315.json"
 MANIFEST="${CODE_ROOT}/contracts/run_manifests/teacher_sanity_17315.json"
 RUNNER="tools/run_3h_teacher_sanity_17315.sh"
 OUTDIR="${CODE_ROOT}/runs/teacher_sanity_17315"
@@ -23,11 +25,31 @@ REPORT="${OUTDIR}/teacher_sanity_17315.json"
 LOG="${OUTDIR}/teacher_sanity_17315.log"
 mkdir -p "${OUTDIR}"
 
-for path in "${PY}" "${SOLVER}" "${TEACHER}" "${MANIFEST}"; do
+for path in "${PY}" "${SOLVER}" "${TEACHER}" "${TEACHER_REPORT}" "${MANIFEST}"; do
   [[ -e "${path}" ]] || { echo "ERROR: missing prerequisite: ${path}" >&2; exit 2; }
 done
 
 "${PY}" tools/check_stage_manifest.py --manifest "${MANIFEST}" --runner "${RUNNER}"
+
+"${PY}" - "${TEACHER}" "${TEACHER_REPORT}" <<'PY'
+import hashlib,json,sys
+def sha(path):
+    h=hashlib.sha256()
+    with open(path,"rb") as f:
+        for b in iter(lambda:f.read(8*1024*1024),b""):
+            h.update(b)
+    return h.hexdigest()
+teacher,report_path=sys.argv[1:3]
+report=json.load(open(report_path,"r",encoding="utf-8"))
+assert report["status"]=="PASS"
+assert int(report["completed_iteration"])==17315
+assert report["final_safety_guard_pass"] is True
+actual=sha(teacher)
+assert report["final_ensemble_sha256"]==actual
+print("TEACHER_17315_SOURCE_BINDING_PASS")
+print("teacher_sha256="+actual)
+PY
+
 "${PY}" -m py_compile tools/audit_3h_teacher_sanity_17315.py
 
 "${PY}" - <<'PY'
