@@ -4670,3 +4670,24 @@ A clean PASS establishes the resumable HU-only training primitive needed by the
 dual-domain scheduler; it is not a strength claim. After this primitive is
 validated, alternate it with unchanged 3H semantic blocks rather than running
 both heavy trainers concurrently.
+
+
+### 2026-10-28 — HU Semantic ENS8 migration/continuation READY
+
+The short-lived HU V1-only continuation plan is superseded before execution.
+HU now migrates to the same domain-agnostic V1+30-semantic Advantage
+architecture already validated in the 3H lane.
+
+Migration is fail-closed: zero-column embedding of the frozen HU ENS8@10105 must
+match the original V1 ensemble on 20k deterministic HU reservoir states within
+2e-6 raw/policy tolerance and zero argmax mismatches. Only then is an initial
+fresh1600 Semantic ENS8 fit from the accumulated HU Advantage reservoir.
+
+The first online HU semantic block is 469 updates x273 HU roots = 128,037 roots,
+with fresh1600 eight-member semantic refits after every update. No 3H training,
+AveragePolicy fitting, strategy-reservoir collection, sealed holdout, or
+strength benchmark occurs.
+
+This makes direct Semantic ENS8 the intended teacher architecture for both
+domains. The expanded-canonical 3H distillation remains a compression fallback,
+not a prerequisite for teacher training.
