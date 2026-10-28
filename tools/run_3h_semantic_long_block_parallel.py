@@ -8,6 +8,9 @@ serial carrier and replaces only pilot.fit_ensemble with the exact-parity
 process-parallel fitter already validated for the long semantic 3H lane.
 """
 
+# PROJECT_CONTRACT_IDS: GOV-023,GOV-024,PERF-001,PERF-002,PERF-010,PERF-011,PERF-012,PERF-013,PERF-014,PERF-015,PERF-016,PERF-017,PERF-019,PERF-020,TRAIN-020,TRAIN-022,TRAIN-023,TRAIN-024,MODEL-020,MODEL-025,RNG-001,RNG-002,RNG-003,CKPT-001,CKPT-004,SAFE-001,SAFE-002,SAFE-010,VALID-025,VALID-034,VALID-035,ART-001,ART-015
+
+
 import atexit
 import json
 import os
