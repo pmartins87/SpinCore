@@ -4940,3 +4940,19 @@ V2 keeps corpus size/origin fixed:
 
 The K=12 FAIL remains immutable and no strength/promotion evidence is opened.
 
+
+
+## 2026-10-27 — shared-corpus pilot hash-type preflight incident repaired
+
+The first V2 shared-corpus variance-pilot launch stopped before any fit or research-bank generation. The runner compared the protocol file's SHA-256 against the frozen 40-character Git blob SHA, so the identity check was type-inconsistent and could never pass.
+
+Repair on main:
+- preserve frozen protocol identity as Git blob SHA1 `5fd7667926c6112310fe5eca61afff396ad218de`;
+- validate that identity with Git's canonical blob-hash construction;
+- separately compute the protocol SHA-256 and use that 64-character digest for durable member/cache/artifact validation, matching the already-built K=8/K=12 evidence;
+- add regression coverage that explicitly distinguishes Git blob SHA1 from file SHA-256;
+- refresh the READY stage manifest support blobs.
+
+Scientific status is unchanged: no pilot replica was fitted, no fresh research state was generated, and no result was observed. The V2 preregistration, fixed member-01 corpus, fit seeds, fresh seed 153159501, 40k episode budget, attribution bands, and closed K=12 FAIL all remain unchanged.
+
+Next action: rerun only `tools/run_post15315_shared_corpus_variance_pilot.sh` after pulling main. Any further failure is a mechanical stop and must be inspected before retry.
