@@ -4691,3 +4691,28 @@ strength benchmark occurs.
 This makes direct Semantic ENS8 the intended teacher architecture for both
 domains. The expanded-canonical 3H distillation remains a compression fallback,
 not a prerequisite for teacher training.
+
+
+### 2026-10-28 — Three-month alternating Semantic ENS8 training plan READY
+
+Long-horizon compute is now frozen as an alternating fixed-root plan using the
+same direct Semantic ENS8 teacher architecture in both domains.
+
+Budget:
+- HU: 11 blocks total including the currently-running migration/+469 block,
+  469 updates x273 roots per block, ending at cumulative update 5159 and
+  1,408,407 new HU roots since the 10105 source;
+- 3H: 11 blocks x2000 semantic iterations x64 roots, ending at 39315 and
+  1,408,000 new 3H roots.
+
+Execution is sequential, one heavy trainer at a time:
+current HU block -> 3H -> HU -> 3H -> ... -> final 3H block.
+
+Generic resumable carriers now exist for both domains and the fail-closed
+orchestrator is `tools/run_three_month_training_v1.py`. It persists stage
+state, revalidates hashes/PASS reports after reboot, never performs an automatic
+git pull, and stops on integrity/safety/runtime failure rather than selecting a
+checkpoint from short-horizon strength noise.
+
+The plan is compute-budget based, approximately three months on the measured
+Ryzen workload, not an exact calendar deadline.
