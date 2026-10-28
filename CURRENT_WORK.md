@@ -5148,3 +5148,50 @@ Stage manifest:
 
 A clean PASS yields a HU Semantic ENS8 teacher endpoint. It is training/integrity
 evidence only, not a strength or promotion claim.
+
+
+## 2026-10-28 — Three-month alternating Semantic ENS8 training plan READY
+
+The long-horizon training carrier is now prepared without touching the HU block
+currently running on the Ryzen host.
+
+Frozen plan:
+- `contracts/three_month_training_plan_v1.json`;
+- direct Semantic Advantage ENS8 remains the teacher architecture in both HU and
+  THREE_HANDED;
+- one heavy trainer at a time; no HU/3H simultaneous CPU sharing;
+- fixed-root alternation, not results-driven checkpoint selection;
+- current HU migration/+469 block counts as HU block 01;
+- after that PASS, the orchestrated sequence begins with 3H 17315->19315,
+  then HU cumulative 469->938, then alternates the same root budget;
+- eleven HU blocks total including the current block:
+  5,159 cumulative HU-only updates / 1,408,407 roots since the 10105 semantic
+  migration source;
+- eleven 3H blocks:
+  +22,000 semantic iterations / 1,408,000 roots, ending at 39315;
+- each HU block remains 469x273=128,037 roots with ENS8 fresh1600;
+- each 3H block remains 2000x64=128,000 roots with ENS8 fresh1600 and safety
+  milestones every 500 iterations;
+- no AveragePolicy training or strength selection occurs inside the long blocks.
+
+New generic carriers:
+- `tools/run_hu_semantic_ens8_long_block.py`;
+- `tools/run_3h_semantic_long_block.py`;
+- `tools/run_3h_semantic_long_block_parallel.py`.
+
+First prepared post-current blocks:
+- `tools/run_3h_semantic_long_17315_19315.sh`;
+- `tools/run_hu_semantic_ens8_long_cum469_938.sh`.
+
+Orchestrator:
+- `tools/run_three_month_training_v1.py`;
+- durable state under `runs/three_month_training_v1/orchestrator_state.json`;
+- revalidates prior PASS endpoints on restart and resumes the first incomplete
+  stage;
+- no automatic git pull/source mutation;
+- stops fail-closed on source-hash drift, memory/integrity failure, safety stop,
+  non-zero trainer exit, or user interruption.
+
+The three-month label is a compute-budget planning target rather than a
+wall-clock cutoff. The frozen 11x11 root budget should be completed even if the
+actual calendar duration differs from the estimate, unless a hard stop fires.
