@@ -293,8 +293,8 @@ def load_canonical_corpora(
         raise RuntimeError("fixed canonical fullpool size drift")
     if len(expanded_ordinary) < len(fixed_ordinary):
         raise RuntimeError("expanded ordinary unexpectedly smaller than fixed")
-    if len(expanded_novel) < len(fixed_novel):
-        raise RuntimeError("expanded novel unexpectedly smaller than fixed")
+    if len(expanded_full) <= len(fixed_full):
+        raise RuntimeError("expanded canonical fullpool is not larger than fixed")
     if len(expanded_specialist) < len(fixed_specialist):
         raise RuntimeError("expanded specialist unexpectedly smaller than fixed")
 
