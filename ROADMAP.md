@@ -4625,3 +4625,34 @@ Roadmap consequence: standardize teacher-target corpus construction before anoth
 Both new treatments reuse the exact eight V2 fit-seed pairs. The unchanged original K=8 stability evaluator and thresholds are applied separately to all three groups after original rare-surface coverage minima pass.
 
 Frozen branches: control PASS -> bank-sensitivity stop; control FAIL + fixed PASS -> standardization sufficient; control FAIL + fixed FAIL + expanded PASS -> expansion required; all canonical FAIL -> corpus-only intervention insufficient. No result in this stage promotes a policy or opens strength.
+
+
+### 2026-10-28 — training-first correction: both 3H and HU remain active
+
+The project is now explicitly training-first for **both** poker domains.
+
+The previous HU freeze was a diagnostic containment decision while the 3H
+semantic representation problem was being repaired. It is not evidence that HU
+is fully trained. HU had received meaningful training through 10105, including
+the validated fresh400 ENS8 path, but there is no basis for treating that point
+as a final learning horizon.
+
+Active training architecture:
+- 3H: continue the validated semantic-Advantage ENS8 teacher from 17315;
+- HU: independently continue the validated V1 ENS8 fresh400 teacher from the
+  10105 sidecar/reservoir;
+- direct teacher inference is the primary deployment hypothesis for both domains;
+- expanded-canonical distillation remains a stable compression fallback for 3H.
+
+Resource/scheduling rule: never run both heavy trainers concurrently on the
+Ryzen. Alternate durable root-balanced blocks. Default block exposure is about
+128k new roots per domain: 3H 2000x64=128000; HU 469x273=128037 using the
+historical HU share from the validated 600-root mixed trainer. Preserve
+checkpoints/endpoints and use only hard safety/integrity conditions to interrupt
+training. Strategic strength comparisons occur at materially separated
+checkpoints and do not block routine continuation.
+
+Next engineering task is a dedicated HU-only resumable continuation path from
+the frozen 10105 ENS8 source, followed by a dual-lane block scheduler. It must
+reuse the existing fresh400 ensemble semantics rather than silently training the
+obsolete 3H V1 lane.
