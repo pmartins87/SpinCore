@@ -41,6 +41,7 @@ from spincore.decision_sanity import (
     effective_stack_bb,
     evaluate_visible_hand,
     flag_to_dict,
+    immediate_straight_flush_draw_outs,
     preflop_class,
     sanity_flags,
 )
@@ -199,6 +200,11 @@ def _opportunity_codes(trace) -> list[str]:
             out.append("POSTFLOP_TOP_PAIR_FOLD")
     if category == 0 and effective_stack_bb(trace) >= 10.0 and "ALL_IN" in legal:
         out.append("POSTFLOP_DEEP_HIGH_CARD_JAM")
+        straight_outs, flush_outs = immediate_straight_flush_draw_outs(
+            hole, trace.board
+        )
+        if not (straight_outs or flush_outs):
+            out.append("POSTFLOP_DEEP_HIGH_CARD_JAM_NO_DRAW")
     return out
 
 
@@ -214,6 +220,7 @@ def _target_action_for_opportunity(code: str) -> str:
     if code in {
         "PREFLOP_DEEP_72O_JAM",
         "POSTFLOP_DEEP_HIGH_CARD_JAM",
+        "POSTFLOP_DEEP_HIGH_CARD_JAM_NO_DRAW",
     }:
         return "ALL_IN"
     raise RuntimeError(f"unknown sanity opportunity code: {code}")
