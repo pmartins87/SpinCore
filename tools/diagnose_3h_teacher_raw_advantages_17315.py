@@ -228,6 +228,139 @@ def worker(task):
     return out
 
 
+
+def _member_policy_mechanism(detail: dict[str, Any]) -> dict[str, Any]:
+    selected = str(detail.get("selected_slot_name"))
+    legal_slots = [int(x) for x in detail.get("legal_slots") or []]
+    legal_names = [str(x) for x in detail.get("legal_names") or []]
+    if not legal_slots or len(legal_slots) != len(legal_names):
+        raise RuntimeError("raw diagnostic lacks legal slot/name mapping")
+    name_to_slot = dict(zip(legal_names, legal_slots))
+    if selected not in name_to_slot:
+        raise RuntimeError("selected action is not legal in raw diagnostic")
+    selected_slot = int(name_to_slot[selected])
+    width = max(10, max(legal_slots) + 1)
+
+    member_selected_probs = []
+    member_selected_raw = []
+    member_selected_positive = 0
+    member_selected_argmax = 0
+    member_selected_policy_argmax = 0
+
+    members = list(detail.get("member_raw_advantages") or [])
+    for row in members:
+        raw = [0.0] * width
+        for name, slot in name_to_slot.items():
+            raw[int(slot)] = float(row[name])
+        sigma = lean_regret_matching_policy(raw, tuple(legal_slots))
+        sraw = float(raw[selected_slot])
+        sprob = float(sigma[selected_slot])
+        member_selected_raw.append(sraw)
+        member_selected_probs.append(sprob)
+        if sraw > 0.0:
+            member_selected_positive += 1
+        legal_raw = [float(raw[a]) for a in legal_slots]
+        if sraw >= max(legal_raw) - 1e-12:
+            member_selected_argmax += 1
+        legal_prob = [float(sigma[a]) for a in legal_slots]
+        if sprob >= max(legal_prob) - 1e-12:
+            member_selected_policy_argmax += 1
+
+    mean_raw = dict(detail.get("mean_raw_advantages") or {})
+    selected_mean_raw = float(mean_raw[selected])
+    other_mean_raw = [
+        float(mean_raw[name]) for name in legal_names if name != selected
+    ]
+    sole_positive = bool(
+        selected_mean_raw > 0.0
+        and all(value <= 0.0 for value in other_mean_raw)
+    )
+    ensemble_prob = float((detail.get("sigma") or {})[selected])
+    mixture_prob = (
+        0.0 if not member_selected_probs
+        else float(np.mean(member_selected_probs))
+    )
+    gap = ensemble_prob - mixture_prob
+
+    return {
+        "selected_action": selected,
+        "ensemble_selected_probability": ensemble_prob,
+        "member_policy_mixture_selected_probability": mixture_prob,
+        "ensemble_minus_member_mixture_probability": gap,
+        "member_selected_raw_mean": (
+            None if not member_selected_raw else float(np.mean(member_selected_raw))
+        ),
+        "member_selected_raw_min": (
+            None if not member_selected_raw else float(np.min(member_selected_raw))
+        ),
+        "member_selected_raw_max": (
+            None if not member_selected_raw else float(np.max(member_selected_raw))
+        ),
+        "member_selected_positive_count": int(member_selected_positive),
+        "member_selected_raw_argmax_count": int(member_selected_argmax),
+        "member_selected_policy_argmax_count": int(member_selected_policy_argmax),
+        "member_count": len(members),
+        "ensemble_selected_is_sole_positive_mean_raw": sole_positive,
+        "ensemble_extreme_probability_ge_80pct": bool(ensemble_prob >= 0.80),
+        "raw_mean_amplification_ge_25pp": bool(gap >= 0.25),
+        "extreme_with_no_member_majority": bool(
+            ensemble_prob >= 0.80 and member_selected_policy_argmax < 4
+        ),
+    }
+
+
+def _mechanism_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        groups.setdefault(str(row["flag_code"]), []).append(row)
+    out: dict[str, Any] = {}
+    for code, items in sorted(groups.items()):
+        mech = [row["mechanism"] for row in items]
+        def mean(key: str):
+            vals = [float(x[key]) for x in mech if x.get(key) is not None]
+            return None if not vals else float(np.mean(vals))
+        out[code] = {
+            "count": len(items),
+            "mean_ensemble_selected_probability": mean(
+                "ensemble_selected_probability"
+            ),
+            "mean_member_policy_mixture_selected_probability": mean(
+                "member_policy_mixture_selected_probability"
+            ),
+            "mean_ensemble_minus_member_mixture_probability": mean(
+                "ensemble_minus_member_mixture_probability"
+            ),
+            "max_ensemble_minus_member_mixture_probability": (
+                None if not mech else max(
+                    float(x["ensemble_minus_member_mixture_probability"])
+                    for x in mech
+                )
+            ),
+            "mean_member_selected_positive_count": mean(
+                "member_selected_positive_count"
+            ),
+            "mean_member_selected_policy_argmax_count": mean(
+                "member_selected_policy_argmax_count"
+            ),
+            "sole_positive_mean_raw_count": sum(
+                bool(x["ensemble_selected_is_sole_positive_mean_raw"])
+                for x in mech
+            ),
+            "ensemble_extreme_ge_80pct_count": sum(
+                bool(x["ensemble_extreme_probability_ge_80pct"])
+                for x in mech
+            ),
+            "raw_mean_amplification_ge_25pp_count": sum(
+                bool(x["raw_mean_amplification_ge_25pp"])
+                for x in mech
+            ),
+            "extreme_with_no_member_majority_count": sum(
+                bool(x["extreme_with_no_member_majority"])
+                for x in mech
+            ),
+        }
+    return out
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--solver", type=Path, required=True)
@@ -306,12 +439,14 @@ def main() -> int:
             mismatches.append({"key": key, "expected": exp_slot, "got": got_slot})
         flag_code = str(exp["flag"]["code"])
         detail = row["policy_detail"]
+        mechanism = _member_policy_mechanism(detail)
         matched.append(
             {
                 **row,
                 "flag_code": flag_code,
                 "expected_selected_slot_name": exp_slot,
                 "replay_selected_slot_matches": got_slot == exp_slot,
+                "mechanism": mechanism,
             }
         )
 
@@ -343,10 +478,13 @@ def main() -> int:
         "selection_mismatches": mismatches,
         "branch_counts": branch_counts,
         "branch_by_flag": branch_by_flag,
+        "mechanism_by_flag": _mechanism_summary(matched),
         "rows": matched,
         "interpretation": {
             "SOFTMAX_FALLBACK": "Every legal ensemble-mean raw Advantage was non-positive; canonical lean policy therefore used softmax over raw values.",
             "POSITIVE_REGRET_MATCHING": "At least one legal ensemble-mean raw Advantage was positive; canonical lean regret matching normalized positive Advantages and zeroed non-positive ones.",
+            "raw_mean_amplification": "Compares the selected-action probability after regret matching the mean raw Advantage vector against the mean probability obtained by regret matching each member separately. A large positive gap exposes aggregation amplification.",
+            "extreme_with_no_member_majority": "Flags >=80% ensemble probability when fewer than four of eight member policies individually have the selected action as an argmax.",
             "scope": "Root-cause diagnostic only. No model selection, policy mutation, or promotion claim.",
         },
     }
@@ -358,6 +496,7 @@ def main() -> int:
     print(f"matched={len(matched)}/{expected_count}")
     print("branch_counts=" + json.dumps(branch_counts, sort_keys=True))
     print("branch_by_flag=" + json.dumps(branch_by_flag, sort_keys=True))
+    print("mechanism_by_flag=" + json.dumps(report["mechanism_by_flag"], sort_keys=True))
     print(f"selection_mismatches={len(mismatches)} missing={len(missing)}")
     print(f"report={args.report.resolve()}")
     print("SPINCORE_3H_TEACHER_RAW_ADVANTAGE_17315_COMPLETE")
