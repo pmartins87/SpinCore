@@ -151,7 +151,10 @@ def migration_parity(source_states, semantic_states, samples, *, batch_size: int
         )
         v1.load_state_dict(v1_state)
         v1.eval()
-        sem = make_semantic_advantage_model(index)
+        sem = make_semantic_advantage_model(
+            index,
+            legacy_exact_zero_mode=True,
+        )
         sem.load_state_dict(sem_state)
         sem.eval()
         v1_models.append(v1)
