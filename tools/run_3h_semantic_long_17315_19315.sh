@@ -118,7 +118,7 @@ assert int(report["completed_iteration"])==17315
 assert report["final_safety_guard_pass"] is True
 assert report["final_ensemble_sha256"]==sha(sys.argv[2])
 assert report["resume_state_sha256"]==sha(sys.argv[1])
-print("SEMANTIC_LONG_15315_SOURCE_PASS")
+print("SEMANTIC_LONG_17315_SOURCE_PASS")
 print("source_final_ensemble_sha256="+report["final_ensemble_sha256"])
 print("source_resume_sha256="+report["resume_state_sha256"])
 PY
