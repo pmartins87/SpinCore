@@ -4956,3 +4956,24 @@ Repair on main:
 Scientific status is unchanged: no pilot replica was fitted, no fresh research state was generated, and no result was observed. The V2 preregistration, fixed member-01 corpus, fit seeds, fresh seed 153159501, 40k episode budget, attribution bands, and closed K=12 FAIL all remain unchanged.
 
 Next action: rerun only `tools/run_post15315_shared_corpus_variance_pilot.sh` after pulling main. Any further failure is a mechanical stop and must be inspected before retry.
+
+
+## 2026-10-28 — shared-corpus V2 result: MIXED_VARIANCE
+
+The research-only fixed-corpus attribution pilot completed mechanically clean:
+- exact member-01 corpus reconstructed: 26,798 ordinary train samples, 29,443 fullpool samples, 4,125 specialist unique states;
+- eight independent fit replicas completed on that identical corpus;
+- fresh research-only bank seed 153159501 completed 40,000 forced THREE_HANDED episodes / 166,207 decision states;
+- all original 12 and all shared-corpus 8 policies evaluated successfully;
+- runner and shell status: PASS / exit status 0; no swap.
+
+Observed attribution ratios, fixed-corpus K8 divided by original K12 on the identical fresh bank:
+- broad worst split mean TV: 0.8244071643;
+- broad worst split statewise p95 TV: 0.8627647540;
+- leave-one-out worst mean TV: 1.0868393094.
+
+Under the preregistered <=0.70 / >=0.90 bands the result is **MIXED_VARIANCE**. Fixing corpus identity reduced broad split divergence by about 17.6% in mean and 13.7% in p95, which establishes a real corpus-support contribution but not dominance. The trips-plus Fold surface did not improve: mean delta was essentially unchanged (0.0242901 -> 0.0243761) and p95 worsened (0.127548 -> 0.139029). The shared-corpus leave-one-out metric also worsened slightly.
+
+Interpretation: corpus heterogeneity contributes to rebuild variance, but removing it is insufficient. Fit/optimization/model sensitivity remains material, and interaction between corpus and fit cannot be separated by the one-anchor V2 design. The immutable K=12 FAIL remains closed; this pilot cannot promote any policy or open strength evidence.
+
+Next research gate is a predeclared crossed factorial pilot using multiple deterministic corpus anchors and matched fit seeds on a never-observed fresh bank. It must compare within-corpus fit-seed variance against across-corpus matched-fit-seed variance and report interaction-sensitive decomposition before any new candidate design.
