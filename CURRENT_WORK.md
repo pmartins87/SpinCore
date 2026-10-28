@@ -5029,3 +5029,63 @@ Frozen branch logic:
 - control FAIL + both canonical FAIL -> CANONICAL_CORPUS_INSUFFICIENT.
 
 A canonical treatment PASS is research evidence for designing a new candidate family only. It is not promotion and does not open external strength.
+
+
+## 2026-10-28 — training-first correction: both 3H and HU remain active
+
+The canonical-corpus pilot completed mechanically clean on the fresh seed-153159503
+100k bank. Result: **EXPANSION_REQUIRED**.
+- control8: FAIL;
+- fixed-size canonical8: FAIL;
+- expanded canonical8: PASS;
+- expanded broad mean TV = 0.0274723 <= 0.03;
+- expanded broad p95 TV = 0.0912879 <= 0.12;
+- expanded leave-one-out = 0.0052650 <= 0.01;
+- expanded trips+ Fold mean = 0.0149943 <= 0.02;
+- expanded trips+ Fold p95 = 0.0823340 <= 0.10.
+
+This closes the immediate rebuild-stability research question. The expanded
+canonical corpus is retained as a proven stable distillation/compression fallback,
+not as the required primary deployment path.
+
+Primary strategic simplification:
+- THREE_HANDED primary candidate path becomes the direct eight-member semantic
+  Advantage teacher followed by unchanged lean regret matching;
+- TRUE_HEADS_UP already uses the analogous direct eight-member raw-Advantage
+  ensemble route and remains a first-class training target;
+- AveragePolicy/fullpool/specialist distillation is now optional compression/
+  deployment fallback, not a prerequisite for further teacher training.
+
+User direction explicitly corrects the prior conservative HU freeze: both domains
+must continue accumulating training unless a hard safety/integrity condition
+stops a lane. Lack of a resolved strength gain at an earlier HU checkpoint is
+not evidence that HU is fully trained or that additional HU training is
+unnecessary.
+
+Training-first dual-lane plan:
+1. preserve all existing 3H and HU source artifacts read-only;
+2. 3H resumes from the semantic teacher @17315 with the same validated semantic-
+   online algorithm and direct-teacher behavior;
+3. HU resumes independently from the 10105 HU ENS8 sidecar/reservoir using the
+   already-validated ENS8 fresh400 architecture and raw-output mean + lean regret
+   matching;
+4. do not run the two CPU-heavy trainers concurrently on the Ryzen; alternate
+   durable blocks so each lane receives continued root exposure without resource
+   contention;
+5. use root-balanced blocks as the default scheduling unit: 3H blocks of 2,000
+   semantic iterations x64 roots = 128,000 roots; HU blocks should target the
+   closest deterministic HU-root count using the historical 273 HU roots/iteration
+   implied by 600 roots x heads_up_prob 0.4548 (469 HU updates = 128,037 roots);
+6. retain the independently validated fit budgets: 3H semantic ENS8 x1600 and HU
+   ENS8 fresh400; do not invent a new HU semantic architecture as a prerequisite
+   to training;
+7. milestones are integrity/safety/checkpoint events, not mandatory strength
+   promotion tests. Preserve every durable endpoint so later evaluation can pick
+   among checkpoints without rewriting history;
+8. deployment feasibility is a separate downstream gate: benchmark direct 3H
+   semantic ENS8 inference on the actual i3/OpenHoldem host. If direct teacher
+   latency is unacceptable, the expanded-corpus stable distillation path remains
+   available.
+
+No further K>12, factorial, or corpus-search work is required before resuming
+teacher training.
