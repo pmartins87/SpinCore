@@ -4996,3 +4996,36 @@ Frozen research classification:
 - otherwise MIXED_INTERACTION.
 
 The stage is research-only. It cannot reopen K=12, promote any cell, select/weight members, relax thresholds, run K>12 or open external strength.
+
+
+## 2026-10-28 — factorial result: CORPUS_CONDITIONED_LARGER; canonical corpus stabilization pilot READY
+
+The preregistered 4x4 factorial research pilot completed mechanically clean:
+- 16 crossed fits completed for corpus anchors 1,4,7,10 x matched fit-seed ids 1-4;
+- fresh seed 153159502 / 40,000 forced THREE_HANDED episodes produced 166,229 common decision states;
+- corpus-conditioned mean TV = 0.0800823734 versus fit-only mean TV = 0.0596272881, ratio 1.3430490636;
+- corpus-conditioned p95 TV = 0.2898775265 versus fit-only p95 TV = 0.2132851779, ratio 1.3591076945;
+- two-way probability-space variance shares: corpus 0.5111956297, fit seed 0.1195698990, corpus-by-fit interaction 0.3692344713;
+- preregistered attribution: CORPUS_CONDITIONED_LARGER;
+- runner/shell PASS, exit 0, no swap.
+
+Interpretation: corpus identity is the largest isolated variance component, while the large interaction means fitting remains sensitive to which corpus it sees. This supports standardizing corpus construction before designing another candidate, but does not authorize cherry-picking any factorial cell or reopening the failed K=12 candidate.
+
+The next research gate is preregistered and implemented as the canonical corpus stabilization pilot:
+1. reuse the existing eight member-01 V2 replicas as the no-refit control;
+2. build a deterministic four-anchor canonical union from the already-frozen caches of members 1,4,7,10, hard-failing duplicate state/legal keys with target drift;
+3. fixed-size canonical treatment uses exactly the V2 control structural counts: 26,798 ordinary + 2,645 novel strong = 29,443 fullpool, plus 4,125 specialist states;
+4. expanded canonical treatment uses every unique eligible sample from the same four-anchor union;
+5. both treatments use the exact same eight V2 fit-seed pairs, 500 fullpool steps and 25 specialist steps;
+6. no new teacher collection occurs;
+7. all control8 + fixed8 + expanded8 policies are evaluated on one never-observed seed 153159503 / 100,000-episode bank;
+8. require the original 72o/trips+/high-card surface minima before any stability interpretation;
+9. apply the unchanged original K=8 stability evaluator and thresholds separately to each group.
+
+Frozen branch logic:
+- control PASS -> BANK_SENSITIVITY_STOP and require another confirmation bank;
+- control FAIL + fixed canonical PASS -> STANDARDIZATION_SUFFICIENT;
+- control FAIL + fixed FAIL + expanded PASS -> EXPANSION_REQUIRED;
+- control FAIL + both canonical FAIL -> CANONICAL_CORPUS_INSUFFICIENT.
+
+A canonical treatment PASS is research evidence for designing a new candidate family only. It is not promotion and does not open external strength.
