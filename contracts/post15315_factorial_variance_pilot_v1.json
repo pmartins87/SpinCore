@@ -1,0 +1,82 @@
+{
+  "schema": "SPINCORE_POST15315_FACTORIAL_VARIANCE_PILOT_V1",
+  "protocol_id": "POST15315_CROSSED_CORPUS_FIT_VARIANCE_ATTRIBUTION_V1",
+  "frozen_on": "2026-10-28",
+  "status": "PREREGISTERED_RESEARCH_ONLY_NOT_PROMOTIONAL",
+  "trigger_evidence": {
+    "required_prior_report": "runs/post15315_shared_corpus_variance_pilot/post15315_shared_corpus_variance_pilot_report.json",
+    "required_prior_schema": "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_RESULT_V2",
+    "required_prior_status": "PASS",
+    "required_attribution_result": "MIXED_VARIANCE"
+  },
+  "purpose": "Separate corpus-conditioned rebuild variance from fit-seed variance after the one-anchor shared-corpus V2 pilot classified the source as mixed.",
+  "immutable_prior_failure": {
+    "k12_result": "FINAL_FAIL",
+    "rule": "This pilot cannot reopen, promote, reweight, subset-select, or otherwise rehabilitate the failed K=12 candidate."
+  },
+  "corpus_factor": {
+    "anchor_members": [1, 4, 7, 10],
+    "selection_rule": "Deterministic stride-3 anchors starting at the lowest member id; chosen without using member strength, stability rank, pathology rank, or diagnostic desirability.",
+    "corpus_size_rule": "Each cell uses exactly one anchor member's original-size reconstructed final fullpool and specialist corpus. No pooling and no enlargement.",
+    "anchor_cache_locations": {
+      "1": "runs/post15315_multirebuild_k8/member_01_collection_cache.pt",
+      "4": "runs/post15315_multirebuild_k8/member_04_collection_cache.pt",
+      "7": "runs/post15315_multirebuild_k8/member_07_collection_cache.pt",
+      "10": "runs/post15315_multirebuild_k12_extension/member_10_collection_cache.pt"
+    }
+  },
+  "fit_factor": {
+    "matched_fit_seed_ids": [1, 2, 3, 4],
+    "fullpool_fit_seeds": [153162001, 153162002, 153162003, 153162004],
+    "specialist_fit_seeds": [153163001, 153163002, 153163003, 153163004],
+    "crossing_rule": "Every corpus anchor is fitted once with each matched fit-seed id, producing exactly 16 cells.",
+    "start_state": "FROZEN_FINALIZED_10105_AVERAGE_POLICY_AND_OPTIMIZER",
+    "fullpool_fit_steps": 500,
+    "specialist_fit_steps": 25,
+    "fit_threads": 8,
+    "execution": "Sequential fits; no fit fanout.",
+    "tail_fit": "OMITTED_BECAUSE_TAIL_ARTIFACT_IS_NOT_IN_FINAL_FULLPOOL_SPECIALIST_ROUTE"
+  },
+  "fresh_research_bank": {
+    "seed": 153159502,
+    "forced_three_handed_episodes": 40000,
+    "lineage_iteration": 15315,
+    "use": "RESEARCH_ATTRIBUTION_ONLY_NOT_PROMOTION",
+    "identical_states_required": true,
+    "never_observed_before_preregistration": true
+  },
+  "primary_metrics": {
+    "fit_only": "For each corpus anchor, compute all six pairwise TVs among the four fit-seed cells; aggregate statewise mean and p95 over anchors.",
+    "corpus_conditioned": "For each matched fit-seed id, compute all six pairwise TVs among the four corpus-anchor cells; aggregate statewise mean and p95 over fit-seed ids.",
+    "comparison_ratios": [
+      "corpus_conditioned_mean_tv / fit_only_mean_tv",
+      "corpus_conditioned_p95_tv / fit_only_p95_tv"
+    ],
+    "interaction_decomposition": "Two-way crossed probability-space sum-of-squares over corpus, fit seed, and corpus-by-fit residual interaction; report normalized shares."
+  },
+  "secondary_metrics": [
+    "The same fit-only and corpus-conditioned comparisons on preflop 72o ALL_IN-legal states.",
+    "The same comparisons on postflop trips-plus Fold-legal states.",
+    "The same comparisons on postflop high-card/no-immediate-draw ALL_IN-legal states.",
+    "Per-action probability dispersion for FOLD, CHECK_CALL, POT_33, POT_50, POT_75, POT_100, and ALL_IN."
+  ],
+  "classification_rule": {
+    "corpus_conditioned_larger": "Both corpus/fit mean-TV and p95-TV ratios >= 1.25.",
+    "fit_seed_larger": "Both corpus/fit mean-TV and p95-TV ratios <= 0.80.",
+    "mixed_interaction": "Any other result.",
+    "note": "These are research attribution bands, not promotion thresholds. The interaction share is mandatory context and can prevent overinterpreting either directional label."
+  },
+  "next_branch_rule": {
+    "corpus_conditioned_larger": "Investigate standardized/expanded teacher-target corpus construction before any new candidate; confirm on a separately preregistered bank.",
+    "fit_seed_larger": "Investigate optimization/model/loss stability before any new candidate; do not spend more teacher collection first.",
+    "mixed_interaction": "Design a targeted intervention addressing both fit stability and corpus coverage, then validate it as a new candidate under a new preregistration."
+  },
+  "exclusions": [
+    "No external strength benchmark.",
+    "No promotion decision.",
+    "No K>12.",
+    "No member selection, dropping, weighting, reseeding, or threshold relaxation.",
+    "No training on any prior stability or research evaluation bank.",
+    "No use of current pilot outcomes to choose corpus anchors or fit seeds."
+  ]
+}
