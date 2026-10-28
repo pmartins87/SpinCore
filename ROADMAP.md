@@ -4599,3 +4599,11 @@ Roadmap consequence:
 5. use a fresh research-only bank not previously inspected;
 6. compare within-corpus fit variance with across-corpus matched-seed variance and quantify interaction;
 7. only then choose whether the next intervention targets collection/corpus standardization, fit/optimization/model stability, or both.
+
+
+
+### 2026-10-28 — factorial variance pilot implementation READY
+
+The next research gate is now frozen as a 4 corpus-anchor x 4 matched-fit-seed crossed design (16 cells) on fresh seed 153159502 / 40k episodes. It directly compares within-corpus fit variance with across-corpus matched-seed variance and reports a two-way corpus/fit/interaction decomposition.
+
+Classification is frozen before results: both corpus/fit mean+p95 ratios >=1.25 -> corpus-conditioned larger; both <=0.80 -> fit-seed larger; otherwise MIXED_INTERACTION. This remains research-only and cannot reopen the failed K=12 candidate or open strength evidence.
