@@ -4977,3 +4977,22 @@ Under the preregistered <=0.70 / >=0.90 bands the result is **MIXED_VARIANCE**. 
 Interpretation: corpus heterogeneity contributes to rebuild variance, but removing it is insufficient. Fit/optimization/model sensitivity remains material, and interaction between corpus and fit cannot be separated by the one-anchor V2 design. The immutable K=12 FAIL remains closed; this pilot cannot promote any policy or open strength evidence.
 
 Next research gate is a predeclared crossed factorial pilot using multiple deterministic corpus anchors and matched fit seeds on a never-observed fresh bank. It must compare within-corpus fit-seed variance against across-corpus matched-fit-seed variance and report interaction-sensitive decomposition before any new candidate design.
+
+
+### 2026-10-28 — factorial variance pilot implementation READY
+
+The MIXED_VARIANCE follow-up is now preregistered and implemented as a research-only 4x4 crossed design:
+- corpus anchors: members 1, 4, 7, 10 by deterministic stride-3 rule;
+- matched fit-seed ids: 1-4, applied to every anchor;
+- total cells: 16;
+- fullpool/specialist budgets remain 500/25 with eight fit threads and sequential execution;
+- fresh evaluation seed: 153159502 over 40,000 forced THREE_HANDED episodes;
+- primary comparison: within-corpus fit-seed TV versus across-corpus matched-fit-seed TV;
+- mandatory balanced two-way probability-space decomposition reports corpus, fit-seed and interaction shares.
+
+Frozen research classification:
+- corpus-conditioned larger only if both mean-TV and p95-TV corpus/fit ratios >=1.25;
+- fit-seed larger only if both ratios <=0.80;
+- otherwise MIXED_INTERACTION.
+
+The stage is research-only. It cannot reopen K=12, promote any cell, select/weight members, relax thresholds, run K>12 or open external strength.
