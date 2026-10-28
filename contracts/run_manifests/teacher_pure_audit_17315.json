@@ -1,0 +1,118 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "TEACHER_PURE_AUDIT_17315",
+  "status": "READY",
+  "runner": "tools/run_3h_teacher_pure_audit_17315.sh",
+  "runner_blob_sha": "161c023b52015f2498ecb9ac0f84c9a5c766bbac",
+  "contract_ids": [
+    "DC-002",
+    "SAFE-001",
+    "SAFE-011",
+    "VALID-025",
+    "VALID-031",
+    "VALID-040",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
+  ],
+  "affected_domains": [
+    "DC",
+    "SAFE",
+    "VALID",
+    "RNG"
+  ],
+  "duration_class": "MEDIUM_DIAGNOSTIC",
+  "target_host_profile": "RYZEN_9_9950X_FREE_16CPU",
+  "source_stage": {
+    "stage_id": "SEMANTIC_LONG_15315_17315_TRAVEL_WEEK",
+    "required_status": "PASS",
+    "required_completed_iteration": 17315,
+    "source_binding": "RUNTIME_BIND_TO_FINAL_PASS_REPORT_SHA_FIELDS",
+    "rationale": "Audit must use the exact final teacher 17315 ensemble bound to the PASS report; iteration label alone is insufficient."
+  },
+  "scientific_plan": {
+    "purpose": "Determine whether the pure direct Semantic Advantage ENS8 teacher @17315 still produces gross/suspicious poker actions, and identify whether any extreme policy comes from member consensus or raw-mean/regret-matching amplification.",
+    "teacher_iteration": 17315,
+    "scenarios": 10000,
+    "seed": 20261025,
+    "domain": "THREE_HANDED_ONLY",
+    "opponent": "frozen DeepCrusher development opponent",
+    "stages": [
+      "sampled-action sanity flags plus all-opportunity policy probabilities",
+      "raw eight-member Advantage replay on all sampled flags plus top-20 probability states per policy surface",
+      "counterfactual checkpoint trend on the same flagged 17315 states at 10315/14815/15315/17315",
+      "consolidated human-review summary"
+    ],
+    "sampled_action_surfaces": [
+      "PREFLOP_AA_FOLD",
+      "PREFLOP_DEEP_72O_JAM",
+      "POSTFLOP_MONSTER_FOLD",
+      "POSTFLOP_TRIPS_PLUS_FOLD",
+      "POSTFLOP_TOP_PAIR_FOLD",
+      "POSTFLOP_DEEP_HIGH_CARD_JAM"
+    ],
+    "policy_probability_surfaces": [
+      "PREFLOP_AA_FOLD",
+      "PREFLOP_DEEP_72O_JAM",
+      "POSTFLOP_MONSTER_FOLD",
+      "POSTFLOP_TRIPS_PLUS_FOLD",
+      "POSTFLOP_TOP_PAIR_FOLD",
+      "POSTFLOP_DEEP_HIGH_CARD_JAM",
+      "POSTFLOP_DEEP_HIGH_CARD_JAM_NO_DRAW"
+    ],
+    "policy_probability_thresholds": [
+      0.5,
+      0.8,
+      0.95
+    ],
+    "root_cause_metrics": [
+      "ensemble selected/target probability",
+      "mean member-policy target probability",
+      "ensemble-minus-member-mixture probability gap",
+      "member target-positive count",
+      "member target-policy-argmax count",
+      "sole-positive ensemble-mean raw Advantage",
+      ">=80% extreme policy with no member majority",
+      ">=25pp raw-mean amplification"
+    ],
+    "exclusions": [
+      "no AveragePolicy",
+      "no specialist",
+      "no rebuild",
+      "no model selection",
+      "no policy mutation",
+      "no strength/promotion claim",
+      "no concurrent heavy trainer"
+    ]
+  },
+  "execution": {
+    "sanity_workers": 16,
+    "worker_threads": 1,
+    "raw_workers": 16,
+    "trend_workers": 8,
+    "simultaneous_semantic_trainer_forbidden": true,
+    "minimum_wsl_mem_available_gib": 8
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/run_3h_teacher_pure_audit_17315.sh": "161c023b52015f2498ecb9ac0f84c9a5c766bbac",
+    "tools/audit_3h_teacher_sanity_17315.py": "1e14446f0f9a31c53a67f8ede2dd61b174db8109",
+    "tools/run_3h_teacher_sanity_17315.sh": "2b5b31aa5ace29db41e7a7b4c00af0446f277aaf",
+    "tools/diagnose_3h_teacher_raw_advantages_17315.py": "eaf31e6dd0f5d9e1e291accd407aee659ed263b2",
+    "tools/diagnose_3h_teacher_flagged_checkpoint_trend.py": "def1ab63285b75a02277d554cce51aeb7d0a23b2",
+    "tools/run_3h_teacher_training_efficiency_17315.sh": "6f0e6b2b0a42205e038f04be5e2ae8007837e719",
+    "tools/summarize_3h_teacher_pure_audit_17315.py": "1cd184b6598645f94ec4bc90f39b6cbdf9886104",
+    "python/spincore/decision_sanity.py": "4abcd3e7799dd026dfbcf023d55172971b7187be"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "READY_AFTER_CURRENT_HU_TRAINER_STOPS",
+    "conditions": [
+      "current HU semantic trainer is not running",
+      "teacher 17315 PASS report binds the exact final ensemble hash",
+      "stage manifest and support blobs match main",
+      "tracked repository is clean",
+      "WSL memory preflight passes"
+    ]
+  }
+}
