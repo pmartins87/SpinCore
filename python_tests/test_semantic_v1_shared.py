@@ -50,7 +50,10 @@ def test_zero_column_embedding_preserves_v1_raw_outputs():
     )
     v1.eval()
     sem_state = expand_v1_state_with_zero_semantics(v1.state_dict())
-    sem = make_semantic_advantage_model(999)
+    sem = make_semantic_advantage_model(
+        999,
+        legacy_exact_zero_mode=True,
+    )
     sem.load_state_dict(sem_state)
     sem.eval()
 
@@ -80,3 +83,32 @@ def test_zero_column_embedding_preserves_v1_raw_outputs():
     added = sem_state["body.0.weight"][:, legacy_width:]
     assert added.shape[1] == SEM_DIM
     assert torch.count_nonzero(added).item() == 0
+
+
+def test_legacy_exact_zero_mode_rejects_nonzero_semantic_columns():
+    _, v1 = make_advantage_action_model(
+        "C0_V1_FROZEN_CONTROL", device="cpu", seed=7
+    )
+    state = expand_v1_state_with_zero_semantics(v1.state_dict())
+    legacy_width = v1.state_dict()["body.0.weight"].shape[1]
+    state["body.0.weight"][0, legacy_width] = 1e-6
+    sem = make_semantic_advantage_model(
+        8,
+        legacy_exact_zero_mode=True,
+    )
+    sem.load_state_dict(state)
+    batch = collate_action_observations(
+        "C0_V1_FROZEN_CONTROL",
+        [obs([0, 5])],
+        [tuple([True] * 10)],
+        device="cpu",
+    )
+    batch["semantic"] = torch.tensor(
+        np.asarray([semantic_vector_from_observation(obs([0, 5]))], dtype=np.float32)
+    )
+    try:
+        sem(batch)
+    except RuntimeError as exc:
+        assert "requires exact-zero semantic columns" in str(exc)
+    else:
+        raise AssertionError("expected exact-zero migration guard to fail")
