@@ -1,0 +1,121 @@
+{
+  "schema": "SPINCORE_POST15315_CANONICAL_CORPUS_PILOT_V1",
+  "protocol_id": "POST15315_CANONICAL_CORPUS_STANDARDIZATION_AND_VOLUME_V1",
+  "frozen_on": "2026-10-28",
+  "status": "PREREGISTERED_RESEARCH_ONLY_NOT_PROMOTIONAL",
+  "trigger_evidence": {
+    "required_factorial_report": "runs/post15315_factorial_variance_pilot/post15315_factorial_variance_pilot_report.json",
+    "required_factorial_schema": "SPINCORE_POST15315_FACTORIAL_VARIANCE_PILOT_RESULT_V1",
+    "required_factorial_status": "PASS",
+    "required_attribution_result": "CORPUS_CONDITIONED_LARGER",
+    "required_min_corpus_over_fit_mean_ratio": 1.25,
+    "required_min_corpus_over_fit_p95_ratio": 1.25
+  },
+  "purpose": "Test whether a deterministic multi-anchor canonical teacher-target corpus stabilizes rebuild fitting, and separately whether increasing canonical corpus volume adds necessary stability beyond standardization.",
+  "immutable_prior_failure": {
+    "k12_result": "FINAL_FAIL",
+    "rule": "This research cannot reopen, promote, reweight, subset-select, or otherwise rehabilitate the failed K=12 candidate."
+  },
+  "control": {
+    "source": "runs/post15315_shared_corpus_variance_pilot/post15315_shared_corpus_variance_pilot_report.json",
+    "schema": "SPINCORE_POST15315_SHARED_CORPUS_VARIANCE_PILOT_RESULT_V2",
+    "replicas": 8,
+    "corpus": "Exact original member-01 corpus used by the completed V2 shared-corpus pilot.",
+    "rule": "Reuse the eight existing V2 control artifacts and evaluate them on the new common bank; do not refit the control."
+  },
+  "canonical_sources": {
+    "anchor_members": [1, 4, 7, 10],
+    "selection_rule": "Same deterministic stride-3 anchors preregistered before the factorial result; no anchor is added, removed, or chosen from performance.",
+    "cache_locations": {
+      "1": "runs/post15315_multirebuild_k8/member_01_collection_cache.pt",
+      "4": "runs/post15315_multirebuild_k8/member_04_collection_cache.pt",
+      "7": "runs/post15315_multirebuild_k8/member_07_collection_cache.pt",
+      "10": "runs/post15315_multirebuild_k12_extension/member_10_collection_cache.pt"
+    },
+    "dedup_rule": "Deduplicate by exact observation bytes plus legal-action mask and hard-fail if duplicate keys have different teacher targets.",
+    "ordering_rule": "After deduplication, order each stream by SHA256 of a frozen stream salt plus exact observation bytes plus legal-action mask. Source/cache traversal order must not determine selection.",
+    "stream_salts": {
+      "ordinary": "POST15315_CANONICAL_ORDINARY_V1",
+      "augmentation": "POST15315_CANONICAL_AUGMENTATION_V1",
+      "specialist": "POST15315_CANONICAL_SPECIALIST_V1"
+    }
+  },
+  "treatments": {
+    "fixed_size_canonical": {
+      "description": "Size-matched canonical corpus drawn deterministically from the four-anchor unique union.",
+      "ordinary_train_samples": 26798,
+      "novel_strong_samples": 2645,
+      "fullpool_train_samples": 29443,
+      "specialist_unique_strong_samples": 4125,
+      "size_basis": "Exact structural counts of the member-01 V2 control corpus; counts are inherited for size matching, not chosen from a performance result."
+    },
+    "expanded_canonical": {
+      "description": "All unique eligible samples from the same four-anchor canonical union after the same deduplication rules.",
+      "ordinary_train_samples": "ALL_UNIQUE",
+      "novel_strong_samples": "ALL_UNIQUE_NOT_IN_ORDINARY_STRONG_KEYS",
+      "specialist_unique_strong_samples": "ALL_UNIQUE",
+      "rule": "No new teacher collection is performed and no evaluation-bank state may enter training."
+    }
+  },
+  "fit_design": {
+    "replicas_per_treatment": 8,
+    "fullpool_fit_seeds": [153160001,153160002,153160003,153160004,153160005,153160006,153160007,153160008],
+    "specialist_fit_seeds": [153161001,153161002,153161003,153161004,153161005,153161006,153161007,153161008],
+    "seed_matching_rule": "Replica i uses the exact same fullpool/specialist fit seeds as V2 control replica i in both canonical treatments.",
+    "start_state": "FROZEN_FINALIZED_10105_AVERAGE_POLICY_AND_OPTIMIZER",
+    "fullpool_fit_steps": 500,
+    "specialist_fit_steps": 25,
+    "fit_threads": 8,
+    "execution": "Sequential fits; no fit fanout.",
+    "route": "postflop made_category>=TRIPS AND FOLD legal -> specialist; otherwise fullpool"
+  },
+  "fresh_confirmation_bank": {
+    "seed": 153159503,
+    "forced_three_handed_episodes": 100000,
+    "lineage_iteration": 15315,
+    "use": "RESEARCH_CONFIRMATION_ONLY_NOT_PROMOTION",
+    "identical_states_required_for_all_24_policies": true,
+    "required_surface_minima": {
+      "preflop_72o_allin_opportunities": 1500,
+      "postflop_trips_plus_fold_legal": 1200,
+      "postflop_high_card_no_immediate_draw_allin_legal": 5000
+    },
+    "rule": "Generate the complete 100k bank before policy evaluation. Coverage failure is a mechanical/research-support stop, not a treatment result."
+  },
+  "primary_evaluation": {
+    "method": "Run the unchanged original K=8 rebuild-stability evaluator separately on control8, fixed-size-canonical8, and expanded-canonical8 using the exact same fresh bank and original frozen thresholds.",
+    "original_thresholds_reused_without_relaxation": true,
+    "mandatory_ratios": [
+      "fixed_size_canonical broad mean and p95 divided by control broad mean and p95",
+      "expanded_canonical broad mean and p95 divided by control broad mean and p95",
+      "expanded_canonical broad mean and p95 divided by fixed_size_canonical broad mean and p95"
+    ],
+    "mandatory_surfaces": [
+      "preflop 72o ALL_IN",
+      "postflop trips-plus Fold",
+      "postflop high-card/no-immediate-draw ALL_IN"
+    ]
+  },
+  "classification_rule": {
+    "bank_sensitivity_stop": "If the reused V2 control passes the complete original K=8 stability gate on the new bank, stop interpretation and require another preregistered confirmation bank.",
+    "standardization_sufficient": "Control FAIL and fixed-size canonical PASS. Expanded result remains descriptive; fixed-size standardization is sufficient for the research stability criterion.",
+    "expansion_required": "Control FAIL, fixed-size canonical FAIL, and expanded canonical PASS.",
+    "canonical_corpus_insufficient": "Control FAIL and both canonical treatments FAIL.",
+    "note": "These labels are research guidance only. A treatment PASS does not promote a policy or reopen the failed K=12 candidate."
+  },
+  "next_branch_rule": {
+    "standardization_sufficient": "Design a new candidate family around the frozen deterministic fixed-size canonical corpus, then preregister fresh candidate stability/quality/safety before strength.",
+    "expansion_required": "Design a new candidate family around the frozen expanded canonical corpus, then preregister fresh candidate stability/quality/safety before strength.",
+    "canonical_corpus_insufficient": "Do not build a candidate yet; combine canonical corpus construction with an explicit fit/optimization stability intervention and test it research-only.",
+    "bank_sensitivity_stop": "Do not choose a corpus treatment; preregister a second independent 100k confirmation bank."
+  },
+  "exclusions": [
+    "No external strength benchmark.",
+    "No promotion decision.",
+    "No K>12.",
+    "No member selection, dropping, weighting, reseeding, or threshold relaxation.",
+    "No new teacher collection.",
+    "No training on any stability, factorial, shared-corpus, or confirmation evaluation bank.",
+    "No treatment choice based on strength."
+  ]
+}
