@@ -4572,3 +4572,16 @@ The initially preregistered pooled-cache pilot was superseded before execution b
 
 If the V2 fixed-corpus replicas reduce both broad metrics to <=70% of original-12 on the same fresh bank, do not jump directly to a candidate: require a second predeclared anchor confirmation first.
 
+
+
+### 2026-10-27 — shared-corpus pilot preflight hash fix
+
+The first V2 attribution-pilot launch stopped before fitting because its runtime preflight confused the frozen Git blob SHA1 of the original post-15315 protocol with the protocol file SHA-256. This was a mechanical identity-check defect, not a scientific result.
+
+The runner now:
+1. validates the frozen protocol bytes against Git blob SHA1 `5fd7667926c6112310fe5eca61afff396ad218de`;
+2. computes the file SHA-256 separately for cache/member/artifact compatibility;
+3. has regression coverage preventing the two hash types from being conflated again;
+4. keeps the V2 research design and closed K=12 FAIL unchanged.
+
+Next roadmap step remains the same V2 fixed-corpus attribution pilot; no new branch or strategy change is authorized by this incident.
