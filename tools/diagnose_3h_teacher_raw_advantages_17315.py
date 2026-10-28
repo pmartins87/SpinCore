@@ -229,8 +229,15 @@ def worker(task):
 
 
 
-def _member_policy_mechanism(detail: dict[str, Any]) -> dict[str, Any]:
-    selected = str(detail.get("selected_slot_name"))
+def _member_policy_mechanism(
+    detail: dict[str, Any],
+    target_action: str | None = None,
+) -> dict[str, Any]:
+    selected = str(
+        target_action
+        if target_action is not None
+        else detail.get("selected_slot_name")
+    )
     legal_slots = [int(x) for x in detail.get("legal_slots") or []]
     legal_names = [str(x) for x in detail.get("legal_names") or []]
     if not legal_slots or len(legal_slots) != len(legal_names):
@@ -378,14 +385,35 @@ def main() -> int:
     if int(sanity.get("seed", -1)) != int(args.seed):
         raise SystemExit("seed mismatch")
     flagged = list(sanity.get("flagged_decisions") or [])
-    targets_by_scenario: dict[int, list[tuple[int, int]]] = {}
-    expected: dict[tuple[int, int, int], dict[str, Any]] = {}
+    targets_by_scenario: dict[int, set[tuple[int, int]]] = {}
+    expected_flags: dict[tuple[int, int, int], dict[str, Any]] = {}
+    expected_policy: dict[tuple[int, int, int], list[dict[str, Any]]] = {}
+
     for item in flagged:
         scenario = int(item["scenario"])
         lineup = int(item["lineup_index"])
         decision = int(item["decision_index"])
-        targets_by_scenario.setdefault(scenario, []).append((lineup, decision))
-        expected[(scenario, lineup, decision)] = item
+        targets_by_scenario.setdefault(scenario, set()).add((lineup, decision))
+        expected_flags[(scenario, lineup, decision)] = item
+
+    for code, surface in (sanity.get("opportunity_policy") or {}).items():
+        for item in list(surface.get("top_probability_rows") or []):
+            scenario = int(item["scenario"])
+            lineup = int(item["lineup_index"])
+            decision = int(item["decision_index"])
+            targets_by_scenario.setdefault(scenario, set()).add((lineup, decision))
+            expected_policy.setdefault(
+                (scenario, lineup, decision), []
+            ).append(
+                {
+                    "code": str(code),
+                    "target_action": str(item["target_action"]),
+                    "target_probability": float(item["target_probability"]),
+                    "source_selected_slot_name": item.get("selected_slot_name"),
+                }
+            )
+
+    expected_keys = set(expected_flags) | set(expected_policy)
 
     sampler = LegacyScenarioSampler(
         seed=int(args.seed) ^ 0x5CE0A710,
@@ -403,7 +431,7 @@ def main() -> int:
             scenario,
             episodes[scenario],
             int(base._mix64(args.seed, scenario, 0xD34A1)),
-            targets_by_scenario[scenario],
+            sorted(targets_by_scenario[scenario]),
             int(args.max_decisions),
         )
         for scenario in sorted(targets_by_scenario)
@@ -430,41 +458,80 @@ def main() -> int:
     mismatches = []
     for row in replayed:
         key = (row["scenario"], row["lineup_index"], row["decision_index"])
-        exp = expected.get(key)
-        if exp is None:
+        exp_flag = expected_flags.get(key)
+        policy_entries = list(expected_policy.get(key) or [])
+        if exp_flag is None and not policy_entries:
             continue
-        got_slot = row["policy_detail"].get("selected_slot_name")
-        exp_slot = exp.get("selected_slot_name")
-        if got_slot != exp_slot:
-            mismatches.append({"key": key, "expected": exp_slot, "got": got_slot})
-        flag_code = str(exp["flag"]["code"])
+
+        got_slot = str(row["policy_detail"].get("selected_slot_name"))
+        expected_selected = (
+            str(exp_flag.get("selected_slot_name"))
+            if exp_flag is not None
+            else str(policy_entries[0].get("source_selected_slot_name"))
+        )
+        if got_slot != expected_selected:
+            mismatches.append(
+                {"key": key, "expected": expected_selected, "got": got_slot}
+            )
+
+        flag_code = (
+            None if exp_flag is None else str(exp_flag["flag"]["code"])
+        )
+        policy_surface_codes = sorted(
+            {str(item["code"]) for item in policy_entries}
+        )
+        target_actions = {
+            str(item["target_action"]) for item in policy_entries
+        }
+        if exp_flag is not None:
+            target_actions.add(str(exp_flag["selected_slot_name"]))
+        if len(target_actions) != 1:
+            raise RuntimeError(
+                f"conflicting diagnostic target actions at {key}: "
+                f"{sorted(target_actions)}"
+            )
+        target_action = next(iter(target_actions))
         detail = row["policy_detail"]
-        mechanism = _member_policy_mechanism(detail)
+        mechanism = _member_policy_mechanism(
+            detail,
+            target_action=target_action,
+        )
+        audit_reasons = []
+        if flag_code is not None:
+            audit_reasons.append("SAMPLED_FLAG:" + flag_code)
+        audit_reasons.extend(
+            "POLICY_SURFACE:" + code for code in policy_surface_codes
+        )
         matched.append(
             {
                 **row,
                 "flag_code": flag_code,
-                "expected_selected_slot_name": exp_slot,
-                "replay_selected_slot_matches": got_slot == exp_slot,
+                "policy_surface_codes": policy_surface_codes,
+                "audit_reasons": audit_reasons,
+                "diagnostic_target_action": target_action,
+                "expected_selected_slot_name": expected_selected,
+                "replay_selected_slot_matches": got_slot == expected_selected,
                 "mechanism": mechanism,
             }
         )
 
-    expected_count = len(expected)
-    missing = sorted(
-        [list(k) for k in expected if k not in {
-            (r["scenario"], r["lineup_index"], r["decision_index"]) for r in replayed
-        }]
-    )
+    expected_count = len(expected_keys)
+    replayed_keys = {
+        (r["scenario"], r["lineup_index"], r["decision_index"])
+        for r in replayed
+    }
+    missing = sorted([list(k) for k in expected_keys if k not in replayed_keys])
 
     branch_counts = {}
     branch_by_flag = {}
     for row in matched:
         branch = str(row["policy_detail"].get("branch"))
-        code = str(row["flag_code"])
+        code = row.get("flag_code")
         branch_counts[branch] = branch_counts.get(branch, 0) + 1
-        branch_by_flag.setdefault(code, {})
-        branch_by_flag[code][branch] = branch_by_flag[code].get(branch, 0) + 1
+        if code is not None:
+            code = str(code)
+            branch_by_flag.setdefault(code, {})
+            branch_by_flag[code][branch] = branch_by_flag[code].get(branch, 0) + 1
 
     report = {
         "schema": "SPINCORE_3H_TEACHER_RAW_ADVANTAGE_DIAGNOSTIC_17315_V1",
@@ -472,13 +539,26 @@ def main() -> int:
         "teacher_iteration": ITERATION,
         "seed": int(args.seed),
         "source_flagged_count": len(flagged),
+        "source_policy_surface_top_row_count": sum(
+            len(list(surface.get("top_probability_rows") or []))
+            for surface in (sanity.get("opportunity_policy") or {}).values()
+        ),
         "unique_target_count": expected_count,
         "matched_count": len(matched),
         "missing_keys": missing,
         "selection_mismatches": mismatches,
         "branch_counts": branch_counts,
         "branch_by_flag": branch_by_flag,
-        "mechanism_by_flag": _mechanism_summary(matched),
+        "mechanism_by_flag": _mechanism_summary(
+            [row for row in matched if row.get("flag_code") is not None]
+        ),
+        "mechanism_by_reason": _mechanism_summary(
+            [
+                {**row, "flag_code": reason}
+                for row in matched
+                for reason in row.get("audit_reasons") or []
+            ]
+        ),
         "rows": matched,
         "interpretation": {
             "SOFTMAX_FALLBACK": "Every legal ensemble-mean raw Advantage was non-positive; canonical lean policy therefore used softmax over raw values.",
@@ -497,6 +577,7 @@ def main() -> int:
     print("branch_counts=" + json.dumps(branch_counts, sort_keys=True))
     print("branch_by_flag=" + json.dumps(branch_by_flag, sort_keys=True))
     print("mechanism_by_flag=" + json.dumps(report["mechanism_by_flag"], sort_keys=True))
+    print("mechanism_by_reason=" + json.dumps(report["mechanism_by_reason"], sort_keys=True))
     print(f"selection_mismatches={len(mismatches)} missing={len(missing)}")
     print(f"report={args.report.resolve()}")
     print("SPINCORE_3H_TEACHER_RAW_ADVANTAGE_17315_COMPLETE")
