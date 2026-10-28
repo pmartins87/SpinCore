@@ -1,0 +1,77 @@
+{
+  "schema": "SPINCORE_HU_SEMANTIC_ENS8_CONTINUATION_PREREG_V1",
+  "protocol_id": "HU_SEMANTIC_ENS8_TEACHER_10105_PLUS469_V1",
+  "frozen_on": "2026-10-28",
+  "status": "PREREGISTERED_RESEARCH_TRAINING_NOT_PROMOTIONAL",
+  "purpose": "Migrate the frozen HU ENS8@10105 to the already-validated V1+30-semantic Advantage architecture and continue HU-only semantic-online training without touching THREE_HANDED.",
+  "source": {
+    "checkpoint": "runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt",
+    "checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "hu_ensemble": "runs/lt3_parallel_9105_10105/20260922_132104/hu_ensemble_state.pt",
+    "hu_ensemble_sha256": "8d11cb6bce172e24e903ced650c7a7d82aeb2b251c71c3cfc28e37d873ddb62d",
+    "source_iteration": 10105,
+    "source_artifacts_read_only": true
+  },
+  "semantic_architecture": {
+    "base": "V1SemanticAdvantageNet",
+    "semantic_dim": 30,
+    "feature_contract": "Same domain-agnostic made-hand/pair-relation/overcard/draw/board-texture vector validated in THREE_HANDED.",
+    "ensemble_size": 8,
+    "member_fit_steps": 1600,
+    "member_fit_seed_contract": "Reuse each source HU ENS8 member init_seed and batch_seed; semantic members are freshly fit from the current HU Advantage reservoir each update.",
+    "behavior": "Mean eight raw semantic-Advantage outputs then unchanged lean regret matching."
+  },
+  "migration_gate": {
+    "zero_column_embedding": "Copy every V1 parameter exactly and append 30 exact-zero columns to body.0.weight for every source HU member.",
+    "parity_sample_count": 20000,
+    "parity_sample_seed": 153170105,
+    "max_raw_abs_error": 0.000002,
+    "max_policy_abs_error": 0.000002,
+    "max_argmax_mismatches": 0,
+    "protected_diagnostic_count": 50000,
+    "protected_diagnostic_seed": 153170106,
+    "rule": "Parity is mechanical only. After parity passes, fit the initial semantic ENS8 fresh1600 on the remaining 1.95M HU reservoir entries before collecting any new roots."
+  },
+  "training": {
+    "domain": "TRUE_HEADS_UP",
+    "roots_per_update": 273,
+    "updates_in_block": 469,
+    "new_hu_roots": 128037,
+    "virtual_seed_iteration_start": 10106,
+    "virtual_seed_iteration_end": 10574,
+    "sampler": "Resume frozen 10105 sampler RNG state and draw TRUE_HEADS_UP episodes only.",
+    "root_behavior": "Current semantic ENS8 raw-output mean + unchanged lean regret matching.",
+    "refit": "After each root block, refit all eight semantic members fresh1600 from the updated HU Advantage reservoir excluding the fixed 50k diagnostic positions.",
+    "three_handed_training": false,
+    "average_policy_training": false,
+    "strategy_reservoir_collection": false,
+    "sealed_holdout_access": false
+  },
+  "execution": {
+    "root_workers": 31,
+    "fit_concurrency": 4,
+    "threads_per_member": 8,
+    "concurrent_with_3h_trainer": false,
+    "resume_checkpoint_every_updates": 25,
+    "ensemble_snapshot_every_updates": 50,
+    "target_host": "Ryzen 9 9950X / 32 logical threads"
+  },
+  "hard_stop_conditions": [
+    "Migration parity threshold failure.",
+    "Source checkpoint or source HU ensemble hash drift.",
+    "Any non-finite fit loss or model tensor.",
+    "Root count/domain mismatch.",
+    "Any THREE_HANDED training.",
+    "Any AveragePolicy or strategy-reservoir training.",
+    "Any mutation of frozen source artifacts.",
+    "Runtime/worker/resume-integrity failure."
+  ],
+  "non_goals": [
+    "No strength benchmark during this training block.",
+    "No promotion decision.",
+    "No sealed holdout.",
+    "No distillation/rebuild requirement.",
+    "No simultaneous 3H long trainer."
+  ],
+  "result": "PASS freezes a new HU semantic ENS8 teacher endpoint after 128037 additional HU roots. PASS is a training/integrity result, not a strength claim."
+}
