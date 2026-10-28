@@ -372,7 +372,7 @@ def main()->int:
     initial_diag=pilot.advantage_dc1_summary(source_models,traces)
 
     started=time.perf_counter()
-    block_roots=0
+    block_roots=(completed-start_iteration)*ROOTS_PER_ITERATION
     try:
         for iteration in range(completed+1,target_iteration+1):
             seen_before=int(r3.bundle.adv_mem.seen)
