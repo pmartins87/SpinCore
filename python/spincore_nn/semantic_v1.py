@@ -289,7 +289,7 @@ class V1SemanticAdvantageNet(nn.Module):
                 )
             x = torch.nn.functional.linear(
                 legacy_x,
-                first.weight[:, :legacy_width],
+                first.weight[:, :legacy_width].contiguous(),
                 first.bias,
             )
             x = self.body[1](x)
