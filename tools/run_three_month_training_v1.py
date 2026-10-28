@@ -9,7 +9,7 @@ considered complete only after its PASS report is present and internally
 consistent. On interruption/reboot, rerunning this orchestrator revalidates
 completed stages and resumes the first incomplete stage.
 
-No git pull/update is performed here. The local source tree is intentionally
+No automatic source update is performed here. The local source tree is intentionally
 frozen for the duration of the plan.
 """
 
@@ -21,7 +21,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import time
