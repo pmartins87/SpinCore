@@ -1,0 +1,66 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "POST15315_FACTORIAL_VARIANCE_PILOT",
+  "status": "READY",
+  "runner": "tools/run_post15315_factorial_variance_pilot.sh",
+  "runner_blob_sha": "07e58106dd397ec819ad6eab9ccd6650449693bd",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "RNG-013",
+    "VALID-025",
+    "VALID-031",
+    "VALID-032",
+    "VALID-034",
+    "VALID-035",
+    "VALID-036",
+    "VALID-037",
+    "VALID-038",
+    "SAFE-001",
+    "SAFE-010",
+    "SAFE-011",
+    "CKPT-001",
+    "ART-001"
+  ],
+  "affected_domains": ["TRAIN","MODEL","RNG","VALID","SAFE","CKPT","ART"],
+  "duration_class": "RESEARCH_PILOT",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "prior_mixed_result": "runs/post15315_shared_corpus_variance_pilot/post15315_shared_corpus_variance_pilot_report.json",
+    "preregistration": "contracts/post15315_factorial_variance_pilot_v1.json",
+    "exact_collection_caches": "Frozen original-size caches for deterministic anchors 1,4,7,10."
+  },
+  "scientific_plan": {
+    "experiment": "Cross four deterministic original-size corpus anchors with four matched fit-seed pairs, producing 16 research-only cells.",
+    "corpus_anchors": [1,4,7,10],
+    "fit_seed_ids": [1,2,3,4],
+    "fresh_research_bank_seed": 153159502,
+    "fresh_research_bank_episodes": 40000,
+    "primary_comparison": "Within-corpus fit-seed TV versus across-corpus matched-fit-seed TV, plus balanced two-way corpus/fit/interaction probability-space decomposition.",
+    "classification": {
+      "corpus_conditioned_larger": "mean and p95 corpus/fit ratios >= 1.25",
+      "fit_seed_larger": "mean and p95 corpus/fit ratios <= 0.80",
+      "mixed_interaction": "otherwise"
+    },
+    "exclusions": [
+      "No promotion decision.",
+      "No external strength benchmark.",
+      "No K>12.",
+      "No member selection, dropping or weighting.",
+      "No threshold relaxation.",
+      "No training on evaluation banks."
+    ]
+  },
+  "support_blob_shas": {
+    "contracts/post15315_factorial_variance_pilot_v1.json": "124ce64bd19bf93f30f5da2a21303167b9dae43b",
+    "tools/run_post15315_factorial_variance_pilot.py": "a91b391f9807a06a71b12d51c89302a8ba2915bb",
+    "tools/run_post15315_factorial_variance_pilot.sh": "07e58106dd397ec819ad6eab9ccd6650449693bd",
+    "python_tests/test_post15315_factorial_variance_pilot.py": "751744e85aea385d271a776354e7d748354201be",
+    "tools/build_post15315_rebuild_member.py": "61df37a0b11c55f431bb1bbc9a960613bf2c10ee",
+    "tools/run_post15315_rebuild_stability_k8.py": "fdcbe57e2c38acf75447a1df3881f9db3a25c1c4",
+    "tools/post15315_member_cache.py": "3f1d8737a99481212534ef7f88fb74b6f8fb6673"
+  }
+}
