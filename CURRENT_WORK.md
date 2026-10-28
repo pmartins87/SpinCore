@@ -5089,3 +5089,24 @@ Training-first dual-lane plan:
 
 No further K>12, factorial, or corpus-search work is required before resuming
 teacher training.
+
+
+### 2026-10-28 — HU-only continuation implementation READY
+
+The first root-balanced HU training block is now preregistered and implemented:
+- source: frozen finalized checkpoint @10105 plus matched HU ENS8 sidecar;
+- domain: TRUE_HEADS_UP only;
+- current direct-teacher behavior: eight V1 Advantage members, raw-output mean, unchanged lean regret matching;
+- 273 HU roots/update, inherited from round(600 * 0.4548) in the validated mixed trainer;
+- 469 HU-only updates = 128,037 new HU roots;
+- eight fresh400 member fits after every update using the already-validated fixed member seed contract;
+- no 3H roots or fitting;
+- no AveragePolicy or strategy-reservoir collection;
+- source checkpoint/ensemble remain read-only;
+- durable full resume every 50 updates and compact ensemble milestones every 100;
+- no strength benchmark or sealed holdout during the block.
+
+Runner: `tools/run_hu_ens8_continuation_10105_plus469.sh`.
+Stage manifest: `contracts/run_manifests/hu_ens8_continuation_10105_plus469.json`.
+
+This is the first production-shaped validation of the new dual-domain training-first schedule. A clean PASS yields a new HU teacher endpoint; it does not by itself claim HU strength improvement.
