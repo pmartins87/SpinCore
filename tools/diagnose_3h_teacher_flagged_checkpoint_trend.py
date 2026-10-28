@@ -353,7 +353,7 @@ def main() -> int:
         scenario = int(item["scenario"])
         targets_by_scenario.setdefault(scenario, []).append(item)
         expected[
-            (scenario, int(item["lineup_index"]), int(item["flag"]["context"]["decision_index"]))
+            (scenario, int(item["lineup_index"]), int(item["decision_index"]))
         ] = item
 
     sampler = LegacyScenarioSampler(
