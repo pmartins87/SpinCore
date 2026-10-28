@@ -1,0 +1,71 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "HU_SEMANTIC_ENS8_CONTINUATION_10105_PLUS469",
+  "status": "READY",
+  "runner": "tools/run_hu_semantic_ens8_continuation_10105_plus469.sh",
+  "runner_blob_sha": "1bcd2ef5027686fd9573cedf8dda6146f60f6946",
+  "contract_ids": [
+    "TRAIN-022",
+    "TRAIN-023",
+    "MODEL-025",
+    "RNG-001",
+    "RNG-003",
+    "VALID-025",
+    "VALID-034",
+    "VALID-035",
+    "SAFE-001",
+    "SAFE-010",
+    "CKPT-001",
+    "ART-001",
+    "PERF-001",
+    "PERF-002"
+  ],
+  "affected_domains": ["TRAIN","MODEL","RNG","VALID","SAFE","CKPT","ART","PERF"],
+  "duration_class": "LONG_TRAINING_BLOCK",
+  "target_host_profile": "RYZEN_9_9950X_32_LOGICAL_THREADS",
+  "prerequisites": {
+    "source_checkpoint": "runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt",
+    "source_checkpoint_sha256": "f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0",
+    "source_hu_v1_ensemble": "runs/lt3_parallel_9105_10105/20260922_132104/hu_ensemble_state.pt",
+    "source_hu_v1_ensemble_sha256": "8d11cb6bce172e24e903ced650c7a7d82aeb2b251c71c3cfc28e37d873ddb62d",
+    "preregistration": "contracts/hu_semantic_ens8_continuation_10105_plus469_v1.json"
+  },
+  "scientific_plan": {
+    "domain": "TRUE_HEADS_UP only",
+    "migration": "V1 ENS8 -> zero-column V1+30-semantic embedding -> deterministic parity gate -> fresh1600 semantic ENS8 fit on accumulated HU Advantage reservoir.",
+    "semantic_dim": 30,
+    "ensemble_size": 8,
+    "member_fit_steps": 1600,
+    "parity_sample_count": 20000,
+    "parity_raw_tolerance": 0.000002,
+    "parity_policy_tolerance": 0.000002,
+    "parity_argmax_mismatches": 0,
+    "protected_diagnostic_count": 50000,
+    "updates": 469,
+    "roots_per_update": 273,
+    "new_hu_roots": 128037,
+    "three_handed_training": false,
+    "average_policy_training": false,
+    "strategy_reservoir_collection": false,
+    "sealed_holdout": false,
+    "strength_benchmark": false
+  },
+  "execution": {
+    "root_workers": 31,
+    "fit_concurrency": 4,
+    "threads_per_member": 8,
+    "resume_checkpoint_every_updates": 25,
+    "ensemble_snapshot_every_updates": 50,
+    "simultaneous_3h_trainer_forbidden": true
+  },
+  "support_blob_shas": {
+    "contracts/hu_semantic_ens8_continuation_10105_plus469_v1.json": "05624302e8fff053bfe18fe1a57a762083564e74",
+    "python/spincore_nn/semantic_v1.py": "d7e6610166a16b21625cf5ce2b26f76560af2b07",
+    "python/spincore/semantic_parallel.py": "903ee34024d30e99f40a1057eea0176ad5f7f8b8",
+    "tools/run_hu_semantic_ens8_continuation_10105_plus469.py": "86ea390f94f8093c9b5001039a74f4f1b0383a0b",
+    "tools/run_hu_semantic_ens8_continuation_10105_plus469.sh": "1bcd2ef5027686fd9573cedf8dda6146f60f6946",
+    "python_tests/test_semantic_v1_shared.py": "cca30e0df6f452a7e91e9afcfcf1f4db69afe10b",
+    "python_tests/test_hu_semantic_ens8_continuation.py": "d58c0b25182e1b2cf38270b3fda6c82e3df258e7",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1"
+  }
+}
