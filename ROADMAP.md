@@ -4779,3 +4779,35 @@ This gate can identify an aggregation candidate but cannot promote it. If one or
 more candidates pass, next gate is common-state/direct-play validation. If none
 pass, move to fallback/model architecture research rather than more unchanged
 long training.
+
+
+### 2026-10-30 — Architecture benchmark result: B_MEMBER_POLICY_MEAN identified
+
+The first architecture gate has a unique passing candidate:
+`B_MEMBER_POLICY_MEAN`.
+
+Evidence:
+- held-out CFR weighted mean TV improves 0.5300 -> 0.4838;
+- cross-entropy improves 12.31 -> 5.10;
+- target argmax agreement improves slightly 0.6001 -> 0.6067;
+- top20 high-card/no-draw ALL_IN collapses 96.96% -> 37.53%;
+- all 20 current >=80% high-card/no-draw cases fall below 80% under B.
+
+However:
+- stored-target expected Advantage decreases 0.01588 -> 0.01298;
+- deep 72o remains ~33% ALL_IN;
+- 13.422% of the protected holdout is current softmax fallback;
+- 69.68% of those current fallback states have a positive-regret stored CFR
+  target, indicating model/sign approximation loss in most fallback events.
+
+Roadmap consequence:
+1. do not promote B directly;
+2. run the preregistered 10k fresh paired common-chance direct-play A-vs-B gate;
+3. require EV noninferiority and fresh sanity criteria;
+4. if B passes, treat it as preferred aggregation for subsequent work;
+5. independently investigate fallback/model-sign error before unblocking long
+   training;
+6. if B fails direct play, reopen aggregation research rather than forcing B.
+
+Runner:
+`tools/run_teacher_member_policy_mean_direct_play_17315.sh`
