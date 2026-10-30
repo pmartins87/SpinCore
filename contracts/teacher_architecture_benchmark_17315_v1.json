@@ -1,0 +1,101 @@
+{
+  "schema": "SPINCORE_TEACHER_ARCHITECTURE_BENCHMARK_17315_PREREG_V1",
+  "status": "FROZEN_BEFORE_BENCHMARK_RESULTS",
+  "frozen_on": "2026-10-30",
+  "source_teacher": {
+    "iteration": 17315,
+    "ensemble_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "behavior": "RAW_MEMBER_MEAN_THEN_LEAN_REGRET_MATCHING"
+  },
+  "motivation": {
+    "audit_status": "HIGH_REVIEW_REQUIRED",
+    "key_evidence": {
+      "high_card_no_draw_opportunities": 3639,
+      "high_card_no_draw_ge80_allin": 22,
+      "high_card_no_draw_ge95_allin": 15,
+      "high_card_no_draw_max_allin": 1,
+      "top20_high_card_no_draw_current_mean_allin": 0.969550115555647,
+      "top20_high_card_no_draw_member_policy_mean_allin": 0.3753138606710106,
+      "top20_high_card_no_draw_amplification_ge25pp": 20,
+      "top20_high_card_no_draw_extreme_without_member_majority": 13,
+      "deep_72o_sampled_flags": 18,
+      "deep_72o_softmax_fallback_flags": 18
+    }
+  },
+  "frozen_holdout": {
+    "source": "final @17315 Advantage reservoir",
+    "count": 50000,
+    "selection": "the same protected indices derived from the existing controlled-split probe holdout_seed/holdout_size; these positions were excluded from semantic member fitting",
+    "target_policy": "canonical lean_regret_matching_policy applied to stored CFR Advantage target and legal actions"
+  },
+  "candidates": [
+    {
+      "id": "A_CURRENT_RAW_MEAN_RM",
+      "definition": "actionwise arithmetic mean of 8 raw Advantage vectors, then canonical lean_regret_matching_policy"
+    },
+    {
+      "id": "B_MEMBER_POLICY_MEAN",
+      "definition": "canonical lean_regret_matching_policy separately on each member raw vector, then arithmetic mean of the 8 normalized policies"
+    },
+    {
+      "id": "C_MEDIAN_RAW_RM",
+      "definition": "actionwise median of 8 raw Advantage vectors, then canonical lean_regret_matching_policy"
+    },
+    {
+      "id": "D_TRIMMED_RAW_MEAN_RM",
+      "definition": "actionwise sort 8 raw values, drop one minimum and one maximum, average remaining 6, then canonical lean_regret_matching_policy"
+    }
+  ],
+  "primary_holdout_metrics": [
+    "weighted mean TV to stored-CFR target policy",
+    "unweighted median TV",
+    "unweighted p95 TV",
+    "weighted cross entropy to stored-CFR target policy",
+    "target-policy argmax agreement",
+    "weighted expected stored-target Advantage",
+    "current-model fallback count",
+    "among current-model fallbacks: fraction whose stored CFR target has positive regret",
+    "among current-model fallbacks: target-policy max-probability distribution"
+  ],
+  "pathology_metrics": {
+    "source": "frozen raw replay report from pure-teacher audit @17315",
+    "groups": [
+      "POLICY_SURFACE:POSTFLOP_DEEP_HIGH_CARD_JAM_NO_DRAW",
+      "POLICY_SURFACE:POSTFLOP_DEEP_HIGH_CARD_JAM",
+      "POLICY_SURFACE:PREFLOP_DEEP_72O_JAM",
+      "POLICY_SURFACE:POSTFLOP_TRIPS_PLUS_FOLD",
+      "POLICY_SURFACE:PREFLOP_AA_FOLD",
+      "POLICY_SURFACE:POSTFLOP_MONSTER_FOLD"
+    ],
+    "metrics": [
+      "mean target-action probability",
+      "max target-action probability",
+      "count >=50%",
+      "count >=80%",
+      "count >=95%"
+    ]
+  },
+  "noninferiority_gate": {
+    "holdout_weighted_mean_tv": "candidate <= current + 0.005 absolute",
+    "holdout_p95_tv": "candidate <= current + 0.010 absolute",
+    "high_card_no_draw_top20_mean_allin": "candidate <= 0.50",
+    "high_card_no_draw_top20_ge80_count": "candidate <= 5",
+    "aa_fold_top20_max": "candidate <= 0.05",
+    "monster_fold_top20_max": "candidate <= 0.05",
+    "trips_fold_top20_mean": "candidate <= current + 0.05",
+    "deep_72o_top20_mean_allin": "candidate <= current + 0.05"
+  },
+  "classification": {
+    "no_candidate_passes": "AGGREGATION_ONLY_INSUFFICIENT",
+    "one_candidate_passes": "AGGREGATION_CANDIDATE_IDENTIFIED",
+    "multiple_candidates_pass": "MULTIPLE_AGGREGATION_CANDIDATES_PASS",
+    "rule": "No automatic production change follows. A passing aggregation candidate must undergo a separate direct-play/common-state gate."
+  },
+  "prohibitions": [
+    "no long HU/3H training during this gate",
+    "no production policy mutation",
+    "no threshold relaxation after results",
+    "no candidate cherry-picking outside the four frozen definitions",
+    "no use of external strength result to rewrite this gate"
+  ]
+}
