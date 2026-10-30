@@ -5252,3 +5252,53 @@ Decision:
   CFR/teacher evidence, with no new long training required to answer the first
   question;
 - no production aggregation change is authorized by this audit alone.
+
+
+## 2026-10-30 — Teacher @17315 architecture benchmark READY
+
+The architecture gate is now preregistered and implemented without new poker
+training.
+
+Inputs:
+- exact Semantic ENS8 teacher/resume @17315 bound to the completed PASS report;
+- the existing 50,000 protected Advantage-reservoir positions selected by the
+  controlled-split probe and excluded from semantic fitting;
+- the completed pure-teacher raw replay report for the frozen pathology states.
+
+Frozen aggregation candidates:
+1. A_CURRENT_RAW_MEAN_RM — current actionwise mean(raw) then canonical lean
+   regret matching;
+2. B_MEMBER_POLICY_MEAN — canonical lean policy per member, then arithmetic mean
+   of the eight normalized policies;
+3. C_MEDIAN_RAW_RM — actionwise median raw, then canonical lean policy;
+4. D_TRIMMED_RAW_MEAN_RM — drop one min/max raw per action, mean the remaining
+   six, then canonical lean policy.
+
+Primary holdout reference is the stored CFR Advantage target converted through
+the unchanged canonical lean policy map. Report weighted mean TV, p95 TV,
+cross-entropy, target argmax agreement and expected stored-target Advantage.
+
+Fallback attribution is separate: on states where the current teacher enters
+softmax fallback, measure how often the stored CFR target actually has positive
+regret. A high fraction implicates model/sign approximation; a low fraction
+implicates the target/regret/fallback semantics themselves.
+
+Frozen non-inferiority/pathology gate:
+- weighted mean TV <= current +0.005;
+- p95 TV <= current +0.010;
+- top-20 high-card/no-draw mean ALL_IN <=50%;
+- <=5 of those top-20 at >=80% ALL_IN;
+- no critical AA/monster Fold >5%;
+- no >5pp mean worsening on trips-Fold or deep-72o ALL_IN.
+
+A passing aggregation candidate is research evidence only and cannot mutate
+production behavior. It requires a later common-state/direct-play gate.
+
+Runner:
+`tools/run_teacher_architecture_benchmark_17315.sh`
+
+Preregistration:
+`contracts/teacher_architecture_benchmark_17315_v1.json`
+
+Stage manifest:
+`contracts/run_manifests/teacher_architecture_benchmark_17315.json`
