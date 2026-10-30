@@ -5195,3 +5195,60 @@ Orchestrator:
 The three-month label is a compute-budget planning target rather than a
 wall-clock cutoff. The frozen 11x11 root budget should be completed even if the
 actual calendar duration differs from the estimate, unless a hard stop fires.
+
+
+## 2026-10-30 — Pure teacher @17315 audit: architecture gate BLOCKED
+
+The completed direct-teacher audit changes the long-horizon execution decision.
+The three-month HU/3H compute budget is preserved, but the orchestrator is now
+blocked pending an architecture gate. This is justified by new evidence rather
+than a preference change.
+
+Frozen teacher identity:
+- exact 3H Semantic Advantage ENS8 @17315;
+- final ensemble SHA-256:
+  `d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4`;
+- no AveragePolicy, specialist or rebuild in the audited policy.
+
+Fresh audit:
+- 10,000 scenarios / 103,832 SpinCore decisions;
+- sampled flags: 271 deep high-card jams, 18 deep 72o jams, 4 trips+ folds;
+- 3,639 deep high-card/no-immediate-draw opportunities;
+- among those no-draw opportunities: 46 >=50% ALL_IN, 22 >=80%, 15 >=95%,
+  maximum 100%.
+
+Root-cause replay:
+- all 367/367 targeted decisions reproduced exactly with zero selection mismatch;
+- current teacher branch split: 198 positive-regret matching, 169 softmax
+  fallback;
+- sampled high-card jams: mean current ALL_IN 44.11% versus mean member-policy
+  mixture 25.73%; 72/271 have >=25pp raw-mean amplification; 26/271 are >=80%
+  ALL_IN with no majority of member policies preferring ALL_IN;
+- top-20 high-card/no-draw states are the strongest evidence:
+  current ensemble mean ALL_IN 96.96% versus member-policy mixture 37.53%;
+  all 20 have >=25pp amplification; 13/20 are extreme with no member majority;
+  15/20 have ALL_IN as the sole positive action after mean(raw);
+- therefore `mean(raw Advantages) -> regret matching` is a demonstrated
+  nonlinear amplification mechanism, not merely an innocent averaging choice.
+
+Separate pathology:
+- all 18 sampled deep-72o jams at @17315 are SOFTMAX_FALLBACK;
+- their mean ALL_IN probability is 33.18%, essentially near-uniform;
+- the top 20 72o policy-surface states show member-policy mean 32.84%, so
+  replacing raw-mean aggregation with policy-mean alone does not solve this lane;
+- trips+ folds are also mostly fallback-driven (3 of 4 sampled cases).
+
+Checkpoint trend on the exact @17315 flagged states:
+- high-card jam mean ALL_IN fell from 29.30%@10315 to 18.77%@15315, then rose
+  sharply to 44.11%@17315;
+- high-card/no-draw mean ALL_IN fell to 14.31%@15315, then rose to 36.14%@17315;
+- 72o mean ALL_IN is 33.18%@17315 with all 18 cases near-uniform fallback.
+
+Decision:
+- do NOT start the three-month orchestrator yet;
+- preserve the completed HU +469 endpoint and the entire long-horizon block
+  budget;
+- next gate is an aggregation/fallback architecture benchmark using existing
+  CFR/teacher evidence, with no new long training required to answer the first
+  question;
+- no production aggregation change is authorized by this audit alone.
