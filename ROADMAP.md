@@ -4716,3 +4716,44 @@ checkpoint from short-horizon strength noise.
 
 The plan is compute-budget based, approximately three months on the measured
 Ryzen workload, not an exact calendar deadline.
+
+
+### 2026-10-30 — Pure teacher @17315 audit: architecture gate BLOCKED
+
+New evidence invalidates the assumption that direct Semantic ENS8 inference is
+already healthy enough for an unattended three-month continuation.
+
+The pure @17315 teacher itself, without downstream distillation, shows two
+separate failure mechanisms:
+
+1. **raw-mean amplification**
+   - in the top 20 deep high-card/no-draw states, current
+     mean(raw)->regret-matching gives 96.96% mean ALL_IN while averaging the
+     eight member policies gives only 37.53%;
+   - every one of those 20 states has >=25pp amplification;
+   - 13/20 are >=80% ALL_IN despite fewer than 4/8 member policies preferring
+     ALL_IN;
+   - 15/20 become sole-positive-ALL_IN after raw averaging.
+
+2. **fallback/near-uniform pathology**
+   - all 18 sampled deep-72o jams at @17315 are softmax fallback;
+   - mean ALL_IN is 33.18% and all 18 are near-uniform;
+   - member-policy averaging is also near 33% on the top 72o states, so changing
+     ensemble aggregation alone cannot solve this second mechanism;
+   - trips+ folds are mostly fallback-driven as well.
+
+The exact flagged-state trend also deteriorates from @15315 to @17315 on the
+high-card surfaces, so more unchanged training is not currently accepted as the
+default remedy.
+
+Roadmap change:
+- three-month compute plan remains preserved but status is
+  `BLOCKED_BY_TEACHER_ARCHITECTURE_GATE`;
+- completed HU semantic +469 endpoint remains valid and read-only;
+- next work is a preregistered architecture benchmark on existing held-out CFR
+  Advantage samples plus the frozen pathology states;
+- compare current raw-mean regret matching against member-policy mean and robust
+  raw aggregators before changing production behavior;
+- separately quantify fallback-state target quality because policy-mean cannot
+  fix the 72o/trips fallback lane;
+- no long 3H/HU orchestrator start until this gate is adjudicated.
