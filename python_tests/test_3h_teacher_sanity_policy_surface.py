@@ -83,3 +83,19 @@ def test_top_pair_fold_probability_surface_is_recorded_even_if_not_sampled():
     codes=audit._opportunity_codes(t)
     assert "POSTFLOP_TOP_PAIR_FOLD" in codes
     assert audit._policy_probability(t,"FOLD")==0.37
+
+
+def test_opportunity_policy_row_preserves_scenario_id():
+    t=trace(
+        hole=(cid(10,0),cid(9,1)),
+        board=(cid(13,2),cid(5,3),cid(4,1)),
+        policy_detail=legal_detail(FOLD=.1,CHECK_CALL=.6,ALL_IN=.3),
+    )
+    row=audit._opportunity_policy_row(
+        t,
+        "POSTFLOP_DEEP_HIGH_CARD_JAM_NO_DRAW",
+        0.3,
+    )
+    assert row["scenario"]==1
+    assert row["lineup_index"]==0
+    assert row["decision_index"]==7
