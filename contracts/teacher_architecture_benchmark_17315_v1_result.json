@@ -1,0 +1,64 @@
+{
+  "schema": "SPINCORE_TEACHER_ARCHITECTURE_BENCHMARK_17315_RESULT_V1",
+  "status": "PASS",
+  "observed_on": "2026-10-30",
+  "classification": "AGGREGATION_CANDIDATE_IDENTIFIED",
+  "passing_candidates": [
+    "B_MEMBER_POLICY_MEAN"
+  ],
+  "protected_holdout_count": 50000,
+  "key_metrics": {
+    "A_CURRENT_RAW_MEAN_RM": {
+      "weighted_mean_tv": 0.5300283997788554,
+      "weighted_cross_entropy": 12.312881845131757,
+      "weighted_expected_stored_target_advantage": 0.01587530431145646,
+      "weighted_target_argmax_agreement": 0.6000806517985849
+    },
+    "B_MEMBER_POLICY_MEAN": {
+      "weighted_mean_tv": 0.4838426278406648,
+      "weighted_cross_entropy": 5.099748341152464,
+      "weighted_expected_stored_target_advantage": 0.012983756210480948,
+      "weighted_target_argmax_agreement": 0.6066787043959613
+    },
+    "C_MEDIAN_RAW_RM": {
+      "weighted_mean_tv": 0.5317558892003438,
+      "weighted_cross_entropy": 12.453884776911844
+    },
+    "D_TRIMMED_RAW_MEAN_RM": {
+      "weighted_mean_tv": 0.5317830254168422,
+      "weighted_cross_entropy": 12.432789927433216
+    }
+  },
+  "pathology": {
+    "high_card_no_draw_top20": {
+      "A_mean_allin": 0.969550115555647,
+      "A_ge80_count": 20,
+      "B_mean_allin": 0.3753138606710106,
+      "B_ge80_count": 0,
+      "B_max_allin": 0.6853874796379911
+    },
+    "deep_72o_top20": {
+      "A_mean_allin": 0.3326141373433914,
+      "B_mean_allin": 0.3283837950497202
+    }
+  },
+  "fallback_diagnostic": {
+    "current_fallback_count": 6711,
+    "current_fallback_fraction": 0.13422,
+    "target_positive_regret_count": 4676,
+    "target_positive_regret_fraction": 0.6967665027566682,
+    "target_fallback_count": 2035,
+    "target_policy_max_probability_ge80_fraction": 0.5815824765310684,
+    "target_policy_max_probability_mean": 0.7804075657462657,
+    "target_policy_max_probability_median": 1,
+    "target_policy_max_probability_p95": 1
+  },
+  "decision": {
+    "preferred_aggregation_candidate": "B_MEMBER_POLICY_MEAN",
+    "production_change_authorized": false,
+    "long_training_unblocked": false,
+    "next_gate": "PAIRED_COMMON_CHANCE_DIRECT_PLAY_A_VS_B",
+    "fallback_lane_remains_open": true,
+    "rationale": "B is the only preregistered aggregation candidate that passed. It materially improves held-out CFR policy fidelity and removes the high-card/no-draw extreme amplification, but it does not solve deep-72o fallback behavior and has lower weighted expected stored-target Advantage than A. Direct-play EV noninferiority is therefore required before adopting B even as the preferred aggregation map."
+  }
+}
