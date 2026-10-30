@@ -1,6 +1,6 @@
 {
   "schema": "SPINCORE_THREE_MONTH_TRAINING_PLAN_V1",
-  "status": "READY_AFTER_CURRENT_HU_PASS",
+  "status": "BLOCKED_BY_TEACHER_ARCHITECTURE_GATE",
   "frozen_on": "2026-10-28",
   "purpose": "Alternating long-horizon direct Semantic ENS8 teacher training for HU and 3H using durable fixed-root blocks. The plan begins only after the already-running HU migration/+469 block completes PASS.",
   "scheduling": {
@@ -8,7 +8,7 @@
     "concurrency": "ONE_HEAVY_TRAINER_AT_A_TIME",
     "calendar_rule": "COMPUTE_BUDGET_NOT_WALL_CLOCK_STOP",
     "restart_rule": "RERUN_ORCHESTRATOR; REVALIDATE COMPLETED PASS STAGES; RESUME FIRST INCOMPLETE STAGE",
-    "stop_rule": "STOP_ONLY_ON_HARD_INTEGRITY_SAFETY_RUNTIME_FAILURE_OR_MANUAL_USER_STOP",
+    "stop_rule": "BLOCKED: DO NOT START ORCHESTRATOR UNTIL TEACHER_ARCHITECTURE_GATE_PASS",
     "strength_selection_during_plan": false
   },
   "current_prerequisite": {
@@ -260,5 +260,22 @@
     "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
     "python/spincore/semantic_parallel.py": "903ee34024d30e99f40a1057eea0176ad5f7f8b8",
     "python/spincore_nn/semantic_v1.py": "f95caf41ed98305940fa4d15d4cb397f0b9143c6"
+  },
+  "blocked_on": "2026-10-30",
+  "block_reason": {
+    "gate": "TEACHER_PURE_AUDIT_17315",
+    "evidence": {
+      "sampled_high_card_jams": 271,
+      "sampled_trips_plus_folds": 4,
+      "sampled_deep_72o_jams": 18,
+      "high_card_no_draw_ge80_allin": 22,
+      "high_card_no_draw_ge95_allin": 15,
+      "high_card_no_draw_max_allin_probability": 1,
+      "top20_high_card_no_draw_current_mean_allin": 0.969550115555647,
+      "top20_high_card_no_draw_member_policy_mean_allin": 0.3753138606710106,
+      "top20_high_card_no_draw_extreme_without_member_majority": 13,
+      "top20_high_card_no_draw_raw_mean_amplification_ge25pp": 20
+    },
+    "rationale": "New post-HU evidence shows the direct 3H teacher @17315 still has material strategic pathologies. In the most suspicious high-card/no-draw states, mean(raw Advantages) followed by regret matching amplifies member disagreement into extreme ALL_IN probabilities. The long-horizon compute budget is preserved but execution is blocked until an aggregation/fallback architecture benchmark resolves this gate."
   }
 }
