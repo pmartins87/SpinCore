@@ -238,6 +238,7 @@ def _policy_probability(trace, action_name: str) -> float:
 
 def _opportunity_policy_row(trace, code: str, probability: float) -> dict[str, Any]:
     return {
+        "scenario": int(trace.scenario_index),
         "code": str(code),
         "target_action": _target_action_for_opportunity(code),
         "target_probability": float(probability),
