@@ -4757,3 +4757,25 @@ Roadmap change:
 - separately quantify fallback-state target quality because policy-mean cannot
   fix the 72o/trips fallback lane;
 - no long 3H/HU orchestrator start until this gate is adjudicated.
+
+
+### 2026-10-30 — Teacher @17315 architecture benchmark READY
+
+The first architecture gate is implemented as a no-training comparison on the
+frozen teacher.
+
+Compare:
+- current mean(raw)->regret matching;
+- mean of eight member policies;
+- median(raw)->regret matching;
+- one-per-tail trimmed mean(raw)->regret matching.
+
+Use the fixed 50k protected CFR Advantage holdout for broad non-inferiority and
+the exact pure-teacher pathology replay for high-card/no-draw, 72o, trips+,
+AA and monster surfaces. Also classify current softmax-fallback states by whether
+their stored CFR target contains positive regret.
+
+This gate can identify an aggregation candidate but cannot promote it. If one or
+more candidates pass, next gate is common-state/direct-play validation. If none
+pass, move to fallback/model architecture research rather than more unchanged
+long training.
