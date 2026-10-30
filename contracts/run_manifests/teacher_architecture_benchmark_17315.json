@@ -1,0 +1,75 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "TEACHER_ARCHITECTURE_BENCHMARK_17315",
+  "status": "READY",
+  "runner": "tools/run_teacher_architecture_benchmark_17315.sh",
+  "runner_blob_sha": "cb87a5624c8560de82dbe46633459415bd6d8318",
+  "contract_ids": [
+    "MODEL-020",
+    "MODEL-025",
+    "VALID-025",
+    "VALID-034",
+    "VALID-035",
+    "SAFE-001",
+    "SAFE-010",
+    "RNG-001",
+    "RNG-003"
+  ],
+  "affected_domains": [
+    "MODEL",
+    "VALID",
+    "SAFE",
+    "RNG"
+  ],
+  "duration_class": "MEDIUM_DIAGNOSTIC",
+  "target_host_profile": "RYZEN_9_9950X_FREE_18GIB",
+  "source_stage": {
+    "teacher_iteration": 17315,
+    "required_teacher_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "required_training_status": "PASS",
+    "required_raw_replay_status": "PASS",
+    "protected_holdout_count": 50000
+  },
+  "scientific_plan": {
+    "purpose": "Adjudicate whether changing only the eight-member aggregation operator can remove the demonstrated @17315 high-card amplification without degrading approximation to held-out CFR Advantage targets, while separately diagnosing the softmax-fallback lane.",
+    "prereg": "contracts/teacher_architecture_benchmark_17315_v1.json",
+    "candidates": [
+      "A_CURRENT_RAW_MEAN_RM",
+      "B_MEMBER_POLICY_MEAN",
+      "C_MEDIAN_RAW_RM",
+      "D_TRIMMED_RAW_MEAN_RM"
+    ],
+    "model_training": false,
+    "production_policy_mutation": false,
+    "external_strength_benchmark": false,
+    "three_month_training_authorized": false
+  },
+  "execution": {
+    "protected_holdout_count": 50000,
+    "batch_size": 512,
+    "minimum_wsl_mem_available_gib": 18,
+    "simultaneous_heavy_trainer_forbidden": true
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/benchmark_teacher_architecture_17315.py": "3c5c2022acf65a2a8e1e6789c6299fcc548f0139",
+    "tools/run_teacher_architecture_benchmark_17315.sh": "cb87a5624c8560de82dbe46633459415bd6d8318",
+    "contracts/teacher_architecture_benchmark_17315_v1.json": "cda1f3c56faa008191bfb84cccdff8e6f92503d0",
+    "python_tests/test_teacher_architecture_benchmark_17315.py": "ac7b7a108f69e2a640ed618abe57d403ff37dccf",
+    "python/spincore/lean_action_policy.py": "2cd05c36c9112d4c5212fc5cfd2712cb6fb09407",
+    "python/spincore_nn/semantic_v1.py": "f95caf41ed98305940fa4d15d4cb397f0b9143c6",
+    "tools/audit_3h_fresh_semantic_strategy_distill_10105.py": "da396b5d67eef7888c20fe856b7181d1c72ec944"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "READY_FOR_RESEARCH_DIAGNOSTIC_ONLY",
+    "conditions": [
+      "no HU or 3H heavy trainer running",
+      "teacher 17315 ensemble/resume hashes match PASS report",
+      "pure-teacher raw replay report is PASS",
+      "protected controlled-split probe exists",
+      "tracked repository clean",
+      ">=18 GiB WSL MemAvailable"
+    ]
+  }
+}
