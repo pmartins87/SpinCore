@@ -57,11 +57,14 @@ def test_three_month_compute_budget_totals_are_exact():
 
 
 def test_plan_is_compute_budget_not_results_driven_selection():
+    assert PLAN["status"]=="BLOCKED_BY_TEACHER_ARCHITECTURE_GATE"
+    assert PLAN["block_reason"]["gate"]=="TEACHER_PURE_AUDIT_17315"
     s=PLAN["scheduling"]
     assert s["policy"]=="ALTERNATE_ONE_FIXED_ROOT_BLOCK_PER_DOMAIN"
     assert s["concurrency"]=="ONE_HEAVY_TRAINER_AT_A_TIME"
     assert s["calendar_rule"]=="COMPUTE_BUDGET_NOT_WALL_CLOCK_STOP"
     assert s["strength_selection_during_plan"] is False
+    assert s["stop_rule"].startswith("BLOCKED:")
 
 
 def test_orchestrator_is_fail_closed_and_does_not_self_update():
