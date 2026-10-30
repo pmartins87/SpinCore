@@ -1,0 +1,51 @@
+{
+  "schema": "SPINCORE_TEACHER_MEMBER_POLICY_MEAN_DIRECT_PLAY_PREREG_V1",
+  "status": "FROZEN_BEFORE_RESULTS",
+  "frozen_on": "2026-10-30",
+  "source": {
+    "teacher_iteration": 17315,
+    "ensemble_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "architecture_benchmark_classification": "AGGREGATION_CANDIDATE_IDENTIFIED",
+    "candidate": "B_MEMBER_POLICY_MEAN"
+  },
+  "design": {
+    "domain": "THREE_HANDED_ONLY",
+    "scenarios": 10000,
+    "seed": 2026103017,
+    "workers": 16,
+    "max_decisions": 300,
+    "opponent": "frozen DeepCrusher development opponent",
+    "pairing": "A and B use the exact same sampled episodes and deal seeds; each receives its own deterministic action RNG stream initialized from the same master seed so pre-divergence stochastic decisions are coupled.",
+    "candidates": {
+      "A": "mean(raw eight-member Advantage vectors) then canonical lean regret matching",
+      "B": "canonical lean regret matching independently per member then arithmetic mean of eight member policies"
+    }
+  },
+  "metrics": [
+    "paired scenario-level SpinCore chips/exposure for A and B",
+    "paired B-minus-A chips/exposure mean/SEM/95% CI",
+    "sampled sanity flags by candidate",
+    "all-opportunity target-action probability surfaces by candidate",
+    "high-card/no-draw >=50/80/95 probability counts and fractions",
+    "deep-72o all-in probability and sampled-jam rates",
+    "trips+/monster/top-pair fold surfaces"
+  ],
+  "gates": {
+    "ev_noninferiority": "B-minus-A paired 95% CI lower bound >= -0.50 chips per policy-seat-hand",
+    "critical_absurdities": "B must have zero PREFLOP_AA_FOLD and zero POSTFLOP_MONSTER_FOLD sampled flags",
+    "high_card_no_draw": "B ge80 ALL_IN fraction <= A ge80 fraction and <=0.0025 absolute",
+    "deep_72o": "B mean ALL_IN probability <= A +0.02 absolute",
+    "trips_plus_fold": "B mean Fold probability <= A +0.02 absolute"
+  },
+  "interpretation": {
+    "pass": "B is validated as the preferred aggregation operator for subsequent research/deployment gates; this still does not unblock long training because fallback/model-sign error remains unresolved.",
+    "fail": "Do not adopt B; aggregation candidate fails direct-play/common-chance validation."
+  },
+  "prohibitions": [
+    "no production mutation",
+    "no long training",
+    "no threshold changes after results",
+    "no external benchmark substitution",
+    "no use of B as final solution to fallback pathology"
+  ]
+}
