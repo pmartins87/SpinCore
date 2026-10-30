@@ -5302,3 +5302,60 @@ Preregistration:
 
 Stage manifest:
 `contracts/run_manifests/teacher_architecture_benchmark_17315.json`
+
+
+## 2026-10-30 — Architecture benchmark result: B_MEMBER_POLICY_MEAN identified
+
+The preregistered @17315 aggregation/fallback benchmark completed PASS and
+identified exactly one aggregation candidate: `B_MEMBER_POLICY_MEAN`.
+
+Protected 50k CFR Advantage holdout:
+- current A mean(raw)->RM weighted mean TV: 0.5300284;
+- B member-policy mean weighted mean TV: 0.4838426;
+- current weighted cross-entropy: 12.3128818;
+- B weighted cross-entropy: 5.0997483;
+- current target-argmax agreement: 0.6000807;
+- B target-argmax agreement: 0.6066787;
+- current weighted expected stored-target Advantage: 0.0158753;
+- B weighted expected stored-target Advantage: 0.0129838.
+
+Thus B improves broad policy fidelity to held-out CFR targets but has lower
+stored-target expected Advantage under this diagnostic. It is not promoted yet.
+
+Frozen high-card/no-draw pathology:
+- A top20 mean ALL_IN 96.955%, 20/20 >=80%, 15/20 >=95%;
+- B top20 mean ALL_IN 37.531%, 0/20 >=80%, 0/20 >=95%, max 68.539%;
+- median/trimmed raw candidates failed the preregistered architecture gate.
+
+Deep-72o remains unresolved:
+- A top20 mean ALL_IN 33.261%;
+- B top20 mean ALL_IN 32.838%;
+- changing aggregation does not remove near-uniform fallback behavior.
+
+Fallback attribution on the protected 50k holdout:
+- current ensemble fallback on 6,711 / 50,000 states = 13.422%;
+- 4,676 / 6,711 = 69.6767% of those fallback states have stored CFR targets
+  with positive regret;
+- only 2,035 / 6,711 have stored CFR targets that also fall back;
+- among current fallback states, stored-CFR target policy max probability has
+  mean 78.04%, median 100%, p95 100%, and >=80% in 58.16%.
+
+Interpretation: most current fallback events are not caused by an inherently
+indifferent CFR target. The learned ensemble lost the positive-regret sign on
+states where the stored CFR target is often decisive. This keeps a separate
+model/sign-approximation gate open even if B wins direct play.
+
+Decision:
+- B is the preferred aggregation **candidate**, not production policy;
+- three-month training remains blocked;
+- next frozen gate is paired common-chance direct play A vs B on 10,000 fresh
+  forced-3H scenarios against the frozen DeepCrusher opponent;
+- B must pass EV noninferiority plus fresh sanity surfaces;
+- even a B direct-play PASS does not unblock long training until the fallback /
+  model-sign-error lane is adjudicated.
+
+Result source:
+`contracts/teacher_architecture_benchmark_17315_v1_result.json`
+
+Next runner:
+`tools/run_teacher_member_policy_mean_direct_play_17315.sh`
