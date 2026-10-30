@@ -1,0 +1,74 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "TEACHER_MEMBER_POLICY_MEAN_DIRECT_PLAY_17315",
+  "status": "READY",
+  "runner": "tools/run_teacher_member_policy_mean_direct_play_17315.sh",
+  "runner_blob_sha": "5a5d1a5558a94531b5be13e53e5cd35f376413d6",
+  "contract_ids": [
+    "MODEL-020",
+    "MODEL-025",
+    "VALID-025",
+    "VALID-031",
+    "VALID-034",
+    "VALID-035",
+    "SAFE-001",
+    "SAFE-010",
+    "RNG-001",
+    "RNG-002",
+    "RNG-003"
+  ],
+  "affected_domains": [
+    "MODEL",
+    "VALID",
+    "SAFE",
+    "RNG"
+  ],
+  "duration_class": "MEDIUM_DIRECT_PLAY",
+  "target_host_profile": "RYZEN_9_9950X_FREE_12GIB",
+  "source_stage": {
+    "teacher_iteration": 17315,
+    "required_teacher_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "architecture_benchmark_result": "AGGREGATION_CANDIDATE_IDENTIFIED",
+    "required_candidate": "B_MEMBER_POLICY_MEAN"
+  },
+  "scientific_plan": {
+    "prereg": "contracts/teacher_member_policy_mean_direct_play_17315_v1.json",
+    "scenarios": 10000,
+    "seed": 2026103017,
+    "domain": "THREE_HANDED_ONLY",
+    "comparison": "A_CURRENT_RAW_MEAN_RM vs B_MEMBER_POLICY_MEAN",
+    "same_episode_and_deal_schedule": true,
+    "same_frozen_teacher_members": true,
+    "same_frozen_deepcrusher": true,
+    "production_mutation": false,
+    "long_training_authorized": false
+  },
+  "execution": {
+    "workers": 16,
+    "max_decisions": 300,
+    "minimum_wsl_mem_available_gib": 12,
+    "simultaneous_heavy_trainer_forbidden": true
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/validate_teacher_member_policy_mean_17315.py": "769e0bdd39d8ec87b91668233b46cb7156c2cfd9",
+    "tools/run_teacher_member_policy_mean_direct_play_17315.sh": "5a5d1a5558a94531b5be13e53e5cd35f376413d6",
+    "contracts/teacher_member_policy_mean_direct_play_17315_v1.json": "8d7c2de6bcd7c2e4d4c306043cd3d18361673a2e",
+    "contracts/teacher_architecture_benchmark_17315_v1_result.json": "f2f63b4d97df8838ecc4f8bda4c92874ceb626e0",
+    "python_tests/test_teacher_member_policy_mean_direct_play_17315.py": "400e9bb231811f40deb21789ab19e9c47fe6d16d",
+    "tools/audit_3h_teacher_sanity_17315.py": "900af4e7a491961ecd4cd34f28cf579bf2a8d0f7",
+    "tools/evaluate_deepcrusher_dc1.py": "0c5acd5d14b2f20699ff69b20ca25c937c3b02af",
+    "python/spincore/lean_action_policy.py": "2cd05c36c9112d4c5212fc5cfd2712cb6fb09407",
+    "python/spincore_nn/semantic_v1.py": "f95caf41ed98305940fa4d15d4cb397f0b9143c6"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "READY_FOR_RESEARCH_DIRECT_PLAY_ONLY",
+    "conditions": [
+      "no heavy HU/3H trainer running",
+      "teacher SHA matches @17315 PASS report",
+      "tracked repository clean",
+      ">=12 GiB WSL MemAvailable"
+    ]
+  }
+}
