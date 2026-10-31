@@ -1,0 +1,94 @@
+{
+  "schema": "SPINCORE_SEMANTIC_OBJECTIVE_BENCHMARK_17315_PREREG_V1",
+  "status": "FROZEN_BEFORE_RESULTS",
+  "frozen_on": "2026-10-31",
+  "source": {
+    "teacher_iteration": 17315,
+    "teacher_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "protected_holdout_count": 50000,
+    "train_pool_count": 1950000,
+    "primary_current_fallback_target_positive_count": 4676
+  },
+  "invariant_training_contract": {
+    "architecture": "same V1+30-semantic Advantage network",
+    "ensemble_size": 8,
+    "member_steps": 1600,
+    "optimizer": "Adam",
+    "learning_rate": "read unchanged from frozen 10105 checkpoint config",
+    "batch_size": "read unchanged from frozen 10105 checkpoint config",
+    "member_init_seeds": "same @17315 member_seed_contract",
+    "member_batch_seeds": "same @17315 member_seed_contract",
+    "sample_order": "same protected split and train_pool ordering",
+    "sample_weights": "unchanged CFR iteration*explicit-opponent-mass weights",
+    "no_new_cfr_roots": true
+  },
+  "parity_gate": {
+    "candidate": "A_CURRENT_WEIGHTED_MSE_REFIT",
+    "definition": "exact canonical current weighted legal-action MSE",
+    "requirement": "all 8 refit state_dicts must be bitwise identical to frozen @17315 ensemble before evaluating alternate objectives"
+  },
+  "candidates": [
+    {
+      "id": "A_CURRENT_WEIGHTED_MSE_REFIT",
+      "target": "raw CFR Advantage",
+      "action_loss": "equal-weight MSE over legal actions",
+      "purpose": "exact reconstruction/parity baseline"
+    },
+    {
+      "id": "B_STATE_SCALE_NORMALIZED_MSE",
+      "target": "raw CFR Advantage divided per state by max absolute legal Advantage, epsilon floor 1e-6",
+      "action_loss": "equal-weight MSE over legal actions",
+      "rationale": "regret matching is invariant to positive per-state target scaling; remove cross-state magnitude heterogeneity without changing ideal policy"
+    },
+    {
+      "id": "C_POSNEG_BALANCED_MSE",
+      "target": "raw CFR Advantage",
+      "action_loss": "within each state, total MSE weight 50% positive-regret legal actions and 50% non-positive legal actions when both groups exist; otherwise uniform legal-action MSE",
+      "rationale": "prevent one/few positive-regret actions from being diluted by many non-positive legal actions"
+    },
+    {
+      "id": "D_NORMALIZED_POSNEG_BALANCED_MSE",
+      "target": "state-scale-normalized CFR Advantage",
+      "action_loss": "same 50/50 positive-vs-nonpositive group-balanced MSE",
+      "rationale": "test scale heterogeneity and positive-action dilution jointly"
+    }
+  ],
+  "evaluation": {
+    "protected_holdout_metrics": [
+      "weighted mean TV to stored-CFR target policy",
+      "weighted cross entropy",
+      "weighted expected stored-target Advantage",
+      "weighted target-policy argmax agreement",
+      "own current-style ensemble fallback count",
+      "own target-positive fallback count"
+    ],
+    "fixed_primary_metrics": [
+      "on the frozen 4676 current-fallback/target-positive states: residual ensemble fallback fraction",
+      "CFR-best positive-sign vote mean across 8 members",
+      "zero-positive-vote fraction",
+      "at-least-four-positive-vote fraction",
+      "member-policy-mean CFR-best probability"
+    ]
+  },
+  "gates": {
+    "parity": "A refit bitwise equals source @17315 ensemble",
+    "weighted_mean_tv": "candidate <= A +0.005",
+    "weighted_cross_entropy": "candidate <= A +0.50",
+    "weighted_expected_stored_target_advantage": "candidate >= A -0.001",
+    "weighted_target_argmax_agreement": "candidate >= A -0.005",
+    "own_target_positive_fallback_count": "candidate <= 0.60 * A",
+    "fixed_primary_residual_fallback_fraction": "candidate <=0.50"
+  },
+  "interpretation": {
+    "pass": "candidate objective improves sign/fallback failure without materially degrading held-out CFR fidelity; candidate proceeds to frozen pathology and direct-play validation",
+    "no_pass": "current architecture/representation or richer objective research is required; do not resume long training"
+  },
+  "prohibitions": [
+    "no new CFR roots",
+    "no production policy mutation",
+    "no long training",
+    "no threshold changes after results",
+    "no architecture-size changes in this gate",
+    "no candidate definitions added after results"
+  ]
+}
