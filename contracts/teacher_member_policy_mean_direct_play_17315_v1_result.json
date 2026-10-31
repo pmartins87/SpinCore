@@ -1,0 +1,72 @@
+{
+  "schema": "SPINCORE_TEACHER_MEMBER_POLICY_MEAN_DIRECT_PLAY_17315_RESULT_V1",
+  "status": "FAIL",
+  "observed_on": "2026-10-31",
+  "teacher_iteration": 17315,
+  "candidate": "B_MEMBER_POLICY_MEAN",
+  "scenarios": 10000,
+  "paired_B_minus_A_spincore_chips_per_policy_seat_hand": {
+    "mean": -0.5528555555555555,
+    "sem": 0.3503197117298351,
+    "ci95_low": -1.2394821905460325,
+    "ci95_high": 0.13377107943492128
+  },
+  "checks": {
+    "ev_noninferiority": false,
+    "zero_aa_fold": true,
+    "zero_monster_fold": true,
+    "high_card_no_draw_ge80": true,
+    "deep_72o_mean_allin": false,
+    "trips_plus_fold_mean": true
+  },
+  "sampled_flags": {
+    "A": {
+      "POSTFLOP_DEEP_HIGH_CARD_JAM": 256,
+      "POSTFLOP_TRIPS_PLUS_FOLD": 3,
+      "PREFLOP_DEEP_72O_JAM": 18
+    },
+    "B": {
+      "POSTFLOP_DEEP_HIGH_CARD_JAM": 744,
+      "POSTFLOP_TOP_PAIR_FOLD": 2,
+      "POSTFLOP_TRIPS_PLUS_FOLD": 2,
+      "PREFLOP_DEEP_72O_JAM": 71
+    }
+  },
+  "policy_surfaces": {
+    "A_high_card_no_draw": {
+      "opportunities": 3653,
+      "mean_allin": 0.039555619404971605,
+      "ge50_fraction": 0.013139885026006022,
+      "ge80_fraction": 0.006569942513003011,
+      "ge95_fraction": 0.005201204489460717,
+      "max_allin": 1
+    },
+    "B_high_card_no_draw": {
+      "opportunities": 5021,
+      "mean_allin": 0.09416218511066157,
+      "ge50_fraction": 0.007568213503286198,
+      "ge80_fraction": 0.0005974905397331209,
+      "ge95_fraction": 0,
+      "max_allin": 0.8339438871063346
+    },
+    "A_deep_72o": {
+      "opportunities": 659,
+      "mean_allin": 0.024708425569507076,
+      "ge50_fraction": 0.0015174506828528073,
+      "max_allin": 1
+    },
+    "B_deep_72o": {
+      "opportunities": 662,
+      "mean_allin": 0.10473138549318284,
+      "ge50_fraction": 0.004531722054380665,
+      "max_allin": 0.5410565080087757
+    }
+  },
+  "decision": {
+    "adopt_B": false,
+    "production_change_authorized": false,
+    "long_training_unblocked": false,
+    "next_gate": "FALLBACK_MODEL_SIGN_ERROR_GATE",
+    "rationale": "B fixes the strongest raw-mean high-card amplification but fails the preregistered direct-play gate: paired EV noninferiority fails and deep-72o ALL_IN probability/sampled jams worsen materially. Aggregation-only replacement is therefore insufficient."
+  }
+}
