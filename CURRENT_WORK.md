@@ -5359,3 +5359,45 @@ Result source:
 
 Next runner:
 `tools/run_teacher_member_policy_mean_direct_play_17315.sh`
+
+
+## 2026-10-31 — Member-policy mean direct-play gate FAIL
+
+The preregistered A-vs-B direct-play gate completed on 10,000 fresh forced-3H
+scenarios with common episode/deal schedules.
+
+Result:
+- candidate B = member-policy mean;
+- paired B-minus-A SpinCore chips/policy-seat-hand:
+  mean -0.55286, SEM 0.35032, 95% CI [-1.23948, +0.13377];
+- EV noninferiority gate failed (required lower bound >= -0.50);
+- B also failed the deep-72o sanity gate;
+- critical AA-fold and monster-fold gates remained clean.
+
+Fresh sampled flags:
+- A: 256 deep high-card jams, 3 trips+ folds, 18 deep-72o jams;
+- B: 744 deep high-card jams, 2 top-pair folds, 2 trips+ folds, 71 deep-72o jams.
+
+Policy surfaces:
+- high-card/no-draw:
+  A mean ALL_IN 3.96%, >=80% in 0.657% of opportunities;
+  B mean ALL_IN 9.42%, >=80% in only 0.060% of opportunities.
+  B suppresses extreme tails but increases average jam pressure and sampled jams.
+- deep 72o:
+  A mean ALL_IN 2.47%;
+  B mean ALL_IN 10.47%;
+  B therefore worsens this lane materially.
+
+Decision:
+- do NOT adopt B;
+- do NOT return to the old downstream treatment;
+- aggregation-only replacement is insufficient;
+- three-month training remains blocked;
+- next gate is FALLBACK_MODEL_SIGN_ERROR_GATE on the frozen 50k protected CFR
+  holdout;
+- objective: determine why 69.68% of current fallback states correspond to
+  stored CFR targets with positive regret and whether the loss occurs at each
+  member, in ensemble cancellation, or in representation/fit.
+
+Result source:
+`contracts/teacher_member_policy_mean_direct_play_17315_v1_result.json`
