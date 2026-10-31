@@ -4811,3 +4811,30 @@ Roadmap consequence:
 
 Runner:
 `tools/run_teacher_member_policy_mean_direct_play_17315.sh`
+
+
+### 2026-10-31 — Member-policy mean direct-play gate FAIL
+
+The unique aggregation candidate from the holdout benchmark did not survive
+fresh common-chance direct play.
+
+A-vs-B result over 10,000 forced-3H scenarios:
+- B-minus-A mean = -0.5529 chips/policy-seat-hand;
+- 95% CI = [-1.2395, +0.1338];
+- preregistered EV noninferiority failed;
+- B reduced >=80% high-card/no-draw tail frequency but increased mean
+  high-card/no-draw ALL_IN from 3.96% to 9.42%;
+- sampled deep high-card jams rose 256 -> 744;
+- deep-72o mean ALL_IN rose 2.47% -> 10.47%;
+- sampled deep-72o jams rose 18 -> 71.
+
+Roadmap consequence:
+1. reject B as a production aggregation replacement;
+2. keep the current long-training plan blocked;
+3. do not revert to AveragePolicy/rebuild treatment;
+4. investigate the learned-Advantage sign/fallback failure directly;
+5. use the protected 50k CFR holdout to localize whether positive-regret targets
+   are lost by all eight members, by ensemble cancellation, or by particular
+   state/target regimes;
+6. only after that diagnosis choose whether to modify loss, representation,
+   training target, or inference.
