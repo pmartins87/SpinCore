@@ -1,0 +1,49 @@
+{
+  "schema": "SPINCORE_TEACHER_FALLBACK_SIGN_ERROR_17315_PREREG_V1",
+  "status": "FROZEN_BEFORE_RESULTS",
+  "frozen_on": "2026-10-31",
+  "source": {
+    "teacher_iteration": 17315,
+    "ensemble_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "protected_holdout_count": 50000,
+    "current_fallback_count": 6711,
+    "current_fallback_target_positive_regret_count": 4676
+  },
+  "objective": "Localize why the learned Semantic ENS8 loses positive-regret signal on protected CFR holdout states where the stored CFR target is decisive enough to avoid fallback.",
+  "population": {
+    "primary": "protected holdout states where A_CURRENT_RAW_MEAN_RM enters SOFTMAX_FALLBACK and stored CFR target has at least one positive legal Advantage",
+    "secondary": "all protected holdout states for baseline comparison"
+  },
+  "frozen_metrics": [
+    "target best-action positive Advantage magnitude distribution",
+    "target best-action policy probability distribution",
+    "per-member target-best raw sign recall",
+    "count distribution of members predicting target-best raw >0",
+    "fraction with zero/1-3/4-7/8 positive votes",
+    "fraction where every member individually falls back",
+    "fraction where at least one member has positive legal regret but raw-mean cancels to global fallback",
+    "per-member any-positive-legal-regret rate",
+    "mean-raw bias and absolute error on target-best action",
+    "member-policy-mean probability assigned to CFR target-best action",
+    "diagnostic by target-strength quartile and decile",
+    "diagnostic by number of legal actions"
+  ],
+  "classifications": {
+    "ALL_MEMBERS_LOSE_SIGNAL": "Most target-positive current-fallback states have zero members preserving positive sign on the CFR-best action and/or most members individually fallback.",
+    "ENSEMBLE_CANCELLATION_DOMINANT": "Most target-positive current-fallback states retain positive target-best sign in multiple members but arithmetic raw averaging cancels all legal positives.",
+    "MIXED_MODEL_AND_ENSEMBLE_FAILURE": "Neither all-member loss nor cancellation alone dominates.",
+    "TARGET_MARGIN_FRAGILE": "Sign loss is concentrated overwhelmingly in the weakest target-positive magnitude quantiles."
+  },
+  "decision_rules": {
+    "all_members_lose_signal_if": "fraction with zero members positive on CFR-best action >=0.50 OR mean fraction of individually-fallback members >=0.75",
+    "ensemble_cancellation_if": "fraction with >=4 members positive on CFR-best action >=0.50 while current raw mean globally falls back",
+    "target_margin_fragile_if": "at least 80% of target-positive fallback states lie in bottom two quartiles of target max-positive Advantage magnitude relative to all target-positive holdout states"
+  },
+  "prohibitions": [
+    "no model training",
+    "no production policy changes",
+    "no fallback-rule changes",
+    "no threshold changes after results",
+    "no long training"
+  ]
+}
