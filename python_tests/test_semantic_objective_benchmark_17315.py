@@ -83,3 +83,11 @@ def test_adjudicate_requires_all_frozen_checks():
     d=b.adjudicate(results)
     assert d["classification"]=="OBJECTIVE_CANDIDATE_IDENTIFIED"
     assert d["passing_candidates"]==["B_STATE_SCALE_NORMALIZED_MSE"]
+
+
+def test_semantic_factory_resolves_and_is_seed_deterministic():
+    from run_3h_v1_semantic_shadow_10105 import V1SemanticAdvantageNet
+    a=b.make_semantic_model(17315)
+    c=b.make_semantic_model(17315)
+    assert isinstance(a,V1SemanticAdvantageNet)
+    assert all(torch.equal(a.state_dict()[key],c.state_dict()[key]) for key in a.state_dict())
