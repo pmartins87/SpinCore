@@ -4850,3 +4850,24 @@ The gate distinguishes all-member signal loss, ensemble cancellation, mixed
 failure, and target-margin fragility. Its result will determine whether the next
 architecture change should target loss/training objective, model/representation,
 or inference.
+
+
+### 2026-10-31 — Semantic objective benchmark READY
+
+The fallback/sign-error gate classified @17315 as
+`MIXED_MODEL_AND_ENSEMBLE_FAILURE`, not target-margin fragility.
+
+The next gate tests whether the network training objective is the main avoidable
+source of sign loss while preserving all other variables. It performs no new CFR
+collection.
+
+Frozen candidates:
+- current exact weighted MSE baseline with mandatory bitwise refit parity;
+- per-state scale-normalized MSE;
+- positive-vs-nonpositive group-balanced MSE;
+- normalized + balanced MSE.
+
+A candidate must materially reduce target-positive fallback while remaining
+noninferior on held-out CFR policy fidelity and expected stored-target Advantage.
+Only a passing objective can proceed to pathology/direct-play validation.
+Three-month training remains blocked.
