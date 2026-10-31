@@ -4871,3 +4871,17 @@ A candidate must materially reduce target-positive fallback while remaining
 noninferior on held-out CFR policy fidelity and expected stored-target Advantage.
 Only a passing objective can proceed to pathology/direct-play validation.
 Three-month training remains blocked.
+
+
+### 2026-10-31 — Semantic objective runner factory repair (execution pending)
+
+The first local run reached `OBJECTIVE_BENCHMARK_PRECOMPUTE_PASS` on 2,000,000 examples,
+then failed before baseline fitting: the runner called `shadow.make_semantic_model`,
+which does not exist in the fresh-strategy distillation module. The factory is
+actually defined in `run_3h_v1_semantic_shadow_10105.py`.
+
+The runner now imports that canonical seeded factory directly; a deterministic
+factory regression test was added. This is an implementation repair only:
+no change to CFR targets, objective candidates, seed schedule, held-out split,
+or promotion criteria. Local rerun and baseline parity remain **PENDING**.
+The three-month training gate remains **BLOCKED**.
