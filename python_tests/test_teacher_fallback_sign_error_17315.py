@@ -38,6 +38,10 @@ def test_quantile_edges_and_bins_are_stable():
 
 
 def test_rm_returns_normalized_policy():
-    p=d.rm([-1.0,2.0,-3.0],(0,1,2))
+    raw=[0.0]*10
+    raw[0]=-1.0
+    raw[1]=2.0
+    raw[2]=-3.0
+    p=d.rm(raw,(0,1,2))
     assert abs(float(p.sum())-1.0)<1e-12
     assert p[1]==1.0
