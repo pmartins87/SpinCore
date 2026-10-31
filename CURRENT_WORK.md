@@ -5401,3 +5401,28 @@ Decision:
 
 Result source:
 `contracts/teacher_member_policy_mean_direct_play_17315_v1_result.json`
+
+
+## 2026-10-31 — Fallback/sign-error diagnostic READY
+
+The next research gate is implemented and preregistered after the failed B
+direct-play gate.
+
+Runner:
+`tools/run_teacher_fallback_sign_error_17315.sh`
+
+Prereg:
+`contracts/teacher_fallback_sign_error_17315_v1.json`
+
+Primary population is frozen at the 4,676 protected-holdout states where:
+- current A inference falls into SOFTMAX_FALLBACK;
+- stored CFR target has at least one positive legal Advantage.
+
+The diagnostic measures whether the CFR-best positive sign is lost:
+- by all eight members;
+- by only a minority/majority of members;
+- by arithmetic ensemble cancellation;
+- or predominantly in very weak target-margin states.
+
+No model training, policy mutation or long-training authorization occurs in this
+gate.
