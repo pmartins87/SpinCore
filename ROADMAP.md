@@ -4838,3 +4838,15 @@ Roadmap consequence:
    state/target regimes;
 6. only after that diagnosis choose whether to modify loss, representation,
    training target, or inference.
+
+
+### 2026-10-31 — Fallback/sign-error diagnostic READY
+
+After rejecting B in direct play, the next gate is no longer another aggregation
+candidate. It directly localizes the 4,676 protected states where current
+inference falls back despite a positive-regret CFR target.
+
+The gate distinguishes all-member signal loss, ensemble cancellation, mixed
+failure, and target-margin fragility. Its result will determine whether the next
+architecture change should target loss/training objective, model/representation,
+or inference.
