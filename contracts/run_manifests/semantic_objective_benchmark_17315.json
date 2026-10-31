@@ -1,0 +1,85 @@
+{
+  "schema": "SPINCORE_STAGE_MANIFEST_V1",
+  "stage_id": "SEMANTIC_OBJECTIVE_BENCHMARK_17315",
+  "status": "READY",
+  "runner": "tools/run_semantic_objective_benchmark_17315.sh",
+  "runner_blob_sha": "4c6d14e6a2b005854a131c52d02038467a3ad11f",
+  "contract_ids": [
+    "MODEL-020",
+    "MODEL-025",
+    "TRAIN-020",
+    "VALID-025",
+    "VALID-034",
+    "VALID-035",
+    "SAFE-001",
+    "SAFE-010",
+    "RNG-001",
+    "RNG-003",
+    "PERF-001",
+    "PERF-002"
+  ],
+  "affected_domains": [
+    "MODEL",
+    "TRAIN",
+    "VALID",
+    "SAFE",
+    "RNG",
+    "PERF"
+  ],
+  "duration_class": "MEDIUM_OFFLINE_REFIT_BENCHMARK",
+  "target_host_profile": "RYZEN_9_9950X_FREE_22GIB",
+  "source_stage": {
+    "teacher_iteration": 17315,
+    "required_teacher_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "protected_holdout_count": 50000,
+    "train_pool_count": 1950000,
+    "primary_fallback_target_positive_count": 4676,
+    "fallback_classification": "MIXED_MODEL_AND_ENSEMBLE_FAILURE"
+  },
+  "scientific_plan": {
+    "prereg": "contracts/semantic_objective_benchmark_17315_v1.json",
+    "candidates": [
+      "A_CURRENT_WEIGHTED_MSE_REFIT",
+      "B_STATE_SCALE_NORMALIZED_MSE",
+      "C_POSNEG_BALANCED_MSE",
+      "D_NORMALIZED_POSNEG_BALANCED_MSE"
+    ],
+    "baseline_bitwise_parity_required": true,
+    "new_cfr_roots": 0,
+    "architecture_change": false,
+    "production_mutation": false,
+    "long_training_authorized": false
+  },
+  "execution": {
+    "ensemble_size": 8,
+    "member_steps": 1600,
+    "fit_concurrency": 4,
+    "threads_per_member": 8,
+    "eval_batch_size": 512,
+    "minimum_wsl_mem_available_gib": 22,
+    "simultaneous_heavy_trainer_forbidden": true
+  },
+  "support_blob_shas": {
+    "tools/check_stage_manifest.py": "c38dbf661759c9892bf7db562b741e135eea77f2",
+    "tools/benchmark_semantic_objectives_17315.py": "afb07e5cf2357d303e1327197fcb73588e290766",
+    "tools/run_semantic_objective_benchmark_17315.sh": "4c6d14e6a2b005854a131c52d02038467a3ad11f",
+    "contracts/semantic_objective_benchmark_17315_v1.json": "ca2d313e1d35485b9b9fe2a9e82a419b35e1ea6c",
+    "python_tests/test_semantic_objective_benchmark_17315.py": "54e509b3e8dc7565ad340f2a0b46ca3dc636cd42",
+    "tools/lt3_3h_semantic_parallel_fit.py": "ecb0102f08b8960a04e2ae7c8e0aca3d08d1b1b1",
+    "tools/run_3h_semantic_online_pilot_10105.py": "75609506e70bb7c5420454dc3ef9a435f063b3d2",
+    "tools/audit_3h_fresh_semantic_strategy_distill_10105.py": "da396b5d67eef7888c20fe856b7181d1c72ec944",
+    "python/spincore_nn/training.py": "277f56efb6935108ddbb90f7fe2f0e6a4120120e",
+    "python/spincore_nn/semantic_v1.py": "f95caf41ed98305940fa4d15d4cb397f0b9143c6"
+  },
+  "block_reason": null,
+  "authorization": {
+    "decision": "READY_FOR_OFFLINE_OBJECTIVE_RESEARCH_ONLY",
+    "conditions": [
+      "no heavy HU/3H trainer running",
+      "source @17315 hashes match PASS report",
+      "tracked repository clean",
+      ">=22 GiB WSL MemAvailable",
+      "baseline exact refit parity passes before alternate objectives are evaluated"
+    ]
+  }
+}
