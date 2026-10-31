@@ -33,6 +33,7 @@ sys.path.insert(0,str(ROOT/"python"))
 sys.path.insert(0,str(ROOT/"tools"))
 
 import audit_3h_fresh_semantic_strategy_distill_10105 as shadow
+from run_3h_v1_semantic_shadow_10105 import make_semantic_model
 import run_3h_semantic_online_pilot_10105 as pilot
 import lt3_3h_semantic_parallel_fit as packed_fit
 
@@ -141,7 +142,7 @@ def worker_fit(task):
     member=int(member)
     init_seed=int(meta["init_seed"])
     batch_seed=int(meta["batch_seed"])
-    model=shadow.make_semantic_model(init_seed)
+    model=make_semantic_model(init_seed)
     opt=torch.optim.Adam(model.parameters(),lr=float(lr))
     rng=random.Random(batch_seed)
     population=range(int(_PACKED.train_count))
