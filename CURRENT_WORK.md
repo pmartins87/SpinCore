@@ -5426,3 +5426,46 @@ The diagnostic measures whether the CFR-best positive sign is lost:
 
 No model training, policy mutation or long-training authorization occurs in this
 gate.
+
+
+## 2026-10-31 — Semantic objective benchmark READY
+
+The fallback/sign-error diagnostic completed PASS with classification
+`MIXED_MODEL_AND_ENSEMBLE_FAILURE` and `target_margin_fragile=False`.
+
+Primary frozen population:
+- 4,676 protected holdout states where current mean(raw) inference falls into
+  fallback while the stored CFR target has positive regret;
+- CFR target-best policy probability mean 91.51%, median 100%;
+- target-strength mean 0.1590, median 0.1493, p10 0.0334, p90 0.2824;
+- only 44.67% lie in the bottom two target-strength quartiles.
+
+Member-level signal:
+- zero of eight members preserve positive sign on the CFR-best action in 18.63%;
+- only 18.63% have >=4 positive votes;
+- 62.75% have only 1-3 positive votes;
+- mean positive votes = 2.085 / 8;
+- all eight members individually fallback in only 0.94%;
+- mean individual-fallback-member fraction = 42.34%;
+- per-member CFR-best positive-sign recall ranges 8.68% to 38.79%.
+
+Interpretation:
+- target weakness alone does not explain the failure;
+- arithmetic ensemble cancellation exists but is not dominant enough to explain
+  the population by itself;
+- the learned networks themselves frequently lose the positive CFR-best sign,
+  while different members often preserve some other positive legal action;
+- current equal-action weighted MSE is therefore an explicit research target.
+
+Next preregistered gate is an offline refit benchmark with no new CFR roots:
+- A exact current weighted-MSE refit, required bitwise-identical to @17315;
+- B per-state scale-normalized Advantage MSE;
+- C positive-vs-nonpositive group-balanced Advantage MSE;
+- D normalized + group-balanced MSE.
+
+All variants keep the same final reservoir, protected 50k split, architecture,
+optimizer, 8 member init seeds, 8 batch seeds, 1600 steps and sample weights.
+Only target/loss treatment changes.
+
+Runner:
+`tools/run_semantic_objective_benchmark_17315.sh`
