@@ -265,3 +265,89 @@ Dados já registrados mostram *mecanismo* de amplificação e erro de
 sinal, mas **não** identificam causalmente a divisão por |A| como
 causa primária. O conjunto protegidos permanece congelado e
 não deve ser consultado repetidamente para escolher arquiteturas.
+
+## G4B — análise do relatório de sinal recebido (2026-11-01)
+
+O usuário anexou `SpinCore_teacher_fallback_sign_error_17315.json`;
+SHA256 **`e19faacee5cc55e59f94598aeb30435421b707da6a64cfa081c1143140b23405`**,
+11.436 bytes. Schema
+`SPINCORE_TEACHER_FALLBACK_SIGN_ERROR_17315_V1`, `status=PASS`,
+teacher 17315, `protected_holdout_count=50000`, fonte de teacher SHA
+`d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4`.
+Os grupos por `by_legal_action_count` somam exatamente 4.676 e a
+média ponderada de votos 2.0853293413 reproduz a agregação global.
+
+### Distribuição da população selecionada (não são taxas condicionais)
+
+| Nº de ações legais | Fallback+target positivo | % dos 4.676 | Média de votos positivos no target-best entre 8 redes | Target-best p médio | Bias raw na melhor ação |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 | 2059 | 44.03% | 2.130 | 0.9925 | -0.16786 |
+| 3 | 1830 | 39.14% | 1.919 | 0.9122 | -0.18681 |
+| 4 | 465 | 9.94% | 2.469 | 0.7707 | -0.19607 |
+| 5 | 157 | 3.36% | 2.191 | 0.6704 | -0.14491 |
+| 6 | 128 | 2.74% | 2.172 | 0.6299 | -0.13892 |
+| 7 | 37 | 0.79% | 2.243 | 0.5919 | -0.19994 |
+
+2–3 ações somam **3.889 / 4.676 = 83,1694%** dos casos
+**já selecionados por erro**. O relatório não fornece
+`n_target_positive_by_legal_count` em todos os 50.000 protegidos,
+portanto **NÃO permite estimar `P(fallback errado | legal_count=k,
+target positivo)`**. É inválido concluir que 2–3 ações possuem
+a maior taxa de erro sem seus denominadores.
+`mean_raw_target_best_bias` é negativo em todos os grupos mas
+não segue progressão monotônica simples com `legal_count`.
+O tamanho médio do target também varia com `legal_count`.
+É **correlação condicionada a um evento selecionado, não causalidade**.
+
+Na população total protegida existem **33.214** targets com
+ao menos um Advantage positivo (66,428% do holdout) e 4.676
+deles entram em fallback no professor: **14,0784% de erro
+condicional global entre target-positivos**, ou 9,352%
+de todo holdout. O target-best tem probabilidade média **91,509%**
+dentre as discrepâncias e há sinal positivo na ação target-best
+em apenas **2,085/8** membros em média. Só **44,67%** dos
+4.676 casos ficam nas duas quartilas inferiores de magnitude
+de target, portanto o `target_margin_fragile=False` do gate
+pré-registrado continua correto. Isso reforça falhas
+de aproximação/sinal sem identificar a causa causal.
+
+### Inferência sobre a loss
+
+A função de treinamento atualmente usa
+`SUM_{legal}(pred-target)^2 / legal_count`. Isso **aumenta o
+peso relativo de estados com 2–3 ações** comparado à
+`SUM_{legal}` do algoritmo impresso. A grande proporção de
+estados 2–3 na *amostra de erros* não demonstra que a normalização
+os penalizou; eles podem ser dominantes entre todos os estados
+alcançáveis e target-positivos. Assim, **não há justificativa
+técnica suficiente para editar o loss agora**, tampouco para
+afirmar que a normalização foi exonerada causalmente.
+
+### Gate terminável, sem nova inferência neural
+
+Foi adicionado `tools/audit_teacher_sign_error_legal_denominators_17315.py`,
+**preparado, não executado**, para ler apenas checkpoint RESUME
+original, probe do split, e relatório existente; recuperar exatamente
+os mesmos 50 mil índices protegidos via `holdout_seed`,
+contar `n_target_positive` e `n_total` por número de ações,
+verificar `sum(target_positivo)=33214` e calcular taxas
+`n_fallback_target_positivo_k / n_target_positivo_k`.
+O código valida SHA do resume contra relatório PASS e falha
+sem retornar números se houver divergência. **Zero forward
+pass, zero CFR root, zero treino, zero alteração em checkpoint,
+sem acesso ao sealed holdout**.
+
+Comando PowerShell único:
+```powershell
+wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && .venv_lean/bin/python tools/audit_teacher_sign_error_legal_denominators_17315.py"
+```
+
+**Stop rule:** se a taxa condicional não mostrar dependência
+convincente de `legal_count`, encerrar a hipótese específica
+de normalização e **não gastar compute em refit apenas por ela**.
+Se mostrar associação forte, isso **ainda não demonstra causalidade**:
+comparar primeiro target-strength e composição de spots e decidir
+se o já congelado benchmark supervisionado de objetivos, que não
+inclui uma variante pura `SUM_{legal}`, é justificável.
+Não adicionar retrospectivamente novo braço a um preregistro
+de outubro nem abrir o holdout selado.
