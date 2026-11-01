@@ -2,7 +2,7 @@
 
 ## Primary objective now
 
-**CONTINUE THE VALIDATED LT2/LT3 LEARNING STATE, AFTER THE ENS8 PERFORMANCE GATE.**
+**PRESERVE LT2/LT3 LEARNING STATE; LONG TRAINING BLOCKED PENDING G4 REFERENCE-FIDELITY ADJUDICATION.**
 
 OpenHoldem deployment is paused until the user explicitly returns to it.
 
@@ -5079,3 +5079,49 @@ could address sign-error without inventing new algorithm.
 preregistered gates; all long HU/3H training stays BLOCKED.
 
 Full audit: `docs/TEACHER_RAW_ADVANTAGE_17315_ROOT_CAUSE_20261101.md`.
+
+### 2026-11-01 — G4 static source audit complete; reuse precomputed protected sign report
+
+Source-fidelity audit: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
+Read `PROJECT_CONTRACT.yaml` and active REP/TRAIN/MODEL/VALID/SRC modules
+before conclusions. Status: **STATIC COMPLETE**, no deployment/code change.
+
+Findings:
+- **Traverser targets** align in structure with published Deep CFR:
+  all effective legal traverser actions, policy-weighted node value,
+  target action value minus node value; opponent external sampling.
+  Legal-action masking uses actual 10-slot resolver output, not old
+  six-slot V1 native mask. Actor-relative stacks and `dealer_rel`
+  exist, so *absence of absolute player ID is not demonstrated bug*.
+- **SPNNIV1** histories are last-32 coarse `(street,action_type)`
+  tokens, not explicit actor/amount event stream. SPNNIV2 has
+  event-relative actor and paid sizes. This is an information-loss
+  limitation, NOT a proved @17315 causal pathology.
+- **Advantage loss** uses `sum(legal squared error)/legal_count`;
+  Brown et al. (2019) algorithm 1 describes `sum_a squared error`
+  (both weighted by iteration): a mathematically real, unproven
+  performance-relevance divergence.
+- **AveragePolicy collection** uses fully sampled trajectories rather
+  than the opponent-node strategy samples of original external-sampling
+  Deep CFR. This is a declared TRAIN-002/TRAIN-005 adaptation, not the
+  direct cause of ENS8 @17315 all-ins (which bypasses AveragePolicy).
+- 3H/HU share separate **domain** nets; within each domain, actor-
+  relative inputs support seat sharing but do not establish equivalence
+  to published per-player Advantage networks.
+
+**Historical gate prevents duplicate experiments:** Aug25
+`R7_5_ARCH_RESET_V1PLUS_CLOSURE...` already documented coarse V1
+history and REJECTED richer representation trials on prior frozen
+stability gates; REP-018 protects V1 as fallback. Do **not** immediately
+launch another V2/V3 architecture experiment.
+
+**Next zero-compute decision action (G4B prioritized):** inspect
+already-generated
+`runs/teacher_fallback_sign_error_17315/teacher_fallback_sign_error_17315.json`
+field `by_legal_action_count` on frozen 4,676 target-positive/fallback
+states. This was explicitly preregistered before results and already
+computed. It can evaluate whether legal-count normalization deserves
+any further investigation, but does not prove causation.
+No new model fitting or benchmarks. G4A history collisions
+reopen only with actual new material evidence; never bypass
+REP-015/REP-018. Preserve pre-registered four-objective benchmark.
