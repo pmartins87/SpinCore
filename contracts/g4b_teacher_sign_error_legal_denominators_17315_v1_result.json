@@ -1,0 +1,98 @@
+{
+  "schema": "SPINCORE_G4B_TEACHER_SIGN_ERROR_LEGAL_DENOMINATORS_CONSOLE_RESULT_V1",
+  "date": "2026-11-01",
+  "source": "Verbatim user-provided WSL console output of tools/audit_teacher_sign_error_legal_denominators_17315.py; exact generated source JSON is not persisted as a local file by this script.",
+  "upstream_teacher_iteration": 17315,
+  "upstream_teacher_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+  "original_resume_sha256": "ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f",
+  "original_sign_report_sha256": "e19faacee5cc55e59f94598aeb30435421b707da6a64cfa081c1143140b23405",
+  "protected_split_path": "runs/3h_advantage_controlled_budget_curve/20260926_031558/3h_advantage_controlled_split_probe.pt",
+  "stage_status": "PASS",
+  "marker": "SPINCORE_G4B_LEGAL_DENOMINATORS_PASS",
+  "total_holdout": 50000,
+  "all_target_positive": 33214,
+  "false_fallback_on_target_positive": 4676,
+  "singleton_count": 0,
+  "groups": [
+    {
+      "legal": 2,
+      "all": 18954,
+      "positive": 10968,
+      "error": 2059,
+      "positive_error_rate": 0.187727935813275,
+      "target_strength_mean": 0.14991334889638225,
+      "teacher_positive_votes_mean": 2.130160271976688
+    },
+    {
+      "legal": 3,
+      "all": 19388,
+      "positive": 12870,
+      "error": 1830,
+      "positive_error_rate": 0.14219114219114218,
+      "target_strength_mean": 0.16475805449169198,
+      "teacher_positive_votes_mean": 1.9191256830601093
+    },
+    {
+      "legal": 4,
+      "all": 5628,
+      "positive": 4489,
+      "error": 465,
+      "positive_error_rate": 0.10358654488750278,
+      "target_strength_mean": 0.18945113836025038,
+      "teacher_positive_votes_mean": 2.468817204301075
+    },
+    {
+      "legal": 5,
+      "all": 2464,
+      "positive": 1926,
+      "error": 157,
+      "positive_error_rate": 0.08151609553478713,
+      "target_strength_mean": 0.13623994335285894,
+      "teacher_positive_votes_mean": 2.1910828025477707
+    },
+    {
+      "legal": 6,
+      "all": 2940,
+      "positive": 2415,
+      "error": 128,
+      "positive_error_rate": 0.05300207039337474,
+      "target_strength_mean": 0.13102721059979533,
+      "teacher_positive_votes_mean": 2.171875
+    },
+    {
+      "legal": 7,
+      "all": 626,
+      "positive": 546,
+      "error": 37,
+      "positive_error_rate": 0.06776556776556776,
+      "target_strength_mean": 0.19253412998414038,
+      "teacher_positive_votes_mean": 2.2432432432432434
+    }
+  ],
+  "grouped": {
+    "legal_2_or_3": {
+      "target_positive": 23838,
+      "false_fallback": 3889,
+      "rate": 0.16314288111418743
+    },
+    "legal_4_to_7": {
+      "target_positive": 9376,
+      "false_fallback": 787,
+      "rate": 0.08393771331058021
+    },
+    "relative_risk": 1.9436183650910053,
+    "risk_difference": 0.07920516780360722,
+    "all_target_positive_false_fallback_rate": 0.14078400674414404
+  },
+  "scientific_adjudication": {
+    "sufficient_association_to_reject_no_pattern_stop": true,
+    "causal_proof_of_legal_loss_normalization": false,
+    "baseline_training_objective_revision_authorized": false,
+    "effective_legal_count_is_endogenous_to_street_raise_depth_stack_size_and_deduplication": true,
+    "key_confounder": "legal-action count indirectly encodes betting situation; sample-level legal count, target-strength and actor/pot context are not jointly compared against all error/nonerror rows",
+    "direct_reference_sum_legal_candidate_preregistered": false,
+    "next": "Existing frozen 2026-10-31 four-objective supervised refit benchmark is the appropriate bounded sign-error hypothesis test, not a new ad hoc sum-vs-mean candidate. Check stage manifest and keep all original states immutable.",
+    "long_cfr_training_authorized": false,
+    "automatic_production_promotion": false
+  }
+}
