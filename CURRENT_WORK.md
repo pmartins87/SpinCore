@@ -1,9 +1,9 @@
 # SpinCore Current Work
 
 Date: 2026-11-01
-Status: **G4B SIGN REPORT ANALYZED; LEGAL-COUNT DENOMINATORS READ-ONLY CHECK READY; LONG TRAINING BLOCKED**
+Status: **G4B DENOMINATOR GATE PASS; PRE-REGISTERED OFFLINE OBJECTIVE RESEARCH READY; LONG CFR TRAINING BLOCKED**
 
-> Latest: the existing 4,676-state sign-error report was read; 83.17% of selected errors occur with 2–3 legal actions, but no group-specific positive-target denominators were reported. One read-only reservoir count is prepared; **no neural inference/training**. All model and long-training changes remain blocked. Details: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`. Older directions are chronological only.
+> Latest: G4B recovered all denominator-based error rates (2–3 actions 16.31% vs 4–7 actions 8.39%), confirming association without proving the cause. Existing October-preregistered offline objective comparison is ready; its 10 source pins match. Long CFR training, production changes and arbitrary new objectives remain blocked. Details: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md` and `contracts/g4b_teacher_sign_error_legal_denominators_17315_v1_result.json`. Older directions are chronological only.
 
 ## Strategic baseline
 
@@ -5765,3 +5765,45 @@ Request its console JSON before concluding group risks.
 
 Source: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
 No long training, model promotion, or methodological pivot.
+
+## 2026-11-01 — G4B denominators PASS; freeze evidence and choose existing objective gate
+
+User ran `tools/audit_teacher_sign_error_legal_denominators_17315.py`,
+received `SPINCORE_G4B_LEGAL_DENOMINATORS_PASS`.
+Source resume and 4,676-case diagnostic SHA verified; split
+`20260926_031558`, 50k total / 33,214 positive target /
+4,676 positive-target teacher-fallback all matched. Conditional
+per-legal counts: k2 2,059/10,968=18.77%;
+k3 1,830/12,870=14.22%;
+k4 465/4,489=10.36%;
+k5 157/1,926=8.15%;
+k6 128/2,415=5.30%;
+k7 37/546=6.78%.
+2–3 combined 16.31% vs 4–7 combined 8.39%, RR 1.94.
+Association is clear, but cannot attribute it to
+`1/legal_count` training loss: legal set size is endogenous
+to stack and betting context, and current MEAN loss already
+relatively prioritizes low-legal-count rows over SUM loss.
+
+**Do not change baseline loss, representation, fallback,
+aggregation or input history** on descriptive data. New
+frozen derivation in `contracts/g4b_teacher_sign_error_legal_denominators_17315_v1_result.json`.
+Full source audit in
+`docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
+
+**Recommended next bounded gate** (not yet run; user triggers):
+`bash tools/run_semantic_objective_benchmark_17315.sh`,
+after `git pull --ff-only`. Frozen four-objective benchmark
+was preregistered 2026-10-31; all **10 manifest blob
+references** currently match source, stage READY. It
+performs A exact bitwise parity to the original ENS8,
+then three alternate **supervised refits** (B normalized
+target, C sign-balanced, D combined) using the same
+reservoir and 50k protected development split, 8 members x
+1600 steps x 4 arms (32 fits), no CFR roots/new deals.
+>=22 GiB WSL MemAvailable/clean repo/no heavy trainers
+are enforced. Passing only warrants later frozen pathology
+and direct-play validation; failure stops additional objective
+candidate generation. No new architecture/long CFR training
+or deployment. Report to share if completed:
+`SpinCore_semantic_objective_benchmark_17315.json` from Desktop.
