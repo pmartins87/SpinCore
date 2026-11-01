@@ -1,9 +1,9 @@
 # SpinCore Current Work
 
 Date: 2026-11-01
-Status: **G3 DIRECT-PLAY COMPLETE: EXECUTION PASS / CANDIDATE FAIL; POSITIVE-REGRET SOURCE AUDIT NEXT; LONG TRAINING BLOCKED**
+Status: **G4 STATIC DEEP CFR FIDELITY REVIEW COMPLETE; ALREADY-EXISTING PROTECTED LEGAL-COUNT REPORT NEXT; LONG TRAINING BLOCKED**
 
-> Latest: G3 completed execution PASS / decision FAIL. Original G3 JSON and @17315 raw advantages independently audited; nonlinearity of raw-mean -> regret matching confirmed, alongside prior per-network sign-loss evidence. Next: finite read-only target/observation/reference-parity audit; long training remains blocked. Details: `docs/TEACHER_RAW_ADVANTAGE_17315_ROOT_CAUSE_20261101.md`. Older directions are chronological only.
+> Latest: finite source fidelity G4 STATIC COMPLETE; the published loss/average strategy and V1 representation differences are documented, but no causal repair justified. Read the already-generated 4,676-state report grouped by legal action count before proposing any test. Long training remains blocked. Details: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`. Older directions are chronological only.
 
 ## Strategic baseline
 
@@ -5685,3 +5685,49 @@ published methods before any experiment; preserve it as prepared/deferred.
 Source-of-truth detailed report:
 `docs/TEACHER_RAW_ADVANTAGE_17315_ROOT_CAUSE_20261101.md`.
 User does not need to run or upload anything further for this stage.
+
+## 2026-11-01 — G4 STATIC Deep CFR fidelity audit COMPLETE
+
+Detailed reference audit:
+`docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
+Governance/contract modules and legacy history were read, not bypassed.
+
+Static findings, no model/test execution:
+1. Traverser values/targets and effective action mask show correct
+   core external-sampling structure; actor-relative button/stack/status
+   observed, no demonstrated seat-ID confusion.
+2. SPNNIV1's last-32 history tokens omit actor identity and historic
+   paid amounts explicitly, while canonical infoset and V2 hold richer
+   events. Known August 25 debt, **not a new discovery** and not
+   proof of strategic collision; previous V1+ representational
+   successors failed preregistered admission tests. Honor REP-018.
+3. `spincore_nn/training.py` divides the squared legal Advantage
+   residuals by `len(legal)`, whereas published Brown2019 Deep CFR
+   minimizes a sum over actions weighted by iteration. This is
+   mathematically different weighting across states with 2–7
+   legal actions, but direct causal impact is **NOT** established.
+4. Lean AveragePolicy targets are fully sampled trajectories,
+   rather than strategy samples at the opponent nodes of original
+   Deep CFR. This is explicit TRAIN-002/TRAIN-005 design,
+   and does not explain pure teacher ENS8 failures directly.
+5. Domain-shared 3H/HU networks are an architecture deviation from
+   reference per-player networks; no actor-rel implementation bug found.
+
+**Critical economy:** original `diagnose_teacher_fallback_sign_error_17315.py`
+already generated `by_legal_action_count` on the 4,676 protected
+target-positive/fallback states. Prereg of Oct31 explicitly required
+this. **Do not rerun** 632MB resume/50k inference or create another
+benchmark. Request pre-existing report from user, preferably
+`C:\\Users\\Rz9\\Desktop\\SpinCore_teacher_fallback_sign_error_17315.json`,
+or original at
+`runs/teacher_fallback_sign_error_17315/teacher_fallback_sign_error_17315.json`.
+Read the group numbers before deciding if published loss
+weighting deserves a controlled isolated candidate. Grouping
+alone is correlational, not proof.
+
+**Decision unchanged:** preserve all checkpoints/reservoirs;
+no loss/architecture/representation/aggregation/fallback switch;
+no 3H/HU long training or sealed holdout; four-objective
+benchmark remains READY/PENDING/DEFERRED. No source contract
+has been superseded. Future G4A only if existing evidence
+fails to explain pathology and proves material history collisions.
