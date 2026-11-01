@@ -217,3 +217,51 @@ checkpoints/dados históricos, conforme REP-015/REP-018.
 
 **Decision: SOURCE_FIDELITY_STATIC_COMPLETE; G4A/G4B READ_ONLY NEXT;
 NO_TRAIN; NO_PRODUCTION_PATCH; NO_ARCHITECTURE_SWITCH.**
+
+## Revisão de continuidade após leitura do histórico validado (2026-11-01)
+
+**Correção de prioridade baseada em evidência já existente, sem alterar
+contratos ativos:**
+
+1. `validation/R7_5_ARCH_RESET_V1PLUS_CLOSURE_AND_V1_FALLBACK_SELECTION_20260825.md`
+   **já documentou** que V1 omite ator/valores no histórico de últimos 32
+   `(street,action_type)` tokens. O documento também registra que
+   os candidatos V1+ mais ricos **falharam** os gates comuns
+   (control TV 0.243976 vs candidate 0.250565, melhoria relativa
+   -2.7009%); V1 permaneceu por estabilidade, **não** por
+   perfeição estratégica. `REP-018` preserva esse entendimento.
+   Logo **não** reabrir no momento um ciclo de experimentos V2/V3
+   só porque o limite de dados ficou evidente na fonte.
+2. O próprio relatório **já calculado** pelo
+   `tools/diagnose_teacher_fallback_sign_error_17315.py` contém
+   `by_legal_action_count`, agrupando a população primária de
+   **4.676** posições protegidas de target positivo / professor
+   em fallback. O contrato congelado de 31/10
+   `contracts/teacher_fallback_sign_error_17315_v1.json`
+   listava explicitamente `diagnostic by number of legal actions`.
+   Portanto, o primeiro passo útil não é uma nova execução:
+   é **ler o relatório existente**
+   `runs/teacher_fallback_sign_error_17315/teacher_fallback_sign_error_17315.json`.
+3. O campo `by_legal_action_count` informa contagens,
+   intensidade de target, perda de sinal, votos dos oito modelos.
+   **Não** apresenta sozinho contrafactual causal de alterar a
+   ponderação da loss. Ele decide se faz sentido investigar
+   `1/|A|` com os targets congelados; evita novos testes
+   quando a discrepância é pouco informativa.
+4. Somente se dados de holdout e análise de regressão indicarem
+   que o fator 1/|A| é um contribuinte relevante,
+   documentar uma **nova hipótese específica** baseada na
+   loss publicada, sem adulterar o benchmark de quatro losses
+   já pré-registrado e sem trocar a metodologia por suposição.
+
+**Ordem revisada e justificada:** G4B (revisão do relatório pronto)
+**ANTES** de qualquer G4A de trajetória/representação.
+G4A só reabre com evidência nova de colisões ou de erro estratégico
+material que a seleção de 25/08 ainda não investigou.
+Não fazer novo solve, refit, random-seed sweep ou migração para
+representação rica neste gate.
+
+Dados já registrados mostram *mecanismo* de amplificação e erro de
+sinal, mas **não** identificam causalmente a divisão por |A| como
+causa primária. O conjunto protegidos permanece congelado e
+não deve ser consultado repetidamente para escolher arquiteturas.
