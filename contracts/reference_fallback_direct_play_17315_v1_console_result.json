@@ -65,5 +65,96 @@
     "production_change_authorized": false,
     "long_training_unblocked": false,
     "fallback_candidate": "REJECT_AS_DIRECT_REPLACEMENT_UNDER_FROZEN_GATE"
+  },
+  "original_json_review": {
+    "status": "REVIEWED_FROM_USER_ATTACHMENT",
+    "original_report_sha256": "fd91b7a871108d095a1b4fe3d152f4f68a0b8a9557bd4be5932294123a3e70f8",
+    "original_report_size_bytes": 151681,
+    "report_schema": "SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_V1",
+    "report_status": "PASS",
+    "original_report_stored_in_github": false,
+    "analysis_note": "Original complete JSON was attached to ChatGPT conversation and reviewed; this small GitHub file remains a derived summary."
+  },
+  "detailed_review": {
+    "candidate_A": {
+      "balanced_games": 60000,
+      "spin_decisions": 103807,
+      "spincore_chips_per_policy_seat_hand": -2.6872555555555553,
+      "vs_deepcrusher_chips_per_policy_seat_hand": -5.374511111111111,
+      "deep_high_card_no_draw_opportunities": 3360,
+      "deep_high_card_no_draw_ge95_count": 19,
+      "deep_high_card_no_draw_ge95_fraction": 0.005654761904761905,
+      "trips_plus_opportunities": 109,
+      "trips_plus_ge95_fold_count": 0
+    },
+    "candidate_B": {
+      "balanced_games": 60000,
+      "spin_decisions": 106292,
+      "spincore_chips_per_policy_seat_hand": -2.481188888888889,
+      "vs_deepcrusher_chips_per_policy_seat_hand": -4.962377777777778,
+      "deep_high_card_no_draw_opportunities": 4579,
+      "deep_high_card_no_draw_ge95_count": 27,
+      "deep_high_card_no_draw_ge95_fraction": 0.0058964839484603624,
+      "trips_plus_opportunities": 159,
+      "trips_plus_ge95_fold_count": 7
+    },
+    "frozen_top20_high_card_no_draw_shared_identical_rows": 12,
+    "shared_rows_changed": 0,
+    "trip_top20_shared_decisions": 8,
+    "trip_shared_decisions_changed": 1,
+    "important_note": "Only top-20 per opportunity are stored, so non-overlap does not prove absence of that state in the other full sample. Different A/B trajectories produce different opportunity denominators and counts.",
+    "seven_B_probability_one_trips_plus_fold_snapshots": [
+      {
+        "scenario": 367,
+        "hand": "6d3h",
+        "board": "Ts Jh Js Jd",
+        "category": "board trips J",
+        "to_call_over_pot": 0.5
+      },
+      {
+        "scenario": 3866,
+        "hand": "2c5h",
+        "board": "Qc 8c Qh Qd",
+        "category": "board trips Q",
+        "to_call_over_pot": 0.9035369774919614
+      },
+      {
+        "scenario": 4384,
+        "hand": "2cTd",
+        "board": "7d Jd 8d 7s Qd",
+        "category": "ten-high flush on paired board",
+        "to_call_over_pot": 0.8984771573604061,
+        "baseline_top20_same_state_fold_probability": 0.33522829359941886
+      },
+      {
+        "scenario": 5920,
+        "hand": "9c4c",
+        "board": "8d 8h 8s 3s",
+        "category": "board trips 8",
+        "to_call_over_pot": 0.9295774647887324
+      },
+      {
+        "scenario": 6213,
+        "hand": "3s2s",
+        "board": "Jc 8s Ad Js Qs",
+        "category": "Q-high flush with low side cards on paired board",
+        "to_call_over_pot": 0.6683673469387755
+      },
+      {
+        "scenario": 6510,
+        "hand": "8h2h",
+        "board": "7s 9s Ts Td Jc",
+        "category": "J-high straight on paired board",
+        "to_call_over_pot": 0.9412628487518355
+      },
+      {
+        "scenario": 9790,
+        "hand": "Th8d",
+        "board": "Js 7s 7c 7h Qh",
+        "category": "board trips 7",
+        "to_call_over_pot": 0.6907216494845361
+      }
+    ],
+    "interpretation": "These seven are diagnostic flags, NOT verified strategic mistakes. Four are trips entirely on board, two are modest flushes on paired boards and one straight on paired board, all facing meaningful bets; pFold=1 on these is a concern to audit, not grounds to claim nine errors. Among the top-20 samples, same-state A/B policy divergence on scenario 4384 rises from 0.3352 to 1.0."
   }
 }
