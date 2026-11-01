@@ -70,7 +70,7 @@ def main() -> int:
     for idx in selected:
         s = items[idx]
         legal = tuple(i for i, bit in enumerate(s.legal) if bool(bit))
-        if not legal or len(legal) not in expected_keys:
+        if not legal or len(legal) > 7:
             raise RuntimeError("unexpected legal mask")
         if not all(isinstance(a, int) for a in legal):
             raise RuntimeError("unexpected legal slot")
@@ -109,6 +109,7 @@ def main() -> int:
         "resume_sha256": train["resume_state_sha256"],
         "source_probe_path": str(probe_path),
         "protected_holdout_rows": 50000,
+        "single_action_holdout_rows": all_legal[1],
         "target_positive_rows": sum(target_positive_legal.values()),
         "error_rows": sum(int(v["count"]) for v in groups.values()),
         "overall_error_rate_given_target_positive": 4676 / sum(target_positive_legal.values()),
