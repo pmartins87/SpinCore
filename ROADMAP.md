@@ -4914,3 +4914,18 @@ G3 preregistered direct-play only if G2 yields a valid candidate.
 Do not discard or mutate any source artifacts. No long 3H/HU training;
 the existing four-objective benchmark remains READY/PENDING and deferred,
 not cancelled. Snapshot availability for exact SD-CFR remains unverified.
+
+### 2026-11-01 — G0 preserved-artifact presence PASS (integrity pending)
+
+User-provided read-only WSL `ls -lh` confirms an LT3@10105 source checkpoint
+(2.7G), the 3H@17315 resume (632M), four ~500-iteration-spaced 5.0M
+Advantage-ensemble snapshots @15815/@16315/@16815/@17315, and the final
+@17315 teacher (5.0M), plus a 5.1M report and logs. **No deletion or retrain**.
+This establishes physical presence and partial reuse feasibility, **not**
+SHA256 integrity, valid Torch loading, the full time-indexed SD-CFR historical
+collection, or strategic quality.
+
+Next gate is **G0 SHA verification read-only** against the source and teacher
+hashes already pinned in contracts, then G1/G2 reference semantics; no
+architecture switch, no objective benchmark execution by default.
+Full record: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
