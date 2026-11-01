@@ -4929,3 +4929,14 @@ Next gate is **G0 SHA verification read-only** against the source and teacher
 hashes already pinned in contracts, then G1/G2 reference semantics; no
 architecture switch, no objective benchmark execution by default.
 Full record: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+### 2026-11-01 — G0 SHA evidence: source @10105 and teacher @17315 PASS
+
+Read-only SHA256 supplied by the user matches both pinned artifacts exactly:
+- @10105 source checkpoint: `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0` — **PASS**.
+- @17315 final teacher: `d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4` — **PASS**.
+- @17315 resume: observed `ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f` — **PENDING** comparison to `resume_state_sha256` in local final PASS report.
+
+Next read-only action: `wsl -e grep resume_state_sha256 /home/rz9/spincore_lean_functional/runs/3h_semantic_long_15315_17315/3h_semantic_long_15315_17315.json`.
+No retuning, migration, or long run authorized. Complete G0 resume comparison,
+then advance G1 reference semantics and G2 frozen-state fallback comparison.
