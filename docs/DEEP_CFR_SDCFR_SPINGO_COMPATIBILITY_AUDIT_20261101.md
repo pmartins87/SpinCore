@@ -362,3 +362,65 @@ been re-read; do not claim full independent audit of that artifact.
   published per-player Advantage vs SpinCore shared-domain network mapping.
   Do not invent a new loss or train a network unless evidence warrants it.
 - The four-loss benchmark remains READY but **deferred**, not invalidated.
+
+## G3 — revisão independente do relatório completo anexado (2026-11-01)
+
+O JSON ORIGINAL foi lido: SHA256 `fd91b7a871108d095a1b4fe3d152f4f68a0b8a9557bd4be5932294123a3e70f8`,
+151.681 bytes, schema/status/seed/contagens/gates compatíveis com console.
+O arquivo completo permanece anexo à conversa, não foi copiado ao GitHub.
+Resumo derivado e verificado: `contracts/reference_fallback_direct_play_17315_v1_console_result.json`.
+
+### EV e interpretação dos flags
+Cada braço teve 10.000 cenários, 60.000 jogos balanceados; 103.807
+decisões SpinCore em A e 106.292 em B. B-A EV pareado +0,20607,
+IC95% [-0,35442,+0,76655]: NÃO demonstra superioridade; ambos
+obtiveram resultado negativo contra DeepCrusher de desenvolvimento
+(-5,37451 A, -4,96238 B fichas no comparador), sujeito às limitações
+do benchmark. G3 permanece **FAIL** conforme critério pre-registrado de
+melhoria de 72o: 0,96683 pp < 1,00000 pp. Não relaxar limiar.
+
+High-card sem draw: 3.360 vs 4.579 oportunidades; p(ALL_IN) média
+3,8791% -> 1,3021%, porém cauda >=95% não melhorou:
+19/3360 (0,5655%) -> 27/4579 (0,5896%). Entre as listas de top20,
+12 snapshots idênticos (mesmos scenario/lineup/decision/cartas/pot/call)
+mantiveram p(ALL_IN)=1.0 nas duas políticas. Como as trajetórias são
+diferentes, comparações de médias/contagens não são efeito por estado;
+ausência nas listas top20 não implica ausência na trajetória.
+
+### Auditoria dos sete B-folds p=1 com categoria trips+
+O flag `POSTFLOP_TRIPS_PLUS_FOLD` apenas marca categoria>=3 pela
+`decision_sanity.py`, independentemente de ser mão privada forte.
+O resumo completo mostra sete top-probability folds determinísticos:
+
+| Cenário | Hole | Board | Interpretação | to_call/pot |
+| --- | --- | --- | --- | --- |
+| 367 | 6d3h | Ts Jh Js Jd | JJJ todo no board, kicker baixo | 40/80 |
+| 3866 | 2c5h | Qc 8c Qh Qd | QQQ todo no board, kicker baixo | 562/622 |
+| 4384 | 2cTd | 7d Jd 8d 7s Qd | Flush T-high, board pareado | 531/591 |
+| 5920 | 9c4c | 8d 8h 8s 3s | 888 todo no board | 528/568 |
+| 6213 | 3s2s | Jc 8s Ad Js Qs | Flush Q-high com cartas baixas, board pareado | 393/588 |
+| 6510 | 8h2h | 7s 9s Ts Td Jc | Sequência J-high, board pareado | 641/681 |
+| 9790 | Th8d | Js 7s 7c 7h Qh | 777 todo no board | 402/582 |
+
+Quatro trincas são inteiramente de mesa, dois flushes baixos relativos
+ao board pareado e uma sequência de board pareado. To-call/pot 50%-94%.
+São **alertas heurísticos**, NÃO sete erros demonstrados. No caso 4384,
+o mesmo estado aparece no top20 dos dois braços: A p(FOLD)=0,3352283,
+B p(FOLD)=1,0, evidenciando mudança de política por fallback, mas não
+a incorreção do fold. No agregado, 3/109 (2,75%) flags em A vs 9/159
+(5,66%) em B, com denominadores e trajetórias diferentes; não declarar
+degradação estratégica comprovada. Por outro lado, não chamar esses
+folds de corretos sem análise de ranges/equity.
+
+Os dois 72o all-in snapshots de B com p(ALL_IN)=1.0 tampouco podem ser
+atribuídos ao ramo positivo/negativo apenas com o G3: o relatório não
+contém os vetores de Advantage nessas decisões.
+
+### Decisão
+Manter **G3 FAIL**, baseline intacto, treinamento bloqueado, nenhum novo
+teste com outras sementes para caçar PASS. A nova evidência qualifica e
+retira a anterior inferência de que 3->9 flags prova degradação.
+A investigação seguinte deve usar os **vetores crus já existentes**
+em `runs/teacher_raw_advantage_17315/teacher_raw_advantage_17315.json`
+para identificar a origem de ALL_IN extremos com regret positivo,
+sem novos CFR roots nem retraining.
