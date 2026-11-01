@@ -1,9 +1,9 @@
 # SpinCore Current Work
 
 Date: 2026-11-01
-Status: **G4 STATIC DEEP CFR FIDELITY REVIEW COMPLETE; ALREADY-EXISTING PROTECTED LEGAL-COUNT REPORT NEXT; LONG TRAINING BLOCKED**
+Status: **G4B SIGN REPORT ANALYZED; LEGAL-COUNT DENOMINATORS READ-ONLY CHECK READY; LONG TRAINING BLOCKED**
 
-> Latest: finite source fidelity G4 STATIC COMPLETE; the published loss/average strategy and V1 representation differences are documented, but no causal repair justified. Read the already-generated 4,676-state report grouped by legal action count before proposing any test. Long training remains blocked. Details: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`. Older directions are chronological only.
+> Latest: the existing 4,676-state sign-error report was read; 83.17% of selected errors occur with 2–3 legal actions, but no group-specific positive-target denominators were reported. One read-only reservoir count is prepared; **no neural inference/training**. All model and long-training changes remain blocked. Details: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`. Older directions are chronological only.
 
 ## Strategic baseline
 
@@ -5731,3 +5731,37 @@ no 3H/HU long training or sealed holdout; four-objective
 benchmark remains READY/PENDING/DEFERRED. No source contract
 has been superseded. Future G4A only if existing evidence
 fails to explain pathology and proves material history collisions.
+
+## 2026-11-01 — G4B grouped report analyzed; one denominator-only check READY
+
+User provided original sign-error report (11,436 bytes; SHA256
+`e19faacee5cc55e59f94598aeb30435421b707da6a64cfa081c1143140b23405`).
+Report PASS @17315: 50,000 protected states, 33,214 with
+positive target, 4,676 with target-positive but teacher in fallback.
+Among 4,676 selected failures: 2 legal actions 2,059; 3 actions
+1,830; 4 actions 465; 5 actions 157; 6 actions 128; 7 actions 37.
+**83.17%** of the failures have 2–3 legal actions, BUT the report
+does not give their **total target-positive denominators**, hence
+cannot compare conditional error rates by legal-count. Do not
+infer legal-count normalization is the cause or that it is harmless
+from group composition alone. The current normalized
+MSE *relatively emphasizes* fewer-legal-action states compared with
+published sum-of-legal-actions loss. Sign-vote means/bias are not
+monotonic. Original target-strength margin test remains NOT fragile.
+
+**Consequence:** current baseline/weights and loss remain unchanged.
+Existing four-objective refit benchmark remains staged, not
+automatically reactivated.
+
+Minimal remaining read-only G4B gate, **READY / NOT EXECUTED**:
+`tools/audit_teacher_sign_error_legal_denominators_17315.py`
+loads existing 632MB resume and protected split to compute only
+legal-count target-positive denominators; no model load/forward,
+no CFR, no training, no sealed-holdout access, no artifact mutation.
+Guard: verify resume SHA against original PASS training report,
+and denominator sum equals 33,214. User PowerShell command:
+`wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && .venv_lean/bin/python tools/audit_teacher_sign_error_legal_denominators_17315.py"`.
+Request its console JSON before concluding group risks.
+
+Source: `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
+No long training, model promotion, or methodological pivot.
