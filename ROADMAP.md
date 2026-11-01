@@ -4959,3 +4959,26 @@ switch; candidate must pass separately preregistered fresh play if a
 static diagnostic warrants further study.
 
 Source of truth: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+### 2026-11-01 — G1/G2 reference fallback PASS; G3 frozen and READY
+
+Read-only user run confirmed exact baseline policy reconstruction on **367**
+frozen selected rows; **169** were changed by switching only the
+all-nonpositive fallback from SpinCore softmax to published Deep CFR argmax.
+Flagged deep-72o mean ALL_IN **33.18% -> 0%**, and 20 deep-72o extreme
+opportunities **33.26% -> 0%**. However, the 20 extreme high-card/no-draw
+positive-regret rows remain **96.96% ALL_IN, unchanged**.
+There are therefore **two separate mechanisms**, and fallback replacement alone
+does not solve the teacher. This is *not* EV evidence.
+
+**G3 READY, NOT RUN:** the preregistered 10k fresh common-chance direct-play
+comparison with frozen teacher, published argmax fallback vs exact baseline
+softmax, `contracts/reference_fallback_direct_play_17315_v1.json`.
+Runner `tools/run_reference_fallback_direct_play_17315.sh` self-tests,
+smokes four scenarios, then invokes frozen 10k paired evaluation.
+Reject if EV noninferiority, critical sanity, 72o improvement or
+high-card/trips noninferiority fail. No long training / no production mutation.
+If it passes, treat as a *candidate only*; positive-regret error remains blocked.
+
+See `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md` and
+`CURRENT_WORK.md`. Objective-loss benchmark remains deferred, not cancelled.
