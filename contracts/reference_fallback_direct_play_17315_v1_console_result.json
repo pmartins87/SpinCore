@@ -1,0 +1,69 @@
+{
+  "schema": "SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_CONSOLE_OBSERVATION_V1",
+  "source": "User pasted verbatim PowerShell output of G3 runner on 2026-11-01. Original JSON artifact is saved at C:\\Users\\Rz9\\Desktop\\SpinCore_reference_fallback_direct_play_17315.json and has NOT been fetched/attached. This GitHub record is a console-derived transcription, not the original full report.",
+  "stage": "G3_REFERENCE_FALLBACK_DIRECT_PLAY_17315",
+  "runner_status": "SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_SHELL_PASS",
+  "contract_status": "STAGE_CONTRACT_PASS",
+  "self_tests": [
+    "G1_REFERENCE_FALLBACK_SEMANTICS_SELFTEST_PASS",
+    "G3_FALLBACK_ONLY_SELFTEST_PASS",
+    "SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_SMOKE_PASS"
+  ],
+  "report_status": "SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_REPORT_PASS",
+  "decision": "FAIL",
+  "seed": 2026110103,
+  "scenarios": 10000,
+  "wall_elapsed": "8:30.77",
+  "paired_B_minus_A": {
+    "ci95_high": 0.7665546034437029,
+    "ci95_low": -0.3544212701103694,
+    "mean": 0.2060666666666667,
+    "n": 10000,
+    "sem": 0.2859632330495082
+  },
+  "checks": {
+    "deep_72o_mean": false,
+    "deep_72o_sufficient_opportunities": true,
+    "ev_noninferiority": true,
+    "high_card_no_draw_ge80": true,
+    "high_card_no_draw_mean": true,
+    "trips_plus_fold_mean": true,
+    "zero_aa_fold": true,
+    "zero_monster_fold": true
+  },
+  "parameters": {
+    "a72": 0.013279529925092749,
+    "a72n": 584,
+    "a_no_draw": 0.03879101876755205,
+    "a_no_draw_ge80": 0.00744047619047619,
+    "a_trips_fold": 0.039904948725625444,
+    "b72": 0.003611190938767503,
+    "b72n": 585,
+    "b_no_draw": 0.013021041183089997,
+    "b_no_draw_ge80": 0.006551648831622625,
+    "b_trips_fold": 0.056316363809935585
+  },
+  "flags_A": {
+    "POSTFLOP_DEEP_HIGH_CARD_JAM": 230,
+    "POSTFLOP_TRIPS_PLUS_FOLD": 3,
+    "PREFLOP_DEEP_72O_JAM": 8
+  },
+  "flags_B": {
+    "POSTFLOP_DEEP_HIGH_CARD_JAM": 134,
+    "POSTFLOP_TRIPS_PLUS_FOLD": 9,
+    "PREFLOP_DEEP_72O_JAM": 2
+  },
+  "gate_math": {
+    "required_deep_72o_improvement_absolute": 0.01,
+    "observed_deep_72o_improvement_absolute": 0.009668338986325246,
+    "shortfall_absolute": 0.000331661013674754,
+    "passes_ev_noninferiority_without_proving_superiority": true,
+    "trip_fold_rate_delta": 0.01641141508431014,
+    "decision_rule": "FAIL from frozen criterion; do not revise threshold after observing results."
+  },
+  "constraints": {
+    "production_change_authorized": false,
+    "long_training_unblocked": false,
+    "fallback_candidate": "REJECT_AS_DIRECT_REPLACEMENT_UNDER_FROZEN_GATE"
+  }
+}
