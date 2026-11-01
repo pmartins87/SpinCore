@@ -5015,3 +5015,30 @@ Next: read-only root-cause audit of *positive-regret high-card/no-draw* cases,
 and reference Deep CFR training/strategy semantics vs current shared-network
 implementation. This is distinct from the now-rejected direct fallback swap.
 No new expensive experiment without a clearly defined evidence-based need.
+
+### 2026-11-01 — G3 full JSON inspected; trips+ heuristic refined
+
+Received and parsed original attached G3 report (151,681 bytes;
+SHA256 `fd91b7a871108d095a1b4fe3d152f4f68a0b8a9557bd4be5932294123a3e70f8`).
+Numerics, decision FAIL and frozen criteria unchanged.
+
+G3 high-card/no-draw mean p(ALL_IN) fell but **extreme tail persists**:
+>=95% ALL_IN opportunities 19/3360 (0.5655%) in A and 27/4579
+(0.5896%) in B. Among the *top20* lists, 12 identical states retained
+p(ALL_IN)=1.0. Do not mistake the lowered mean for a fix of saturated
+positive-regret predictions.
+
+The seven B `TRIPS_PLUS_FOLD` snapshots with p(FOLD)=1.0 represent
+**four community-card-only trips**, **two moderate flushes on paired
+boards**, and **one straight on a paired board**, facing nontrivial
+to-call/pot ratios 50%-94%. These were not seven proved errors.
+At shared state scenario 4384 A p(FOLD)=0.3352283 vs B p(FOLD)=1.0:
+a real fallback change whose strategic correctness is unproven.
+Correct earlier oversimplified claim that 3 -> 9 flags proves worse play.
+Full hand-by-hand board decoding:
+`docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+**No strategic decision change:** G3 FAIL by frozen 72o improvement
+threshold, baseline remains production reference. Next focused
+read-only source = existing `teacher_raw_advantage_17315.json`
+for extreme POSITIVE-regret states; no training or new random-seed runs.
