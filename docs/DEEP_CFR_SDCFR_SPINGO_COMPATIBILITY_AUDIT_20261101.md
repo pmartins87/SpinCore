@@ -2,7 +2,7 @@
 
 Data: 2026-11-01  
 Escopo: **análise técnica, sem autorização de mudança estratégica**  
-Status: **G0 CENTRAL PASS; G1/G2 REFERENCE FALLBACK PASS; G3 DIRECT PLAY READY, NOT EXECUTED**  
+Status: **G0 CENTRAL PASS; G1/G2 PASS; G3 EXECUTION PASS / CANDIDATE FAIL; READ-ONLY ROOT CAUSE NEXT**  
 Fonte de verdade operacional: `CURRENT_WORK.md`; decisões e gates: `ROADMAP.md`.
 
 ## Decisão
@@ -309,3 +309,56 @@ PowerShell:
 ```powershell
 wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && bash tools/run_reference_fallback_direct_play_17315.sh"
 ```
+
+## G3 — executed on Ryzen (2026-11-01): technical PASS, strategic FAIL
+
+All prerequisites and execution gates passed:
+`STAGE_CONTRACT_PASS`, `G1_REFERENCE_FALLBACK_SEMANTICS_SELFTEST_PASS`,
+`G3_FALLBACK_ONLY_SELFTEST_PASS`, smoke `PASS`, 10,000 each A/B fresh
+paired 3H scenarios, report `PASS`, postvalidation `PASS`, runner `PASS`.
+Wall clock: **8m30.77s**. Actual result **`G3_DECISION=FAIL`**.
+
+Comparison A=current softmax fallback; B=the exact same frozen teacher,
+but argmax fallback only on all-nonpositive legal raw Advantages.
+
+| Metric | A | B | Interpretation |
+| --- | ---: | ---: | --- |
+| Deep-72o mean ALL_IN | 0.0132795299 | 0.0036111909 | Difference 0.00966834 < required 0.01; **FAIL** (sole failing criterion) |
+| Deep-72o opportunities | 584 | 585 | count gate PASS |
+| Deep-72o sampled jam flags | 8 | 2 | fewer, but count not sufficient to override gate |
+| High-card/no-draw mean ALL_IN | 0.03879102 | 0.01302104 | improved, check PASS |
+| High-card/no-draw fraction >=80% ALL_IN | 0.00744048 | 0.00655165 | noninferiority PASS, extreme tail remains |
+| High-card jam flags | 230 | 134 | fewer, but no proof all positive-regret failures resolved |
+| Trips+ mean fold | 0.03990495 | 0.05631636 | worsened 1.641pp; within frozen +2pp tolerance |
+| Trips+ sampled fold flags | 3 | 9 | **safety warning** despite numeric gate passing |
+
+Paired B-A chipEV/policy-seat-hand: mean **+0.2060667**, standard error
+**0.2859632**, 95% CI **[-0.3544213,+0.7665546]**. Meets frozen
+noninferiority threshold lower bound >= -0.50, but **does not demonstrate
+superiority**.
+
+The G3 deep-72o improvement requirement was **at least 1.00 percentage
+point absolute**. Observed reduction was **0.96683 percentage point**,
+short by **0.03317 percentage point**. Do not adjust the threshold after
+results; the attempt is **rejected as direct replacement**.
+
+The lower global high-card-no-draw mean is from *fresh policy trajectories*,
+where states visited differ between A and B. It does **not** contradict
+G1/G2's observation that the *frozen selected positive-regret top20*
+high-card/no-draw states are completely unaffected by fallback choice.
+
+Observed console provenance preserved in
+`contracts/reference_fallback_direct_play_17315_v1_console_result.json`.
+Original full report on Ryzen/Desktop is **not attached here** and has not
+been re-read; do not claim full independent audit of that artifact.
+
+### Decision and next step
+
+- Keep baseline A; do not promote B, rerun for a favorable seed, or relax criteria.
+- Preserve original @10105 checkpoint, @17315 ensemble/resume and milestone
+  snapshots; no new CFR roots and no long 3H/HU training.
+- Next useful work is **read-only** source/evidence audit of extreme
+  **positive-regret** all-in behavior in high-card/no-draw states and of the
+  published per-player Advantage vs SpinCore shared-domain network mapping.
+  Do not invent a new loss or train a network unless evidence warrants it.
+- The four-loss benchmark remains READY but **deferred**, not invalidated.
