@@ -4940,3 +4940,22 @@ Read-only SHA256 supplied by the user matches both pinned artifacts exactly:
 Next read-only action: `wsl -e grep resume_state_sha256 /home/rz9/spincore_lean_functional/runs/3h_semantic_long_15315_17315/3h_semantic_long_15315_17315.json`.
 No retuning, migration, or long run authorized. Complete G0 resume comparison,
 then advance G1 reference semantics and G2 frozen-state fallback comparison.
+
+### 2026-11-01 — G0 central hash PASS; G1/G2 reference-fallback diagnostic READY
+
+Three key user-supplied SHA256 digests now match their recorded references:
+@10105 checkpoint `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0`;
+@17315 teacher `d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4`;
+@17315 resume `ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f`
+(matches the local original completion report). This is **G0-CENTRAL-3-SHA PASS**;
+additional milestones and HU artifacts are outside this narrow hash gate.
+
+Read-only `tools/audit_reference_fallback_17315.py` now prepares G1
+regret-matching function semantics checks and G2 biased frozen raw-state
+policy comparison: existing softmax vs published OpenSpiel/Brown argmax.
+**READY / NOT EXECUTED**: neither strategic benefit nor global parity
+has been demonstrated. No new training, no production change, no SD-CFR
+switch; candidate must pass separately preregistered fresh play if a
+static diagnostic warrants further study.
+
+Source of truth: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
