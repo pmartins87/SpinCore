@@ -1,9 +1,9 @@
 # SpinCore Current Work
 
 Date: 2026-11-01
-Status: **3H @17315 TEACHER ARCHITECTURE GATE BLOCKED; REFERENCE COMPATIBILITY AUDIT COMPLETED STATICALLY; NO TRAINING OR METHOD CHANGE AUTHORIZED**
+Status: **G0 CENTRAL SHA PASS; G1/G2 REFERENCE FALLBACK PASS; G3 DIRECT PLAY READY; LONG TRAINING BLOCKED**
 
-> Latest decision: preserve LT2/LT3 checkpoints, 3H@17315 ensemble/resume, and the full reservoirs. Deep CFR/SD-CFR source compatibility has been reviewed statically; pending G0 local inventory and G1/G2 zero-training checks. The October objective benchmark remains pending and deferred. Details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`. Historical interim directions below are retained as chronological record, not the active instructions.
+> Latest: G0 central SHA verified, G1/G2 frozen published-fallback check PASS, G3 paired direct-play READY (not run). Existing networks, checkpoints and reservoirs remain immutable; 3H/HU long training blocked. Details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`. Historical interim directions below are chronological only.
 
 ## Strategic baseline
 
@@ -5559,3 +5559,28 @@ Next user command:
 
 G1/G2 still **NOT EXECUTED**. Long training BLOCKED; four-objective
 benchmark preserved but deferred, not cancelled. No architecture switch.
+
+## 2026-11-01 — G1/G2 PASS; G3 published-fallback direct-play READY
+
+Ryzen: `G1_REFERENCE_FALLBACK_SEMANTICS_SELFTEST_PASS` and
+`SPINCORE_REFERENCE_FALLBACK_FROZEN_DIAGNOSTIC_17315_PASS`.
+The reconstructed baseline policy exactly matches frozen @17315 output
+on 367 selected rows. Changing only the all-nonpositive fallback
+from softmax to published Deep CFR argmax affects 169 rows; sampled
+72o ALL_IN mean **0.3318054 -> 0**, while positive-regret high-card/no-draw
+top20 stay **0.9695501 -> 0.9695501**. Snapshot evidence does not establish EV.
+
+G3 **READY / NOT EXECUTED**: prereg
+`contracts/reference_fallback_direct_play_17315_v1.json`, code
+`tools/validate_reference_fallback_direct_play_17315.py`, stage manifest
+`contracts/run_manifests/reference_fallback_direct_play_17315.json`, runner
+`tools/run_reference_fallback_direct_play_17315.sh`. Frozen 10,000 fresh
+paired 3H scenarios, seed 2026110103; one changed fallback branch;
+original eight @17315 nets. Selftest + 4-scenario smoke before full gate.
+No new CFR, optimizer steps, checkpoint/production mutation, long training.
+Gate includes EV noninferiority, 72o benefit, AA/monster zero and
+high-card/trips noninferiority. Positive-regret high-card pathology remains
+independently unresolved even if G3 PASS.
+
+Next PowerShell: `wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && bash tools/run_reference_fallback_direct_play_17315.sh"`.
+Full decisions: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
