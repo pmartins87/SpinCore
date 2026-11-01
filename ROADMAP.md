@@ -1,4 +1,4 @@
-# SpinCore Roadmap — active state 2026-09-29
+# SpinCore Roadmap — active state 2026-11-01
 
 ## Primary objective now
 
@@ -4885,3 +4885,32 @@ factory regression test was added. This is an implementation repair only:
 no change to CFR targets, objective candidates, seed schedule, held-out split,
 or promotion criteria. Local rerun and baseline parity remain **PENDING**.
 The three-month training gate remains **BLOCKED**.
+
+## 2026-11-01 — Deep CFR / SD-CFR compatibility audit (no method switch)
+
+Canonical report: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+**Decision: baseline preserved; no architecture change authorized.**
+The static source audit confirms that SpinCore already has the main Deep CFR
+mechanics (traverser action valuation, Advantage reservoir, per-iteration fit,
+AveragePolicy) while its teacher ENS8 is a distinct inference adaptation,
+not a faithful implementation of SD-CFR.
+
+Important concrete divergence from the published Brown/OpenSpiel behavior:
+SpinCore `lean_regret_matching_policy` uses a softmax when all predicted legal
+Advantages are non-positive, whereas the published Deep CFR/OpenSpiel reference
+uses deterministic raw-Advantage argmax for that condition. This merits a
+read-only frozen-state comparison; it does **not** authorize a live code change.
+
+The current `LeanTrainingScope` explicitly optimizes `CHIP_EV_WTA_V1`,
+scaled globally by 1/1500; multi-place ICM specialization is deferred, not
+accidentally active. A shared 3H or HU model per domain differs from the
+reference's separate per-player Advantage networks and requires an
+information-state sufficiency check.
+
+**Next gates (in order):** G0 local artifact inventory; G1 executable
+reference-semantic comparison; G2 no-training fallback comparison;
+G3 preregistered direct-play only if G2 yields a valid candidate.
+Do not discard or mutate any source artifacts. No long 3H/HU training;
+the existing four-objective benchmark remains READY/PENDING and deferred,
+not cancelled. Snapshot availability for exact SD-CFR remains unverified.
