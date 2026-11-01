@@ -34,7 +34,6 @@ from spincore.lean_action_scope import FIRST_RELEASE_ACTION_SPEC
 from spincore.lean_solver_actions import lean_legal_actions
 from spincore.r7_5_action_cfr import legal_mask
 from spincore_nn.action_models import collate_action_observations
-from spincore_nn.semantic_v1 import semantic_vector_from_observation
 
 SCHEMA="SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_V1"
 PREREG_SCHEMA="SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_PREREG_V1"
@@ -56,7 +55,12 @@ class PublishedFallbackPolicy(sanity.SemanticAdvantageTeacherPolicy):
         batch=collate_action_observations(
             distill.REPRESENTATION,[obs],[legal_mask(legal)],device="cpu"
         )
-        semantic=semantic_vector_from_observation(obs)
+        # Match A's historical semantic feature builder exactly.
+        class Sample:
+            pass
+        sample=Sample()
+        sample.observation=obs
+        semantic=distill.semantic_vector(sample)
         sb=dict(batch)
         sb["semantic"]=torch.tensor(
             np.asarray([semantic],dtype=np.float32),dtype=torch.float32
