@@ -2,7 +2,7 @@
 
 Data: 2026-11-01  
 Escopo: **análise técnica, sem autorização de mudança estratégica**  
-Status: **REVISÃO ESTÁTICA PARCIAL CONCLUÍDA; G0 DOIS PINNED SHA256 PASS; RESUME/OUTROS ARTEFATOS E G1/G2 PENDENTES**  
+Status: **G0 TRÊS ARTEFATOS CENTRAIS PASS SHA256; DEMAIS ARTEFATOS E G1/G2 PENDENTES**  
 Fonte de verdade operacional: `CURRENT_WORK.md`; decisões e gates: `ROADMAP.md`.
 
 ## Decisão
@@ -187,7 +187,7 @@ O usuário executou `wsl -e sha256sum` diretamente (somente leitura):
 | --- | --- | --- | --- |
 | `runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt` | `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0` | Checkpoint imutável @10105 em `ROADMAP.md`, `pilot.EXPECTED_SHA` | **PASS SHA** |
 | `runs/3h_semantic_long_15315_17315/semantic_long_ensemble_final_17315.pt` | `d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4` | `contracts/run_manifests/semantic_objective_benchmark_17315.json` e `CURRENT_WORK.md` | **PASS SHA** |
-| `runs/3h_semantic_long_15315_17315/resume_state.pt` | `ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f` | Report local `3h_semantic_long_15315_17315.json` ainda **não lido** | **PENDING COMPARISON** |
+| `runs/3h_semantic_long_15315_17315/resume_state.pt` | `ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f` | Chave `resume_state_sha256` do relatório local, enviada pelo usuário | **PASS SHA** |
 
 A própria implementação original `tools/run_3h_semantic_long_15315_17315.py`
 preenche `resume_state_sha256` no relatório antes de imprimi-lo ao concluir
@@ -205,3 +205,14 @@ por que o relatório e o arquivo diferem, antes de qualquer ação.
 
 **Não** atestar integridade dos snapshots intermediários, HU ou reservoirs
 não verificados. Nenhuma mudança de inferência ou treino está autorizada.
+
+## G0 — verificação do resume concluída (2026-11-01)
+
+O usuário executou `wsl -e grep resume_state_sha256 .../3h_semantic_long_15315_17315.json` e retornou
+`"resume_state_sha256": "ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f"`.
+Coincide **exatamente** com `sha256sum` calculado para `resume_state.pt`.
+
+**Resultado: G0-CENTRAL-3-SHA PASS**: checkpoint @10105, final ENS8 @17315 e resume @17315.
+Isto comprova igualdade criptográfica com os registros de referência verificados,
+mas **não** comprova cobertura integral do histórico SD-CFR, validade da estratégia,
+passagem em teste de load, nem hashes dos snapshots adicionais.
