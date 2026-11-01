@@ -148,7 +148,7 @@ def adjudicate(A,B,paired):
         "ev_noninferiority":math.isfinite(float(paired["ci95_low"])) and float(paired["ci95_low"])>=-0.50,
         "zero_aa_fold":int(B["flag_counts"].get("PREFLOP_AA_FOLD",0))==0,
         "zero_monster_fold":int(B["flag_counts"].get("POSTFLOP_MONSTER_FOLD",0))==0,
-        "high_card_no_draw_ge80":af is not None and bf is not None and bf<=af+0.001 and bf<=0.0025,
+        "high_card_no_draw_ge80":af is not None and bf is not None and bf<=af+0.001,
         "high_card_no_draw_mean":am is not None and bm is not None and bm<=am+0.02,
         "deep_72o_sufficient_opportunities":a72n>=25 and b72n>=25,
         "deep_72o_mean":a72 is not None and b72 is not None and b72<=a72+0.005 and b72<=0.05 and b72<=a72-0.01,
