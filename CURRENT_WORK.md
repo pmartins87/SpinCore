@@ -1,7 +1,9 @@
 # SpinCore Current Work
 
-Date: 2026-09-29
-Status: **3H SEMANTIC LONG 10115 -> 10315 PASS / POSTLONG PERFORMANCE GATE NEXT — DC0 REAL-OPENHOLDEM PARITY PENDING**
+Date: 2026-11-01
+Status: **3H @17315 TEACHER ARCHITECTURE GATE BLOCKED; REFERENCE COMPATIBILITY AUDIT COMPLETED STATICALLY; NO TRAINING OR METHOD CHANGE AUTHORIZED**
+
+> Latest decision: preserve LT2/LT3 checkpoints, 3H@17315 ensemble/resume, and the full reservoirs. Deep CFR/SD-CFR source compatibility has been reviewed statically; pending G0 local inventory and G1/G2 zero-training checks. The October objective benchmark remains pending and deferred. Details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`. Historical interim directions below are retained as chronological record, not the active instructions.
 
 ## Strategic baseline
 
@@ -5469,3 +5471,33 @@ Only target/loss treatment changes.
 
 Runner:
 `tools/run_semantic_objective_benchmark_17315.sh`
+
+
+## 2026-11-01 — Source-reference audit of Deep CFR / SD-CFR (STATIC COMPLETE)
+
+Read and compared original Deep CFR (Brown et al. 2019), OpenSpiel's PyTorch
+Deep CFR implementation, and SD-CFR (Steinberger 2019), against current SpinCore
+`r7_5_action_cfr`, `lean_functional_training`, `lean_training_scope`,
+`r7_5_action_training`, `lean_action_policy`, model definitions, and long
+3H checkpoint/resume scripts.
+
+Findings:
+- Existing traverser enumeration, Advantage targets, reservoirs, network reset,
+  and AveragePolicy are compatible in broad design with published Deep CFR.
+- Current 3H/HU domain-shared model and final-iteration ENS8 teacher inference
+  are custom adaptations; ENS8 **must not be relabeled** as faithful SD-CFR.
+- Current fallback on all-nonpositive Advantages is SOFTMAX; Brown/OpenSpiel
+  reference chooses raw-Advantage ARGMAX. This is the clearest immediately
+  actionable algorithm-reference discrepancy, but no patch is authorized.
+- Training scope is deliberately CHIP_EV_WTA_V1, with global 1/1500 scaling.
+- Semantic long-resume format stores Advantage reservoir, ensemble members,
+  seeds, RNG and progress. Physical file presence and complete temporal
+  SD-CFR model-history coverage remain **UNVERIFIED** without a read-only
+  inventory on the Ryzen.
+
+Decision: **DO NOT SWITCH METHOD, DO NOT RETRAIN, DO NOT DISCARD CHECKPOINTS**.
+Current pending task is G0 read-only artifact inventory, then G1/G2 reference
+behavior and frozen-state inference comparison; no production mutation,
+no change to existing preregistered four-objective benchmark, and no long
+training authorization. Full record:
+`docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
