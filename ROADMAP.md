@@ -5125,3 +5125,34 @@ any further investigation, but does not prove causation.
 No new model fitting or benchmarks. G4A history collisions
 reopen only with actual new material evidence; never bypass
 REP-015/REP-018. Preserve pre-registered four-objective benchmark.
+
+### 2026-11-01 — G4B: read original 4,676-state sign report; denominator-only check READY
+
+Source JSON arrived, SHA256
+`e19faacee5cc55e59f94598aeb30435421b707da6a64cfa081c1143140b23405`,
+11,436 bytes; 50k protected holdout and 33,214 target-positive rows,
+4,676 false-fallback target-positive cases. In the *error-selected*
+group: 2 legal actions=2,059 (44.03%); 3=1,830 (39.14%);
+4=465, 5=157, 6=128, 7=37. Overall among target positives,
+false-fallback rate=14.0784%. Per-legal-action group **denominators
+are missing** from this JSON. Do not confuse 83.17% of the failures
+coming from 2–3 legal actions with a measured 2–3-action failure risk.
+Bias and sign-vote differences by legal count are non-monotonic;
+`target_margin_fragile=false` remains supported.
+
+**Decision:** no loss/representation modification. An exact
+`SUM_{legal}` reference loss is *not* one of the already
+preregistered B/C/D objective experiments; do not silently relabel
+them or alter their frozen candidate set.
+
+Next and only justified zero-forward/zero-CFR check:
+`tools/audit_teacher_sign_error_legal_denominators_17315.py`
+is **READY / NOT RUN**; reads the immutable @17315 resume and original
+protected split, reconstructs denominators for the already-reported
+groups and checks 33,214 target-positive count, without inference or
+training. Then decide whether the legal-count-normalization
+hypothesis should be closed. **STOP** if there is no material
+group-specific pattern; no broad new architecture/seed sweep.
+
+Details:
+`docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
