@@ -5535,3 +5535,27 @@ four-objective benchmark remains deferred. Reference comparison confirms
 that OpenSpiel PyTorch **and JAX** Deep CFR use argmax fallback for all-
 nonpositive Advantage outputs; SpinCore uses softmax. No replacement is approved
 before G1/G2 evidence. Details in `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+## 2026-11-01 — G0 central SHA PASS; G1/G2 frozen-policy audit READY
+
+SHA256 for the original @17315 resume was separately computed by user:
+`ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f`.
+The same value is printed as `resume_state_sha256` in the original local
+`3h_semantic_long_15315_17315.json` completion report. Together with
+previous exact checkpoint @10105 and final teacher @17315 hash matches,
+**all three central G0 hashes PASS**; intermediate snapshots and HU artifacts
+remain outside the SHA inventory.
+
+Prepared `tools/audit_reference_fallback_17315.py` as **read-only**
+diagnostic, with no environment dependency installation, checkpoint load,
+new roots, or production action. Self-test checks local regret matching
+against published reference behavior; frozen raw-report comparison checks
+stored policy reconstruction, then compares softmax vs argmax only on
+already-flagged decision snapshots. These were selected under the baseline,
+so do not infer broad EV or safe deployment from them.
+
+Next user command:
+`wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && .venv_lean/bin/python tools/audit_reference_fallback_17315.py --self-test --raw-report runs/teacher_raw_advantage_17315/teacher_raw_advantage_17315.json"`.
+
+G1/G2 still **NOT EXECUTED**. Long training BLOCKED; four-objective
+benchmark preserved but deferred, not cancelled. No architecture switch.
