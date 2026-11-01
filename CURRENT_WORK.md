@@ -5501,3 +5501,22 @@ behavior and frozen-state inference comparison; no production mutation,
 no change to existing preregistered four-objective benchmark, and no long
 training authorization. Full record:
 `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+## 2026-11-01 — G0 WSL inventory: required files exist; hashes pending
+
+User executed a read-only WSL directory listing. Evidence: the original
+LT3@10105 2.7G checkpoint, @17315 632M resume, 5.0M Advantage snapshots
+@15815/@16315/@16815/@17315, 5.0M final @17315 teacher, 5.1M final
+report, and both training/memory logs are **present**.
+
+Do **not** interpret presence as SHA/hash integrity, complete SD-CFR
+iteration-series coverage, model-load validation, or a strength result.
+The next minimal action is read-only `wsl -e sha256sum` of source checkpoint,
+resume, and final teacher. The @10105 checkpoint and @17315 final teacher
+can then be checked against their pinned contractual hashes. The associated
+PASS report will be needed to validate resume integrity.
+
+Decision unchanged: preserve training state, no methodological pivot,
+no three-month training, and no production inference change. The four-objective
+benchmark remains staged, currently deferred while reference compatibility
+is assessed. See `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
