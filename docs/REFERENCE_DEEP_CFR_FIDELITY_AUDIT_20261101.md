@@ -351,3 +351,109 @@ se o já congelado benchmark supervisionado de objetivos, que não
 inclui uma variante pura `SUM_{legal}`, é justificável.
 Não adicionar retrospectivamente novo braço a um preregistro
 de outubro nem abrir o holdout selado.
+
+## G4B — denominadores executados no Ryzen: PASS (2026-11-01)
+
+O usuário executou o script read-only e colou
+`SPINCORE_G4B_LEGAL_DENOMINATORS_PASS`.
+A saída valida `resume_state.pt` SHA
+`ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f`,
+`teacher_fallback_sign_error_17315.json` SHA
+`e19faacee5cc55e59f94598aeb30435421b707da6a64cfa081c1143140b23405`,
+e o split já existente
+`runs/3h_advantage_controlled_budget_curve/20260926_031558/3h_advantage_controlled_split_probe.pt`.
+Não houve inference forward, raízes CFR, refit ou alteração de pesos.
+O output foi registrado como **transcrição derivada do console**
+em `contracts/g4b_teacher_sign_error_legal_denominators_17315_v1_result.json`;
+o script não salvou um JSON original de saída.
+
+### Distribuição com denominadores CORRETOS
+
+| Ações legais | Todos os 50k | Target positivo | Fallback com target positivo | P(fallback | target+, legal_count) |
+|---:|---:|---:|---:|---:|
+| 2 | 18.954 | 10.968 | 2.059 | **18,7728%** |
+| 3 | 19.388 | 12.870 | 1.830 | **14,2191%** |
+| 4 | 5.628 | 4.489 | 465 | **10,3587%** |
+| 5 | 2.464 | 1.926 | 157 | **8,1516%** |
+| 6 | 2.940 | 2.415 | 128 | **5,3002%** |
+| 7 | 626 | 546 | 37 | **6,7766%** |
+| **TOTAL** | **50.000** | **33.214** | **4.676** | **14,0784%** |
+
+Agrupamento pré-descritivo: 2–3 ações **3.889/23.838 = 16,3143%**
+versus 4–7 ações **787/9.376 = 8,3938%**; razão
+**1,9436**, diferença absoluta **7,9205 pp**.
+Existe associação relevante: taxas decrescem de 2 a 6, com
+pequena reversão em 7 (somente 37 eventos). Não concluir
+causa nem precisão independente a partir de trajetórias correlacionadas.
+
+### Checagem causal com o código do resolvedor
+
+`src/lean_action_abstraction.cpp` demonstra que legal_count é
+endógeno à situação de jogo:
+- pré-flop com >=2 raises elimina opções fracionárias;
+  com >=3 raises pode proibir `CHECK_CALL` e restringir
+  decisão a fold/shove;
+- all-in puramente equivalente a call não é duplicado;
+- `d.got_isolated` pode suprimir raises;
+- pós-flop, `min_raise_to`, recursos restantes, apostas
+  que envolvem >=60% do stack efetivo, e deduplicação
+  eliminam alguns tamanhos de aposta.
+
+Portanto as taxas maiores com 2–3 ações **podem refletir
+situações de decisão/facing-raise mais difíceis**,
+além do número de ações. O JSON agregado não identifica
+o efeito da perda de informação histórica, do número de
+ações, nem da normalização do loss controlando
+posição/street/pot/to_call/mão de cada estado.
+
+O objetivo MSE atual **já** aumenta, relativamente ao
+`SUM_{legal}` publicado, a importância de estados com
+poucas ações; logo não há evidência direta de que
+alterar `MEAN_{legal}` para `SUM_{legal}` corrigiria o
+grupo com maiores taxas. **NÃO** editar loss ou
+acrescentar braço SUM retrospectivamente.
+
+### Decisão após G4B
+
+**G4B PASS como evidência descritiva, CAUSALITY NOT ESTABLISHED.**
+
+A revisão estrutural e os gates de fallback/aggregation anteriores
+não localizaram uma correção pontual segura; o problema de
+sinal do ENS8 persiste. É racional agora passar ao **único
+experimento supervisionado limitado já definido e congelado**,
+`contracts/semantic_objective_benchmark_17315_v1.json`,
+**sem modificar os quatro braços**: A = refit idêntico
+ao baseline, B = escala normalizada, C = balanceamento
+positive/nonpositive, D = normalizado+balanceado.
+Essa experiência pode determinar se objetivos de
+aproximação recuperam o sinal no reservoir existente,
+**não** testar diretamente o efeito de `1/|A|`.
+
+Manifesto `contracts/run_manifests/semantic_objective_benchmark_17315.json`
+validado estaticamente em 2026-11-01: os **dez** blob SHAs,
+inclusive runner, correspondem aos arquivos atuais no GitHub.
+`status=READY`, `block_reason=null`.
+A execução de 4 x ENS8 refits com 1.600 passos por membro
+(**32 fits, 51.200 passos de otimização**) é computação
+supervisionada de escopo limitado, e **não** continuação do
+treinamento CFR nem geração de novas mãos/targets.
+O runner exige pelo menos 22 GiB WSL disponíveis,
+árvore git limpa, treino longo ausente e checagem de
+paridade bit a bit do braço A com @17315, antes das
+alternativas. Falha em qualquer requisito deve
+**parar**, sem fazer workaround experimental.
+
+Comando PowerShell (o usuário decide se executa):
+```powershell
+wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && bash tools/run_semantic_objective_benchmark_17315.sh"
+```
+
+**Critério de parada seguinte:** se nenhum B/C/D
+cumprir todos os gates congelados,
+não reabrir seeds, arquitetura, loss ou holdout
+à procura de um PASS; registrar falha e reconsiderar
+a estratégia global de treinamento em um gate
+separado. Se algum passar, somente autorizar
+próximo gate de avaliação de patologias/jogo direto,
+não produção nem treino longo. Preservar
+@10105, @17315, todos os reservoirs e snapshots.
