@@ -2,7 +2,7 @@
 
 ## Primary objective now
 
-**PRESERVE LT2/LT3 LEARNING STATE; LONG TRAINING BLOCKED PENDING G4 REFERENCE-FIDELITY ADJUDICATION.**
+**PRESERVE LT2/LT3 STATE; G4B DONE, PRE-REGISTERED OFFLINE OBJECTIVE BENCHMARK READY; LONG CFR TRAINING BLOCKED.**
 
 OpenHoldem deployment is paused until the user explicitly returns to it.
 
@@ -5155,4 +5155,51 @@ hypothesis should be closed. **STOP** if there is no material
 group-specific pattern; no broad new architecture/seed sweep.
 
 Details:
+`docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
+
+### 2026-11-01 — G4B PASS, denominators resolved; frozen objective benchmark is next
+
+Read-only Ryzen run `SPINCORE_G4B_LEGAL_DENOMINATORS_PASS` completed.
+On frozen 50k (33,214 target-positive; 4,676 teacher-fallback/target-positive)
+the **conditional error rates** by legal actions were:
+2=2,059/10,968 **18.77%**;
+3=1,830/12,870 **14.22%**;
+4=465/4,489 **10.36%**;
+5=157/1,926 **8.15%**;
+6=128/2,415 **5.30%**;
+7=37/546 **6.78%**.
+2–3 combined = 3,889/23,838 **16.31%**;
+4–7 = 787/9,376 **8.39%**; rate ratio ~**1.94**.
+Checksum, original probe and counts PASSED. The association
+is real; cause remains UNPROVEN. The action resolver makes
+legal_count dependent on betting/raise history, stack, near-all-in
+pruning and deduplication, so this is **not** proof that
+the current `MEAN_{legal}` loss caused poor behavior. It
+actually relatively UPWEIGHTS smaller legal sets compared
+with the printed Brown et al. `SUM_{legal}` loss.
+No `MEAN -> SUM` patch or fifth candidate authorized.
+
+**Next research step SELECTED but NOT EXECUTED:**
+Use existing frozen/preregistered
+`contracts/semantic_objective_benchmark_17315_v1.json`;
+`contracts/run_manifests/semantic_objective_benchmark_17315.json`
+is READY with all **10** source/runner blob SHA pins matching
+current GitHub. A=current-weighted-MSE exact refit, B=target
+state-scale normalization, C=positive/nonpositive balancing,
+D=combination. This is 32 bounded supervised model fits on
+the already-preserved reservoir, NO new CFR roots or long
+training. Exact bitwise parity of A with original @17315 is
+mandatory before checking B/C/D; runner requires >=22 GiB
+available WSL and blocks concurrent heavy training. **No
+success or EV result assumed.**
+
+Gate stop: all frozen validation criteria must pass; any
+candidate passing requires separate pathology/direct-play
+validation; zero passing means **STOP**, no candidate/threshold/
+seed additions after the result. Existing baseline, snapshots,
+reservoir, HOLDOUT SEALED and production remain untouched.
+
+G4B console evidence:
+`contracts/g4b_teacher_sign_error_legal_denominators_17315_v1_result.json`.
+Detailed audit:
 `docs/REFERENCE_DEEP_CFR_FIDELITY_AUDIT_20261101.md`.
