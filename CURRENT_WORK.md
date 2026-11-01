@@ -5520,3 +5520,18 @@ Decision unchanged: preserve training state, no methodological pivot,
 no three-month training, and no production inference change. The four-objective
 benchmark remains staged, currently deferred while reference compatibility
 is assessed. See `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+## 2026-11-01 — G0 SHA source and final teacher confirmed
+
+User-supplied hashes:
+- `checkpoint.pt` @10105: `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0` — matches pinned **PASS**.
+- `semantic_long_ensemble_final_17315.pt`: `d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4` — matches pinned **PASS**.
+- `resume_state.pt` @17315: `ed0e00a05fe3c6900100b12de5f27efcaf24261adb816090320cc9b34b1d403f` — not yet compared to original local training report's `resume_state_sha256` (**PENDING**).
+
+Next action is direct `wsl -e grep resume_state_sha256 /home/rz9/spincore_lean_functional/runs/3h_semantic_long_15315_17315/3h_semantic_long_15315_17315.json`. This is read-only and requires no new Python packages. Compare exact value to observed resume SHA.
+
+Source architecture unchanged, all artifacts preserved, no training authorized;
+four-objective benchmark remains deferred. Reference comparison confirms
+that OpenSpiel PyTorch **and JAX** Deep CFR use argmax fallback for all-
+nonpositive Advantage outputs; SpinCore uses softmax. No replacement is approved
+before G1/G2 evidence. Details in `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
