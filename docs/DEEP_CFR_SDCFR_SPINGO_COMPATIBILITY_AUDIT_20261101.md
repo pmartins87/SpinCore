@@ -2,7 +2,7 @@
 
 Data: 2026-11-01  
 Escopo: **análise técnica, sem autorização de mudança estratégica**  
-Status: **REVISÃO ESTÁTICA PARCIAL CONCLUÍDA; PARIDADE EXECUTÁVEL E INVENTÁRIO LOCAL PENDENTES**  
+Status: **REVISÃO ESTÁTICA PARCIAL CONCLUÍDA; G0 PRESENÇA DE ARQUIVOS PASS PARCIAL; SHA/METADADOS, G1/G2 PENDENTES**  
 Fonte de verdade operacional: `CURRENT_WORK.md`; decisões e gates: `ROADMAP.md`.
 
 ## Decisão
@@ -92,7 +92,7 @@ inventadas, mas não fornecem, sozinhos, prova de melhora de EV.
 
 ## Gates enxutos antes de qualquer recomendação de mudança
 
-- **G0 — inventário read-only (não executado):** existência, tamanho, SHA256
+- **G0 — inventário read-only (presença/tamanho confirmado; SHA256/metadados pendentes):** existência, tamanho, SHA256
   e metadados de: checkpoint @10105; HU sidecar; @15315/@17315 ensembles;
   @17315 resume; relatórios PASS; split protegido. Confirmar que snapshots
   históricos SD-CFR realmente existem antes de contar com eles.
@@ -124,6 +124,57 @@ a inspeção baseada em algoritmo publicado não explicar o problema.
 - Evidência de sucesso de métodos CFR em poker multiplayer não implica a mesma
   garantia de convergência conhecida para dois jogadores zero-soma.
 - Os checkpoints `*.pt` e reservoirs são locais e não estão no GitHub;
-  a integridade física só poderá ser certificada no Ryzen/WSL.
+  a presença física e os tamanhos foram confirmados por listagem do usuário;
+  integridade SHA256/conteúdo ainda precisa ser certificada no Ryzen/WSL.
 - O benchmark de quatro losses corrigido e seu contrato continuam
   **PENDENTES**, não PASS.
+
+## G0 — presença de artefatos confirmada no Ryzen/WSL (relato de 2026-11-01)
+
+Comando executado pelo usuário (somente leitura):
+```powershell
+wsl -e bash -lc "cd ~/spincore_lean_functional && ls -lh runs/3h_semantic_long_15315_17315/ runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt"
+```
+
+Arquivos encontrados:
+- `runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt` — **2.7G** (Sep 23 11:00).
+- `runs/3h_semantic_long_15315_17315/resume_state.pt` — **632M** (Oct 25 02:36).
+- `runs/3h_semantic_long_15315_17315/semantic_long_ensemble_15815.pt` — **5.0M** (Oct 20 04:57).
+- `runs/3h_semantic_long_15315_17315/semantic_long_ensemble_16315.pt` — **5.0M** (Oct 21 20:21).
+- `runs/3h_semantic_long_15315_17315/semantic_long_ensemble_16815.pt` — **5.0M** (Oct 23 11:31).
+- `runs/3h_semantic_long_15315_17315/semantic_long_ensemble_17315.pt` — **5.0M** (Oct 25 02:35).
+- `runs/3h_semantic_long_15315_17315/semantic_long_ensemble_final_17315.pt` — **5.0M** (Oct 25 02:36).
+- `3h_semantic_long_15315_17315.json` — **5.1M**; `memory_parallel.log` — **2.9M**; `training_parallel.log` — **5.5M**.
+- `parallel_semantic_pack/` directory exists; content not enumerated.
+
+**G0 finding:** multiple *time-separated* Advantage-ensemble snapshots exist;
+this strengthens the case for **reusing** previous work. However, these
+are approximately 500-iteration snapshots, **not proof of a complete per-iteration
+SD-CFR archive**. Earlier runs, HU artifacts, protected split, and their hashes
+were not included in this narrow listing. Checkpoint presence does not yet prove
+loadability or correct hash binding to published PASS reports.
+
+Next minimal command (no Bash shell, no new Python package, no mutation):
+```powershell
+wsl -e sha256sum /home/rz9/spincore_lean_functional/runs/lt3_parallel_9105_10105/20260922_132104/checkpoint.pt /home/rz9/spincore_lean_functional/runs/3h_semantic_long_15315_17315/resume_state.pt /home/rz9/spincore_lean_functional/runs/3h_semantic_long_15315_17315/semantic_long_ensemble_final_17315.pt
+```
+
+Cross-check against pinned source SHA256 `f2058cae8a1b194e08295f1b726b43432544d668c86a4c3a4c9ee8724963faa0`
+and teacher SHA256 `d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4` listed
+in the @17315 experiment manifest. The resume hash must be confirmed using its
+associated original PASS report; **do not infer** it from file size.
+
+### Utility nuance
+
+For a **winner-take-all** payout vector under the *Independent Chip Model*,
+the modeled probability of first place equals chip fraction `stack/total_chips`.
+Thus chipEV optimization is consistent with the WTA *ICM proxy* up to constant
+scale; this is not proof that chip fraction equals real-world first-place equity
+under strategic tournament dynamics. Multi-place payout vectors remain distinct.
+
+### Reference nuance
+
+OpenSpiel PyTorch Deep CFR implements argmax(raw legal Advantage) on an
+all-nonpositive neural output, while its generic tabular CFR fallback may be
+uniform. The comparison must use the **Deep CFR neural reference** and avoid
+conflating the two algorithms.
