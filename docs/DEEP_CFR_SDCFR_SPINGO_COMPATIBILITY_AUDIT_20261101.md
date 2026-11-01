@@ -216,3 +216,37 @@ Coincide **exatamente** com `sha256sum` calculado para `resume_state.pt`.
 Isto comprova igualdade criptográfica com os registros de referência verificados,
 mas **não** comprova cobertura integral do histórico SD-CFR, validade da estratégia,
 passagem em teste de load, nem hashes dos snapshots adicionais.
+
+## G1/G2 — diagnóstico offline preparado (não executado no Ryzen)
+
+Foi criado `tools/audit_reference_fallback_17315.py` com **somente leitura**,
+sem novos CFR roots, re-treino, mutação do professor ou substituição da política.
+
+- `--self-test` compara a implementação real do SpinCore à forma de
+  regret matching publicada para estados sintéticos de regret positivo,
+  all-nonpositive, empate e restrição de ações legais.
+  Esta etapa valida **apenas a função de política**, não toda a travessia Deep CFR.
+- `--raw-report` reutiliza o relatório local já criado pelo diagnóstico
+  `run_3h_teacher_raw_advantage_17315.sh` em
+  `runs/teacher_raw_advantage_17315/teacher_raw_advantage_17315.json`.
+  Reconstitui as políticas atuais a partir do vetor raw, exige paridade com
+  as probabilidades armazenadas e calcula a política de fallback
+  `ARGMAX_LEGAL_RAW` como contrafactual estritamente por estado.
+- Informa TV das distribuições e probabilidade média de ALL_IN entre estados
+  congelados, por grupo sinalizado. Não reexecuta mãos; não mede EV.
+  **A seleção original de estados sinalizados é enviesada**; conclusões
+  não podem ser extrapoladas ao conjunto completo de decisões.
+- Em falhas de paridade ou schema, falha explicitamente em vez de produzir
+  recomendações. Nenhum efeito na estratégia de produção é autorizado.
+
+Comando recomendado no PowerShell (sem quoting aninhado com Bash vars):
+
+```powershell
+wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && .venv_lean/bin/python tools/audit_reference_fallback_17315.py --self-test --raw-report runs/teacher_raw_advantage_17315/teacher_raw_advantage_17315.json"
+```
+
+**Gates seguintes:** após saída G1/G2, adjudicar relevância; se houver
+sinal de melhoria, pré-registrar jogo direto sobre cenários frescos. Um
+resultado positivo em snapshots enviesados **não** é autorização de
+substituição do fallback. Preservar todos os checkpoints e o benchmark de
+quatro objetivos, que continua pendente/adiado.
