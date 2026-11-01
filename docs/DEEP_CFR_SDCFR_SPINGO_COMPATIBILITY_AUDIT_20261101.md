@@ -2,7 +2,7 @@
 
 Data: 2026-11-01  
 Escopo: **análise técnica, sem autorização de mudança estratégica**  
-Status: **G0 TRÊS ARTEFATOS CENTRAIS PASS SHA256; DEMAIS ARTEFATOS E G1/G2 PENDENTES**  
+Status: **G0 CENTRAL PASS; G1/G2 REFERENCE FALLBACK PASS; G3 DIRECT PLAY READY, NOT EXECUTED**  
 Fonte de verdade operacional: `CURRENT_WORK.md`; decisões e gates: `ROADMAP.md`.
 
 ## Decisão
@@ -250,3 +250,62 @@ sinal de melhoria, pré-registrar jogo direto sobre cenários frescos. Um
 resultado positivo em snapshots enviesados **não** é autorização de
 substituição do fallback. Preservar todos os checkpoints e o benchmark de
 quatro objetivos, que continua pendente/adiado.
+
+## G1/G2 — executed on Ryzen: PASS (2026-11-01)
+
+The user executed the published-fallback diagnostic after pulling the source.
+Observed:
+- `G1_REFERENCE_FALLBACK_SEMANTICS_SELFTEST_PASS`;
+- `SPINCORE_REFERENCE_FALLBACK_FROZEN_DIAGNOSTIC_17315_PASS`;
+- schema `SPINCORE_REFERENCE_FALLBACK_FROZEN_DIAGNOSTIC_17315_V1`;
+- `baseline_policy_parity=true`; **367** frozen flagged/extreme decision rows;
+- **169/367** used the all-nonpositive fallback and changed under published
+  argmax; total mean TV over selected rows **0.3505833**.
+- 18 sampled deep-72o all-ins: current mean all-in **0.3318054**, reference
+  **0.0**. 20 high-probability deep-72o opportunities: **0.3326141 -> 0**;
+- 271 sampled high-card jams: overall mean all-in **0.4410964 -> 0.3737804**.
+  Within 129 fallback decisions with legal all-in, **0.2034312 -> 0.0620155**;
+- The 20 extreme *high-card-no-draw* opportunity rows had **zero** fallback
+  events and **no change** in mean all-in: **0.9695501 -> 0.9695501**.
+  The distinct top-20 high-card jam list also remains at all-in **1.0**.
+- Trips+/monster/AA opportunity rows cannot be pronounced fixed: among
+  sampled trips+ folds, three of four used fallback, but only all-in
+  probabilities were summarized in G1/G2, not fold correctness.
+
+**Adjudication:** published argmax plausibly addresses the *fallback-driven*
+72o pathology, not the separate *positive-regret high-card/no-draw*
+amplification/model-sign failure. The 367 rows are baseline-selected
+and biased; **no EV, deployment, or global safety conclusion** follows.
+
+## G3 — bounded common-chance direct-play gate prepared, NOT EXECUTED
+
+The only candidate is the **published Deep CFR fallback choice**
+`argmax(raw legal Advantage)` when every legal Advantage is nonpositive.
+Everything else remains strictly the same: original @17315 eight-member
+semantic Advantage weights, raw-member arithmetic mean, positive-Advantage
+regret matching, same 3H scenarios/opponent/engine, 10k fresh fixed-seed
+paired common-chance scenarios, 16 workers. No new CFR roots or optimizer steps.
+
+Preregistered **before** direct-play results:
+- `contracts/reference_fallback_direct_play_17315_v1.json` (frozen seed
+  `2026110103`, 10000 scenarios, criteria including 95% paired EV
+  noninferiority lower bound >= -0.50 chips/seat-hand, 72o improvement,
+  no new critical folds, high-card-no-draw and trips-fold noninferiority);
+- `tools/validate_reference_fallback_direct_play_17315.py`, reuses the
+  *existing* SpinCore common-chance engine, scenario summary and sanity
+  metrics and the **original** semantic-vector implementation. Includes
+  selftest and a 4-scenario smoke pass prerequisite;
+- `tools/run_reference_fallback_direct_play_17315.sh` uses read-only source
+  hashes via `contracts/run_manifests/reference_fallback_direct_play_17315.json`,
+  checks working tree/RAM/heavy trainer, performs selftest/smoke before the
+  full run and attempts to copy the report to Desktop.
+
+A PASS identifies an *inference-only candidate* for a later integration
+gate. A FAIL rejects it as a direct replacement. Neither outcome permits
+automatic production changes or long 3H/HU training. This experiment cannot
+resolve the positive-regret high-card/no-draw pathology.
+
+PowerShell:
+```powershell
+wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && bash tools/run_reference_fallback_direct_play_17315.sh"
+```
