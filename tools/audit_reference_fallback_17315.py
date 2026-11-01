@@ -60,6 +60,8 @@ def self_test() -> None:
             assert max(abs(a - b) for a, b in zip(ref, current)) < 1e-12
         else:
             assert ref[best] == 1.0
+            if len(legal) > 1:
+                assert current[best] < 1.0, "current fitted fallback unexpectedly deterministic"
     print("G1_REFERENCE_FALLBACK_SEMANTICS_SELFTEST_PASS")
 
 
