@@ -5042,3 +5042,40 @@ Full hand-by-hand board decoding:
 threshold, baseline remains production reference. Next focused
 read-only source = existing `teacher_raw_advantage_17315.json`
 for extreme POSITIVE-regret states; no training or new random-seed runs.
+
+### 2026-11-01 — RAW ENS8 file independently audited; next is finite reference fidelity gate
+
+Original user-uploaded 1,661,527-byte teacher raw Advantage report @17315
+SHA256 `2d57cc58343948101e6d9be4e91aaa70392da6f02e15e2b09ece0d5ba5c4c456`.
+Policy replay on 367/367 states has zero error (double precision
+member-mixture tolerance 1.11e-16). Positive regret 198; softmax 169.
+
+Selected top20 high-card/no-draw: p(ALL_IN) raw-mean RM **96.96%**
+vs average member policy **37.53%**, 15/20 sole positive ALL_IN, 13/20
+without >=4 argmax member votes, all20 >=25pp amplification. Distinct
+betting/card states: **19**. At scenario 3980, tiny positive raw all-in
++0.000402298 with every other legal average negative implies p=1.0,
+despite only 1/8 members preferring all-in and member-policy mixture
+p=0.21044. Mechanism is nonlinear aggregation + sign approximation;
+hand-level regret-target incorrectness not established by this
+teacher-only file.
+
+Earlier 4,676-protected-target sign-loss diagnostic remains the stronger
+evidence that model quality, not only aggregation, loses correct sign;
+the attempted member-policy averaging **failed direct play** and
+published argmax fallback alone **failed G3**, so no fallback or
+aggregation-only pivot. Reference neural Deep CFR uses per-player
+Advantage networks + separate average policy; current ENS8 direct
+raw-mean teacher is own adaptation.
+
+**NEXT finite gate, no new training:** audit source of target encoding,
+actor/position info, legal action masks, shared-net representation
+and separation of behavior vs averaged strategy against reference.
+If source parity issue found -> isolated documented correction candidate
+with regression test before deployment; otherwise prioritize validated
+holdout targets and decide whether already frozen objective refit
+could address sign-error without inventing new algorithm.
+**STOP:** no new seed searches, no promoting candidates failing
+preregistered gates; all long HU/3H training stays BLOCKED.
+
+Full audit: `docs/TEACHER_RAW_ADVANTAGE_17315_ROOT_CAUSE_20261101.md`.
