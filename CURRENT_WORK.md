@@ -5616,3 +5616,33 @@ Data: `contracts/reference_fallback_direct_play_17315_v1_console_result.json`
 (transcribed from user terminal; original local full artifact has **not** been
 read by this assistant). Full output is at
 `runs/reference_fallback_direct_play_17315/reference_fallback_direct_play_17315.json`.
+
+## 2026-11-01 — G3 complete JSON reviewed, full signal adjudicated
+
+Original G3 JSON attached by user and parsed:
+SHA256 `fd91b7a871108d095a1b4fe3d152f4f68a0b8a9557bd4be5932294123a3e70f8`.
+Source schema PASS, decision FAIL under unmodified prereg. The console
+summary GitHub artifact was augmented with original report provenance,
+counts, same-state checks and seven flagged hand explanations.
+
+New critical qualifiers:
+- p>=95% all-in in no-draw high-card opportunities
+  A 19/3360 (0.5655%), B 27/4579 (0.5896%):
+  positive-regret saturation persists despite mean p(ALL_IN) reduction.
+- 12 shared identical high-card/no-draw top20 snapshots remain all-in p=1.
+- B had 7 p(FOLD)=1 trips+ flagged rows, but four are trips entirely on
+  board, two modest flushes on paired boards, one straight on paired
+  board, and each faces a meaningful bet. These are diagnostic alerts,
+  NOT seven errors proven by the metric; do not claim A is strategically
+  safer because it has 3 vs 9 flags without equity/range evaluation.
+- Same-state scenario 4384: A fold 33.5228%, B fold 100%
+  with T-high flush on paired 7 board and 531/591 call/pot; investigate
+  rather than assume right/wrong.
+
+Unchanged outcome: do not override G3 FAIL, do not change policy,
+no additional long training nor rerunning random seeds.
+Next: read-only inspect existing
+`runs/teacher_raw_advantage_17315/teacher_raw_advantage_17315.json`
+and check the source target-vs-predicted Advantage model sign
+in high-card/no-draw extreme states, preserving checkpoints/reservoir.
+Full details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
