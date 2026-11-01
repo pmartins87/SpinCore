@@ -4982,3 +4982,36 @@ If it passes, treat as a *candidate only*; positive-regret error remains blocked
 
 See `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md` and
 `CURRENT_WORK.md`. Objective-loss benchmark remains deferred, not cancelled.
+
+### 2026-11-01 — G3 published fallback direct-play completed: EXECUTION PASS / STRATEGIC FAIL
+
+User executed `tools/run_reference_fallback_direct_play_17315.sh`. Manifest,
+selftest, four-scenario smoke, both 10k-scenario arms and postvalidation all
+**PASS**. Total evaluation wall time **8m30.77s**. The scientific decision is
+**FAIL** under the *unchanged pre-registered* gate. Preserve original report at
+`runs/reference_fallback_direct_play_17315/reference_fallback_direct_play_17315.json`;
+console-derived read-only evidence is in
+`contracts/reference_fallback_direct_play_17315_v1_console_result.json`
+(does not replace full JSON or independent re-audit).
+
+A=current raw-mean+softmax fallback; B=same frozen ENS8+published argmax fallback.
+10,000 fresh 3H scenarios, common-chance seed 2026110103. B-A chipEV per
+policy-seat-hand mean **+0.20607**, 95% CI **[-0.35442,+0.76655]**;
+noninferiority gate PASS, but **no evidence of superiority** from this CI.
+Deep-72o mean ALL_IN 1.32795% -> 0.36112%, reduction **0.96683pp**.
+This **misses the pre-registered >=1.00000pp required improvement by 0.03317pp**;
+`deep_72o_mean=false`, sole failed numeric gate. High-card/no-draw mean
+ALL_IN 3.87910% -> 1.30210%; high-card jam flags 230 -> 134;
+72o jam flags 8 -> 2. **However trips+ fold flags increased 3 -> 9**
+and trips+ mean fold 3.99049% -> 5.63164%, a potential safety regression
+although within the predeclared +2pp noninferiority tolerance.
+All other predefined checks PASS, including zero sampled AA folds and
+zero sampled monster folds, but this does not override the decision FAIL.
+
+**Decision:** do NOT replace production fallback; do NOT relax thresholds,
+rerun seeds or promote candidate to escape near-miss; do NOT train or pivot
+architecture. Preserve this reproducible evidence and source checkpoints.
+Next: read-only root-cause audit of *positive-regret high-card/no-draw* cases,
+and reference Deep CFR training/strategy semantics vs current shared-network
+implementation. This is distinct from the now-rejected direct fallback swap.
+No new expensive experiment without a clearly defined evidence-based need.
