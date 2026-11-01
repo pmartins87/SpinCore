@@ -1,0 +1,43 @@
+{
+  "schema": "SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_PREREG_V1",
+  "status": "FROZEN_BEFORE_RESULTS",
+  "prereg_date": "2026-11-01",
+  "context": {
+    "source_teacher_iteration": 17315,
+    "source_teacher_sha256": "d856acacf4f9d1e03f424c15a1d41cc36bb0384f3cbc62e6fadea84979c6e9f4",
+    "source_diagnostic": "G1/G2 367 selected frozen states: 72o fallback-only all-in mean 0.3318 to 0, top 20 high-card no-draw unchanged at 0.96955",
+    "goal": "Check whether replacing ONLY all-nonpositive fitted Advantage softmax fallback with published Deep CFR argmax is strategically safe; not a method replacement."
+  },
+  "design": {
+    "domain": "THREE_HANDED_ONLY",
+    "scenarios": 10000,
+    "seed": 2026110103,
+    "workers": 16,
+    "max_decisions": 300,
+    "opponent": "frozen DeepCrusher R8 development oracle",
+    "pairing": "A and B share sampled 3H episodes, deck seed and engine master seed; diverging actions imply diverging future trajectories.",
+    "A": "Existing teacher: arithmetic mean of eight raw Advantage vectors, then canonical lean regret matching with softmax on all-nonpositive legal Advantages",
+    "B": "Same eight frozen networks, raw mean and positive-regret matching; only all-nonpositive legal Advantage fallback uses deterministic max(raw legal) as in published Deep CFR.",
+    "independent_of_prior_direct_play_seed": true
+  },
+  "safety": {
+    "require_source_teacher_sha256_match": true,
+    "require_training_report_pass": true,
+    "no_training": true,
+    "no_cfr_roots": true,
+    "no_model_or_checkpoint_mutation": true,
+    "no_production_change": true,
+    "no_long_training_unblock": true,
+    "baseline_A_unchanged": true,
+    "no_sealed_holdout": true
+  },
+  "gate": {
+    "paired_ev_noninferiority": "95% paired CI lower bound (B-A chips per policy seat hand) >= -0.50, identical to previous member-mean direct-play gate",
+    "critical": "B zero PREFLOP_AA_FOLD and POSTFLOP_MONSTER_FOLD sampled events",
+    "no_draw_extremes": "B fraction of >=80% all-in in high-card/no-draw opportunities <= A + 0.001 and <=0.0025",
+    "no_draw_mean": "B high-card/no-draw mean all-in probability <= A+0.02",
+    "deep_72o": "At least 25 valid deep-72o opportunities in both arms; B mean ALL_IN <= A+0.005, <=0.05 absolute, and B<=A-0.01 (benefit required)",
+    "trips_fold": "B mean FOLD on trips+ opportunities <= A+0.02",
+    "interpretation": "PASS identifies B as an inference fallback candidate for the NEXT gated integration validation; no automatic promotion nor unblock of long training. FAIL rejects B as direct substitute. Severe positive-regret high-card/no-draw pathology remains independently unresolved."
+  }
+}
