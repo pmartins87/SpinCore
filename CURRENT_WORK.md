@@ -1,7 +1,7 @@
 # SpinCore Current Work
 
 Date: 2026-11-01
-Status: **G0 CENTRAL SHA PASS; G1/G2 REFERENCE FALLBACK PASS; G3 DIRECT PLAY READY; LONG TRAINING BLOCKED**
+Status: **G3 DIRECT-PLAY COMPLETE: EXECUTION PASS / CANDIDATE FAIL; POSITIVE-REGRET SOURCE AUDIT NEXT; LONG TRAINING BLOCKED**
 
 > Latest: G0 central SHA verified, G1/G2 frozen published-fallback check PASS, G3 paired direct-play READY (not run). Existing networks, checkpoints and reservoirs remain immutable; 3H/HU long training blocked. Details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`. Historical interim directions below are chronological only.
 
@@ -5584,3 +5584,35 @@ independently unresolved even if G3 PASS.
 
 Next PowerShell: `wsl -e bash -lc "cd ~/spincore_lean_functional && git pull --ff-only origin main && bash tools/run_reference_fallback_direct_play_17315.sh"`.
 Full decisions: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+## 2026-11-01 — G3 COMPLETE: execution PASS / candidate FAIL; freeze decision
+
+Actual Ryzen execution `SPINCORE_REFERENCE_FALLBACK_DIRECT_PLAY_17315_SHELL_PASS`,
+10,000 fresh common-chance 3H scenarios. Selftest, smoke, stage manifest and
+report postvalidation PASS. **Scientific gate G3_DECISION=FAIL** under frozen
+`contracts/reference_fallback_direct_play_17315_v1.json`.
+
+Results (A=current softmax fallback, B=published argmax fallback):
+- paired B-A chips/policy-seat-hand +0.2060667, 95% CI
+  [-0.3544213,+0.7665546]; EV noninferiority PASS, superiority unproven;
+- deep 72o mean ALL_IN 0.0132795 -> 0.0036112 (improvement 0.00966834,
+  required >=0.0100); sole failed check `deep_72o_mean`;
+- deep 72o sampled jam flags 8 -> 2;
+- deep high-card sampled jam flags 230 -> 134;
+- high-card-no-draw mean ALL_IN 0.0387910 -> 0.0130210;
+- trips+ fold sampled flags **3 -> 9**; mean 0.0399049 -> 0.0563164,
+  inside +0.02 prereg tolerance but clinically/strategically concerning;
+- no sampled AA or monster folds in B; all other predefined checks passed.
+
+**No retroactive threshold edits, no selected-seed reruns, no production
+change, no long training.** Reject reference-argmax fallback **as a direct
+standalone replacement under G3**. Do not infer it is universally inferior;
+current model-sign/positive-regret extreme-high-card defects remain unresolved.
+Continue only nontraining source-and-reservoir auditing of positive-regret
+high-card/no-draw root cause and Deep CFR shared-net vs reference semantics.
+The objective-loss benchmark remains preserved/deferred.
+
+Data: `contracts/reference_fallback_direct_play_17315_v1_console_result.json`
+(transcribed from user terminal; original local full artifact has **not** been
+read by this assistant). Full output is at
+`runs/reference_fallback_direct_play_17315/reference_fallback_direct_play_17315.json`.
