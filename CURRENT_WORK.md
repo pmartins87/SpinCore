@@ -3,7 +3,7 @@
 Date: 2026-11-01
 Status: **G3 DIRECT-PLAY COMPLETE: EXECUTION PASS / CANDIDATE FAIL; POSITIVE-REGRET SOURCE AUDIT NEXT; LONG TRAINING BLOCKED**
 
-> Latest: G0 central SHA verified, G1/G2 frozen published-fallback check PASS, G3 paired direct-play READY (not run). Existing networks, checkpoints and reservoirs remain immutable; 3H/HU long training blocked. Details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`. Historical interim directions below are chronological only.
+> Latest: G3 completed execution PASS / decision FAIL. Original G3 JSON and @17315 raw advantages independently audited; nonlinearity of raw-mean -> regret matching confirmed, alongside prior per-network sign-loss evidence. Next: finite read-only target/observation/reference-parity audit; long training remains blocked. Details: `docs/TEACHER_RAW_ADVANTAGE_17315_ROOT_CAUSE_20261101.md`. Older directions are chronological only.
 
 ## Strategic baseline
 
@@ -5646,3 +5646,42 @@ Next: read-only inspect existing
 and check the source target-vs-predicted Advantage model sign
 in high-card/no-draw extreme states, preserving checkpoints/reservoir.
 Full details: `docs/DEEP_CFR_SDCFR_SPINGO_COMPATIBILITY_AUDIT_20261101.md`.
+
+## 2026-11-01 — Received raw ENS8 teacher @17315: independent arithmetic replay PASS
+
+User attached `SpinCore_teacher_raw_advantage_17315(1).json`; SHA256
+`2d57cc58343948101e6d9be4e91aaa70392da6f02e15e2b09ece0d5ba5c4c456`,
+1,661,527 bytes. 367/367 rows verified with 0.0 max error for
+ensemble raw means and baseline sigma, <=1.11e-16 for member-policy mean.
+198 positive-regret, 169 softmax-fallback. Zero selection mismatches.
+
+Top20 **preselected** high-card/no-immediate-draw (19 distinct betting/card
+states, one repeated lineup) have `RM(mean(raw))` ALL_IN mean 96.9550%
+vs `mean(RM(raw member))` 37.5314%; 13/20 extreme with <4/8 member
+argmax support; 15/20 sole-positive ALL_IN. Example scenario3980:
+ALL_IN raw mean +0.000402298, all other legal averages negative,
+so RM gives 100% ALL_IN even though member-policy average gives
+21.0437% and only one member prefers all-in. Exact arithmetic,
+not yet verified wrong CFR target for this exact state.
+All 18 sampled deep72o jams were softmax fallback near 1/3 ALL_IN,
+a separate pathology.
+
+**Crucial prior evidence and constraints:** protected holdout sign-loss
+was already measured on 4,676 positions; per-member approximation is
+substantial, so do not blame the aggregation alone. Member-policy mean
+B previously **failed direct-play**, and the published argmax fallback
+also **failed preregistered G3**; neither is authorized as an easy fix.
+Reference Deep CFR uses a network per player and distinct average-policy
+training, whereas current ENS8 raw-mean direct teacher is a custom policy.
+
+**Decision:** do not alter code or weights, do not start training or
+choose new aggregation. Next only static/read-only audit of protected
+CFR target-to-prediction mapping, observation/actor positional
+information, legal masks and strategy-average separation. This is a
+*finite source audit*, not a new broad search. If no real source defect,
+adjudicate the already available four-objective refit gate against
+published methods before any experiment; preserve it as prepared/deferred.
+
+Source-of-truth detailed report:
+`docs/TEACHER_RAW_ADVANTAGE_17315_ROOT_CAUSE_20261101.md`.
+User does not need to run or upload anything further for this stage.
