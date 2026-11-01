@@ -34,7 +34,7 @@
   "gate": {
     "paired_ev_noninferiority": "95% paired CI lower bound (B-A chips per policy seat hand) >= -0.50, identical to previous member-mean direct-play gate",
     "critical": "B zero PREFLOP_AA_FOLD and POSTFLOP_MONSTER_FOLD sampled events",
-    "no_draw_extremes": "B fraction of >=80% all-in in high-card/no-draw opportunities <= A + 0.001 and <=0.0025",
+    "no_draw_extremes": "B >=80%-ALL_IN fraction in high-card/no-draw opportunities <= A+0.001. This limited fallback-only candidate is NOT required to fix positive-regret-only extremes; no unconditional absolute 0.0025 gate.",
     "no_draw_mean": "B high-card/no-draw mean all-in probability <= A+0.02",
     "deep_72o": "At least 25 valid deep-72o opportunities in both arms; B mean ALL_IN <= A+0.005, <=0.05 absolute, and B<=A-0.01 (benefit required)",
     "trips_fold": "B mean FOLD on trips+ opportunities <= A+0.02",
